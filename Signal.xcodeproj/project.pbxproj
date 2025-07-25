@@ -2474,8 +2474,8 @@
 		D91D9C8C2C3F06400009E4F7 /* BackupArchiveExpirationTimerChatUpdateArchiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = D91D9C8B2C3F06400009E4F7 /* BackupArchiveExpirationTimerChatUpdateArchiver.swift */; };
 		D91F0B4E2B193A5C0086DB30 /* GroupCallRecordRingUpdateDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9B91D8D2B17E2A600BCB11A /* GroupCallRecordRingUpdateDelegate.swift */; };
 		D91F0B4F2B193A7A0086DB30 /* GroupCallRecordRingUpdateDelegateTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = D91F0B4B2B1939B60086DB30 /* GroupCallRecordRingUpdateDelegateTest.swift */; };
-		D91FBCF62E2EF4C100D0BCDB /* BackupExportJobRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = D91FBCF52E2EF4B900D0BCDB /* BackupExportJobRunner.swift */; };
 		D91FBCF42E2E9EA200D0BCDB /* ChatListFYISheetCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D91FBCF32E2E9E9E00D0BCDB /* ChatListFYISheetCoordinator.swift */; };
+		D91FBCF62E2EF4C100D0BCDB /* BackupExportJobRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = D91FBCF52E2EF4B900D0BCDB /* BackupExportJobRunner.swift */; };
 		D923DF9C2DC135D200CDAFC3 /* BackupIdManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D923DF9B2DC135A000CDAFC3 /* BackupIdManager.swift */; };
 		D9247EA62BFBFFCA00DFEF6F /* DeleteForMeIncomingSyncMessageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9247EA42BFBFFCA00DFEF6F /* DeleteForMeIncomingSyncMessageManager.swift */; };
 		D9247EA82BFD28E800DFEF6F /* DeleteForMeSyncMessageReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9247EA72BFD28E800DFEF6F /* DeleteForMeSyncMessageReceiver.swift */; };
@@ -6427,8 +6427,8 @@
 		D91D9C8B2C3F06400009E4F7 /* BackupArchiveExpirationTimerChatUpdateArchiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupArchiveExpirationTimerChatUpdateArchiver.swift; sourceTree = "<group>"; };
 		D91F0B4B2B1939B60086DB30 /* GroupCallRecordRingUpdateDelegateTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallRecordRingUpdateDelegateTest.swift; sourceTree = "<group>"; };
 		D91F7A2C2935A32F00012C64 /* DonationMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DonationMode.swift; sourceTree = "<group>"; };
-		D91FBCF52E2EF4B900D0BCDB /* BackupExportJobRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupExportJobRunner.swift; sourceTree = "<group>"; };
 		D91FBCF32E2E9E9E00D0BCDB /* ChatListFYISheetCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListFYISheetCoordinator.swift; sourceTree = "<group>"; };
+		D91FBCF52E2EF4B900D0BCDB /* BackupExportJobRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupExportJobRunner.swift; sourceTree = "<group>"; };
 		D923DF9B2DC135A000CDAFC3 /* BackupIdManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupIdManager.swift; sourceTree = "<group>"; };
 		D9247EA42BFBFFCA00DFEF6F /* DeleteForMeIncomingSyncMessageManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeleteForMeIncomingSyncMessageManager.swift; sourceTree = "<group>"; };
 		D9247EA72BFD28E800DFEF6F /* DeleteForMeSyncMessageReceiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteForMeSyncMessageReceiver.swift; sourceTree = "<group>"; };
@@ -14921,7 +14921,6 @@
 					};
 					453518671FC635DD00210559 = {
 						CreatedOnToolsVersion = 9.2;
-						DevelopmentTeam = U68MSDN6DR;
 						LastSwiftMigration = 1020;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
@@ -19287,6 +19286,7 @@
 				CODE_SIGN_ENTITLEMENTS = SignalNSE/SignalNSE.entitlements;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = JVP5CFJTCN;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -19300,6 +19300,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal.SignalNSE";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = org.homesteadheritage.signal.SignalNSE;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -19336,6 +19337,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_ENTITLEMENTS = "SignalNSE/SignalNSE-AppStore.entitlements";
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = JVP5CFJTCN;
 				ENABLE_NS_ASSERTIONS = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -19353,6 +19355,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal.SignalNSE";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = org.homesteadheritage.signal.SignalNSE;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -19392,6 +19395,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_ENTITLEMENTS = SignalNSE/SignalNSE.entitlements;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = JVP5CFJTCN;
 				ENABLE_NS_ASSERTIONS = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -19409,6 +19413,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal.SignalNSE";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = org.homesteadheritage.signal.SignalNSE;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -19448,6 +19453,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_ENTITLEMENTS = SignalNSE/SignalNSE.entitlements;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = JVP5CFJTCN;
 				ENABLE_NS_ASSERTIONS = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -19465,6 +19471,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal.SignalNSE";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = org.homesteadheritage.signal.SignalNSE;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -19492,6 +19499,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEFINES_MODULE = YES;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = JVP5CFJTCN;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -19551,6 +19559,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEFINES_MODULE = YES;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = JVP5CFJTCN;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -19617,6 +19626,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEFINES_MODULE = YES;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = JVP5CFJTCN;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -19683,6 +19693,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEFINES_MODULE = YES;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = JVP5CFJTCN;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -19732,6 +19743,7 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = JVP5CFJTCN;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -19783,6 +19795,7 @@
 				CODE_SIGN_IDENTITY = "";
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = JVP5CFJTCN;
 				ENABLE_NS_ASSERTIONS = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -19841,6 +19854,7 @@
 				CODE_SIGN_IDENTITY = "";
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = JVP5CFJTCN;
 				ENABLE_NS_ASSERTIONS = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -19899,6 +19913,7 @@
 				CODE_SIGN_IDENTITY = "";
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = JVP5CFJTCN;
 				ENABLE_NS_ASSERTIONS = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -19942,6 +19957,7 @@
 				CODE_SIGN_ENTITLEMENTS = SignalShareExtension/SignalShareExtension.entitlements;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = JVP5CFJTCN;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -19991,6 +20007,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_ENTITLEMENTS = "SignalShareExtension/SignalShareExtension-AppStore.entitlements";
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = JVP5CFJTCN;
 				ENABLE_NS_ASSERTIONS = NO;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -20096,8 +20113,8 @@
 				);
 				OTHER_SWIFT_FLAGS = "-DTESTABLE_BUILD";
 				SDKROOT = iphoneos;
-				SIGNAL_BUNDLEID_PREFIX = org.whispersystems;
-				SIGNAL_MERCHANTID = org.signalfoundation;
+				SIGNAL_BUNDLEID_PREFIX = org.homesteadheritage;
+				SIGNAL_MERCHANTID = org.homesteadheritage;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -20136,6 +20153,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Signal/Signal.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JVP5CFJTCN;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_OPTIMIZATION_LEVEL = 3;
@@ -20154,6 +20172,7 @@
 				LLVM_LTO = NO;
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = org.homesteadheritage.signal;
 				PRODUCT_NAME = Signal;
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				SDKROOT = iphoneos;
@@ -20248,6 +20267,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_ENTITLEMENTS = SignalShareExtension/SignalShareExtension.entitlements;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = JVP5CFJTCN;
 				ENABLE_NS_ASSERTIONS = NO;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -20349,8 +20369,8 @@
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				OTHER_SWIFT_FLAGS = "-DTESTABLE_BUILD";
 				SDKROOT = iphoneos;
-				SIGNAL_BUNDLEID_PREFIX = org.whispersystems;
-				SIGNAL_MERCHANTID = org.signalfoundation;
+				SIGNAL_BUNDLEID_PREFIX = org.homesteadheritage;
+				SIGNAL_MERCHANTID = org.homesteadheritage;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -20389,6 +20409,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Signal/Signal.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JVP5CFJTCN;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -20407,6 +20428,7 @@
 				LLVM_LTO = NO;
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = org.homesteadheritage.signal;
 				PRODUCT_NAME = Signal;
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				SDKROOT = iphoneos;
@@ -20501,6 +20523,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_ENTITLEMENTS = SignalShareExtension/SignalShareExtension.entitlements;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = JVP5CFJTCN;
 				ENABLE_NS_ASSERTIONS = NO;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -20607,8 +20630,8 @@
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_SWIFT_FLAGS = "-DTESTABLE_BUILD -DUSE_DEBUG_UI";
 				SDKROOT = iphoneos;
-				SIGNAL_BUNDLEID_PREFIX = org.whispersystems;
-				SIGNAL_MERCHANTID = org.signalfoundation;
+				SIGNAL_BUNDLEID_PREFIX = org.homesteadheritage;
+				SIGNAL_MERCHANTID = org.homesteadheritage;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
 				SWIFT_UPCOMING_FEATURE_CONCISE_MAGIC_FILE = YES;
@@ -20705,8 +20728,8 @@
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				SDKROOT = iphoneos;
-				SIGNAL_BUNDLEID_PREFIX = org.whispersystems;
-				SIGNAL_MERCHANTID = org.signalfoundation;
+				SIGNAL_BUNDLEID_PREFIX = org.homesteadheritage;
+				SIGNAL_MERCHANTID = org.homesteadheritage;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -20748,6 +20771,7 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = JVP5CFJTCN;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -20765,6 +20789,7 @@
 				LLVM_LTO = NO;
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = org.homesteadheritage.signal;
 				PRODUCT_NAME = Signal;
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				SDKROOT = iphoneos;
@@ -20785,6 +20810,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "Signal/Signal-AppStore.entitlements";
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JVP5CFJTCN;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -20803,6 +20829,7 @@
 				LLVM_LTO = NO;
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = org.homesteadheritage.signal;
 				PRODUCT_NAME = Signal;
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				SDKROOT = iphoneos;
@@ -20941,6 +20968,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEFINES_MODULE = YES;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = JVP5CFJTCN;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -20982,6 +21010,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEFINES_MODULE = YES;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = JVP5CFJTCN;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -21023,6 +21052,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEFINES_MODULE = YES;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = JVP5CFJTCN;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -21064,6 +21094,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEFINES_MODULE = YES;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = JVP5CFJTCN;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -21110,6 +21141,8 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = JVP5CFJTCN;
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = JVP5CFJTCN;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -21163,6 +21196,8 @@
 				CODE_SIGN_IDENTITY = "";
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = JVP5CFJTCN;
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = JVP5CFJTCN;
 				ENABLE_NS_ASSERTIONS = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -21223,6 +21258,8 @@
 				CODE_SIGN_IDENTITY = "";
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = JVP5CFJTCN;
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = JVP5CFJTCN;
 				ENABLE_NS_ASSERTIONS = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -21283,6 +21320,8 @@
 				CODE_SIGN_IDENTITY = "";
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = JVP5CFJTCN;
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = JVP5CFJTCN;
 				ENABLE_NS_ASSERTIONS = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
