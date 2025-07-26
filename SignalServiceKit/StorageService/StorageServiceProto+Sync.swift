@@ -1180,7 +1180,7 @@ class StorageServiceAccountRecordUpdater: StorageServiceRecordUpdater {
     private let linkPreviewSettingStore: LinkPreviewSettingStore
     private let localUsernameManager: LocalUsernameManager
     private let paymentsHelper: PaymentsHelperSwift
-    private let phoneNumberDiscoverabilityManager: PhoneNumberDiscoverabilityManager
+
     private let pinnedThreadManager: PinnedThreadManager
     private let preferences: Preferences
     private let profileManager: OWSProfileManager
@@ -1204,7 +1204,7 @@ class StorageServiceAccountRecordUpdater: StorageServiceRecordUpdater {
         linkPreviewSettingStore: LinkPreviewSettingStore,
         localUsernameManager: LocalUsernameManager,
         paymentsHelper: PaymentsHelperSwift,
-        phoneNumberDiscoverabilityManager: PhoneNumberDiscoverabilityManager,
+
         pinnedThreadManager: PinnedThreadManager,
         preferences: Preferences,
         profileManager: OWSProfileManager,
@@ -1228,7 +1228,7 @@ class StorageServiceAccountRecordUpdater: StorageServiceRecordUpdater {
         self.linkPreviewSettingStore = linkPreviewSettingStore
         self.localUsernameManager = localUsernameManager
         self.paymentsHelper = paymentsHelper
-        self.phoneNumberDiscoverabilityManager = phoneNumberDiscoverabilityManager
+
         self.pinnedThreadManager = pinnedThreadManager
         self.preferences = preferences
         self.profileManager = profileManager
@@ -1321,9 +1321,8 @@ class StorageServiceAccountRecordUpdater: StorageServiceRecordUpdater {
         let phoneNumberSharingMode = udManager.phoneNumberSharingMode(tx: transaction)
         builder.setPhoneNumberSharingMode(phoneNumberSharingMode.asProtoMode)
 
-        builder.setNotDiscoverableByPhoneNumber(
-            tsAccountManager.phoneNumberDiscoverability(tx: transaction).orDefault.isNotDiscoverableByPhoneNumber
-        )
+        // Phone number discoverability was removed
+        builder.setNotDiscoverableByPhoneNumber(false)
 
         let pinnedConversationProtos = self.pinnedConversationProtos(transaction: transaction)
         builder.setPinnedConversations(pinnedConversationProtos)
@@ -1579,16 +1578,7 @@ class StorageServiceAccountRecordUpdater: StorageServiceRecordUpdater {
             }
         }
 
-        let localPhoneNumberDiscoverability = tsAccountManager.phoneNumberDiscoverability(tx: transaction)
-        if record.notDiscoverableByPhoneNumber != localPhoneNumberDiscoverability?.isNotDiscoverableByPhoneNumber {
-            phoneNumberDiscoverabilityManager.setPhoneNumberDiscoverability(
-                record.notDiscoverableByPhoneNumber ? .nobody : .everybody,
-                updateAccountAttributes: false,
-                updateStorageService: false,
-                authedAccount: authedAccount,
-                tx: transaction
-            )
-        }
+
 
         do {
             try self.processPinnedConversationsProto(record.pinnedConversations, transaction: transaction)

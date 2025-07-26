@@ -94,7 +94,7 @@ public struct AccountAttributes: Codable {
         twofaMode: TwoFactorAuthMode,
         registrationRecoveryPassword: String?,
         encryptedDeviceName: String?,
-        discoverableByPhoneNumber: PhoneNumberDiscoverability?,
+        discoverableByPhoneNumber: Bool?,
         hasSVRBackups: Bool
     ) {
         self.isManualMessageFetchEnabled = isManualMessageFetchEnabled
@@ -115,7 +115,7 @@ public struct AccountAttributes: Codable {
         }
         self.registrationRecoveryPassword = registrationRecoveryPassword
         self.encryptedDeviceName = encryptedDeviceName
-        self.discoverableByPhoneNumber = discoverableByPhoneNumber.orAccountAttributeDefault.isDiscoverable
+        self.discoverableByPhoneNumber = discoverableByPhoneNumber ?? true
         self.capabilities = Capabilities(hasSVRBackups: hasSVRBackups)
     }
 

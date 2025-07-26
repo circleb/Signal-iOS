@@ -327,11 +327,7 @@ public class AppSetup {
             tsAccountManager: tsAccountManager
         )
 
-        let phoneNumberDiscoverabilityManager = PhoneNumberDiscoverabilityManagerImpl(
-            accountAttributesUpdater: accountAttributesUpdater,
-            storageServiceManager: storageServiceManager,
-            tsAccountManager: tsAccountManager
-        )
+
 
         let svr = SecureValueRecovery2Impl(
             accountAttributesUpdater: accountAttributesUpdater,
@@ -1194,7 +1190,7 @@ public class AppSetup {
                 linkPreviewSettingStore: linkPreviewSettingStore,
                 localUsernameManager: localUsernameManager,
                 ows2FAManager: BackupArchive.Wrappers.OWS2FAManager(ows2FAManager),
-                phoneNumberDiscoverabilityManager: phoneNumberDiscoverabilityManager,
+
                 preferences: BackupArchive.Wrappers.Preferences(preferences: preferences),
                 profileManager: BackupArchive.Wrappers.ProfileManager(profileManager),
                 receiptManager: BackupArchive.Wrappers.ReceiptManager(receiptManager: receiptManager),
@@ -1508,7 +1504,7 @@ public class AppSetup {
             orphanedBackupAttachmentManager: orphanedBackupAttachmentManager,
             orphanedAttachmentCleaner: orphanedAttachmentCleaner,
             archivedPaymentStore: archivedPaymentStore,
-            phoneNumberDiscoverabilityManager: phoneNumberDiscoverabilityManager,
+
             phoneNumberVisibilityFetcher: phoneNumberVisibilityFetcher,
             pinnedThreadManager: pinnedThreadManager,
             pinnedThreadStore: pinnedThreadStore,
@@ -1893,22 +1889,6 @@ extension AppSetup.FinalContinuation {
     }
 
     private func setUpDefaultDiscoverability() {
-        let databaseStorage = sskEnvironment.databaseStorageRef
-        let phoneNumberDiscoverabilityManager = DependenciesBridge.shared.phoneNumberDiscoverabilityManager
-        let tsAccountManager = DependenciesBridge.shared.tsAccountManager
-
-        if databaseStorage.read(block: { tsAccountManager.phoneNumberDiscoverability(tx: $0) }) != nil {
-            return
-        }
-
-        databaseStorage.write { tx in
-            phoneNumberDiscoverabilityManager.setPhoneNumberDiscoverability(
-                PhoneNumberDiscoverabilityManager.Constants.discoverabilityDefault,
-                updateAccountAttributes: true,
-                updateStorageService: true,
-                authedAccount: .implicit(),
-                tx: tx
-            )
-        }
+        // Phone number discoverability was removed
     }
 }

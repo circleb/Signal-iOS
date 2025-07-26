@@ -126,19 +126,7 @@ public class MockTSAccountManager: TSAccountManager {
         setIsManualMessageFetchEnabledMock(isEnabled)
     }
 
-    // MARK: - Phone Number Discoverability
 
-    public var phoneNumberDiscoverabilityMock: () -> PhoneNumberDiscoverability? = { .everybody }
-
-    open func phoneNumberDiscoverability(tx: DBReadTransaction) -> PhoneNumberDiscoverability? {
-        return phoneNumberDiscoverabilityMock()
-    }
-
-    public var lastSetIsDiscoverableByPhoneNumberMock: () -> Date = { .distantPast }
-
-    open func lastSetIsDiscoverableByPhoneNumber(tx: DBReadTransaction) -> Date {
-        return lastSetIsDiscoverableByPhoneNumberMock()
-    }
 }
 
 #endif

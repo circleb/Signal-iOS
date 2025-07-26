@@ -24,7 +24,7 @@ public struct RegistrationCoordinatorDependencies {
     public let messagePipelineSupervisor: RegistrationCoordinatorImpl.Shims.MessagePipelineSupervisor
     public let messageProcessor: RegistrationCoordinatorImpl.Shims.MessageProcessor
     public let ows2FAManager: RegistrationCoordinatorImpl.Shims.OWS2FAManager
-    public let phoneNumberDiscoverabilityManager: PhoneNumberDiscoverabilityManager
+
     public let preKeyManager: RegistrationCoordinatorImpl.Shims.PreKeyManager
     public let profileManager: RegistrationCoordinatorImpl.Shims.ProfileManager
     public let pushRegistrationManager: RegistrationCoordinatorImpl.Shims.PushRegistrationManager
@@ -63,7 +63,7 @@ public struct RegistrationCoordinatorDependencies {
             messagePipelineSupervisor: RegistrationCoordinatorImpl.Wrappers.MessagePipelineSupervisor(SSKEnvironment.shared.messagePipelineSupervisorRef),
             messageProcessor: RegistrationCoordinatorImpl.Wrappers.MessageProcessor(SSKEnvironment.shared.messageProcessorRef),
             ows2FAManager: RegistrationCoordinatorImpl.Wrappers.OWS2FAManager(SSKEnvironment.shared.ows2FAManagerRef),
-            phoneNumberDiscoverabilityManager: DependenciesBridge.shared.phoneNumberDiscoverabilityManager,
+
             preKeyManager: RegistrationCoordinatorImpl.Wrappers.PreKeyManager(
                 DependenciesBridge.shared.preKeyManager
             ),

@@ -58,7 +58,6 @@ public struct RegistrationVerificationState: Equatable {
 // MARK: - RegistrationVerificationPresenter
 
 protocol RegistrationVerificationPresenter: AnyObject {
-    func returnToPhoneNumberEntry()
     func requestSMSCode()
     func requestVoiceCode()
     func submitVerificationCode(_ code: String)
@@ -550,7 +549,7 @@ class RegistrationVerificationViewController: OWSViewController {
     private func didTapWrongNumberButton() {
         Logger.info("")
 
-        presenter?.returnToPhoneNumberEntry()
+        presenter?.exitRegistration()
     }
 
     @objc
@@ -570,7 +569,7 @@ class RegistrationVerificationViewController: OWSViewController {
             mode: .sms,
             e164: state.e164.stringValue,
             didConfirm: { [weak self] in self?.presenter?.requestSMSCode() },
-            didRequestEdit: { [weak self] in self?.presenter?.returnToPhoneNumberEntry() }
+            didRequestEdit: { [weak self] in self?.presenter?.exitRegistration() }
         ))
     }
 
@@ -584,7 +583,7 @@ class RegistrationVerificationViewController: OWSViewController {
             mode: .voice,
             e164: state.e164.stringValue,
             didConfirm: { [weak self] in self?.presenter?.requestVoiceCode() },
-            didRequestEdit: { [weak self] in self?.presenter?.returnToPhoneNumberEntry() }
+            didRequestEdit: { [weak self] in self?.presenter?.exitRegistration() }
         ))
     }
 }

@@ -43,7 +43,7 @@
 			<string>$(SIGNAL_BUNDLEID_PREFIX).signal</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>sgnl</string>
+				<string>heritagesignal</string>
 			</array>
 		</dict>
 	</array>

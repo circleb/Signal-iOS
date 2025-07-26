@@ -382,7 +382,6 @@
 		34ACA7D62733159600E47AD4 /* ProvisioningTransferQRCodeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34ACA7BD2733159600E47AD4 /* ProvisioningTransferQRCodeViewController.swift */; };
 		34ACA7D72733159600E47AD4 /* ProvisioningTransferProgressViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34ACA7BE2733159600E47AD4 /* ProvisioningTransferProgressViewController.swift */; };
 		34ACA7DB2733159600E47AD4 /* ProvisioningSplashViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34ACA7C32733159600E47AD4 /* ProvisioningSplashViewController.swift */; };
-		34ACA7F62733183000E47AD4 /* RegistrationValues.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34ACA7F42733183000E47AD4 /* RegistrationValues.swift */; };
 		34ACA7F72733183000E47AD4 /* CountryCodeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34ACA7F52733183000E47AD4 /* CountryCodeViewController.swift */; };
 		34B14D8D24F02A9600CC3A9A /* GroupLinkViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34B14D8C24F02A9500CC3A9A /* GroupLinkViewController.swift */; };
 		34B14D8F24F41C4300CC3A9A /* GroupLinkQRCodeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34B14D8E24F41C4200CC3A9A /* GroupLinkQRCodeViewController.swift */; };
@@ -511,8 +510,6 @@
 		4C3EF802210918740007EBF7 /* SSKProtoEnvelopeTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C3EF801210918740007EBF7 /* SSKProtoEnvelopeTest.swift */; };
 		4C46361122EB98EC00185951 /* CameraFirstCaptureSendFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C46361022EB98EC00185951 /* CameraFirstCaptureSendFlow.swift */; };
 		4C4AE6A1224AF35700D4AF6F /* SendMediaNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C4AE69F224AF21900D4AF6F /* SendMediaNavigationController.swift */; };
-		4C5250D221E7BD7D00CE3D95 /* PhoneNumberValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C5250D121E7BD7D00CE3D95 /* PhoneNumberValidator.swift */; };
-		4C5250D421E7C51900CE3D95 /* PhoneNumberValidatorTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C5250D321E7C51900CE3D95 /* PhoneNumberValidatorTest.swift */; };
 		4C6E6C6924241C00009DE948 /* ConversationViewControllerTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C6E6C6824241C00009DE948 /* ConversationViewControllerTest.swift */; };
 		4C751BE523FA0284002A8AF1 /* ContactSupportActionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C751BE423FA0284002A8AF1 /* ContactSupportActionSheet.swift */; };
 		4C83AC4223C55D9C00D4F2E6 /* SignalBaseTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C83AC4123C55D9C00D4F2E6 /* SignalBaseTest.swift */; };
@@ -885,10 +882,9 @@
 		6645F30C29BFA28A00B58EBD /* AccountAttributesGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6645F30B29BFA28A00B58EBD /* AccountAttributesGenerator.swift */; };
 		6646572C2AC347B70099DE1C /* AccountAttributesUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6646572B2AC347B70099DE1C /* AccountAttributesUpdater.swift */; };
 		6646572E2AC349C80099DE1C /* AccountAttributesUpdaterImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6646572D2AC349C80099DE1C /* AccountAttributesUpdaterImpl.swift */; };
-		664657312AC36A130099DE1C /* PhoneNumberDiscoverabilityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 664657302AC36A130099DE1C /* PhoneNumberDiscoverabilityManager.swift */; };
-		664657332AC36A510099DE1C /* PhoneNumberDiscoverabilityManagerImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 664657322AC36A510099DE1C /* PhoneNumberDiscoverabilityManagerImpl.swift */; };
+
 		664657352AC370670099DE1C /* MockAccountAttributesUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 664657342AC370670099DE1C /* MockAccountAttributesUpdater.swift */; };
-		664657372AC371B90099DE1C /* MockPhoneNumberDiscoverabilityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 664657362AC371B90099DE1C /* MockPhoneNumberDiscoverabilityManager.swift */; };
+
 		6646573B2AC388C70099DE1C /* RegistrationStateChangeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6646573A2AC388C70099DE1C /* RegistrationStateChangeManager.swift */; };
 		6646573D2AC3894D0099DE1C /* RegistrationStateChangeManagerImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6646573C2AC3894D0099DE1C /* RegistrationStateChangeManagerImpl.swift */; };
 		6646573F2AC3B9190099DE1C /* MockRegistrationStateChangeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6646573E2AC3B9190099DE1C /* MockRegistrationStateChangeManager.swift */; };
@@ -1093,9 +1089,6 @@
 		66A93A8029940A8200FA0291 /* RegistrationCoordinatorImpl+Service.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66A93A7F29940A8200FA0291 /* RegistrationCoordinatorImpl+Service.swift */; };
 		66AA0BA42A819FFA00F7DC80 /* ProvisioningBaseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66AA0BA32A819FFA00F7DC80 /* ProvisioningBaseViewController.swift */; };
 		66AAC2C429CB6F1100566AD6 /* RegistrationChangeNumberSplashViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66AAC2C329CB6F1100566AD6 /* RegistrationChangeNumberSplashViewController.swift */; };
-		66AAC2C629CB942F00566AD6 /* RegistrationChangePhoneNumberViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66AAC2C529CB942F00566AD6 /* RegistrationChangePhoneNumberViewController.swift */; };
-		66AAC2C829CB9ED900566AD6 /* RegistrationChangePhoneNumberConfirmationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66AAC2C729CB9ED900566AD6 /* RegistrationChangePhoneNumberConfirmationViewController.swift */; };
-		66AAC2CA29CBC07300566AD6 /* RegistrationPhoneNumberViewState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66AAC2C929CBC07300566AD6 /* RegistrationPhoneNumberViewState.swift */; };
 		66AE5779298440A100E40CFA /* ViewControllerContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6698FC13297F38BB004EFC30 /* ViewControllerContext.swift */; };
 		66AE8A872C169A900044D388 /* MediaGalleryAttachmentFinderTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66AE8A852C169A830044D388 /* MediaGalleryAttachmentFinderTest.swift */; };
 		66AEC77E2DD47FE40097AAA2 /* BackupArchive+AccountDataContexts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66AEC77D2DD47FD80097AAA2 /* BackupArchive+AccountDataContexts.swift */; };
@@ -1748,7 +1741,6 @@
 		C16B8B752B8940D40030BA24 /* OWSOutgoingSentMessageTranscript.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16B8B742B8940D40030BA24 /* OWSOutgoingSentMessageTranscript.swift */; };
 		C17310A72BD9D45400B7A151 /* BackupServiceAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17310A62BD9D45400B7A151 /* BackupServiceAuth.swift */; };
 		C17345BB2A5E000300C6426D /* PreKeyTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17345BA2A5E000300C6426D /* PreKeyTarget.swift */; };
-		C176B48A299DA25500B1900D /* PhoneNumberPrivacySettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C176B489299DA25500B1900D /* PhoneNumberPrivacySettingsViewController.swift */; };
 		C179B01E29ED94FA00275AD1 /* EditRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = C179B01D29ED94FA00275AD1 /* EditRecord.swift */; };
 		C17A54962D7B3D9E00E1D267 /* DeviceProvisioningURLTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = F93999EB28C80A6C00E34899 /* DeviceProvisioningURLTest.swift */; };
 		C17A54972D7B3DA700E1D267 /* ProvisionManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F94261C8289B1B5300460798 /* ProvisionManagerTests.swift */; };
@@ -3089,7 +3081,6 @@
 		F5C80FA22BE3F29F0028F76D /* RTCIceServerFetcherTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5C80FA12BE3F29F0028F76D /* RTCIceServerFetcherTest.swift */; };
 		F900F2DD27F25AB400431E09 /* DonationReceiptViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F900F2DC27F25AB300431E09 /* DonationReceiptViewController.swift */; };
 		F903C29B28EC7AE60035B42B /* RegistrationIdGeneratorTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = F903C29A28EC7AE60035B42B /* RegistrationIdGeneratorTest.swift */; };
-		F905DFEB29A534F200BAD034 /* RegistrationPhoneNumberDiscoverabilityViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F905DFEA29A534F200BAD034 /* RegistrationPhoneNumberDiscoverabilityViewController.swift */; };
 		F9066F0727ECE41B008C9530 /* DonationReceiptsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9066F0627ECE41B008C9530 /* DonationReceiptsViewController.swift */; };
 		F908179628EF107800D31AD5 /* GRDBDatabaseStorageAdapterTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = F908179528EF107800D31AD5 /* GRDBDatabaseStorageAdapterTest.swift */; };
 		F908AA7D28CE629700472E68 /* test-apng.png in Resources */ = {isa = PBXBuildFile; fileRef = F908AA7C28CE629700472E68 /* test-apng.png */; };
@@ -3104,7 +3095,6 @@
 		F915A77029CB6D4C00EB6F68 /* ShareActivityUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = F915A76F29CB6D4C00EB6F68 /* ShareActivityUtil.swift */; };
 		F915A77229CB6F6F00EB6F68 /* AccountDataReportTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = F915A77129CB6F6F00EB6F68 /* AccountDataReportTest.swift */; };
 		F9189AC02947D9F300CD8EF6 /* DonationViewsUtil+LocalizedStripeError.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9189ABF2947D9F300CD8EF6 /* DonationViewsUtil+LocalizedStripeError.swift */; };
-		F9198485299AA7FC007FD5E4 /* RegistrationPhoneNumberInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9198484299AA7FC007FD5E4 /* RegistrationPhoneNumberInputView.swift */; };
 		F92074762888648A00B7F087 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F92074752888648A00B7F087 /* AppDelegate.swift */; };
 		F924A68228F8706200E368C8 /* DonationReadMoreSheetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F924A68128F8706200E368C8 /* DonationReadMoreSheetViewController.swift */; };
 		F925A3AB29493D0D009024D0 /* DisappearingMessagesFinder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F925A3AA29493D0C009024D0 /* DisappearingMessagesFinder.swift */; };
@@ -3198,7 +3188,7 @@
 		F95427E6286E042200314EDA /* BadgeGiftingThanksSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F95427E5286E042200314EDA /* BadgeGiftingThanksSheet.swift */; };
 		F959E0C729EF2ECD00A396CF /* OWSDisappearingMessagesJob.swift in Sources */ = {isa = PBXBuildFile; fileRef = F959E0C629EF2ECD00A396CF /* OWSDisappearingMessagesJob.swift */; };
 		F95A64F3299589CA007FDBDF /* RegistrationNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F95A64F2299589CA007FDBDF /* RegistrationNavigationController.swift */; };
-		F95A64F529959065007FDBDF /* RegistrationPhoneNumberViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F95A64F429959065007FDBDF /* RegistrationPhoneNumberViewController.swift */; };
+		
 		F95D71A3299305C400ED3102 /* RegistrationViewUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = F95D71A2299305C400ED3102 /* RegistrationViewUtil.swift */; };
 		F9613CDC2981F11400894B55 /* SqliteUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9613CDB2981F11400894B55 /* SqliteUtil.swift */; };
 		F9613CDE2981F15700894B55 /* SqliteUtilTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9613CDD2981F15700894B55 /* SqliteUtilTest.swift */; };
@@ -4258,7 +4248,6 @@
 		34ACA7BD2733159600E47AD4 /* ProvisioningTransferQRCodeViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProvisioningTransferQRCodeViewController.swift; sourceTree = "<group>"; };
 		34ACA7BE2733159600E47AD4 /* ProvisioningTransferProgressViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProvisioningTransferProgressViewController.swift; sourceTree = "<group>"; };
 		34ACA7C32733159600E47AD4 /* ProvisioningSplashViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProvisioningSplashViewController.swift; sourceTree = "<group>"; };
-		34ACA7F42733183000E47AD4 /* RegistrationValues.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RegistrationValues.swift; sourceTree = "<group>"; };
 		34ACA7F52733183000E47AD4 /* CountryCodeViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CountryCodeViewController.swift; sourceTree = "<group>"; };
 		34B0796E1FD07B1E00E248C2 /* SignalShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SignalShareExtension.entitlements; sourceTree = "<group>"; };
 		34B14D8C24F02A9500CC3A9A /* GroupLinkViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupLinkViewController.swift; sourceTree = "<group>"; };
@@ -4423,8 +4412,6 @@
 		4C3EF801210918740007EBF7 /* SSKProtoEnvelopeTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSKProtoEnvelopeTest.swift; sourceTree = "<group>"; };
 		4C46361022EB98EC00185951 /* CameraFirstCaptureSendFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraFirstCaptureSendFlow.swift; sourceTree = "<group>"; };
 		4C4AE69F224AF21900D4AF6F /* SendMediaNavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendMediaNavigationController.swift; sourceTree = "<group>"; };
-		4C5250D121E7BD7D00CE3D95 /* PhoneNumberValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberValidator.swift; sourceTree = "<group>"; };
-		4C5250D321E7C51900CE3D95 /* PhoneNumberValidatorTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberValidatorTest.swift; sourceTree = "<group>"; };
 		4C63CBFF210A620B003AE45C /* SignalTSan.supp */ = {isa = PBXFileReference; lastKnownFileType = text; path = SignalTSan.supp; sourceTree = "<group>"; };
 		4C6E446822AEDDEE007982E6 /* NewAccountDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewAccountDiscovery.swift; sourceTree = "<group>"; };
 		4C6E6C6824241C00009DE948 /* ConversationViewControllerTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationViewControllerTest.swift; sourceTree = "<group>"; };
@@ -4839,10 +4826,9 @@
 		6645F30B29BFA28A00B58EBD /* AccountAttributesGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountAttributesGenerator.swift; sourceTree = "<group>"; };
 		6646572B2AC347B70099DE1C /* AccountAttributesUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountAttributesUpdater.swift; sourceTree = "<group>"; };
 		6646572D2AC349C80099DE1C /* AccountAttributesUpdaterImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountAttributesUpdaterImpl.swift; sourceTree = "<group>"; };
-		664657302AC36A130099DE1C /* PhoneNumberDiscoverabilityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberDiscoverabilityManager.swift; sourceTree = "<group>"; };
-		664657322AC36A510099DE1C /* PhoneNumberDiscoverabilityManagerImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberDiscoverabilityManagerImpl.swift; sourceTree = "<group>"; };
+
 		664657342AC370670099DE1C /* MockAccountAttributesUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockAccountAttributesUpdater.swift; sourceTree = "<group>"; };
-		664657362AC371B90099DE1C /* MockPhoneNumberDiscoverabilityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockPhoneNumberDiscoverabilityManager.swift; sourceTree = "<group>"; };
+
 		6646573A2AC388C70099DE1C /* RegistrationStateChangeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationStateChangeManager.swift; sourceTree = "<group>"; };
 		6646573C2AC3894D0099DE1C /* RegistrationStateChangeManagerImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationStateChangeManagerImpl.swift; sourceTree = "<group>"; };
 		6646573E2AC3B9190099DE1C /* MockRegistrationStateChangeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockRegistrationStateChangeManager.swift; sourceTree = "<group>"; };
@@ -5051,9 +5037,6 @@
 		66A93A7F29940A8200FA0291 /* RegistrationCoordinatorImpl+Service.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RegistrationCoordinatorImpl+Service.swift"; sourceTree = "<group>"; };
 		66AA0BA32A819FFA00F7DC80 /* ProvisioningBaseViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvisioningBaseViewController.swift; sourceTree = "<group>"; };
 		66AAC2C329CB6F1100566AD6 /* RegistrationChangeNumberSplashViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationChangeNumberSplashViewController.swift; sourceTree = "<group>"; };
-		66AAC2C529CB942F00566AD6 /* RegistrationChangePhoneNumberViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationChangePhoneNumberViewController.swift; sourceTree = "<group>"; };
-		66AAC2C729CB9ED900566AD6 /* RegistrationChangePhoneNumberConfirmationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationChangePhoneNumberConfirmationViewController.swift; sourceTree = "<group>"; };
-		66AAC2C929CBC07300566AD6 /* RegistrationPhoneNumberViewState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationPhoneNumberViewState.swift; sourceTree = "<group>"; };
 		66AE8A852C169A830044D388 /* MediaGalleryAttachmentFinderTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGalleryAttachmentFinderTest.swift; sourceTree = "<group>"; };
 		66AEC77D2DD47FD80097AAA2 /* BackupArchive+AccountDataContexts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BackupArchive+AccountDataContexts.swift"; sourceTree = "<group>"; };
 		66AEFCA32A5CAED9004B4D6C /* SpoilerableLabelAnimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpoilerableLabelAnimator.swift; sourceTree = "<group>"; };
@@ -5705,7 +5688,6 @@
 		C16B8B742B8940D40030BA24 /* OWSOutgoingSentMessageTranscript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OWSOutgoingSentMessageTranscript.swift; sourceTree = "<group>"; };
 		C17310A62BD9D45400B7A151 /* BackupServiceAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupServiceAuth.swift; sourceTree = "<group>"; };
 		C17345BA2A5E000300C6426D /* PreKeyTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreKeyTarget.swift; sourceTree = "<group>"; };
-		C176B489299DA25500B1900D /* PhoneNumberPrivacySettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberPrivacySettingsViewController.swift; sourceTree = "<group>"; };
 		C179B01D29ED94FA00275AD1 /* EditRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditRecord.swift; sourceTree = "<group>"; };
 		C17B31542D710DBD0060664D /* ProvisioningManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvisioningManager.swift; sourceTree = "<group>"; };
 		C17B31582D710DD80060664D /* ProvisioningManager+Shims.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProvisioningManager+Shims.swift"; sourceTree = "<group>"; };
@@ -7073,7 +7055,6 @@
 		F5C80FA12BE3F29F0028F76D /* RTCIceServerFetcherTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTCIceServerFetcherTest.swift; sourceTree = "<group>"; };
 		F900F2DC27F25AB300431E09 /* DonationReceiptViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DonationReceiptViewController.swift; sourceTree = "<group>"; };
 		F903C29A28EC7AE60035B42B /* RegistrationIdGeneratorTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationIdGeneratorTest.swift; sourceTree = "<group>"; };
-		F905DFEA29A534F200BAD034 /* RegistrationPhoneNumberDiscoverabilityViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationPhoneNumberDiscoverabilityViewController.swift; sourceTree = "<group>"; };
 		F9066F0627ECE41B008C9530 /* DonationReceiptsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DonationReceiptsViewController.swift; sourceTree = "<group>"; };
 		F908179528EF107800D31AD5 /* GRDBDatabaseStorageAdapterTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GRDBDatabaseStorageAdapterTest.swift; sourceTree = "<group>"; };
 		F908AA7728CB894400472E68 /* PngChunkerTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PngChunkerTest.swift; sourceTree = "<group>"; };
@@ -7089,7 +7070,6 @@
 		F915A77129CB6F6F00EB6F68 /* AccountDataReportTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountDataReportTest.swift; sourceTree = "<group>"; };
 		F9189ABD2947D7C300CD8EF6 /* Stripe+StripeError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Stripe+StripeError.swift"; sourceTree = "<group>"; };
 		F9189ABF2947D9F300CD8EF6 /* DonationViewsUtil+LocalizedStripeError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DonationViewsUtil+LocalizedStripeError.swift"; sourceTree = "<group>"; };
-		F9198484299AA7FC007FD5E4 /* RegistrationPhoneNumberInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationPhoneNumberInputView.swift; sourceTree = "<group>"; };
 		F92074752888648A00B7F087 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		F924A68128F8706200E368C8 /* DonationReadMoreSheetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DonationReadMoreSheetViewController.swift; sourceTree = "<group>"; };
 		F925A3AA29493D0C009024D0 /* DisappearingMessagesFinder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DisappearingMessagesFinder.swift; sourceTree = "<group>"; };
@@ -7186,7 +7166,7 @@
 		F95427E5286E042200314EDA /* BadgeGiftingThanksSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgeGiftingThanksSheet.swift; sourceTree = "<group>"; };
 		F959E0C629EF2ECD00A396CF /* OWSDisappearingMessagesJob.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OWSDisappearingMessagesJob.swift; sourceTree = "<group>"; };
 		F95A64F2299589CA007FDBDF /* RegistrationNavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationNavigationController.swift; sourceTree = "<group>"; };
-		F95A64F429959065007FDBDF /* RegistrationPhoneNumberViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationPhoneNumberViewController.swift; sourceTree = "<group>"; };
+
 		F95D71A2299305C400ED3102 /* RegistrationViewUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationViewUtil.swift; sourceTree = "<group>"; };
 		F9613CDB2981F11400894B55 /* SqliteUtil.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SqliteUtil.swift; sourceTree = "<group>"; };
 		F9613CDD2981F15700894B55 /* SqliteUtilTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SqliteUtilTest.swift; sourceTree = "<group>"; };
@@ -8817,7 +8797,7 @@
 		458E38381D6699110094BD24 /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				4C5250D321E7C51900CE3D95 /* PhoneNumberValidatorTest.swift */,
+				
 			);
 			name = Models;
 			sourceTree = "<group>";
@@ -9296,7 +9276,7 @@
 			isa = PBXGroup;
 			children = (
 				66B35EA1299F077F00130204 /* UserInterface */,
-				4C5250D121E7BD7D00CE3D95 /* PhoneNumberValidator.swift */,
+				
 				6600F39529919ECC00B1EDB7 /* RegistrationCoodinatorShims.swift */,
 				66E3C8F52994634E00BB38ED /* RegistrationCoordinator.swift */,
 				C154CB932E0C6607009F878C /* RegistrationCoordinatorBackupErrorPresenter.swift */,
@@ -9510,16 +9490,7 @@
 			path = AccountAttributes;
 			sourceTree = "<group>";
 		};
-		6646572F2AC369EB0099DE1C /* PhoneNumberDiscoverabilityManager */ = {
-			isa = PBXGroup;
-			children = (
-				664657362AC371B90099DE1C /* MockPhoneNumberDiscoverabilityManager.swift */,
-				664657302AC36A130099DE1C /* PhoneNumberDiscoverabilityManager.swift */,
-				664657322AC36A510099DE1C /* PhoneNumberDiscoverabilityManagerImpl.swift */,
-			);
-			path = PhoneNumberDiscoverabilityManager;
-			sourceTree = "<group>";
-		};
+		
 		664657392AC388900099DE1C /* RegistrationStateChangeManager */ = {
 			isa = PBXGroup;
 			children = (
@@ -10001,8 +9972,8 @@
 			children = (
 				F9480120299E89F8005442BE /* RegistrationCaptchaViewController.swift */,
 				66AAC2C329CB6F1100566AD6 /* RegistrationChangeNumberSplashViewController.swift */,
-				66AAC2C729CB9ED900566AD6 /* RegistrationChangePhoneNumberConfirmationViewController.swift */,
-				66AAC2C529CB942F00566AD6 /* RegistrationChangePhoneNumberViewController.swift */,
+				
+				
 				C15C31142D9B3F7F0071E54C /* RegistrationChoiceButton.swift */,
 				C1F09BA02BB32E5900F9E7F5 /* RegistrationChooseRestoreMethodViewController.swift */,
 				6659CCB029CD4650000C24C0 /* RegistrationConfirmModeSwitchViewController.swift */,
@@ -10010,10 +9981,10 @@
 				F92E4C73299E9A0100C6E6C7 /* RegistrationLoadingViewController.swift */,
 				F95A64F2299589CA007FDBDF /* RegistrationNavigationController.swift */,
 				F9D5C39E2993F9FF004891FC /* RegistrationPermissionsView.swift */,
-				F905DFEA29A534F200BAD034 /* RegistrationPhoneNumberDiscoverabilityViewController.swift */,
-				F9198484299AA7FC007FD5E4 /* RegistrationPhoneNumberInputView.swift */,
-				F95A64F429959065007FDBDF /* RegistrationPhoneNumberViewController.swift */,
-				66AAC2C929CBC07300566AD6 /* RegistrationPhoneNumberViewState.swift */,
+				
+				
+
+				
 				F9D47A4729D1D5DB00E6E080 /* RegistrationPinAttemptsExhaustedAndMustCreateNewPinViewController.swift */,
 				F9E3006029A02D8800DCA219 /* RegistrationPinViewController.swift */,
 				F9EECB00299EC9D8005FDD52 /* RegistrationProfileViewController.swift */,
@@ -10762,7 +10733,7 @@
 				887B381225F0681400685845 /* AdvancedPrivacySettingsViewController.swift */,
 				76847C952A1346A8008E2EAB /* BlockListViewController.swift */,
 				5011D1CA293FC7E000064098 /* DomainFrontingCountryViewController.swift */,
-				C176B489299DA25500B1900D /* PhoneNumberPrivacySettingsViewController.swift */,
+				
 				887B381025F05F3100685845 /* PrivacySettingsViewController.swift */,
 				88DF81A228E15D1600F8BA80 /* ProxySettingsViewController.swift */,
 			);
@@ -10919,7 +10890,7 @@
 				8835DDFC230CEE8900DC6B66 /* RecipientPickerDelegate.swift */,
 				F9B652BB28D514E6006914CA /* RecipientPickerViewController.swift */,
 				509913BD2913274100F34F8E /* RecipientPickerViewControllerTest.swift */,
-				34ACA7F42733183000E47AD4 /* RegistrationValues.swift */,
+				
 				34A955A7271B510500B05242 /* ThreadViewModel.swift */,
 				50086B9D29DF606E00F9C072 /* TSGroupThread+ViewModel.swift */,
 			);
@@ -13998,7 +13969,7 @@
 		F9C5C9BA289453B100548EEE /* Account */ = {
 			isa = PBXGroup;
 			children = (
-				6646572F2AC369EB0099DE1C /* PhoneNumberDiscoverabilityManager */,
+
 				6659A0242A7C112700066AB7 /* PreKeys */,
 				661170BF2ABA458800A1B16D /* TSAccountManager */,
 				D9F399AC2A95798A001599EC /* IdentityKeyChecker.swift */,
@@ -16620,7 +16591,7 @@
 				506A92512900888900A2EFC2 /* RecipientPickerContainerViewController.swift in Sources */,
 				88B986F528807D6F00F8C74D /* RecipientPickerDelegate.swift in Sources */,
 				F9B652BC28D514E6006914CA /* RecipientPickerViewController.swift in Sources */,
-				34ACA7F62733183000E47AD4 /* RegistrationValues.swift in Sources */,
+				
 				88B986FA28807EEA00F8C74D /* ReminderView.swift in Sources */,
 				3402AA86271D9E180084CBAE /* ResizingScrollView.swift in Sources */,
 				7628DDBF2807505D009AA53D /* RotationControl.swift in Sources */,
@@ -17292,8 +17263,8 @@
 				34FB6A5325D2D10400E599B1 /* PaymentsViewUtils.swift in Sources */,
 				D96BE42E292EF04200E4FE1A /* PaypalButton.swift in Sources */,
 				667AF9DE2B4C5824008AEE5D /* PersistableGroupUpdateItem+CVComponentSystemMessageAction.swift in Sources */,
-				C176B48A299DA25500B1900D /* PhoneNumberPrivacySettingsViewController.swift in Sources */,
-				4C5250D221E7BD7D00CE3D95 /* PhoneNumberValidator.swift in Sources */,
+				
+				
 				E44AD4E624E98F440035D7B8 /* PhotoCaptureDismiss.swift in Sources */,
 				4CA485BB2232339F004B9E7D /* PhotoCaptureViewController.swift in Sources */,
 				4C1885D2218F8E1C00B67051 /* PhotoGridViewCell.swift in Sources */,
@@ -17341,8 +17312,8 @@
 				8809CE8A22F93C2200D38867 /* RecentPhotoCollectionView.swift in Sources */,
 				F9480121299E89F8005442BE /* RegistrationCaptchaViewController.swift in Sources */,
 				66AAC2C429CB6F1100566AD6 /* RegistrationChangeNumberSplashViewController.swift in Sources */,
-				66AAC2C829CB9ED900566AD6 /* RegistrationChangePhoneNumberConfirmationViewController.swift in Sources */,
-				66AAC2C629CB942F00566AD6 /* RegistrationChangePhoneNumberViewController.swift in Sources */,
+				
+				
 				C15C31152D9B3F7F0071E54C /* RegistrationChoiceButton.swift in Sources */,
 				C1F09BA12BB32E5900F9E7F5 /* RegistrationChooseRestoreMethodViewController.swift in Sources */,
 				6659CCB129CD4650000C24C0 /* RegistrationConfirmModeSwitchViewController.swift in Sources */,
@@ -17358,10 +17329,10 @@
 				66533E3A29B9502100E8D928 /* RegistrationMode.swift in Sources */,
 				F95A64F3299589CA007FDBDF /* RegistrationNavigationController.swift in Sources */,
 				F9D5C39F2993F9FF004891FC /* RegistrationPermissionsView.swift in Sources */,
-				F905DFEB29A534F200BAD034 /* RegistrationPhoneNumberDiscoverabilityViewController.swift in Sources */,
-				F9198485299AA7FC007FD5E4 /* RegistrationPhoneNumberInputView.swift in Sources */,
-				F95A64F529959065007FDBDF /* RegistrationPhoneNumberViewController.swift in Sources */,
-				66AAC2CA29CBC07300566AD6 /* RegistrationPhoneNumberViewState.swift in Sources */,
+				
+				
+
+				
 				F9D47A4829D1D5DB00E6E080 /* RegistrationPinAttemptsExhaustedAndMustCreateNewPinViewController.swift in Sources */,
 				F9E3006129A02D8800DCA219 /* RegistrationPinViewController.swift in Sources */,
 				F9EECB01299EC9D8005FDD52 /* RegistrationProfileViewController.swift in Sources */,
@@ -17552,7 +17523,7 @@
 				3471211025ED5F910037CD1F /* PaymentsReconciliationTest.swift in Sources */,
 				346EFC3225FD051400F493C7 /* PaymentsTest.swift in Sources */,
 				50791B1D2D037A9800D747F8 /* PhoneNumberCountryTest.swift in Sources */,
-				4C5250D421E7C51900CE3D95 /* PhoneNumberValidatorTest.swift in Sources */,
+				
 				66CDB7602AFC45CF009A36EC /* ProvisioningCoordinator+Mocks.swift in Sources */,
 				66CDB75D2AFC42FC009A36EC /* ProvisioningCoordinatorTest.swift in Sources */,
 				C17A54972D7B3DA700E1D267 /* ProvisionManagerTests.swift in Sources */,
@@ -18133,7 +18104,7 @@
 				D990CAC92B4CCB97000A99A2 /* MockLocalUsernameManager.swift in Sources */,
 				B9327B3E2BBCC2EB00CCDBBA /* MockNicknameManager.swift in Sources */,
 				D91AC93C2B62F7C200814975 /* MockOutgoingCallEventSyncMessageManager.swift in Sources */,
-				664657372AC371B90099DE1C /* MockPhoneNumberDiscoverabilityManager.swift in Sources */,
+
 				6694BF6C2B3656D500B18764 /* MockPinnedThreadManager.swift in Sources */,
 				6659A0282A7C11ED00066AB7 /* MockPreKeyManager.swift in Sources */,
 				6646573F2AC3B9190099DE1C /* MockRegistrationStateChangeManager.swift in Sources */,
@@ -18346,8 +18317,7 @@
 				F9C5CD56289453B300548EEE /* PendingViewedReceiptRecord.swift in Sources */,
 				726E0F0C2C626978000BC973 /* PhoneNumber.swift in Sources */,
 				5033D46329D64ADF007FEADA /* PhoneNumberChangedMessageInserter.swift in Sources */,
-				664657312AC36A130099DE1C /* PhoneNumberDiscoverabilityManager.swift in Sources */,
-				664657332AC36A510099DE1C /* PhoneNumberDiscoverabilityManagerImpl.swift in Sources */,
+
 				F9CAC7832919B35E00EEC1DE /* PhoneNumberRegions.swift in Sources */,
 				F9C5CCD6289453B300548EEE /* PhoneNumberUtil.swift in Sources */,
 				50C98A412B69D9340065BD2E /* PhoneNumberVisibilityFetcher.swift in Sources */,

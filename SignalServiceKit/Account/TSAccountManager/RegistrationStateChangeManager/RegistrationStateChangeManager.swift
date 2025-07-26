@@ -99,7 +99,7 @@ public protocol RegistrationStateChangeManager {
     func resetForReregistration(
         localPhoneNumber: E164,
         localAci: Aci,
-        discoverability: PhoneNumberDiscoverability?,
+        discoverability: Bool?,
         wasPrimaryDevice: Bool,
         tx: DBWriteTransaction
     )

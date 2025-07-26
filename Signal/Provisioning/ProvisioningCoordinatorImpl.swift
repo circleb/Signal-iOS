@@ -733,8 +733,6 @@ class ProvisioningCoordinatorImpl: ProvisioningCoordinator {
 
         let encryptedDeviceName = encryptedDeviceNameRaw.base64EncodedString()
 
-        let phoneNumberDiscoverability = tsAccountManager.phoneNumberDiscoverability(tx: tx)
-
         let hasSVRBackups = svr.hasBackedUpMasterKey(transaction: tx)
 
         return AccountAttributes(
@@ -746,7 +744,7 @@ class ProvisioningCoordinatorImpl: ProvisioningCoordinator {
             twofaMode: twoFaMode,
             registrationRecoveryPassword: registrationRecoveryPassword,
             encryptedDeviceName: encryptedDeviceName,
-            discoverableByPhoneNumber: phoneNumberDiscoverability,
+            discoverableByPhoneNumber: nil,
             hasSVRBackups: hasSVRBackups
         )
     }

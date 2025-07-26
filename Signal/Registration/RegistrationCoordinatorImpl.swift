@@ -124,89 +124,11 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
             }
     }
 
-    public func submitProspectiveChangeNumberE164(_ e164: E164) -> Guarantee<RegistrationStep> {
-        Logger.info("")
-        self.inMemoryState.changeNumberProspectiveE164 = e164
-        return nextStep()
-    }
 
-    public func submitE164(_ e164: E164) -> Guarantee<RegistrationStep> {
-        Logger.info("")
 
-        var e164 = e164
-        switch mode {
-        case .reRegistering(let reregState):
-            if e164 != reregState.e164 {
-                Logger.debug("Tried to submit a changed e164 during rereg; ignoring and submitting the fixed e164 instead.")
-                e164 = reregState.e164
-            }
-        case .registering, .changingNumber:
-            break
-        }
 
-        let pathway = getPathway()
-        db.write { tx in
-            updatePersistedState(tx) {
-                $0.e164 = e164
-            }
-            switch pathway {
-            case .session(let session):
-                guard session.e164 == e164 else {
-                    resetSession(tx)
-                    return
-                }
-                if
-                    let sessionState = self.persistedState.sessionState,
-                    sessionState.sessionId == session.id
-                {
-                    switch sessionState.initialCodeRequestState {
-                    case
-                            .smsTransportFailed,
-                            .transientProviderFailure,
-                            .permanentProviderFailure,
-                            .failedToRequest,
-                            .exhaustedCodeAttempts:
-                        // Reset state so we try again.
-                        self.updatePersistedSessionState(session: session, tx) {
-                            $0.initialCodeRequestState = .neverRequested
-                        }
-                    case .requested, .neverRequested:
-                        break
-                    }
-                }
-            case
-                    .opening,
-                    .quickRestore,
-                    .manualRestore,
-                    .svrAuthCredential,
-                    .svrAuthCredentialCandidates,
-                    .registrationRecoveryPassword,
-                    .profileSetup:
-                break
-            }
-        }
-        inMemoryState.hasEnteredE164 = true
 
-        return nextStep()
-    }
 
-    public func requestChangeE164() -> Guarantee<RegistrationStep> {
-        Logger.info("")
-        db.write { tx in
-            updatePersistedState(tx) {
-                $0.e164 = nil
-            }
-            // Reset the session; it is e164 dependent.
-            resetSession(tx)
-            // Reload auth credential candidates; we might not have
-            // had a credential for the old e164 but might have one for
-            // the new e164!
-            loadSVRAuthCredentialCandidates(tx)
-        }
-        inMemoryState.hasEnteredE164 = false
-        inMemoryState.changeNumberProspectiveE164 = nil
-        return nextStep()
-    }
 
     public func requestSMSCode() -> Guarantee<RegistrationStep> {
         Logger.info("")
@@ -262,6 +184,13 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
         case .session(let session):
             return submitSessionCode(session: session, code: code)
         }
+    }
+
+    public func submitProspectiveChangeNumberE164(_ e164: E164) -> Guarantee<RegistrationStep> {
+        Logger.info("")
+        // For heritage-sso, we don't support phone number change during registration
+        // Return to the current step with an error
+        return nextStep()
     }
 
     /// Note: This method does _not_ report the restore method back to the old device.
@@ -662,40 +591,21 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
         }
     }
 
-    public func setPhoneNumberDiscoverability(_ phoneNumberDiscoverability: PhoneNumberDiscoverability) -> Guarantee<RegistrationStep> {
-        Logger.info("")
-        guard let accountIdentity = persistedState.accountIdentity else {
-            owsFailBeta("Shouldn't be setting phone number discoverability prior to registration.")
-            return .value(.showErrorSheet(.genericError))
-        }
 
-        updatePhoneNumberDiscoverability(
-            accountIdentity: accountIdentity,
-            phoneNumberDiscoverability: phoneNumberDiscoverability
-        )
-
-        return self.nextStep()
-    }
 
     public func setProfileInfo(
         givenName: OWSUserProfile.NameComponent,
         familyName: OWSUserProfile.NameComponent?,
-        avatarData: Data?,
-        phoneNumberDiscoverability: PhoneNumberDiscoverability
+        avatarData: Data?
     ) -> Guarantee<RegistrationStep> {
         Logger.info("")
 
-        guard let accountIdentity = persistedState.accountIdentity else {
-            owsFailBeta("Shouldn't be setting phone number discoverability prior to registration.")
+        guard persistedState.accountIdentity != nil else {
+            owsFailBeta("Shouldn't be setting profile info prior to registration.")
             return .value(.showErrorSheet(.genericError))
         }
 
         inMemoryState.pendingProfileInfo = (givenName: givenName, familyName: familyName, avatarData: avatarData)
-
-        updatePhoneNumberDiscoverability(
-            accountIdentity: accountIdentity,
-            phoneNumberDiscoverability: phoneNumberDiscoverability
-        )
 
         return self.nextStep()
     }
@@ -751,18 +661,7 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
         // Whether some system permissions (contacts, APNS) are needed.
         var needsSomePermissions = false
 
-        // We persist the entered e164. But in addition we need to
-        // know whether its been entered during this app launch; if it
-        // hasn't we want to explicitly ask the user for it before
-        // sending an SMS. But if we have (e.g. we asked for it to try
-        // some SVR recovery that failed) we should auto-send an SMS if
-        // we get to that step without asking again.
-        var hasEnteredE164 = false
 
-        // When changing number, we ask the user to confirm old number and
-        // enter the new number before confirming the new number.
-        // This tracks that first check before the confirm.
-        var changeNumberProspectiveE164: E164?
 
         var shouldRestoreSVRMasterKeyAfterRegistration = false
         // base64 encoded data
@@ -803,6 +702,9 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
 
         var session: RegistrationSession?
 
+        // Whether the user has entered a phone number (E164) for this session
+        var hasEnteredE164 = false
+
         // If we try and resend a code (NOT the original SMS code automatically sent
         // at the start of every session), but hit a challenge, we write this var
         // so that when we complete the challenge we send the code right away.
@@ -830,7 +732,7 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
         var registrationId: UInt32!
         var pniRegistrationId: UInt32!
         var isManualMessageFetchEnabled = false
-        var phoneNumberDiscoverability: PhoneNumberDiscoverability?
+
 
         // OWSProfileManager state
         var profileKey: Aes256Key!
@@ -923,17 +825,7 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
         /// state thats needed to use the app outside of registration.
         var hasResetForReRegistration = false
 
-        /// The e164 the user has entered for this attempt at registration.
-        /// Initially the e164 in the UI may be pre-populated (e.g. in re-reg)
-        /// but this value is not set until the user accepts it or enters their own value.
-        var e164: E164?
 
-        /// If we ever get a response from a server where we failed reglock,
-        /// we know the e164 the request was for has reglock enabled.
-        /// Note that so we always include the reglock token in requests.
-        /// (Note that we can't blindly include it because if it wasn't enabled
-        /// and we sent it up, that would enable reglock.)
-        var e164WithKnownReglockEnabled: E164?
 
         /// How many times the user has tried making guesses against the PIN
         /// we have locally? This happens when we have a local SVR master key
@@ -1086,6 +978,13 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
         /// Note if we are re-registering on the same primary device (based on mode),
         /// we ignore this field and always skip asking for device transfer.
         var hasDeclinedTransfer: Bool = false
+
+        /// The phone number (e164) associated with this registration.
+        /// For heritage-sso, this may be nil as phone numbers are not required.
+        var e164: E164?
+
+        /// The phone number that we know has reglock enabled
+        var e164WithKnownReglockEnabled: E164?
 
         init() {}
 
@@ -1664,10 +1563,8 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
             // which always needs contacts permissions.
             return .value(.permissions)
         }
-        if inMemoryState.hasEnteredE164, let e164 = persistedState.e164 {
-            return self.startSession(e164: e164)
-        }
-        return .value(.phoneNumberEntry(phoneNumberEntryState()))
+        // SSO: Always show SSO login as the next step
+        return .value(.ssoLogin)
     }
 
     private func nextStepForQuickRestore() -> Guarantee<RegistrationStep> {
@@ -1712,11 +1609,7 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
             return .value(.chooseRestoreMethod(.manualRestore))
         }
 
-        // We need a phone number to proceed; ask the user if unavailable.
-        if persistedState.e164 == nil {
-            return .value(.phoneNumberEntry(phoneNumberEntryState()))
-        }
-
+        // Phone number entry was removed - skip to next step
         return .value(.enterBackupKey)
     }
 
@@ -1743,10 +1636,11 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
     /// "Registration Recovery Password" from it, which we can use as an alternative to a verified SMS code session
     /// to register. This path returns the steps to complete that flow.
     private func nextStepForRegRecoveryPasswordPath(regRecoveryPw: String) -> Guarantee<RegistrationStep> {
-        // We need a phone number to proceed; ask the user if unavailable.
-        guard let e164 = persistedState.e164 else {
-            return .value(.phoneNumberEntry(phoneNumberEntryState()))
+        // Phone number entry was removed - get e164 from session if available
+        guard let session = inMemoryState.session else {
+            return .value(.enterBackupKey)
         }
+        let e164 = session.e164
 
         if let askForPinStep = askForUserPINIfNeeded() {
             return askForPinStep
@@ -2123,11 +2017,11 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
     private func nextStepForSVRAuthCredentialCandidatesPath(
         svr2AuthCredentialCandidates: [SVR2AuthCredential]
     ) -> Guarantee<RegistrationStep> {
-        guard let e164 = persistedState.e164 else {
-            // If we haven't entered a phone number but we have auth
-            // credential candidates to check, enter it now.
-            return .value(.phoneNumberEntry(phoneNumberEntryState()))
+        guard let session = inMemoryState.session else {
+            // Phone number entry was removed - skip to next step if no session
+            return .value(.enterBackupKey)
         }
+        let e164 = session.e164
         return Guarantee.wrapAsync {
             return await self.makeSVR2AuthCredentialCheckRequest(
                 svr2AuthCredentialCandidates: svr2AuthCredentialCandidates,
@@ -2355,8 +2249,9 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
         }
 
         // Otherwise we have no code awaiting submission and aren't
-        // trying to send one yet, so just go to phone number entry.
-        return .value(.phoneNumberEntry(phoneNumberEntryState()))
+        // trying to send one yet, so just go to next step.
+        // Phone number entry was removed - skip to next step
+        return .value(.enterBackupKey)
     }
 
     private func processSession(
@@ -2451,12 +2346,8 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
             let timeoutDate = persistedState.sessionState?.createAccountTimeout,
             deps.dateProvider() < timeoutDate
         {
-            return .value(.phoneNumberEntry(phoneNumberEntryState(
-                validationError: .rateLimited(.init(
-                    expiration: timeoutDate,
-                    e164: session.e164
-                ))
-            )))
+            // Phone number entry was removed - skip to next step
+            return .value(.enterBackupKey)
         }
         let twoFAMode = self.attributes2FAMode(e164: session.e164)
         return self.makeRegisterOrChangeNumberRequest(
@@ -2646,9 +2537,7 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
 
                         return strongSelf.nextStep()
                     case .invalidArgument:
-                        return .value(.phoneNumberEntry(strongSelf.phoneNumberEntryState(
-                            validationError: .invalidE164(.init(invalidE164: e164))
-                        )))
+                        return .value(.showErrorSheet(.genericError))
                     case .retryAfter(let timeInterval):
                         if timeInterval < Constants.autoRetryInterval {
                             return Guarantee
@@ -2662,12 +2551,7 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
                                     )
                                 }
                         }
-                        return .value(.phoneNumberEntry(strongSelf.phoneNumberEntryState(
-                            validationError: .rateLimited(.init(
-                                expiration: strongSelf.deps.dateProvider().addingTimeInterval(timeInterval),
-                                e164: e164
-                            ))
-                        )))
+                        return .value(.showErrorSheet(.genericError))
                     case .networkFailure:
                         if retriesLeft > 0 {
                             return strongSelf.startSession(
@@ -2779,17 +2663,12 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
                                 }
                             }()
                         )))
-                    } else if let timeInterval {
+                    } else if timeInterval != nil {
                         self.db.write {
                             self.processSession(session, initialCodeRequestState: .failedToRequest, $0)
                         }
-                        // We were trying to resend from the phone number screen.
-                        return .value(.phoneNumberEntry(self.phoneNumberEntryState(
-                            validationError: .rateLimited(.init(
-                                expiration: self.deps.dateProvider().addingTimeInterval(timeInterval),
-                                e164: session.e164
-                            )
-                        ))))
+                        // Phone number entry was removed - show generic error
+                        return .value(.showErrorSheet(.genericError))
                     } else {
                         // Can't send a code, session is useless.
                         self.db.write { self.resetSession($0) }
@@ -3405,20 +3284,9 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
                 }
             } else {
                 return .value(.setupProfile(RegistrationProfileState(
-                    e164: accountIdentity.e164,
-                    phoneNumberDiscoverability: inMemoryState.phoneNumberDiscoverability.orDefault
+                    e164: accountIdentity.e164
                 )))
             }
-        }
-
-        if
-            inMemoryState.phoneNumberDiscoverability == nil,
-            inMemoryState.restoreMethod?.backupType == nil
-        {
-            return .value(.phoneNumberDiscoverability(RegistrationPhoneNumberDiscoverabilityState(
-                e164: accountIdentity.e164,
-                phoneNumberDiscoverability: inMemoryState.phoneNumberDiscoverability.orDefault
-            )))
         }
 
         // We are ready to finish! Export all state and wipe things
@@ -3871,8 +3739,7 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
             inMemoryState.hasProfileName = localProfile?.hasNonEmptyFilteredGivenName == true
             inMemoryState.profileKey = localProfile?.profileKey
 
-            inMemoryState.phoneNumberDiscoverability =
-                deps.phoneNumberDiscoverabilityManager.phoneNumberDiscoverability(tx: tx)
+
 
             inMemoryState.usernameReclamationState =
                 .localUsernameStateLoaded(deps.localUsernameManager.usernameState(tx: tx))
@@ -3898,22 +3765,7 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
         }
     }
 
-    private func updatePhoneNumberDiscoverability(accountIdentity: AccountIdentity, phoneNumberDiscoverability: PhoneNumberDiscoverability) {
-        Logger.info("")
 
-        self.inMemoryState.phoneNumberDiscoverability = phoneNumberDiscoverability
-
-        db.write { tx in
-            // We will update attributes & storage service at the end of registration.
-            deps.phoneNumberDiscoverabilityManager.setPhoneNumberDiscoverability(
-                phoneNumberDiscoverability,
-                updateAccountAttributes: false,
-                updateStorageService: false,
-                authedAccount: accountIdentity.authedAccount,
-                tx: tx
-            )
-        }
-    }
 
     private enum FinalizeChangeNumberResult {
         case success
@@ -4011,11 +3863,10 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
             if persistedState.hasResetForReRegistration.negated {
                 db.write { tx in
                     let isPrimaryDevice = deps.tsAccountManager.registrationState(tx: tx).isPrimaryDevice ?? true
-                    let discoverability = deps.phoneNumberDiscoverabilityManager.phoneNumberDiscoverability(tx: tx)
                     deps.registrationStateChangeManager.resetForReregistration(
                         localPhoneNumber: state.e164,
                         localAci: state.aci,
-                        discoverability: discoverability,
+                        discoverability: true,
                         wasPrimaryDevice: isPrimaryDevice,
                         tx: tx
                     )
@@ -4509,7 +4360,7 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
             twofaMode: twoFAMode,
             registrationRecoveryPassword: inMemoryState.regRecoveryPw,
             encryptedDeviceName: nil, // This class only deals in primary devices, which have no name
-            discoverableByPhoneNumber: inMemoryState.phoneNumberDiscoverability,
+            discoverableByPhoneNumber: true,
             hasSVRBackups: hasSVRBackups
         )
     }
@@ -4593,67 +4444,9 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
 
     // MARK: - Step State Generation Helpers
 
-    private enum RemoteValidationError {
-        case invalidE164(RegistrationPhoneNumberViewState.ValidationError.InvalidE164)
-        case rateLimited(RegistrationPhoneNumberViewState.ValidationError.RateLimited)
 
-        func asViewStateError() -> RegistrationPhoneNumberViewState.ValidationError {
-            switch self {
-            case let .invalidE164(error):
-                return .invalidE164(error)
-            case let .rateLimited(error):
-                return .rateLimited(error)
-            }
-        }
-    }
 
-    private func phoneNumberEntryState(
-        validationError: RemoteValidationError? = nil
-    ) -> RegistrationPhoneNumberViewState {
-        switch mode {
-        case .registering:
-            return .registration(.initialRegistration(.init(
-                previouslyEnteredE164: persistedState.e164,
-                validationError: validationError?.asViewStateError(),
-                canExitRegistration: canExitRegistrationFlow().canExit
-            )))
-        case .reRegistering(let state):
-            return .registration(.reregistration(.init(
-                e164: state.e164,
-                validationError: validationError?.asViewStateError(),
-                canExitRegistration: canExitRegistrationFlow().canExit
-            )))
-        case .changingNumber(let state):
-            var rateLimitedError: RegistrationPhoneNumberViewState.ValidationError.RateLimited?
-            switch validationError {
-            case .none:
-                break
-            case .rateLimited(let error):
-                rateLimitedError = error
-            case .invalidE164(let invalidE164Error):
-                return .changingNumber(.initialEntry(.init(
-                    oldE164: state.oldE164,
-                    newE164: inMemoryState.changeNumberProspectiveE164,
-                    hasConfirmed: inMemoryState.changeNumberProspectiveE164 != nil,
-                    invalidE164Error: invalidE164Error
-                )))
-            }
-            if let newE164 = inMemoryState.changeNumberProspectiveE164 {
-                return .changingNumber(.confirmation(.init(
-                    oldE164: state.oldE164,
-                    newE164: newE164,
-                    rateLimitedError: rateLimitedError
-                )))
-            } else {
-                return .changingNumber(.initialEntry(.init(
-                    oldE164: state.oldE164,
-                    newE164: nil,
-                    hasConfirmed: false,
-                    invalidE164Error: nil
-                )))
-            }
-        }
-    }
+
 
     private func verificationCodeEntryState(
         session: RegistrationSession,
@@ -4884,6 +4677,8 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
         // them go through re-registration.
         static let maxLocalPINGuesses: UInt = 10
     }
+
+    /// Note: This method does _not_ report the restore method back to the old device.
 }
 
 private func unretainedSelfError() -> Guarantee<RegistrationStep> {

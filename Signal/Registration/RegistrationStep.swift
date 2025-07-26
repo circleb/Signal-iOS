@@ -21,13 +21,6 @@ public enum RegistrationStep: Equatable {
 
     // MARK: - Actually registering
 
-    /// The user should enter or confirm their phone number.
-    /// The number may be pre-filled or empty; either way we will require
-    /// the user to confirm the number at least once before proceeding.
-    /// The number may be used to send an SMS or as a way to identify the
-    /// account being registered for via KBS backup info.
-    case phoneNumberEntry(RegistrationPhoneNumberViewState)
-
     /// If registering via session, the step to enter the verification code.
     case verificationCodeEntry(RegistrationVerificationState)
 
@@ -82,14 +75,12 @@ public enum RegistrationStep: Equatable {
 
     case deviceTransfer(RegistrationTransferStatusState)
 
-    /// If the account has not set whether its phone number should be
-    /// discoverable, this step happens after registration is complete.
-    /// (Typically skipped during re-registration as a result.)
-    case phoneNumberDiscoverability(RegistrationPhoneNumberDiscoverabilityState)
-
     /// If the account has not set profile info, this step happens after registration is complete.
     /// (Typically skipped during re-registration as a result.)
     case setupProfile(RegistrationProfileState)
+
+    /// SSO login step for authentication via SSO (Keycloak).
+    case ssoLogin
 
     // MARK: - Non-ViewController steps
 
@@ -145,7 +136,6 @@ public enum RegistrationStep: Equatable {
         case .changeNumberSplash: return "changeNumberSplash"
         case .permissions: return "permissions"
         case .scanQuickRegistrationQrCode: return "scanQuickRegistrationQrCode"
-        case .phoneNumberEntry: return "phoneNumberEntry"
         case .verificationCodeEntry: return "verificationCodeEntry"
         case .transferSelection: return "transferSelection"
         case .deviceTransfer: return "deviceTransfer"
@@ -156,8 +146,8 @@ public enum RegistrationStep: Equatable {
         case .enterBackupKey: return "enterBackupKey"
         case .chooseRestoreMethod: return "chooseRestoreMethod"
         case .confirmRestoreFromBackup: return "confirmRestoreFromBackup"
-        case .phoneNumberDiscoverability: return "phoneNumberDiscoverability"
         case .setupProfile: return "setupProfile"
+        case .ssoLogin: return "ssoLogin"
         case .showErrorSheet: return "showErrorSheet"
         case .appUpdateBanner: return "appUpdateBanner"
         case .done: return "done"

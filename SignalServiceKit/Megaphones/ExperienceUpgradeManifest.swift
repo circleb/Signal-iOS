@@ -625,23 +625,12 @@ extension ExperienceUpgradeManifest {
             // If we have a username, do not show the reminder.
             return false
         }
-        let tsAccountManager = DependenciesBridge.shared.tsAccountManager
-        if tsAccountManager.phoneNumberDiscoverability(tx: transaction).orDefault.isDiscoverable {
-            // If phone number discovery is enabled, do not prompt to create a
-            // username.
-            return false
-        }
+        // Phone number discoverability was removed
+        // Always allow username creation reminder
 
-        /// The elapsed interval since the user disabled phone number
-        /// discovery. Note that we need to invert the sign as this date will
-        /// be in the past.
-        let timeIntervalSinceDisabledDiscovery = DependenciesBridge.shared.tsAccountManager
-            .lastSetIsDiscoverableByPhoneNumber(tx: transaction)
-            .timeIntervalSinceNow * -1
-
-        let requiredDelayAfterDisablingDiscovery: TimeInterval = 3 * .day
-
-        return timeIntervalSinceDisabledDiscovery > requiredDelayAfterDisablingDiscovery
+        // Phone number discoverability was removed
+        // Always allow username creation reminder
+        return true
     }
 
     public static func checkPreconditionsForInactiveLinkedDeviceReminder(tx: DBReadTransaction) -> Bool {

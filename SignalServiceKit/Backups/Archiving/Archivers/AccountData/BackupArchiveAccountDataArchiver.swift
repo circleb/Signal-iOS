@@ -59,7 +59,7 @@ public class BackupArchiveAccountDataArchiver: BackupArchiveProtoStreamWriter {
     private let linkPreviewSettingStore: LinkPreviewSettingStore
     private let localUsernameManager: LocalUsernameManager
     private let ows2FAManager: BackupArchive.Shims.OWS2FAManager
-    private let phoneNumberDiscoverabilityManager: PhoneNumberDiscoverabilityManager
+
     private let preferences: BackupArchive.Shims.Preferences
     private let profileManager: BackupArchive.Shims.ProfileManager
     private let receiptManager: BackupArchive.Shims.ReceiptManager
@@ -81,7 +81,7 @@ public class BackupArchiveAccountDataArchiver: BackupArchiveProtoStreamWriter {
         linkPreviewSettingStore: LinkPreviewSettingStore,
         localUsernameManager: LocalUsernameManager,
         ows2FAManager: BackupArchive.Shims.OWS2FAManager,
-        phoneNumberDiscoverabilityManager: PhoneNumberDiscoverabilityManager,
+
         preferences: BackupArchive.Shims.Preferences,
         profileManager: BackupArchive.Shims.ProfileManager,
         receiptManager: BackupArchive.Shims.ReceiptManager,
@@ -102,7 +102,7 @@ public class BackupArchiveAccountDataArchiver: BackupArchiveProtoStreamWriter {
         self.linkPreviewSettingStore = linkPreviewSettingStore
         self.localUsernameManager = localUsernameManager
         self.ows2FAManager = ows2FAManager
-        self.phoneNumberDiscoverabilityManager = phoneNumberDiscoverabilityManager
+
         self.preferences = preferences
         self.profileManager = profileManager
         self.receiptManager = receiptManager
@@ -218,10 +218,7 @@ public class BackupArchiveAccountDataArchiver: BackupArchiveProtoStreamWriter {
         let sealedSenderIndicators = preferences.shouldShowUnidentifiedDeliveryIndicators(tx: context.tx)
         let typingIndicatorsEnabled = typingIndicators.areTypingIndicatorsEnabled()
         let linkPreviews = linkPreviewSettingStore.areLinkPreviewsEnabled(tx: context.tx)
-        let notDiscoverableByPhoneNumber = switch phoneNumberDiscoverabilityManager.phoneNumberDiscoverability(tx: context.tx) {
-        case .everybody: false
-        case .nobody, .none: true
-        }
+        let notDiscoverableByPhoneNumber = false
         let preferContactAvatars = sskPreferences.preferContactAvatars(tx: context.tx)
         let universalExpireTimerSeconds = disappearingMessageConfigurationStore.fetchOrBuildDefault(
             for: .universal,
@@ -424,13 +421,7 @@ public class BackupArchiveAccountDataArchiver: BackupArchiveProtoStreamWriter {
             preferences.setShouldShowUnidentifiedDeliveryIndicators(value: settings.sealedSenderIndicators, tx: context.tx)
             typingIndicators.setTypingIndicatorsEnabled(value: settings.typingIndicators, tx: context.tx)
             linkPreviewSettingStore.setAreLinkPreviewsEnabled(settings.linkPreviews, tx: context.tx)
-            phoneNumberDiscoverabilityManager.setPhoneNumberDiscoverability(
-                settings.notDiscoverableByPhoneNumber ? .nobody : .everybody,
-                updateAccountAttributes: false, // This should be updated later, similar to storage service
-                updateStorageService: false,
-                authedAccount: .implicit(),
-                tx: context.tx
-            )
+
             sskPreferences.setPreferContactAvatars(value: settings.preferContactAvatars, tx: context.tx)
             disappearingMessageConfigurationStore.setUniversalTimer(
                 token: DisappearingMessageToken(

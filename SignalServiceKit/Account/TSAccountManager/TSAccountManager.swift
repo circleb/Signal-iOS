@@ -60,10 +60,7 @@ public protocol TSAccountManager {
     func isManualMessageFetchEnabled(tx: DBReadTransaction) -> Bool
     func setIsManualMessageFetchEnabled(_ isEnabled: Bool, tx: DBWriteTransaction)
 
-    // MARK: - Phone Number Discoverability
 
-    func phoneNumberDiscoverability(tx: DBReadTransaction) -> PhoneNumberDiscoverability?
-    func lastSetIsDiscoverableByPhoneNumber(tx: DBReadTransaction) -> Date
 }
 
 /// It's *possible* (but implausible) that the local user's "device ID"
@@ -133,12 +130,7 @@ extension TSAccountManager {
     }
 }
 
-/// Should only be used in ``PhoneNumberDiscoverabilityManager``, so that necessary
-/// side effects can be triggered.
-public protocol PhoneNumberDiscoverabilitySetter {
 
-    func setPhoneNumberDiscoverability(_ phoneNumberDiscoverability: PhoneNumberDiscoverability, tx: DBWriteTransaction)
-}
 
 /// Should only be used in ``RegistrationStateChangeManager``, so that necessary
 /// side effects can be triggered.
@@ -176,7 +168,7 @@ public protocol LocalIdentifiersSetter {
     func resetForReregistration(
         localNumber: E164,
         localAci: Aci,
-        discoverability: PhoneNumberDiscoverability?,
+        discoverability: Bool?,
         wasPrimaryDevice: Bool,
         tx: DBWriteTransaction
     )

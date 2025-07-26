@@ -67,8 +67,6 @@ public struct AccountAttributesGenerator {
             for: .registrationRecoveryPassword
         ).canonicalStringRepresentation
 
-        let phoneNumberDiscoverability = tsAccountManager.phoneNumberDiscoverability(tx: tx)
-
         return AccountAttributes(
             isManualMessageFetchEnabled: isManualMessageFetchEnabled,
             registrationId: registrationId,
@@ -78,7 +76,7 @@ public struct AccountAttributesGenerator {
             twofaMode: twoFaMode,
             registrationRecoveryPassword: registrationRecoveryPassword,
             encryptedDeviceName: nil,
-            discoverableByPhoneNumber: phoneNumberDiscoverability,
+            discoverableByPhoneNumber: nil,
             hasSVRBackups: hasSVRBackups
         )
     }

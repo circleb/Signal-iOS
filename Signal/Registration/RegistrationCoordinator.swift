@@ -52,19 +52,9 @@ public protocol RegistrationCoordinator {
     func submitProspectiveChangeNumberE164(_ e164: E164) -> Guarantee<RegistrationStep>
 
     /// Submit an e164 to use, returning the next step to take.
-    /// If the e164 is rejected for any reason, the next step will be the same current step
-    /// but with attached metadata giving more info on the rejection.
-    ///
-    /// An e164 may already be known (e.g. re-registration); this call cements that
-    /// e164. Until this is called, the e164 will not actually be used for registration.
-    /// This gives the user a chance to change it before any automatic steps are taken.
-    func submitE164(_ e164: E164) -> Guarantee<RegistrationStep>
 
-    /// Wipes any previously submitted E164 so the user can enter a new one.
-    ///
-    /// May also blow away in progress registration steps and require redoing them;
-    /// a new number is essentially a new registration.
-    func requestChangeE164() -> Guarantee<RegistrationStep>
+
+
 
     /// Request an SMS code be sent, returning the next step to take.
     /// If requesting a code is disallowed for any reason, the next step will be the same current
@@ -130,10 +120,7 @@ public protocol RegistrationCoordinator {
     /// Mark the users choice to skip restoring from backup and continuing to the next step.
     func skipRestoreFromBackup() -> Guarantee<RegistrationStep>
 
-    /// Set whether the user's PNI should be discoverable by phone number.
-    /// If the update is rejected for any reason, the next step will be the same current
-    /// step but with attached metadata giving more info on the rejection.
-    func setPhoneNumberDiscoverability(_ phoneNumberDiscoverability: PhoneNumberDiscoverability) -> Guarantee<RegistrationStep>
+
 
     /// Set the user's profile information.
     /// If the update is rejected for any reason, the next step will be the same current
@@ -142,7 +129,7 @@ public protocol RegistrationCoordinator {
         givenName: OWSUserProfile.NameComponent,
         familyName: OWSUserProfile.NameComponent?,
         avatarData: Data?,
-        phoneNumberDiscoverability: PhoneNumberDiscoverability
+
     ) -> Guarantee<RegistrationStep>
 
     /// The user has hit a reglock timeout and is acknowledging it.

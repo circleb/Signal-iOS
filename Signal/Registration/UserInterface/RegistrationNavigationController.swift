@@ -202,52 +202,7 @@ public class RegistrationNavigationController: OWSNavigationController {
                 // State never changes.
                 update: nil
             )
-        case .phoneNumberEntry(let state):
-            switch state {
-            case .registration(let registrationMode):
-                return Controller(
-                    type: RegistrationPhoneNumberViewController.self,
-                    canCancel: true,
-                    make: { presenter in
-                        return RegistrationPhoneNumberViewController(state: registrationMode, presenter: presenter)
-                    },
-                    update: { controller in
-                        controller.updateState(registrationMode)
-                        return nil
-                    }
-                )
-            case .changingNumber(let changingNumberMode):
-                switch changingNumberMode {
-                case .initialEntry(let initialEntryState):
-                    return Controller(
-                        type: RegistrationChangePhoneNumberViewController.self,
-                        make: { presenter in
-                            return RegistrationChangePhoneNumberViewController(
-                                state: initialEntryState,
-                                presenter: presenter
-                            )
-                        },
-                        update: { controller in
-                            controller.updateState(initialEntryState)
-                            return nil
-                        }
-                    )
-                case .confirmation(let confirmationState):
-                    return Controller(
-                        type: RegistrationChangePhoneNumberConfirmationViewController.self,
-                        make: { presenter in
-                            return RegistrationChangePhoneNumberConfirmationViewController(
-                                state: confirmationState,
-                                presenter: presenter
-                            )
-                        },
-                        update: { controller in
-                            controller.updateState(confirmationState)
-                            return nil
-                        }
-                    )
-                }
-            }
+
         case .verificationCodeEntry(let state):
             return Controller(
                 type: RegistrationVerificationViewController.self,
@@ -353,14 +308,6 @@ public class RegistrationNavigationController: OWSNavigationController {
                 // No state to update.
                 update: nil
             )
-        case .phoneNumberDiscoverability(let state):
-            return Controller(
-                type: RegistrationPhoneNumberDiscoverabilityViewController.self,
-                make: { presenter in
-                    return RegistrationPhoneNumberDiscoverabilityViewController(state: state, presenter: presenter)
-                },
-                update: nil
-            )
         case .reglockTimeout(let state):
             return Controller(
                 type: RegistrationReglockTimeoutViewController.self,
@@ -429,6 +376,10 @@ public class RegistrationNavigationController: OWSNavigationController {
             Logger.info("Finished with registration!")
             SignalApp.shared.showConversationSplitView(appReadiness: appReadiness)
             return nil
+        case .ssoLogin:
+            Logger.info("Proceeding to SSO login")
+            pushNextController(coordinator.nextStep())
+            return nil
         }
     }
 
@@ -478,7 +429,7 @@ public class RegistrationNavigationController: OWSNavigationController {
     }
 }
 
-extension RegistrationNavigationController: RegistrationSplashPresenter {
+extension RegistrationNavigationController: RegistrationSplashPresenter, RegistrationChangeNumberSplashPresenter {
 
     public func continueFromSplash() {
         pushNextController(coordinator.continueFromSplash())
@@ -493,6 +444,27 @@ extension RegistrationNavigationController: RegistrationSplashPresenter {
         let controller = RegistrationConfirmModeSwitchViewController(presenter: self)
         pushViewController(controller, animated: true, completion: nil)
     }
+
+    public func transferDevice() {
+        Logger.info("Pushing device transfer")
+        do {
+            let url = try AppEnvironment.shared.deviceTransferServiceRef.startAcceptingTransfersFromOldDevices(
+                mode: .primary
+            )
+            pushViewController(RegistrationTransferQRCodeViewController(url: url), animated: true, completion: nil)
+        } catch {
+            Logger.error("Error transferring: \(error)")
+        }
+    }
+
+    func exitRegistration() {
+        guard coordinator.exitRegistration() else {
+            owsFailBeta("Unable to exit registration")
+            return
+        }
+        Logger.info("Early exiting registration")
+        SignalApp.shared.showConversationSplitView(appReadiness: appReadiness)
+    }
 }
 
 extension RegistrationNavigationController: RegistrationConfimModeSwitchPresenter {
@@ -506,58 +478,7 @@ extension RegistrationNavigationController: RegistrationConfimModeSwitchPresente
     }
 }
 
-extension RegistrationNavigationController: RegistrationChangeNumberSplashPresenter {}
-
-extension RegistrationNavigationController: RegistrationPermissionsPresenter {
-    func requestPermissions() async {
-        let guarantee = coordinator.requestPermissions()
-        pushNextController(guarantee, loadingMode: nil)
-        await guarantee.asVoid().awaitable()
-    }
-}
-
-extension RegistrationNavigationController: RegistrationPhoneNumberPresenter {
-
-    func goToNextStep(withE164 e164: E164) {
-        pushNextController(coordinator.submitE164(e164), loadingMode: .submittingPhoneNumber(e164: e164.stringValue))
-    }
-
-    func exitRegistration() {
-        guard coordinator.exitRegistration() else {
-            owsFailBeta("Unable to exit registration")
-            return
-        }
-        Logger.info("Early exiting registration")
-        SignalApp.shared.showConversationSplitView(appReadiness: appReadiness)
-    }
-}
-
-extension RegistrationNavigationController: RegistrationChangePhoneNumberPresenter {
-    func submitProspectiveChangeNumberE164(newE164: E164) {
-        pushNextController(coordinator.submitProspectiveChangeNumberE164(newE164), loadingMode: .submittingPhoneNumber(e164: newE164.stringValue))
-    }
-}
-
-extension RegistrationNavigationController: RegistrationChangePhoneNumberConfirmationPresenter {
-
-    func confirmChangeNumber(newE164: E164) {
-        pushNextController(coordinator.submitE164(newE164), loadingMode: .submittingPhoneNumber(e164: newE164.stringValue))
-    }
-}
-
-extension RegistrationNavigationController: RegistrationCaptchaPresenter {
-
-    func submitCaptcha(_ token: String) {
-        pushNextController(coordinator.submitCaptcha(token))
-    }
-}
-
 extension RegistrationNavigationController: RegistrationVerificationPresenter {
-
-    func returnToPhoneNumberEntry() {
-        pushNextController(coordinator.requestChangeE164())
-    }
-
     func requestSMSCode() {
         pushNextController(coordinator.requestSMSCode())
     }
@@ -568,6 +489,20 @@ extension RegistrationNavigationController: RegistrationVerificationPresenter {
 
     func submitVerificationCode(_ code: String) {
         pushNextController(coordinator.submitVerificationCode(code), loadingMode: .submittingVerificationCode)
+    }
+}
+
+extension RegistrationNavigationController: RegistrationCaptchaPresenter {
+    func submitCaptcha(_ token: String) {
+        pushNextController(coordinator.submitCaptcha(token))
+    }
+}
+
+extension RegistrationNavigationController: RegistrationPermissionsPresenter {
+    func requestPermissions() async {
+        let guarantee = coordinator.requestPermissions()
+        pushNextController(guarantee, loadingMode: nil)
+        await guarantee.asVoid().awaitable()
     }
 }
 
@@ -602,28 +537,6 @@ extension RegistrationNavigationController: RegistrationPinAttemptsExhaustedAndM
 
 extension RegistrationNavigationController: RegistrationTransferChoicePresenter {
 
-    public func transferDevice() {
-        Logger.info("Pushing device transfer")
-
-        do {
-            // TODO: [Backups] - Don't reach into app environment, but this should be removed
-            // once Backups launches
-            let url = try AppEnvironment.shared.deviceTransferServiceRef.startAcceptingTransfersFromOldDevices(
-                mode: .primary
-            )
-
-            // We push these controllers right onto the same navigation stack, even though they
-            // are not coordinator "steps". They have their own internal logic to proceed and go
-            // back (direct calls to push and pop) and, when they complete, they will have _totally_
-            // overwritten our local database, thus wiping any in progress reg coordinator state
-            // and putting us into the chat list.
-            pushViewController(RegistrationTransferQRCodeViewController(url: url), animated: true, completion: nil)
-        } catch {
-            // TODO: [Backups] - update this error handling
-            Logger.error("Error transferring")
-        }
-    }
-
     func continueRegistration() {
         pushNextController(coordinator.skipDeviceTransfer())
     }
@@ -633,26 +546,15 @@ extension RegistrationNavigationController: RegistrationProfilePresenter {
     func goToNextStep(
         givenName: OWSUserProfile.NameComponent,
         familyName: OWSUserProfile.NameComponent?,
-        avatarData: Data?,
-        phoneNumberDiscoverability: PhoneNumberDiscoverability
+        avatarData: Data?
     ) {
         pushNextController(
             coordinator.setProfileInfo(
                 givenName: givenName,
                 familyName: familyName,
-                avatarData: avatarData,
-                phoneNumberDiscoverability: phoneNumberDiscoverability
+                avatarData: avatarData
             )
         )
-    }
-}
-
-extension RegistrationNavigationController: RegistrationPhoneNumberDiscoverabilityPresenter {
-
-    var presentedAsModal: Bool { return false }
-
-    func setPhoneNumberDiscoverability(_ phoneNumberDiscoverability: PhoneNumberDiscoverability) {
-        pushNextController(coordinator.setPhoneNumberDiscoverability(phoneNumberDiscoverability))
     }
 }
 

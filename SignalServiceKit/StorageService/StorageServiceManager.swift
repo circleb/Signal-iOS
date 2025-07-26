@@ -2071,7 +2071,7 @@ class StorageServiceOperation {
                 linkPreviewSettingStore: DependenciesBridge.shared.linkPreviewSettingStore,
                 localUsernameManager: DependenciesBridge.shared.localUsernameManager,
                 paymentsHelper: SSKEnvironment.shared.paymentsHelperRef,
-                phoneNumberDiscoverabilityManager: DependenciesBridge.shared.phoneNumberDiscoverabilityManager,
+
                 pinnedThreadManager: DependenciesBridge.shared.pinnedThreadManager,
                 preferences: SSKEnvironment.shared.preferencesRef,
                 profileManager: SSKEnvironment.shared.profileManagerImplRef,

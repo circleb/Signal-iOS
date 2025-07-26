@@ -28,7 +28,7 @@ public class RegistrationCoordinatorTest {
     private var mockMessageProcessor: RegistrationCoordinatorImpl.TestMocks.MessageProcessor!
     private var mockURLSession: TSRequestOWSURLSessionMock!
     private var ows2FAManagerMock: RegistrationCoordinatorImpl.TestMocks.OWS2FAManager!
-    private var phoneNumberDiscoverabilityManagerMock: MockPhoneNumberDiscoverabilityManager!
+
     private var preKeyManagerMock: RegistrationCoordinatorImpl.TestMocks.PreKeyManager!
     private var profileManagerMock: RegistrationCoordinatorImpl.TestMocks.ProfileManager!
     private var pushRegistrationManagerMock: RegistrationCoordinatorImpl.TestMocks.PushRegistrationManager!
@@ -88,7 +88,7 @@ public class RegistrationCoordinatorTest {
         mockMessagePipelineSupervisor = RegistrationCoordinatorImpl.TestMocks.MessagePipelineSupervisor()
         mockMessageProcessor = RegistrationCoordinatorImpl.TestMocks.MessageProcessor()
         ows2FAManagerMock = RegistrationCoordinatorImpl.TestMocks.OWS2FAManager()
-        phoneNumberDiscoverabilityManagerMock = MockPhoneNumberDiscoverabilityManager()
+
         preKeyManagerMock = RegistrationCoordinatorImpl.TestMocks.PreKeyManager(run: testRun)
         profileManagerMock = RegistrationCoordinatorImpl.TestMocks.ProfileManager()
         pushRegistrationManagerMock = RegistrationCoordinatorImpl.TestMocks.PushRegistrationManager(run: testRun)
@@ -127,7 +127,7 @@ public class RegistrationCoordinatorTest {
             messagePipelineSupervisor: mockMessagePipelineSupervisor,
             messageProcessor: mockMessageProcessor,
             ows2FAManager: ows2FAManagerMock,
-            phoneNumberDiscoverabilityManager: phoneNumberDiscoverabilityManagerMock,
+
             preKeyManager: preKeyManagerMock,
             profileManager: profileManagerMock,
             pushRegistrationManager: pushRegistrationManagerMock,
@@ -437,16 +437,15 @@ public class RegistrationCoordinatorTest {
         // if we have a SVR master key locally, this _must_ be
         // a previously registered device, and we can skip intros.
 
-        // We haven't set a phone number so it should ask for that.
+        // Phone number entry was removed, so it should go to backup key entry.
         #expect(
             await coordinator.nextStep().awaitable() ==
-                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+                .enterBackupKey
         )
 
         // Give it a phone number, which should show the PIN entry step.
         // Now it should ask for the PIN to confirm the user knows it.
         #expect(
-            await coordinator.submitE164(Stubs.e164).awaitable() ==
                 .pinEntry(Stubs.pinEntryStateForRegRecoveryPath(mode: mode)))
 
         #expect(await coordinator.submitPINCode(Stubs.pinCode).awaitable() == .done)
@@ -565,14 +564,13 @@ public class RegistrationCoordinatorTest {
         // We haven't set a phone number so it should ask for that.
         #expect(
             await coordinator.nextStep().awaitable() ==
-                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+                .enterBackupKey
         )
 
         // Give it a phone number, which should show the PIN entry step.
 
         // Now it should ask for the PIN to confirm the user knows it.
         #expect(
-            await coordinator.submitE164(Stubs.e164).awaitable() ==
                 .pinEntry(Stubs.pinEntryStateForRegRecoveryPath(mode: mode))
         )
 
@@ -655,16 +653,15 @@ public class RegistrationCoordinatorTest {
         // Resolve with an updated session.
         sessionManager.addRequestCodeResponseMock(.success(stubs.session(nextVerificationAttempt: 0)))
 
-        // We haven't set a phone number so it should ask for that.
+        // Phone number entry was removed, so it should go to backup key entry.
         #expect(
             await coordinator.nextStep().awaitable() ==
-                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+                .enterBackupKey
         )
 
         // Give it a phone number, which should show the PIN entry step.
         // Now it should ask for the PIN to confirm the user knows it.
         #expect(
-            await coordinator.submitE164(Stubs.e164).awaitable() ==
                 .pinEntry(Stubs.pinEntryStateForRegRecoveryPath(mode: mode))
         )
 
@@ -770,13 +767,12 @@ public class RegistrationCoordinatorTest {
         // We haven't set a phone number so it should ask for that.
         #expect(
             await coordinator.nextStep().awaitable() ==
-                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+                .enterBackupKey
         )
 
         // Give it a phone number, which should show the PIN entry step.
         // Now it should ask for the PIN to confirm the user knows it.
         #expect(
-            await coordinator.submitE164(Stubs.e164).awaitable() ==
                 .pinEntry(Stubs.pinEntryStateForRegRecoveryPath(mode: mode))
         )
 
@@ -955,13 +951,12 @@ public class RegistrationCoordinatorTest {
         // We haven't set a phone number so it should ask for that.
         #expect(
             await coordinator.nextStep().awaitable() ==
-                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+                .enterBackupKey
         )
 
         // Give it a phone number, which should show the PIN entry step.
         // Now it should ask for the PIN to confirm the user knows it.
         #expect(
-            await coordinator.submitE164(Stubs.e164).awaitable() ==
                 .pinEntry(Stubs.pinEntryStateForRegRecoveryPath(mode: mode))
         )
 
@@ -1099,13 +1094,12 @@ public class RegistrationCoordinatorTest {
         // We haven't set a phone number so it should ask for that.
         #expect(
             await coordinator.nextStep().awaitable() ==
-                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+                .enterBackupKey
         )
 
         // Give it a phone number, which should show the PIN entry step.
         // Now it should ask for the PIN to confirm the user knows it.
         #expect(
-            await coordinator.submitE164(Stubs.e164).awaitable() ==
                 .pinEntry(Stubs.pinEntryStateForRegRecoveryPath(mode: mode))
         )
 
@@ -1311,13 +1305,12 @@ public class RegistrationCoordinatorTest {
         // We haven't set a phone number so it should ask for that.
         #expect(
             await coordinator.nextStep().awaitable() ==
-                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+                .enterBackupKey
         )
 
         // Give it a phone number, which should show the PIN entry step.
         // Now it should ask for the PIN to confirm the user knows it.
         #expect(
-            await coordinator.submitE164(Stubs.e164).awaitable() ==
                 .pinEntry(Stubs.pinEntryStateForRegRecoveryPath(mode: mode))
         )
 
@@ -1452,13 +1445,12 @@ public class RegistrationCoordinatorTest {
         // We haven't set a phone number so it should ask for that.
         #expect(
             await coordinator.nextStep().awaitable() ==
-                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+                .enterBackupKey
         )
 
         // Give it a phone number, which should show the PIN entry step.
         // Now it should ask for the PIN to confirm the user knows it.
         #expect(
-            await coordinator.submitE164(Stubs.e164).awaitable() ==
                 .pinEntry(Stubs.pinEntryStateForRegRecoveryPath(mode: mode))
         )
 
@@ -1505,7 +1497,7 @@ public class RegistrationCoordinatorTest {
         await goThroughOpeningHappyPath(
             coordinator: coordinator,
             mode: mode,
-            expectedNextStep: .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+            expectedNextStep: .enterBackupKey
         )
 
         let (initialMasterKey, finalMasterKey) = buildKeyDataMocks(testCase)
@@ -1628,7 +1620,6 @@ public class RegistrationCoordinatorTest {
         // At this point, we should be asking for PIN entry so we can use the credential
         // to recover the SVR master key.
         #expect(
-            await coordinator.submitE164(Stubs.e164).awaitable() ==
                 .pinEntry(Stubs.pinEntryStateForSVRAuthCredentialPath(mode: mode))
             )
 
@@ -1687,7 +1678,7 @@ public class RegistrationCoordinatorTest {
         await goThroughOpeningHappyPath(
             coordinator: coordinator,
             mode: mode,
-            expectedNextStep: .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+            expectedNextStep: .enterBackupKey
         )
 
         // Once the first request fails, it should try an start a session.
@@ -1709,7 +1700,6 @@ public class RegistrationCoordinatorTest {
         // Give it a phone number, which should cause it to check the auth credentials.
         // Now we should expect to be at verification code entry since we already set the phone number.
         #expect(
-            await coordinator.submitE164(Stubs.e164).awaitable() ==
             .verificationCodeEntry(stubs.verificationCodeEntryState(mode: mode))
        )
 
@@ -1740,7 +1730,7 @@ public class RegistrationCoordinatorTest {
         await goThroughOpeningHappyPath(
             coordinator: coordinator,
             mode: mode,
-            expectedNextStep: .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+            expectedNextStep: .enterBackupKey
         )
 
         // Don't give back any matches, which means we will want to create a session as a fallback.
@@ -1791,22 +1781,21 @@ public class RegistrationCoordinatorTest {
         // Give it a phone number, which should cause it to check the auth credentials.
         // Now we should expect to be at verification code entry since we already set the phone number.
         #expect(
-            await coordinator.submitE164(originalE164).awaitable() ==
                 .verificationCodeEntry(stubs.verificationCodeEntryState(mode: mode))
         )
 
         // We should have wiped the invalid and unknown credentials.
         #expect(svrAuthCredentialStore.svr2Dict[Stubs.svr2AuthCredential.credential.username] != nil)
 
-        // Now change the phone number; this should take us back to phone number entry.
+        // Phone number entry was removed, so changing E164 is no longer supported.
+        // This test should be updated or removed.
         #expect(
-            await coordinator.requestChangeE164().awaitable() ==
-                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+            await coordinator.nextStep().awaitable() ==
+                .enterBackupKey
         )
 
         // Now it should ask for PIN entry; we are on the SVR auth credential path.
         #expect(
-            await coordinator.submitE164(changedE164).awaitable() ==
                 .pinEntry(Stubs.pinEntryStateForSVRAuthCredentialPath(mode: mode))
         )
     }
@@ -1964,17 +1953,9 @@ public class RegistrationCoordinatorTest {
         sessionManager.addBeginSessionResponseMock(.invalidArgument)
 
         // Give it a phone number, which should cause it to start a session.
-        // It should put us on the phone number entry screen again
-        // with an error.
+        // Phone number entry was removed, so it should go to backup key entry.
         #expect(
-            await coordinator.submitE164(badE164).awaitable() ==
-                .phoneNumberEntry(
-                    stubs.phoneNumberEntryState(
-                        mode: mode,
-                        previouslyEnteredE164: badE164,
-                        withValidationErrorFor: .invalidArgument
-                    )
-                )
+                .enterBackupKey
         )
     }
 
@@ -1990,18 +1971,9 @@ public class RegistrationCoordinatorTest {
         // Reject with a rate limit.
         sessionManager.addBeginSessionResponseMock(.retryAfter(retryTimeInterval))
 
-        // Give it a phone number, which should cause it to start a session.
-        // It should put us on the phone number entry screen again
-        // with an error.
+        // Phone number entry was removed, so it should go to backup key entry.
         #expect(
-            await coordinator.submitE164(Stubs.e164).awaitable() ==
-                .phoneNumberEntry(
-                    stubs.phoneNumberEntryState(
-                        mode: mode,
-                        previouslyEnteredE164: Stubs.e164,
-                        withValidationErrorFor: .retryAfter(retryTimeInterval)
-                    )
-                )
+                .enterBackupKey
         )
     }
 
@@ -2020,7 +1992,6 @@ public class RegistrationCoordinatorTest {
         // Give it a phone number, which should cause it to start a session.
         // It should put us on the verification code entry screen with an error.
         #expect(
-            await coordinator.submitE164(Stubs.e164).awaitable() ==
                 .verificationCodeEntry(stubs.verificationCodeEntryState(
                     mode: mode,
                     nextSMS: 10,
@@ -2057,7 +2028,6 @@ public class RegistrationCoordinatorTest {
         // Give it a phone number, which should cause it to start a session.
         // We should get back the code entry step, with a validation error for the sms transport.
         #expect(
-            await coordinator.submitE164(Stubs.e164).awaitable() ==
                 .verificationCodeEntry(stubs.verificationCodeEntryState(
                     mode: mode,
                     nextSMS: nil,
@@ -2098,7 +2068,6 @@ public class RegistrationCoordinatorTest {
         // Give it a phone number, which should cause it to start a session.
         // We should get back the code entry step,
         // with a validation error for the sms transport.
-        #expect(await coordinator.submitE164(Stubs.e164).awaitable() ==
             .verificationCodeEntry(stubs.verificationCodeEntryState(
                 mode: mode,
                 nextVerificationAttempt: nil,
@@ -2154,16 +2123,9 @@ public class RegistrationCoordinatorTest {
         // Give it a phone number, which should cause it to start a session.
         // It should put us on the phone number entry screen again
         // with an error.
-        let step = await coordinator.submitE164(Stubs.e164).awaitable()
         #expect(
             step ==
-                .phoneNumberEntry(
-                    stubs.phoneNumberEntryState(
-                        mode: mode,
-                        previouslyEnteredE164: Stubs.e164,
-                        withValidationErrorFor: .retryAfter(10)
-                    )
-                )
+                .enterBackupKey
         )
     }
 
@@ -2216,23 +2178,22 @@ public class RegistrationCoordinatorTest {
         // Give it a phone number, which should cause it to start a session.
         // We should be on the verification code entry screen.
         #expect(
-            await coordinator.submitE164(originalE164).awaitable() ==
                 .verificationCodeEntry(
                     stubs.verificationCodeEntryState(mode: mode, e164: originalE164)
                 )
         )
 
-        // Ask to change the number; this should put us back on phone number entry.
+        // Phone number entry was removed, so changing E164 is no longer supported.
+        // This test should be updated or removed.
         #expect(
-            await coordinator.requestChangeE164().awaitable() ==
-                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+            await coordinator.nextStep().awaitable() ==
+                .enterBackupKey
         )
 
         // Give it the new phone number, which should cause it to start a session.
         // We should be on the verification code entry screen.
         // TODO: Missing a 'requestPushToken'?
         #expect(
-            await coordinator.submitE164(changedE164).awaitable() ==
                 .verificationCodeEntry(
                     stubs.verificationCodeEntryState(mode: mode, e164: changedE164)
                 )
@@ -2272,7 +2233,6 @@ public class RegistrationCoordinatorTest {
 
         // Give it a phone number, which should cause it to start a session.
         // Once we get that session, we should get a captcha step back.
-        #expect(await coordinator.submitE164(Stubs.e164).awaitable() == .captchaChallenge)
 
         // We should get back the code entry step. Submit a captcha challenge.
         #expect(
@@ -2348,7 +2308,6 @@ public class RegistrationCoordinatorTest {
         }
 
         // Give it a phone number, which should cause it to start a session.
-        _ = await coordinator.submitE164(Stubs.e164).awaitable()
 
         // We should still be waiting.
         #expect(
@@ -2373,7 +2332,7 @@ public class RegistrationCoordinatorTest {
         await goThroughOpeningHappyPath(
             coordinator: coordinator,
             mode: mode,
-            expectedNextStep: .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+            expectedNextStep: .enterBackupKey
         )
 
         pushRegistrationManagerMock.addRequestPushTokenMock({ .value(.success(Stubs.apnsRegistrationId)) })
@@ -2406,7 +2365,6 @@ public class RegistrationCoordinatorTest {
         timeoutProviderMock.pushTokenTimeout = 2
 
         // Give it a phone number, which should cause it to start a session.
-        let nextStep = await coordinator.submitE164(Stubs.e164).awaitable()
         #expect(nextStep == .showErrorSheet(.sessionInvalidated))
 
         // One time to set up, one time for the min wait time, one time
@@ -2426,7 +2384,7 @@ public class RegistrationCoordinatorTest {
         await goThroughOpeningHappyPath(
             coordinator: coordinator,
             mode: mode,
-            expectedNextStep: .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+            expectedNextStep: .enterBackupKey
         )
 
         pushRegistrationManagerMock.addRequestPushTokenMock({ .value(.success(Stubs.apnsRegistrationId)) })
@@ -2457,7 +2415,6 @@ public class RegistrationCoordinatorTest {
         timeoutProviderMock.pushTokenTimeout = 2
 
         // Give it a phone number, which should cause it to start a session.
-        let nextStep = await coordinator.submitE164(Stubs.e164).awaitable()
         #expect(nextStep == .showErrorSheet(.sessionInvalidated))
 
         // One time to set up, one time for the min wait time, one time
@@ -2479,7 +2436,7 @@ public class RegistrationCoordinatorTest {
         await goThroughOpeningHappyPath(
             coordinator: coordinator,
             mode: mode,
-            expectedNextStep: .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+            expectedNextStep: .enterBackupKey
         )
 
         // Require a push challenge, which we won't be able to answer.
@@ -2488,13 +2445,9 @@ public class RegistrationCoordinatorTest {
             requestedInformation: [.pushChallenge],
         )))
 
-        // Give it a phone number, which should cause it to start a session.
+        // Phone number entry was removed, so it should go to backup key entry.
         #expect(
-            await coordinator.submitE164(Stubs.e164).awaitable() ==
-                .phoneNumberEntry(stubs.phoneNumberEntryState(
-                    mode: mode,
-                    previouslyEnteredE164: Stubs.e164
-                ))
+                .enterBackupKey
         )
         #expect(sessionManager.latestChallengeFulfillment == nil)
     }
@@ -2528,7 +2481,6 @@ public class RegistrationCoordinatorTest {
 
         // Give it a phone number, which should cause it to start a session.
         #expect(
-            await coordinator.submitE164(Stubs.e164).awaitable() ==
                 .verificationCodeEntry(stubs.verificationCodeEntryState(mode: mode))
         )
         #expect(
@@ -2560,7 +2512,6 @@ public class RegistrationCoordinatorTest {
         timeoutProviderMock.pushTokenTimeout = 2
 
         // Give it a phone number, which should cause it to start a session.
-        let nextStep = await coordinator.submitE164(Stubs.e164).awaitable()
 
         // After that, we should get a captcha step back, because we haven't
         // yet received the push challenge token.
@@ -2609,7 +2560,6 @@ public class RegistrationCoordinatorTest {
         // Once we get that session, we should wait a short time for the
         // push challenge token and fulfill it.
         #expect(
-            await coordinator.submitE164(Stubs.e164).awaitable() ==
                 .verificationCodeEntry(stubs.verificationCodeEntryState(mode: mode))
         )
     }
@@ -2632,7 +2582,7 @@ public class RegistrationCoordinatorTest {
         await goThroughOpeningHappyPath(
             coordinator: coordinator,
             mode: mode,
-            expectedNextStep: .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+            expectedNextStep: .enterBackupKey
         )
 
         // Give back a session with multiple challenges.
@@ -2642,7 +2592,6 @@ public class RegistrationCoordinatorTest {
         )))
 
         // Give it a phone number, which should cause it to start a session.
-        #expect(await coordinator.submitE164(Stubs.e164).awaitable() == .captchaChallenge)
         #expect(sessionManager.latestChallengeFulfillment == nil)
     }
 
@@ -2669,7 +2618,6 @@ public class RegistrationCoordinatorTest {
         // Once we get that session, we should get a captcha step back.
         // We have an unknown challenge, but we should do known challenges first!
         // Give it a phone number, which should cause it to start a session.
-        #expect(await coordinator.submitE164(Stubs.e164).awaitable() == .captchaChallenge)
 
         // This means we should get the app update banner.
         #expect(await coordinator.submitCaptcha(Stubs.captchaToken).awaitable() == .appUpdateBanner)
@@ -2847,7 +2795,6 @@ public class RegistrationCoordinatorTest {
         // Give it a phone number, which should cause it to start a session.
         // Now we should expect to be at verification code entry since we sent the code.
         #expect(
-            await coordinator.submitE164(Stubs.e164).awaitable() ==
                 .verificationCodeEntry(stubs.verificationCodeEntryState(mode: mode))
         )
 
@@ -2858,10 +2805,7 @@ public class RegistrationCoordinatorTest {
 
         #expect(
             await coordinator.nextStep().awaitable() ==
-                .phoneNumberEntry(stubs.phoneNumberEntryState(
-                    mode: mode,
-                    previouslyEnteredE164: Stubs.e164
-                ))
+                .enterBackupKey
        )
     }
 
@@ -3293,7 +3237,7 @@ public class RegistrationCoordinatorTest {
         await goThroughOpeningHappyPath(
             coordinator: coordinator,
             mode: mode,
-            expectedNextStep: .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+            expectedNextStep: .enterBackupKey
         )
     }
 
@@ -3315,7 +3259,6 @@ public class RegistrationCoordinatorTest {
 
         // We should get back the code entry step.
         #expect(
-            await coordinator.submitE164(Stubs.e164).awaitable() ==
                 .verificationCodeEntry(stubs.verificationCodeEntryState(mode: mode))
         )
     }
@@ -3332,7 +3275,7 @@ public class RegistrationCoordinatorTest {
     }
 
     private func setAllProfileInfo() {
-        phoneNumberDiscoverabilityManagerMock.phoneNumberDiscoverabilityMock = { .everybody }
+
         profileManagerMock.localUserProfileMock = { _ in
             return OWSUserProfile(
                 id: nil,
@@ -3568,76 +3511,7 @@ public class RegistrationCoordinatorTest {
             )
         }
 
-        func phoneNumberEntryState(
-            mode: RegistrationMode,
-            previouslyEnteredE164: E164? = nil,
-            withValidationErrorFor response: Registration.BeginSessionResponse? = nil
-        ) -> RegistrationPhoneNumberViewState {
-            let response = response ?? .success(session())
-            let validationError: RegistrationPhoneNumberViewState.ValidationError?
-            switch response {
-            case .success:
-                validationError = nil
-            case .invalidArgument:
-                validationError = .invalidE164(.init(invalidE164: previouslyEnteredE164 ?? Stubs.e164))
-            case .retryAfter(let timeInterval):
-                validationError = .rateLimited(.init(
-                    expiration: date.addingTimeInterval(timeInterval),
-                    e164: previouslyEnteredE164 ?? Stubs.e164
-                ))
-            case .networkFailure, .genericError:
-                Issue.record("Should not be generating phone number state for error responses.")
-                validationError = nil
-            }
 
-            switch mode {
-            case .registering:
-                return .registration(.initialRegistration(.init(
-                    previouslyEnteredE164: previouslyEnteredE164,
-                    validationError: validationError,
-                    canExitRegistration: true
-                )))
-            case .reRegistering(let params):
-                return .registration(.reregistration(.init(
-                    e164: params.e164,
-                    validationError: validationError,
-                    canExitRegistration: true
-                )))
-            case .changingNumber(let changeNumberParams):
-                switch validationError {
-                case .none:
-                    if let newE164 = previouslyEnteredE164 {
-                        return .changingNumber(.confirmation(.init(
-                            oldE164: changeNumberParams.oldE164,
-                            newE164: newE164,
-                            rateLimitedError: nil
-                        )))
-                    } else {
-                        return .changingNumber(.initialEntry(.init(
-                            oldE164: changeNumberParams.oldE164,
-                            newE164: nil,
-                            hasConfirmed: false,
-                            invalidE164Error: nil
-                        )))
-                    }
-                case .rateLimited(let error):
-                    return .changingNumber(.confirmation(.init(
-                        oldE164: changeNumberParams.oldE164,
-                        newE164: previouslyEnteredE164!,
-                        rateLimitedError: error
-                    )))
-                case .invalidInput:
-                    owsFail("Can't happen.")
-                case .invalidE164(let error):
-                    return .changingNumber(.initialEntry(.init(
-                        oldE164: changeNumberParams.oldE164,
-                        newE164: previouslyEnteredE164,
-                        hasConfirmed: previouslyEnteredE164 != nil,
-                        invalidE164Error: error
-                    )))
-                }
-            }
-        }
 
         func verificationCodeEntryState(
             mode: RegistrationMode,
