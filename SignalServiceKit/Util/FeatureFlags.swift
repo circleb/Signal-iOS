@@ -30,9 +30,9 @@ public enum FeatureFlags {
 
     public static let failDebug = build.includes(.internal)
 
-    public static let linkedPhones = build.includes(.internal)
+    public static let linkedPhones = false
 
-    public static let preRegDeviceTransfer = build.includes(.dev)
+    public static let preRegDeviceTransfer = false
 
     public static let isPrerelease = build.includes(.beta)
 
@@ -43,7 +43,7 @@ public enum FeatureFlags {
     public static let periodicallyCheckDatabaseIntegrity: Bool = false
 
     public enum Backups {
-        public static let supported = build.includes(.internal)
+        public static let supported = false
         public static let showSettings = build.includes(.dev)
 
         public static let restoreFailOnAnyError = build.includes(.beta)

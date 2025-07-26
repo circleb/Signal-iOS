@@ -51,7 +51,8 @@ public class RegistrationSplashViewController: OWSViewController {
         view.addSubview(stackView)
         stackView.autoPinEdgesToSuperviewMargins()
 
-        let canSwitchModes = UIDevice.current.isIPad || FeatureFlags.linkedPhones
+//        let canSwitchModes = UIDevice.current.isIPad || FeatureFlags.linkedPhones
+        let canSwitchModes = FeatureFlags.linkedPhones
         var transferButtonTrailingView: UIView = self.view
         var transferButtonTrailingEdge: ALEdge = .trailing
         if canSwitchModes {
@@ -138,24 +139,24 @@ public class RegistrationSplashViewController: OWSViewController {
         stackView.addArrangedSubview(explanationButton)
         stackView.setCustomSpacing(57, after: explanationButton)
 
-        let continueButton = OWSFlatButton.primaryButtonForRegistration(
-            title: CommonStrings.continueButton,
-            target: self,
-            selector: #selector(continuePressed)
-        )
-        continueButton.accessibilityIdentifier = "registration.splash.continueButton"
-        stackView.addArrangedSubview(continueButton)
-        continueButton.autoSetDimension(.width, toSize: 280)
-        continueButton.autoHCenterInSuperview()
-        NSLayoutConstraint.autoSetPriority(.defaultLow) {
-            continueButton.autoPinEdge(toSuperviewEdge: .leading)
-            continueButton.autoPinEdge(toSuperviewEdge: .trailing)
-        }
+//        let continueButton = OWSFlatButton.primaryButtonForRegistration(
+//            title: CommonStrings.continueButton,
+//            target: self,
+//            selector: #selector(continuePressed)
+//        )
+//        continueButton.accessibilityIdentifier = "registration.splash.continueButton"
+//        stackView.addArrangedSubview(continueButton)
+//        continueButton.autoSetDimension(.width, toSize: 280)
+//        continueButton.autoHCenterInSuperview()
+//        NSLayoutConstraint.autoSetPriority(.defaultLow) {
+//            continueButton.autoPinEdge(toSuperviewEdge: .leading)
+//            continueButton.autoPinEdge(toSuperviewEdge: .trailing)
+//        }
 
         // Add SSO login button
-        stackView.setCustomSpacing(16, after: continueButton)
+//        stackView.setCustomSpacing(16, after: continueButton)
         
-        let ssoLoginButton = OWSFlatButton.secondaryButtonForRegistration(
+        let ssoLoginButton = OWSFlatButton.primaryButtonForRegistration(
             title: OWSLocalizedString(
                 "REGISTRATION_SSO_LOGIN_BUTTON_TITLE",
                 comment: "Button title for SSO login in the registration splash view."
