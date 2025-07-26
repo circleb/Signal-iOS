@@ -57,7 +57,7 @@
       "size" : "40x40"
     },
     {
-      "filename" : "Signal_120x120 1.png",
+      "filename" : "Signal_120x120.png",
       "idiom" : "universal",
       "platform" : "ios",
       "scale" : "2x",
@@ -71,25 +71,11 @@
       "size" : "60x60"
     },
     {
-      "filename" : "Signal_128x128.png",
+      "filename" : "Signal_144x144.png",
       "idiom" : "universal",
       "platform" : "ios",
       "scale" : "2x",
-      "size" : "64x64"
-    },
-    {
-      "filename" : "Signal_192x192.png",
-      "idiom" : "universal",
-      "platform" : "ios",
-      "scale" : "3x",
-      "size" : "64x64"
-    },
-    {
-      "filename" : "Signal_136x136.png",
-      "idiom" : "universal",
-      "platform" : "ios",
-      "scale" : "2x",
-      "size" : "68x68"
+      "size" : "72x72"
     },
     {
       "filename" : "Signal_152x152.png",
@@ -222,7 +208,7 @@
           "value" : "dark"
         }
       ],
-      "filename" : "Signal_Dark_120x120 1.png",
+      "filename" : "Signal_Dark_120x120.png",
       "idiom" : "universal",
       "platform" : "ios",
       "scale" : "2x",
@@ -248,37 +234,11 @@
           "value" : "dark"
         }
       ],
-      "filename" : "Signal_Dark_128x128.png",
+      "filename" : "Signal_Dark_144x144.png",
       "idiom" : "universal",
       "platform" : "ios",
       "scale" : "2x",
-      "size" : "64x64"
-    },
-    {
-      "appearances" : [
-        {
-          "appearance" : "luminosity",
-          "value" : "dark"
-        }
-      ],
-      "filename" : "Signal_Dark_192x192.png",
-      "idiom" : "universal",
-      "platform" : "ios",
-      "scale" : "3x",
-      "size" : "64x64"
-    },
-    {
-      "appearances" : [
-        {
-          "appearance" : "luminosity",
-          "value" : "dark"
-        }
-      ],
-      "filename" : "Signal_Dark_136x136.png",
-      "idiom" : "universal",
-      "platform" : "ios",
-      "scale" : "2x",
-      "size" : "68x68"
+      "size" : "72x72"
     },
     {
       "appearances" : [
@@ -429,7 +389,7 @@
           "value" : "tinted"
         }
       ],
-      "filename" : "Signal_Tinted_120x120 1.png",
+      "filename" : "Signal_Tinted_120x120.png",
       "idiom" : "universal",
       "platform" : "ios",
       "scale" : "2x",
@@ -455,37 +415,11 @@
           "value" : "tinted"
         }
       ],
-      "filename" : "Signal_Tinted_128x128.png",
+      "filename" : "Signal_Tinted_144x144.png",
       "idiom" : "universal",
       "platform" : "ios",
       "scale" : "2x",
-      "size" : "64x64"
-    },
-    {
-      "appearances" : [
-        {
-          "appearance" : "luminosity",
-          "value" : "tinted"
-        }
-      ],
-      "filename" : "Signal_Tinted_192x192.png",
-      "idiom" : "universal",
-      "platform" : "ios",
-      "scale" : "3x",
-      "size" : "64x64"
-    },
-    {
-      "appearances" : [
-        {
-          "appearance" : "luminosity",
-          "value" : "tinted"
-        }
-      ],
-      "filename" : "Signal_Tinted_136x136.png",
-      "idiom" : "universal",
-      "platform" : "ios",
-      "scale" : "2x",
-      "size" : "68x68"
+      "size" : "72x72"
     },
     {
       "appearances" : [
