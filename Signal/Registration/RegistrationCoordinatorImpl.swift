@@ -102,6 +102,18 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
         return nextStep()
     }
 
+    public func startSSOLogin() -> Guarantee<RegistrationStep> {
+        Logger.info("Starting SSO login from splash screen")
+        
+        // Mark splash as shown and go directly to SSO login
+        db.write { tx in
+            self.updatePersistedState(tx) {
+                $0.hasShownSplash = true
+            }
+        }
+        return .value(.ssoLogin)
+    }
+
     public func requestPermissions() -> Guarantee<RegistrationStep> {
         Logger.info("")
 
@@ -294,6 +306,41 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
         case .session(let session):
             return submit(challengeFulfillment: .captcha(token), for: session)
         }
+    }
+
+    public func submitSSOToken(_ accessToken: String) -> Guarantee<RegistrationStep> {
+        Logger.info("Processing SSO token for registration")
+        
+        // Store the SSO token for later use
+        deps.db.write { tx in
+            updatePersistedState(tx) {
+                $0.ssoAccessToken = accessToken
+            }
+        }
+        
+        // For SSO registration, we skip phone number verification entirely
+        // and proceed directly to profile setup or PIN creation
+        // Generate a synthetic E164 or use a special SSO marker
+        let syntheticE164 = E164("+15551234567")! // This will be replaced with proper SSO handling
+        
+        deps.db.write { tx in
+            updatePersistedState(tx) {
+                $0.e164 = syntheticE164
+                $0.isSSOReg = true
+            }
+        }
+        
+        // Create a successful account identity for SSO registration
+        let accountIdentity = createAccountIdentityForSSO(accessToken: accessToken, syntheticE164: syntheticE164)
+        
+        // Set the account identity in persisted state to make the pathway become .profileSetup
+        deps.db.write { tx in
+            updatePersistedState(tx) {
+                $0.accountIdentity = accountIdentity
+            }
+        }
+        
+        return nextStep()
     }
 
     public func setHasOldDevice(_ hasOldDevice: Bool) -> Guarantee<RegistrationStep> {
@@ -986,7 +1033,33 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
         /// The phone number that we know has reglock enabled
         var e164WithKnownReglockEnabled: E164?
 
+        /// SSO-related fields for Heritage SSO integration
+        var ssoAccessToken: String?
+        var isSSOReg: Bool = false
+
         init() {}
+        
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            
+            hasShownSplash = try container.decodeIfPresent(Bool.self, forKey: .hasShownSplash) ?? false
+            shouldSkipRegistrationSplash = try container.decodeIfPresent(Bool.self, forKey: .shouldSkipRegistrationSplash) ?? false
+            hasResetForReRegistration = try container.decodeIfPresent(Bool.self, forKey: .hasResetForReRegistration) ?? false
+            e164 = try container.decodeIfPresent(E164.self, forKey: .e164)
+            e164WithKnownReglockEnabled = try container.decodeIfPresent(E164.self, forKey: .e164WithKnownReglockEnabled)
+            numLocalPinGuesses = try container.decodeIfPresent(UInt.self, forKey: .numLocalPinGuesses) ?? 0
+            hasSkippedPinEntry = try container.decodeIfPresent(Bool.self, forKey: .hasSkippedPinEntry) ?? false
+            hasGivenUpTryingToRestoreWithSVR = try container.decodeIfPresent(Bool.self, forKey: .hasGivenUpTryingToRestoreWithSVR) ?? false
+            hasRestoredFromSVR = try container.decodeIfPresent(Bool.self, forKey: .hasRestoredFromSVR) ?? false
+            sessionState = try container.decodeIfPresent(SessionState.self, forKey: .sessionState)
+            accountIdentity = try container.decodeIfPresent(AccountIdentity.self, forKey: .accountIdentity)
+            didRefreshOneTimePreKeys = try container.decodeIfPresent(Bool.self, forKey: .didRefreshOneTimePreKeys) ?? false
+            hasDeclinedTransfer = try container.decodeIfPresent(Bool.self, forKey: .hasDeclinedTransfer) ?? false
+            restoreMode = try container.decodeIfPresent(RestoreMode.self, forKey: .restoreMode)
+            recoveredSVRMasterKey = try container.decodeIfPresent(MasterKey.self, forKey: .recoveredSVRMasterKey)
+            ssoAccessToken = try container.decodeIfPresent(String.self, forKey: .ssoAccessToken)
+            isSSOReg = try container.decodeIfPresent(Bool.self, forKey: .isSSOReg) ?? false
+        }
 
         enum CodingKeys: String, CodingKey {
             case hasShownSplash
@@ -1005,6 +1078,8 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
             case hasDeclinedTransfer
             case restoreMode
             case recoveredSVRMasterKey
+            case ssoAccessToken
+            case isSSOReg
         }
     }
 
@@ -4374,6 +4449,21 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
 
     private func generateServerAuthToken() -> String {
         return Randomness.generateRandomBytes(16).hexadecimalString
+    }
+
+    private func createAccountIdentityForSSO(accessToken: String, syntheticE164: E164) -> AccountIdentity {
+        // For SSO registration, we create synthetic identifiers
+        // In a real implementation, these might be derived from the SSO token or generated differently
+        let syntheticAci = Aci.randomForTesting()
+        let syntheticPni = Pni.randomForTesting()
+        
+        return AccountIdentity(
+            aci: syntheticAci,
+            pni: syntheticPni,
+            e164: syntheticE164,
+            hasPreviouslyUsedSVR: false, // New SSO users haven't used SVR
+            authPassword: generateServerAuthToken()
+        )
     }
 
     struct AccountIdentity: Codable {

@@ -17,6 +17,7 @@ private enum OpenableUrl {
     case completeIDEALDonation(Stripe.IDEALCallbackType)
     case callLink(CallLink)
     case quickRestore
+    case ssoOAuthRedirect(URL)
 }
 
 class UrlOpener {
@@ -84,8 +85,15 @@ class UrlOpener {
         if let callLink = CallLink(url: url) {
             return .callLink(callLink)
         }
+        if isSSOOAuthRedirectUrl(url) {
+            return .ssoOAuthRedirect(url)
+        }
         owsFailDebug("Couldn't parse URL")
         return nil
+    }
+
+    private static func isSSOOAuthRedirectUrl(_ url: URL) -> Bool {
+        return url.scheme == "heritagesignal" && url.host == "callback"
     }
 
     private static func parseSgnlAddStickersUrl(_ url: URL) -> StickerPackInfo? {
@@ -141,7 +149,7 @@ class UrlOpener {
     private func shouldDismiss(for url: OpenableUrl) -> Bool {
         switch url {
         case .completeIDEALDonation: return false
-        case .groupInvite, .linkDevice, .phoneNumberLink, .signalProxy, .stickerPack, .usernameLink, .callLink, .quickRestore: return true
+        case .groupInvite, .linkDevice, .phoneNumberLink, .signalProxy, .stickerPack, .usernameLink, .callLink, .quickRestore, .ssoOAuthRedirect: return true
         }
     }
 
@@ -239,6 +247,19 @@ class UrlOpener {
 
         case .callLink(let callLink):
             GroupCallViewController.presentLobby(for: callLink)
+
+        case .ssoOAuthRedirect(let url):
+            handleSSOOAuthRedirect(url)
         }
+    }
+
+    private func handleSSOOAuthRedirect(_ url: URL) {
+        // For AppAuth integration, we need to handle this URL through AppAuth's session
+        // AppAuth will handle the callback automatically when the URL is opened
+        Logger.info("Handling SSO OAuth redirect: \(url)")
+        
+        // AppAuth automatically handles OAuth redirects when the app is opened with the redirect URL
+        // The RegistrationSSOLoginViewController will be notified through its OAuth flow completion
+        // No additional handling is needed here as AppAuth manages this internally
     }
 }

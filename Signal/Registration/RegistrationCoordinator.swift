@@ -37,6 +37,9 @@ public protocol RegistrationCoordinator {
     /// Continue past the splash screen (marking it as shown).
     func continueFromSplash() -> Guarantee<RegistrationStep>
 
+    /// Start SSO login from the splash screen, bypassing normal registration flow.
+    func startSSOLogin() -> Guarantee<RegistrationStep>
+
     /// Mark if the user has their old device available to source registration information from.
     func setHasOldDevice(_ hasOldDevice: Bool) -> Guarantee<RegistrationStep>
 
@@ -75,6 +78,11 @@ public protocol RegistrationCoordinator {
     /// If the token is rejected for any reason, the next step will be the same current
     /// step but with attached metadata giving more info on the rejection.
     func submitCaptcha(_ token: String) -> Guarantee<RegistrationStep>
+
+    /// Submit an SSO access token to proceed with registration.
+    /// The token will be used to create a new Signal account without being tied to 
+    /// email or other identifiable information.
+    func submitSSOToken(_ accessToken: String) -> Guarantee<RegistrationStep>
 
     /// Submit a PIN code, but require confirmation in a subsequent step to proceed.
     /// That step will be provided the passed in blob, uninspected by this class.

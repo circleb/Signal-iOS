@@ -222,9 +222,9 @@ public class PreKeyManagerImpl: PreKeyManager {
 
         return Self.taskQueue.enqueue { [weak self, taskManager] in
             try Task.checkCancellation()
-            try await taskManager.createOneTimePreKeys(identity: .aci, auth: auth)
+            try await taskManager.createOneTimePreKeysForRegistration(identity: .aci, auth: auth)
             try Task.checkCancellation()
-            try await taskManager.createOneTimePreKeys(identity: .pni, auth: auth)
+            try await taskManager.createOneTimePreKeysForRegistration(identity: .pni, auth: auth)
             self?.refreshOneTimePreKeysCheckDidSucceed()
         }
     }

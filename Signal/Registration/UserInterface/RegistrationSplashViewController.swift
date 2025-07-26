@@ -13,6 +13,7 @@ public import SignalUI
 public protocol RegistrationSplashPresenter: AnyObject {
     func continueFromSplash()
     func setHasOldDevice(_ hasOldDevice: Bool)
+    func startSSOLogin()
 
     func switchToDeviceLinkingMode()
     func transferDevice()
@@ -151,8 +152,28 @@ public class RegistrationSplashViewController: OWSViewController {
             continueButton.autoPinEdge(toSuperviewEdge: .trailing)
         }
 
+        // Add SSO login button
+        stackView.setCustomSpacing(16, after: continueButton)
+        
+        let ssoLoginButton = OWSFlatButton.secondaryButtonForRegistration(
+            title: OWSLocalizedString(
+                "REGISTRATION_SSO_LOGIN_BUTTON_TITLE",
+                comment: "Button title for SSO login in the registration splash view."
+            ),
+            target: self,
+            selector: #selector(ssoLoginPressed)
+        )
+        ssoLoginButton.accessibilityIdentifier = "registration.splash.ssoLoginButton"
+        stackView.addArrangedSubview(ssoLoginButton)
+        ssoLoginButton.autoSetDimension(.width, toSize: 280)
+        ssoLoginButton.autoHCenterInSuperview()
+        NSLayoutConstraint.autoSetPriority(.defaultLow) {
+            ssoLoginButton.autoPinEdge(toSuperviewEdge: .leading)
+            ssoLoginButton.autoPinEdge(toSuperviewEdge: .trailing)
+        }
+
         if FeatureFlags.Backups.supported {
-            stackView.setCustomSpacing(16, after: continueButton)
+            stackView.setCustomSpacing(16, after: ssoLoginButton)
 
             let restoreOrTransferButton = OWSFlatButton.secondaryButtonForRegistration(
                 title: OWSLocalizedString(
@@ -199,6 +220,12 @@ public class RegistrationSplashViewController: OWSViewController {
     private func continuePressed() {
         Logger.info("")
         presenter?.continueFromSplash()
+    }
+
+    @objc
+    private func ssoLoginPressed() {
+        Logger.info("")
+        presenter?.startSSOLogin()
     }
 
     @objc
@@ -275,6 +302,10 @@ private class PreviewRegistrationSplashPresenter: RegistrationSplashPresenter {
 
     func setHasOldDevice(_ hasOldDevice: Bool) {
         print("setHasOldDevice: \(hasOldDevice)")
+    }
+
+    func startSSOLogin() {
+        print("startSSOLogin")
     }
 
     func switchToDeviceLinkingMode() {

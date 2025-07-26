@@ -9366,3 +9366,26 @@
 
 /* Info Message when you update disappearing messages duration. Embeds a {{time amount}} before messages disappear. see the *_TIME_AMOUNT strings for context. */
 "YOU_UPDATED_DISAPPEARING_MESSAGES_CONFIGURATION" = "You set disappearing message time to %@.";
+
+/* SSO Login Related Strings */
+
+/* Title for the SSO login step during registration */
+"REGISTRATION_SSO_LOGIN_TITLE" = "Sign in with Heritage";
+
+/* Button title for SSO login in the registration splash view */
+"REGISTRATION_SSO_LOGIN_BUTTON_TITLE" = "Sign in with Heritage";
+
+/* Explanation text for the SSO login step during registration */
+"REGISTRATION_SSO_LOGIN_EXPLANATION" = "Please wait while we redirect you to Heritage's secure login page to verify your identity.";
+
+/* Button to retry SSO login during registration */
+"REGISTRATION_SSO_LOGIN_RETRY" = "Try Again";
+
+/* Title for SSO login error alert */
+"REGISTRATION_SSO_LOGIN_ERROR_TITLE" = "Login Failed";
+
+/* Title for SSO login cancelled alert */
+"REGISTRATION_SSO_LOGIN_CANCELLED_TITLE" = "Login Cancelled";
+
+/* Message for SSO login cancelled alert */
+"REGISTRATION_SSO_LOGIN_CANCELLED_MESSAGE" = "You cancelled the Heritage login process. Please try again to continue setting up Signal.";

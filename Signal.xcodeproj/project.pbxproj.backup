@@ -3186,7 +3186,6 @@
 		F95427E6286E042200314EDA /* BadgeGiftingThanksSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F95427E5286E042200314EDA /* BadgeGiftingThanksSheet.swift */; };
 		F959E0C729EF2ECD00A396CF /* OWSDisappearingMessagesJob.swift in Sources */ = {isa = PBXBuildFile; fileRef = F959E0C629EF2ECD00A396CF /* OWSDisappearingMessagesJob.swift */; };
 		F95A64F3299589CA007FDBDF /* RegistrationNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F95A64F2299589CA007FDBDF /* RegistrationNavigationController.swift */; };
-			9DD28996-B166-4BC0-98F6- /* RegistrationSSOLoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B260D1F1-8C1E-4ADE-9BD4- /* RegistrationSSOLoginViewController.swift */; };
 		F95D71A3299305C400ED3102 /* RegistrationViewUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = F95D71A2299305C400ED3102 /* RegistrationViewUtil.swift */; };
 		F9613CDC2981F11400894B55 /* SqliteUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9613CDB2981F11400894B55 /* SqliteUtil.swift */; };
 		F9613CDE2981F15700894B55 /* SqliteUtilTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9613CDD2981F15700894B55 /* SqliteUtilTest.swift */; };
@@ -7162,7 +7161,6 @@
 		F95427E5286E042200314EDA /* BadgeGiftingThanksSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgeGiftingThanksSheet.swift; sourceTree = "<group>"; };
 		F959E0C629EF2ECD00A396CF /* OWSDisappearingMessagesJob.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OWSDisappearingMessagesJob.swift; sourceTree = "<group>"; };
 		F95A64F2299589CA007FDBDF /* RegistrationNavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationNavigationController.swift; sourceTree = "<group>"; };
-			B260D1F1-8C1E-4ADE-9BD4- /* RegistrationSSOLoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationSSOLoginViewController.swift; sourceTree = "<group>"; };
 		F95D71A2299305C400ED3102 /* RegistrationViewUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationViewUtil.swift; sourceTree = "<group>"; };
 		F9613CDB2981F11400894B55 /* SqliteUtil.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SqliteUtil.swift; sourceTree = "<group>"; };
 		F9613CDD2981F15700894B55 /* SqliteUtilTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SqliteUtilTest.swift; sourceTree = "<group>"; };
@@ -9971,7 +9969,6 @@
 				E183B2B22D025AA700B197C9 /* RegistrationEnterAccountEntropyPoolViewController.swift */,
 				F92E4C73299E9A0100C6E6C7 /* RegistrationLoadingViewController.swift */,
 				F95A64F2299589CA007FDBDF /* RegistrationNavigationController.swift */,
-									B260D1F1-8C1E-4ADE-9BD4- /* RegistrationSSOLoginViewController.swift */,
 				F9D5C39E2993F9FF004891FC /* RegistrationPermissionsView.swift */,
 				F9D47A4729D1D5DB00E6E080 /* RegistrationPinAttemptsExhaustedAndMustCreateNewPinViewController.swift */,
 				F9E3006029A02D8800DCA219 /* RegistrationPinViewController.swift */,
@@ -17310,7 +17307,6 @@
 				F92E4C74299E9A0100C6E6C7 /* RegistrationLoadingViewController.swift in Sources */,
 				66533E3A29B9502100E8D928 /* RegistrationMode.swift in Sources */,
 				F95A64F3299589CA007FDBDF /* RegistrationNavigationController.swift in Sources */,
-									9DD28996-B166-4BC0-98F6- /* RegistrationSSOLoginViewController.swift in Sources */,
 				F9D5C39F2993F9FF004891FC /* RegistrationPermissionsView.swift in Sources */,
 				F9D47A4829D1D5DB00E6E080 /* RegistrationPinAttemptsExhaustedAndMustCreateNewPinViewController.swift in Sources */,
 				F9E3006129A02D8800DCA219 /* RegistrationPinViewController.swift in Sources */,

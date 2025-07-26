@@ -210,6 +210,28 @@ internal struct PreKeyTaskManager {
         try await uploadAndPersistBundle(bundle, auth: auth)
     }
 
+    /// Creates one-time prekeys for registration, creating identity keys if they don't exist.
+    /// This is used during the profile setup phase when identity keys might not be properly persisted yet.
+    internal func createOneTimePreKeysForRegistration(
+        identity: OWSIdentity,
+        auth: ChatServiceAuth
+    ) async throws {
+        PreKey.logger.info("[\(identity)] Create one-time prekeys for registration")
+        try Task.checkCancellation()
+        let bundle = try await db.awaitableWrite { tx in
+            let identityKeyPair = self.getOrCreateIdentityKeyPair(identity: identity, tx: tx)
+            return try self.createAndPersistPartialBundle(
+                identity: identity,
+                identityKeyPair: identityKeyPair,
+                targets: [.oneTimePreKey, .oneTimePqPreKey],
+                tx: tx
+            )
+        }
+
+        try Task.checkCancellation()
+        try await uploadAndPersistBundle(bundle, auth: auth)
+    }
+
     // MARK: - Private helpers
 
     // MARK: Per-identity registration generators

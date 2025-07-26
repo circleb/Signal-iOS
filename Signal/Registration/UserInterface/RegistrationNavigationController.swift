@@ -377,9 +377,14 @@ public class RegistrationNavigationController: OWSNavigationController {
             SignalApp.shared.showConversationSplitView(appReadiness: appReadiness)
             return nil
         case .ssoLogin:
-            Logger.info("Proceeding to SSO login")
-            pushNextController(coordinator.nextStep())
-            return nil
+            return Controller(
+                type: RegistrationSSOLoginViewController.self,
+                make: { presenter in
+                    return RegistrationSSOLoginViewController(presenter: presenter)
+                },
+                // No state to update.
+                update: nil
+            )
         }
     }
 
@@ -437,6 +442,10 @@ extension RegistrationNavigationController: RegistrationSplashPresenter, Registr
 
     public func setHasOldDevice(_ hasOldDevice: Bool) {
         pushNextController(coordinator.setHasOldDevice(hasOldDevice))
+    }
+
+    public func startSSOLogin() {
+        pushNextController(coordinator.startSSOLogin())
     }
 
     public func switchToDeviceLinkingMode() {
@@ -636,6 +645,56 @@ extension RegistrationNavigationController: RegistrationRestoreFromBackupConfirm
     func restoreFromBackupConfirmed() {
         let guarantee = coordinator.confirmRestoreFromBackup()
         pushNextController(guarantee)
+    }
+}
+
+extension RegistrationNavigationController: RegistrationSSOLoginPresenter {
+    public func ssoLoginDidComplete(withToken accessToken: String) {
+        Logger.info("SSO login completed successfully")
+        // For now, we'll treat SSO success as enough to proceed with registration
+        // without being tied to email or any other identifiable information
+        let guarantee = coordinator.submitSSOToken(accessToken)
+        pushNextController(guarantee)
+    }
+    
+    public func ssoLoginDidFail(withError error: Error) {
+        Logger.error("SSO login failed: \(error)")
+        // For now, just show an error alert and stay on the SSO screen
+        // In a production app, you might want to retry or fallback
+        let alert = ActionSheetController(
+            title: OWSLocalizedString(
+                "REGISTRATION_SSO_LOGIN_ERROR_TITLE",
+                comment: "Title for SSO login error alert"
+            ),
+            message: error.localizedDescription
+        )
+        alert.addAction(.init(
+            title: CommonStrings.okButton,
+            style: .default,
+            handler: nil
+        ))
+        present(alert, animated: true)
+    }
+    
+    public func ssoLoginDidCancel() {
+        Logger.info("SSO login was cancelled by user")
+        // For now, just show an info alert
+        let alert = ActionSheetController(
+            title: OWSLocalizedString(
+                "REGISTRATION_SSO_LOGIN_CANCELLED_TITLE", 
+                comment: "Title for SSO login cancelled alert"
+            ),
+            message: OWSLocalizedString(
+                "REGISTRATION_SSO_LOGIN_CANCELLED_MESSAGE",
+                comment: "Message for SSO login cancelled alert"
+            )
+        )
+        alert.addAction(.init(
+            title: CommonStrings.okButton,
+            style: .default,
+            handler: nil
+        ))
+        present(alert, animated: true)
     }
 }
 
