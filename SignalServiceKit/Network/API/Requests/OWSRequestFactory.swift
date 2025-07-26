@@ -543,6 +543,7 @@ public enum OWSRequestFactory {
             parameters: parameters
         )
         request.auth = .identified(auth)
+        request.shouldCheckDeregisteredOn401 = true
         return request
     }
 

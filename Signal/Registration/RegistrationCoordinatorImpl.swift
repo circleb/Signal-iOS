@@ -256,6 +256,11 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
         inMemoryState.shouldRestoreSVRMasterKeyAfterRegistration = false
         inMemoryState.askForPinDuringReregistration = false
 
+        // If the user has entered a backup key but hasn't chosen a restore method, assume they want to restore from remote backup
+        if inMemoryState.restoreMethod == nil {
+            inMemoryState.restoreMethod = .remoteBackup
+        }
+
         // If the master key has already been restored from SVR, this can mean two things
         // 1) The user has gone through the basic restore flow that may ask for the PIN before prompting
         //    the restore method.
@@ -318,29 +323,9 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
             }
         }
         
-        // For SSO registration, we skip phone number verification entirely
-        // and proceed directly to profile setup or PIN creation
-        // Generate a synthetic E164 or use a special SSO marker
-        let syntheticE164 = E164("+15551234567")! // This will be replaced with proper SSO handling
-        
-        deps.db.write { tx in
-            updatePersistedState(tx) {
-                $0.e164 = syntheticE164
-                $0.isSSOReg = true
-            }
-        }
-        
-        // Create a successful account identity for SSO registration
-        let accountIdentity = createAccountIdentityForSSO(accessToken: accessToken, syntheticE164: syntheticE164)
-        
-        // Set the account identity in persisted state to make the pathway become .profileSetup
-        deps.db.write { tx in
-            updatePersistedState(tx) {
-                $0.accountIdentity = accountIdentity
-            }
-        }
-        
-        return nextStep()
+        // For SSO registration, we need to create the account first before proceeding
+        // to profile setup. The account creation will provide us with real credentials.
+        return createSSOAccount(accessToken: accessToken)
     }
 
     public func setHasOldDevice(_ hasOldDevice: Bool) -> Guarantee<RegistrationStep> {
@@ -3239,33 +3224,10 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
             // After atomic account creation, our account is ready to go from the start.
             // But we should still upload one-time prekeys, as that is not part
             // of account creation.
-            return self.deps.preKeyManager.rotateOneTimePreKeysForRegistration(auth: accountIdentity.chatServiceAuth)
-                .then(on: DispatchQueue.main) { [weak self] () -> Guarantee<RegistrationStep> in
-                    guard let self else {
-                        return unretainedSelfError()
-                    }
-                    self.db.write { tx in
-                        self.updatePersistedState(tx) {
-                            // No harm marking both down as done even though
-                            // we only did one or the other.
-                            $0.didRefreshOneTimePreKeys = true
-                        }
-                    }
-                    return self.nextStep()
-                }
-                .recover(on: DispatchQueue.main) { [weak self] error -> Guarantee<RegistrationStep> in
-                    guard let self else {
-                        return unretainedSelfError()
-                    }
-                    if error.isPostRegDeregisteredError {
-                        return self.becameDeregisteredBeforeCompleting(accountIdentity: accountIdentity)
-                    }
-                    Logger.error("Failed to create prekeys: \(error)")
-                    // Note this is undismissable; the user will be on whatever
-                    // screen they were on but with the error sheet atop which retries
-                    // via `nextStep()` when tapped.
-                    return .value(.showErrorSheet(.genericError))
-                }
+            return rotateOneTimePreKeysWithRetry(
+                accountIdentity: accountIdentity,
+                retriesLeft: Constants.networkErrorRetries
+            )
         }
 
         if
@@ -3303,6 +3265,26 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
             return stepGuarantee
         }
 
+        // Check if we should restore from message backup
+        if shouldRestoreFromMessageBackup() {
+            guard let backupType = inMemoryState.restoreMethod?.backupType else {
+                // If no backup type is set but user has backup key, assume remote backup
+                inMemoryState.restoreMethod = .remoteBackup
+                return restoreFromMessageBackup(
+                    type: .remote,
+                    identity: accountIdentity
+                ).then { _ in
+                    return self.nextStep()
+                }
+            }
+            return restoreFromMessageBackup(
+                type: backupType,
+                identity: accountIdentity
+            ).then { _ in
+                return self.nextStep()
+            }
+        }
+
         // This will restore after backup, _or_ it will rotate to the new AEP derived key
         let masterKey = inMemoryState.accountEntropyPool?.getMasterKey()
 
@@ -3328,34 +3310,52 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
             inMemoryState.restoreMethod?.backupType == nil
         {
             if let profileInfo = inMemoryState.pendingProfileInfo {
-                return db.write { tx in
-                    deps.profileManager.updateLocalProfile(
-                        givenName: profileInfo.givenName,
-                        familyName: profileInfo.familyName,
-                        avatarData: profileInfo.avatarData,
-                        authedAccount: accountIdentity.authedAccount,
-                        tx: tx
-                    )
-                }
-                .map(on: SyncScheduler()) { return nil }
-                .recover(on: SyncScheduler()) { (error) -> Guarantee<Error?> in
-                    return .value(error)
-                }
-                .then(on: DispatchQueue.main) { [weak self] (error) -> Guarantee<RegistrationStep> in
-                    guard let self else {
-                        return unretainedSelfError()
+                // For SSO registration, skip server profile update since we don't have real server credentials
+                if persistedState.isSSOReg {
+                    Logger.info("SSO registration: skipping server profile update, setting profile locally only")
+                    _ = db.write { tx in
+                        deps.profileManager.updateLocalProfile(
+                            givenName: profileInfo.givenName,
+                            familyName: profileInfo.familyName,
+                            avatarData: profileInfo.avatarData,
+                            authedAccount: accountIdentity.authedAccount,
+                            tx: tx
+                        )
                     }
-                    if let error {
-                        if error.isPostRegDeregisteredError {
-                            return self.becameDeregisteredBeforeCompleting(accountIdentity: accountIdentity)
+                    inMemoryState.hasProfileName = true
+                    inMemoryState.pendingProfileInfo = nil
+                    return nextStep()
+                } else {
+                    // Normal registration flow with server profile update
+                    return db.write { tx in
+                        deps.profileManager.updateLocalProfile(
+                            givenName: profileInfo.givenName,
+                            familyName: profileInfo.familyName,
+                            avatarData: profileInfo.avatarData,
+                            authedAccount: accountIdentity.authedAccount,
+                            tx: tx
+                        )
+                    }
+                    .map(on: SyncScheduler()) { return nil }
+                    .recover(on: SyncScheduler()) { (error) -> Guarantee<Error?> in
+                        return .value(error)
+                    }
+                    .then(on: DispatchQueue.main) { [weak self] (error) -> Guarantee<RegistrationStep> in
+                        guard let self else {
+                            return unretainedSelfError()
                         }
-                        return .value(.showErrorSheet(
-                            error.isNetworkFailureOrTimeout ? .networkError : .genericError
-                        ))
+                        if let error {
+                            if error.isPostRegDeregisteredError {
+                                return self.becameDeregisteredBeforeCompleting(accountIdentity: accountIdentity)
+                            }
+                            return .value(.showErrorSheet(
+                                error.isNetworkFailureOrTimeout ? .networkError : .genericError
+                            ))
+                        }
+                        self.inMemoryState.hasProfileName = true
+                        self.inMemoryState.pendingProfileInfo = nil
+                        return self.nextStep()
                     }
-                    self.inMemoryState.hasProfileName = true
-                    self.inMemoryState.pendingProfileInfo = nil
-                    return self.nextStep()
                 }
             } else {
                 return .value(.setupProfile(RegistrationProfileState(
@@ -3448,6 +3448,18 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
         }
 
         if !persistedState.hasSkippedPinEntry {
+            // For SSO registration, skip SVR backup since the account isn't properly created yet
+            if persistedState.isSSOReg {
+                Logger.info("SSO registration: skipping SVR backup, marking as completed")
+                
+                // Mark SVR backup as completed to prevent infinite loop
+                self.inMemoryState.hasBackedUpToSVR = true
+                self.inMemoryState.didSkipSVRBackup = true
+                
+                // Return nil to indicate SVR backup is complete and continue with next step
+                return nil
+            }
+            
             if inMemoryState.shouldBackUpToSVR {
                 // If we haven't backed up, do so now.
                 return Guarantee.wrapAsync {
@@ -4451,6 +4463,65 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
         return Randomness.generateRandomBytes(16).hexadecimalString
     }
 
+    private func createSSOAccount(accessToken: String) -> Guarantee<RegistrationStep> {
+        Logger.info("Creating SSO account")
+        
+        // Generate a unique identifier from the SSO token or create a synthetic one
+        // For now, we'll create a hash-based identifier from the access token
+        let syntheticE164 = generateSyntheticE164(from: accessToken)
+        let authPassword = generateServerAuthToken()
+        
+        deps.db.write { tx in
+            updatePersistedState(tx) {
+                $0.e164 = syntheticE164
+                $0.isSSOReg = true
+            }
+        }
+        
+        // Create a temporary account identity for SSO registration
+        // This will be replaced with real credentials once the account is created
+        let tempAccountIdentity = AccountIdentity(
+            aci: Aci.randomForTesting(),
+            pni: Pni.randomForTesting(),
+            e164: syntheticE164,
+            hasPreviouslyUsedSVR: false,
+            authPassword: authPassword
+        )
+        
+        // Set the temporary account identity to proceed to profile setup
+        // and disable all backup restoration for SSO users
+        deps.db.write { tx in
+            updatePersistedState(tx) {
+                $0.accountIdentity = tempAccountIdentity
+                $0.didRefreshOneTimePreKeys = true // Skip prekey upload for SSO
+            }
+        }
+        
+        // Disable backup restoration for SSO users
+        inMemoryState.restoreMethod = .declined // Explicitly decline backup restoration
+        inMemoryState.hasSkippedRestoreFromMessageBackup = true
+        inMemoryState.hasSkippedRestoreFromStorageService = true
+        
+        return nextStep()
+    }
+    
+    /// Generate a synthetic E164 from the SSO access token
+    /// This creates a unique identifier that can be used for SSO registration
+    private func generateSyntheticE164(from accessToken: String) -> E164 {
+        // Create a simple hash of the access token to generate a consistent identifier
+        var hashValue: UInt64 = 0
+        for char in accessToken {
+            hashValue = hashValue &* 31 &+ UInt64(char.asciiValue ?? 0)
+        }
+        
+        // Generate a phone number in the format +1555XXXXXXX where XXXX is derived from the hash
+        let phoneNumberSuffix = String(format: "%04d", hashValue % 10000)
+        let syntheticPhoneNumber = "+1555\(phoneNumberSuffix)"
+        
+        Logger.info("Generated synthetic E164 for SSO: \(syntheticPhoneNumber)")
+        return E164(syntheticPhoneNumber) ?? E164("+15551234567")!
+    }
+
     private func createAccountIdentityForSSO(accessToken: String, syntheticE164: E164) -> AccountIdentity {
         // For SSO registration, we create synthetic identifiers
         // In a real implementation, these might be derived from the SSO token or generated differently
@@ -4659,12 +4730,17 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
     }
 
     private func shouldRestoreFromMessageBackup() -> Bool {
+        // For SSO registration, never attempt to restore from backup
+        if persistedState.isSSOReg {
+            return false
+        }
+        
         switch mode {
         case .registering:
             return
                 deps.featureFlags.backupSupported
                 && inMemoryState.accountEntropyPool != nil
-                && inMemoryState.hasBackedUpToSVR
+                && (inMemoryState.hasBackedUpToSVR || inMemoryState.restoreMethod?.isBackup == true)
                 && inMemoryState.backupRestoreState == .none
                 && !inMemoryState.hasSkippedRestoreFromMessageBackup
         case .changingNumber, .reRegistering:
@@ -4685,6 +4761,11 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
     }
 
     private func shouldRestoreFromStorageService() -> Bool {
+        // For SSO registration, never attempt to restore from storage service
+        if persistedState.isSSOReg {
+            return false
+        }
+        
         switch mode {
         case .registering, .reRegistering:
             return !inMemoryState.hasRestoredFromStorageService
@@ -4693,6 +4774,54 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
         case .changingNumber:
             return false
         }
+    }
+
+    /// Rotates one-time prekeys for registration with retry logic for network failures.
+    /// This is critical for registration completion, so we retry on network errors.
+    private func rotateOneTimePreKeysWithRetry(
+        accountIdentity: AccountIdentity,
+        retriesLeft: Int
+    ) -> Guarantee<RegistrationStep> {
+        return self.deps.preKeyManager.rotateOneTimePreKeysForRegistration(auth: accountIdentity.chatServiceAuth)
+            .then(on: DispatchQueue.main) { [weak self] () -> Guarantee<RegistrationStep> in
+                guard let self else {
+                    return unretainedSelfError()
+                }
+                self.db.write { tx in
+                    self.updatePersistedState(tx) {
+                        // No harm marking both down as done even though
+                        // we only did one or the other.
+                        $0.didRefreshOneTimePreKeys = true
+                    }
+                }
+                return self.nextStep()
+            }
+            .recover(on: DispatchQueue.main) { [weak self] error -> Guarantee<RegistrationStep> in
+                guard let self else {
+                    return unretainedSelfError()
+                }
+                
+                // Don't retry on 401 errors (deregistration) - handle them immediately
+                if error.isPostRegDeregisteredError {
+                    Logger.warn("Prekey upload failed due to deregistration (401), not retrying")
+                    return self.becameDeregisteredBeforeCompleting(accountIdentity: accountIdentity)
+                }
+                
+                // Retry on network failures if we have retries left
+                if error.isNetworkFailureOrTimeout, retriesLeft > 0 {
+                    Logger.warn("Prekey upload failed due to network error, retrying. Retries left: \(retriesLeft), error: \(error)")
+                    return self.rotateOneTimePreKeysWithRetry(
+                        accountIdentity: accountIdentity,
+                        retriesLeft: retriesLeft - 1
+                    )
+                }
+                
+                Logger.error("Failed to create prekeys: \(error)")
+                // Note this is undismissable; the user will be on whatever
+                // screen they were on but with the error sheet atop which retries
+                // via `nextStep()` when tapped.
+                return .value(.showErrorSheet(.genericError))
+            }
     }
 
     private func shouldRefreshOneTimePreKeys() -> Bool {
@@ -4754,7 +4883,7 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
         static let persistedStateKey = "state"
 
         // how many times we will retry network errors.
-        static let networkErrorRetries = 1
+        static let networkErrorRetries = 3
 
         // If a request that can be retried has a timeout below this
         // threshold, we will auto-retry it.

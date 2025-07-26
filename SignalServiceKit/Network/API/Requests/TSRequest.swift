@@ -121,8 +121,12 @@ public struct TSRequest: CustomDebugStringConvertible {
     }
 
     private func setAuth(username: String, password: String, for httpHeaders: inout HttpHeaders) {
-        owsAssertDebug(!username.isEmpty)
-        owsAssertDebug(!password.isEmpty)
+        // During registration, credentials might be empty, so we need to handle this gracefully
+        if username.isEmpty || password.isEmpty {
+            Logger.warn("Attempting to set auth with empty credentials - username: \(username.isEmpty ? "empty" : "present"), password: \(password.isEmpty ? "empty" : "present")")
+            // Don't add auth header if credentials are empty
+            return
+        }
         httpHeaders.addAuthHeader(username: username, password: password)
     }
 

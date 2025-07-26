@@ -85,6 +85,25 @@ private class RESTSessionManager {
     }
 
     private func makeIsDeregisteredRequest() async throws(CancellationError) {
+        // Check if we're in the middle of registration and don't have proper credentials yet
+        let registrationState = DependenciesBridge.shared.tsAccountManager.registrationStateWithMaybeSneakyTransaction
+        if !registrationState.isRegistered {
+            Logger.warn("Skipping deregistration check during registration - user not fully registered yet")
+            return
+        }
+        
+        // Check if we have valid credentials before making the request
+        let hasValidCredentials = DependenciesBridge.shared.db.read { tx in
+            let username = DependenciesBridge.shared.tsAccountManager.storedServerUsername(tx: tx)
+            let password = DependenciesBridge.shared.tsAccountManager.storedServerAuthToken(tx: tx)
+            return !(username?.isEmpty ?? true) && !(password?.isEmpty ?? true)
+        }
+        
+        if !hasValidCredentials {
+            Logger.warn("Skipping deregistration check - no valid credentials available")
+            return
+        }
+        
         let isDeregisteredRequest = WhoAmIRequestFactory.amIDeregisteredRequest()
 
         let result: WhoAmIRequestFactory.Responses.AmIDeregistered?
