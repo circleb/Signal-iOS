@@ -175,6 +175,11 @@ class GetStartedBannerViewController: UIViewController, UICollectionViewDelegate
                 activeCards.removeAll(where: { $0 == .avatarBuilder })
             }
 
+            // Disable invite friends card if feature flag is enabled
+            if FeatureFlags.disableInviteFriendsCard {
+                activeCards.removeAll(where: { $0 == .inviteFriends })
+            }
+
             return activeCards
         }
     }
