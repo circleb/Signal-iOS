@@ -127,11 +127,12 @@ class AppSettingsViewController: OWSTableViewController2 {
     }
 
     func updateTableContents() {
-        let isPrimaryDevice = DependenciesBridge.shared.db.read { tx in
-            return DependenciesBridge.shared.tsAccountManager
-                .registrationState(tx: tx)
-                .isPrimaryDevice == true
-        }
+//  Hide because it's only used for linked device settings section
+//        let isPrimaryDevice = DependenciesBridge.shared.db.read { tx in
+//            return DependenciesBridge.shared.tsAccountManager
+//                .registrationState(tx: tx)
+//                .isPrimaryDevice == true
+//        }
 
         let contents = OWSTableContents()
 
@@ -162,39 +163,42 @@ class AppSettingsViewController: OWSTableViewController2 {
                 self?.navigationController?.pushViewController(vc, animated: true)
             }
         ))
-        if isPrimaryDevice {
-            section1.add(.disclosureItem(
-                icon: .settingsLinkedDevices,
-                withText: OWSLocalizedString("LINKED_DEVICES_TITLE", comment: "Menu item and navbar title for the device manager"),
-                actionBlock: { [weak self] in
-                    self?.navigationController?.pushViewController(
-                        LinkedDevicesHostingController(),
-                        animated: true
-                    )
-                }
-            ))
-        }
-        section1.add(.init(customCellBlock: { [weak self] in
-            guard let self = self else { return UITableViewCell() }
-            let accessoryContentView: UIView?
-            if self.hasExpiredGiftBadge {
-                let imageView = UIImageView(image: UIImage(imageLiteralResourceName: "info-fill"))
-                imageView.tintColor = Theme.accentBlueColor
-                imageView.autoSetDimensions(to: CGSize(square: 24))
-                accessoryContentView = imageView
-            } else {
-                accessoryContentView = nil
-            }
-            return OWSTableItem.buildCell(
-                icon: .settingsDonate,
-                itemName: OWSLocalizedString("SETTINGS_DONATE", comment: "Title for the 'donate to signal' link in settings."),
-                accessoryType: .disclosureIndicator,
-                accessoryContentView: accessoryContentView,
-                accessibilityIdentifier: UIView.accessibilityIdentifier(in: self, name: "donate")
-            )
-        }, actionBlock: { [weak self] in
-            self?.didTapDonate()
-        }))
+        // Hide Linked Devices for now
+        // if isPrimaryDevice {
+        //     section1.add(.disclosureItem(
+        //         icon: .settingsLinkedDevices,
+        //         withText: OWSLocalizedString("LINKED_DEVICES_TITLE", comment: "Menu item and navbar title for the device manager"),
+        //         actionBlock: { [weak self] in
+        //             self?.navigationController?.pushViewController(
+        //                 LinkedDevicesHostingController(),
+        //                 animated: true
+        //             )
+        //         }
+        //     ))
+        // }
+        
+        // Donate option disabled
+        // section1.add(.init(customCellBlock: { [weak self] in
+        //     guard let self = self else { return UITableViewCell() }
+        //     let accessoryContentView: UIView?
+        //     if self.hasExpiredGiftBadge {
+        //         let imageView = UIImageView(image: UIImage(imageLiteralResourceName: "info-fill"))
+        //         imageView.tintColor = Theme.accentBlueColor
+        //         imageView.autoSetDimensions(to: CGSize(square: 24))
+        //         accessoryContentView = imageView
+        //     } else {
+        //         accessoryContentView = nil
+        //     }
+        //     return OWSTableItem.buildCell(
+        //         icon: .settingsDonate,
+        //         itemName: OWSLocalizedString("SETTINGS_DONATE", comment: "Title for the 'donate to signal' link in settings."),
+        //         accessoryType: .disclosureIndicator,
+        //         accessoryContentView: accessoryContentView,
+        //         accessibilityIdentifier: UIView.accessibilityIdentifier(in: self, name: "donate")
+        //     )
+        // }, actionBlock: { [weak self] in
+        //     self?.didTapDonate()
+        // }))
         contents.add(section1)
 
         let section2 = OWSTableSection()
@@ -241,35 +245,36 @@ class AppSettingsViewController: OWSTableViewController2 {
                 self?.navigationController?.pushViewController(vc, animated: true)
             }
         ))
-        if
-            isPrimaryDevice,
-            RemoteConfig.current.allowBackupSettings
-        {
-            section2.add(.disclosureItem(
-                icon: .backup,
-                withText: OWSLocalizedString(
-                    "SETTINGS_BACKUPS",
-                    comment: "Label for the 'backups' section of app settings."
-                ),
-                actionBlock: { [weak self] in
-                    guard let self else { return }
+        // Hide Backups for now
+        // if
+        //     isPrimaryDevice,
+        //     RemoteConfig.current.allowBackupSettings
+        // {
+        //     section2.add(.disclosureItem(
+        //         icon: .backup,
+        //         withText: OWSLocalizedString(
+        //             "SETTINGS_BACKUPS",
+        //             comment: "Label for the 'backups' section of app settings."
+        //         ),
+        //         actionBlock: { [weak self] in
+        //             guard let self else { return }
 
-                    let backupSettingsStore = BackupSettingsStore()
-                    let db = DependenciesBridge.shared.db
+        //             let backupSettingsStore = BackupSettingsStore()
+        //             let db = DependenciesBridge.shared.db
 
-                    let haveBackupsEverBeenEnabled = db.read { tx in
-                        backupSettingsStore.haveBackupsEverBeenEnabled(tx: tx)
-                    }
+        //             let haveBackupsEverBeenEnabled = db.read { tx in
+        //                 backupSettingsStore.haveBackupsEverBeenEnabled(tx: tx)
+        //             }
 
-                    if haveBackupsEverBeenEnabled {
-                        let vc = BackupSettingsViewController(onLoadAction: .none)
-                        navigationController?.pushViewController(vc, animated: true)
-                    } else {
-                        BackupOnboardingCoordinator().present(fromViewController: self)
-                    }
-                }
-            ))
-        }
+        //             if haveBackupsEverBeenEnabled {
+        //                 let vc = BackupSettingsViewController(onLoadAction: .none)
+        //                 navigationController?.pushViewController(vc, animated: true)
+        //             } else {
+        //                 BackupOnboardingCoordinator().present(fromViewController: self)
+        //             }
+        //         }
+        //     ))
+        // }
         section2.add(.disclosureItem(
             icon: .settingsDataUsage,
             withText: OWSLocalizedString("SETTINGS_DATA", comment: "Label for the 'data' section of the app settings."),
@@ -362,13 +367,14 @@ class AppSettingsViewController: OWSTableViewController2 {
                 self?.navigationController?.pushViewController(vc, animated: true)
             }
         ))
-        section3.add(.item(
-            icon: .settingsInvite,
-            name: OWSLocalizedString("SETTINGS_INVITE_TITLE", comment: "Settings table view cell label"),
-            actionBlock: { [weak self] in
-                self?.showInviteFlow()
-            }
-        ))
+        // Hide Invite Friends for now
+        // section3.add(.item(
+        //     icon: .settingsInvite,
+        //     name: OWSLocalizedString("SETTINGS_INVITE_TITLE", comment: "Settings table view cell label"),
+        //     actionBlock: { [weak self] in
+        //         self?.showInviteFlow()
+        //     }
+        // ))
         contents.add(section3)
 
         if DebugFlags.internalSettings {
