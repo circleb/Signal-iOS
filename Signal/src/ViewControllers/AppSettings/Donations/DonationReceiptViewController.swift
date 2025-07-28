@@ -211,8 +211,7 @@ class DonationReceiptViewController: OWSTableViewController2 {
         }
 
         private class func headerView() -> UIView {
-            let signalLogo = UIImage(named: "signal-full-logo")
-            let signalLogoView = UIImageView(image: signalLogo)
+            let signalLogoView = UIImageView(image: #imageLiteral(resourceName: "signal-logo-128-launch-screen"))
 
             signalLogoView.autoSetDimensions(to: CGSize(width: 140, height: 40))
 

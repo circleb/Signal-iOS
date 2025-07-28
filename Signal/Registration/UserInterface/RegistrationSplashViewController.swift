@@ -91,8 +91,8 @@ public class RegistrationSplashViewController: OWSViewController {
             transferButton.autoPinEdge(toSuperviewMargin: .top)
         }
 
-        let heroImage = UIImage(named: "onboarding_splash_hero")
-        let heroImageView = UIImageView(image: heroImage)
+//        let heroImage = UIImage(named: "onboarding_splash_hero")
+        let heroImageView = UIImageView(image: #imageLiteral(resourceName: "signal-logo-128-launch-screen"))
         heroImageView.contentMode = .scaleAspectFit
         heroImageView.layer.minificationFilter = .trilinear
         heroImageView.layer.magnificationFilter = .trilinear
