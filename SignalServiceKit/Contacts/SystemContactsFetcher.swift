@@ -95,7 +95,8 @@ public class ContactsFrameworkContactStoreAdaptee: ContactStoreAdaptee {
     }
 
     func requestAccess(completionHandler: @escaping (Bool, Error?) -> Void) {
-        contactStoreForLargeRequests.requestAccess(for: .contacts, completionHandler: completionHandler)
+        // Skip contact permission requests - always return denied
+        completionHandler(false, nil)
     }
 
     func fetchContacts() -> Result<[SystemContact], Error> {
@@ -231,37 +232,9 @@ public class SystemContactsFetcher {
         }
         setupObservationIfNecessary()
 
-        switch rawAuthorizationStatus {
-        case .notDetermined:
-            if CurrentAppContext().isInBackground() {
-                Logger.error("do not request contacts permission when app is in background")
-                completion(nil)
-                return
-            }
-            self.contactStoreAdapter.requestAccess { (granted, error) in
-                if let error = error {
-                    Logger.error("error fetching contacts: \(error)")
-                    completion(error)
-                    return
-                }
-
-                guard granted else {
-                    // This case should have been caught by the error guard a few lines up.
-                    owsFailDebug("declined contact access.")
-                    completion(nil)
-                    return
-                }
-
-                DispatchQueue.main.async {
-                    self.updateContacts(completion: completion)
-                }
-            }
-        case .authorized, .limited:
-            self.updateContacts(completion: completion)
-        case .denied, .restricted:
-            self.delegate?.systemContactsFetcher(self, hasAuthorizationStatus: rawAuthorizationStatus)
-            completion(nil)
-        }
+        // Skip contact permission requests - treat as denied
+        self.delegate?.systemContactsFetcher(self, hasAuthorizationStatus: .denied)
+        completion(nil)
     }
 
     public func fetchOnceIfAlreadyAuthorized() {

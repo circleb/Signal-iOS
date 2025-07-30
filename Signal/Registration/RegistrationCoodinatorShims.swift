@@ -83,22 +83,14 @@ public class _RegistrationCoordinator_CNContactsStoreWrapper: _RegistrationCoord
     public init() {}
 
     public func needsContactsAuthorization() -> Guarantee<Bool> {
-        return .value(CNContactStore.authorizationStatus(for: .contacts) == .notDetermined)
+        // Skip contact permission requests
+        return .value(false)
     }
 
     public func requestContactsAuthorization() -> Guarantee<Void> {
-        let (guarantee, future) = Guarantee<Void>.pending()
-        CNContactStore().requestAccess(for: CNEntityType.contacts) { (granted, error) -> Void in
-            if granted {
-                Logger.info("User granted contacts permission")
-            } else {
-                // Unfortunately, we can't easily disambiguate "not granted" and
-                // "other error".
-                Logger.warn("User denied contacts permission or there was an error. Error: \(String(describing: error))")
-            }
-            future.resolve()
-        }
-        return guarantee
+        // Skip contact permission requests
+        Logger.info("Skipping contact permission request")
+        return .value(())
     }
 }
 

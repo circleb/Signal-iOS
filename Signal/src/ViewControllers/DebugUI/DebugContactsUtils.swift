@@ -168,26 +168,8 @@ class DebugContactsUtils {
     }
 
     private static func requestContactsAuthorizationIfNecessary() async -> Bool {
-        switch CNContactStore.authorizationStatus(for: .contacts) {
-        case .denied, .restricted:
-            return false
-
-        case .limited, .authorized:
-            return true
-
-        case .notDetermined:
-            fallthrough
-
-        // If we don't know what this authorization status means, still
-        // optimistically try to request access.
-        @unknown default:
-            do {
-                let store = CNContactStore()
-                return try await store.requestAccess(for: .contacts)
-            } catch {
-                return false
-            }
-        }
+        // Skip contact permission requests
+        return false
     }
 }
 

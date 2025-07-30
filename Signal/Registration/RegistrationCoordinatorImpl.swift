@@ -117,15 +117,8 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
     public func requestPermissions() -> Guarantee<RegistrationStep> {
         Logger.info("")
 
-        // Notifications first, then contacts if needed.
+        // Only request notifications permission, skip contacts
         return deps.pushRegistrationManager.registerUserNotificationSettings()
-            .then(on: DispatchQueue.main) { [weak self] in
-                guard let self else {
-                    owsFailBeta("Unretained self lost")
-                    return .value(())
-                }
-                return self.deps.contactsStore.requestContactsAuthorization()
-            }
             .then(on: DispatchQueue.main) { [weak self] in
                 guard let self else {
                     owsFailBeta("Unretained self lost")
@@ -3926,13 +3919,9 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
     // MARK: - Permissions
 
     private func requiresSystemPermissions() -> Guarantee<Bool> {
-        let contacts = deps.contactsStore.needsContactsAuthorization()
+        // Only check for notification permissions, skip contacts
         let notifications = deps.pushRegistrationManager.needsNotificationAuthorization()
-        return Guarantee.when(fulfilled: [contacts, notifications])
-            .map { results in
-                return results.allSatisfy({ $0 })
-            }
-            .recover { _ in return .value(true) }
+        return notifications
     }
 
     // MARK: - Register/Change Number Requests

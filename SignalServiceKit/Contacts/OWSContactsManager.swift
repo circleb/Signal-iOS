@@ -1449,13 +1449,26 @@ extension ContactManager {
         let addresses = Array(addresses)
         let displayNames = self.displayNames(for: addresses, tx: tx)
         let config = DisplayName.ComparableValue.Config.current()
-        return zip(addresses, displayNames).map { (address, displayName) in
+        let realConnections = zip(addresses, displayNames).map { (address, displayName) in
             return ComparableDisplayName(
                 address: address,
                 displayName: displayName,
                 config: config
             )
         }.sorted(by: <)
+        
+        // If no real contacts are available, use API contacts
+        if realConnections.isEmpty {
+            return createAPIComparableNames(config: config)
+        } else {
+            return realConnections
+        }
+    }
+    
+    private func createAPIComparableNames(config: DisplayName.ComparableValue.Config) -> [ComparableDisplayName] {
+        // This will be populated asynchronously when API contacts are fetched
+        // For now, return empty array - the actual implementation will be in the UI layer
+        return []
     }
 }
 

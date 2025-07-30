@@ -7,6 +7,7 @@ import Foundation
 import MessageUI
 public import SignalServiceKit
 import SwiftUI
+import LibSignalClient
 
 public class RecipientPickerViewController: OWSViewController, OWSNavigationChildController {
 
@@ -37,7 +38,7 @@ public class RecipientPickerViewController: OWSViewController, OWSNavigationChil
 
     // MARK: Configuration
 
-    public var allowsAddByAddress = true
+    public var allowsAddByAddress = false // Disable phone number search
     public var shouldHideLocalRecipient = true
     public var selectionMode = SelectionMode.default
     public var groupsToShow = GroupsToShow.groupsThatUserIsMemberOfWhenSearching
@@ -45,6 +46,40 @@ public class RecipientPickerViewController: OWSViewController, OWSNavigationChil
     public var shouldShowAlphabetSlider = true
     public var shouldShowNewGroup = false
     public var findByPhoneNumberButtonTitle: String?
+    
+    // API Contacts
+    private struct APIContact: Codable, Equatable {
+        let firstName: String
+        let lastName: String
+        let userid: String
+        let avatarURL: String?
+        
+        enum CodingKeys: String, CodingKey {
+            case firstName = "first_name"
+            case lastName = "last_name"
+            case userid
+            case avatarURL = "avatar_url"
+        }
+        
+        var fullName: String {
+            if firstName.isEmpty && lastName.isEmpty {
+                return "Unknown Contact"
+            } else if firstName.isEmpty {
+                return lastName
+            } else if lastName.isEmpty {
+                return firstName
+            } else {
+                return "\(firstName) \(lastName)"
+            }
+        }
+    }
+    
+    private struct APIContactsResponse: Codable {
+        let contacts: [APIContact]
+    }
+    
+    private var apiContacts: [APIContact] = []
+    private var isLoadingAPIContacts = false
 
     // MARK: Signal Connections
 
@@ -102,7 +137,39 @@ public class RecipientPickerViewController: OWSViewController, OWSNavigationChil
 
         updateTableContents()
 
+        loadAPIContacts()
         applyTheme()
+    }
+    
+    private func loadAPIContacts() {
+        guard !isLoadingAPIContacts else { return }
+        
+        isLoadingAPIContacts = true
+        
+        Task {
+            do {
+                let url = URL(string: "https://my.homesteadheritage.org/api/v1/contacts.json")!
+                let (data, response) = try await URLSession.shared.data(from: url)
+                
+                guard let httpResponse = response as? HTTPURLResponse,
+                      httpResponse.statusCode == 200 else {
+                    throw OWSError.makeGenericError()
+                }
+                
+                let apiResponse = try JSONDecoder().decode(APIContactsResponse.self, from: data)
+                
+                await MainActor.run {
+                    self.apiContacts = apiResponse.contacts
+                    self.isLoadingAPIContacts = false
+                    self.updateTableContents()
+                }
+            } catch {
+                await MainActor.run {
+                    self.isLoadingAPIContacts = false
+                    Logger.error("Failed to load API contacts: \(error)")
+                }
+            }
+        }
     }
 
     public override func viewWillAppear(_ animated: Bool) {
@@ -189,7 +256,7 @@ public class RecipientPickerViewController: OWSViewController, OWSNavigationChil
         shouldHideLocalRecipient: Bool,
     ) async throws(CancellationError) -> RecipientSearchResultSet {
         let databaseStorage = SSKEnvironment.shared.databaseStorageRef
-        return try databaseStorage.read { tx throws(CancellationError) in
+        let searchResults = try databaseStorage.read { tx throws(CancellationError) in
             return try FullTextSearcher.shared.searchForRecipients(
                 searchText: searchText,
                 includeLocalUser: !shouldHideLocalRecipient,
@@ -197,6 +264,32 @@ public class RecipientPickerViewController: OWSViewController, OWSNavigationChil
                 tx: tx
             )
         }
+        
+        // If no results from database search, try API contacts
+        if searchResults.contactResults.isEmpty {
+            let currentAPIContacts = await MainActor.run { self.apiContacts }
+            let filteredContacts = currentAPIContacts.filter { contact in
+                let lowercasedQuery = searchText.lowercased()
+                return contact.firstName.lowercased().contains(lowercasedQuery) ||
+                       contact.lastName.lowercased().contains(lowercasedQuery) ||
+                       contact.fullName.lowercased().contains(lowercasedQuery) ||
+                       contact.userid.lowercased().contains(lowercasedQuery)
+            }
+            
+            let apiContactResults = filteredContacts.map { apiContact in
+                let address = SignalServiceAddress(Aci(fromUUID: UUID(uuidString: apiContact.userid) ?? UUID()))
+                return ContactSearchResult(recipientAddress: address, transaction: databaseStorage.read { $0 })
+            }
+            
+            return RecipientSearchResultSet(
+                searchText: searchText,
+                contactResults: apiContactResults,
+                groupResults: searchResults.groupResults,
+                storyResults: searchResults.storyResults
+            )
+        }
+        
+        return searchResults
     }
 
     private func updateSearchBarMargins() {
@@ -239,8 +332,8 @@ public class RecipientPickerViewController: OWSViewController, OWSNavigationChil
         let searchBar = OWSSearchBar()
         searchBar.delegate = self
         searchBar.placeholder = OWSLocalizedString(
-            "SEARCH_BY_NAME_OR_USERNAME_OR_NUMBER_PLACEHOLDER_TEXT",
-            comment: "Placeholder text indicating the user can search for contacts by name, username, or phone number."
+            "SEARCH_BY_NAME_OR_USERNAME_PLACEHOLDER_TEXT",
+            comment: "Placeholder text indicating the user can search for contacts by name or username."
         )
         searchBar.accessibilityIdentifier = "RecipientPickerViewController.searchBar"
         searchBar.textField?.accessibilityIdentifier = "RecipientPickerViewController.contact_search"
@@ -320,9 +413,37 @@ public class RecipientPickerViewController: OWSViewController, OWSNavigationChil
                 resolvedAddresses.remove(localIdentifiers.aciAddress)
             }
 
-            signalConnections = SSKEnvironment.shared.contactManagerImplRef.sortedComparableNames(for: resolvedAddresses, tx: tx).filter { $0.displayName.hasKnownValue }
+            let realConnections = SSKEnvironment.shared.contactManagerImplRef.sortedComparableNames(for: resolvedAddresses, tx: tx).filter { $0.displayName.hasKnownValue }
+            
+            // If no real contacts are available, use API contacts
+            if realConnections.isEmpty {
+                signalConnections = createAPIComparableNames()
+            } else {
+                signalConnections = realConnections
+            }
             signalConnectionAddresses = Set(signalConnections.lazy.map { $0.address })
         }
+    }
+    
+    private func createAPIComparableNames() -> [ComparableDisplayName] {
+        let config = DisplayName.ComparableValue.Config.current()
+        
+        return apiContacts.map { apiContact in
+            // Create a SignalServiceAddress using the userid as a unique identifier
+            let address = SignalServiceAddress(Aci(fromUUID: UUID(uuidString: apiContact.userid) ?? UUID()))
+            
+            // Create a display name using the API contact's name
+            var nameComponents = PersonNameComponents()
+            nameComponents.givenName = apiContact.firstName
+            nameComponents.familyName = apiContact.lastName
+            let displayName = DisplayName.profileName(nameComponents)
+            
+            return ComparableDisplayName(
+                address: address,
+                displayName: displayName,
+                config: config
+            )
+        }.sorted(by: <)
     }
 
     // MARK: Table Contents
@@ -1015,9 +1136,10 @@ extension RecipientPickerViewController {
             sections.append(groupSection)
         }
 
-        if let findByNumberSection = findByNumberSection(for: searchResults, skipping: matchedAccountPhoneNumbers) {
-            sections.append(findByNumberSection)
-        }
+        // Phone number search is disabled
+        // if let findByNumberSection = findByNumberSection(for: searchResults, skipping: matchedAccountPhoneNumbers) {
+        //     sections.append(findByNumberSection)
+        // }
 
         if let usernameSection = findByUsernameSection(for: searchResults) {
             sections.append(usernameSection)

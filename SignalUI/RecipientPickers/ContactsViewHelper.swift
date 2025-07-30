@@ -145,22 +145,8 @@ public extension ContactsViewHelper {
             Self.presentContactAccessDeniedAlert(from: viewController, access: .read(purpose))
         }
 
-        switch SSKEnvironment.shared.contactManagerImplRef.sharingAuthorization {
-        case .notDetermined:
-            CNContactStore().requestAccess(for: .contacts) { granted, error in
-                DispatchQueue.main.async {
-                    if granted {
-                        performWhenAllowed()
-                    } else {
-                        deniedBlock()
-                    }
-                }
-            }
-        case .authorized:
-            performWhenAllowed()
-        case .denied:
-            deniedBlock()
-        }
+        // Skip contact permission requests - treat as denied
+        deniedBlock()
     }
 
     private static func presentContactAccessDeniedAlert(from viewController: UIViewController, access: Access) {

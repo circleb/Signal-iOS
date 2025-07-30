@@ -84,8 +84,6 @@
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Signal uses your camera to take photos and for video calls.</string>
-	<key>NSContactsUsageDescription</key>
-	<string>Signal uses your contacts to find users you know. We do not store your contacts on the server.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Signal's Screen Lock uses Face ID.</string>
 	<key>NSLocalNetworkUsageDescription</key>
