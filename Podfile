@@ -61,6 +61,8 @@ end
 target 'Signal' do
   project 'Signal.xcodeproj', 'Debug' => :debug, 'Release' => :release
 
+  pod 'AppAuth'
+
   # Pods only available inside the main Signal app
   ui_pods
 
