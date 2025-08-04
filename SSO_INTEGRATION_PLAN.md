@@ -1,8 +1,8 @@
-# SSO Integration Plan for Signal App
+# SSO Integration Implementation Guide for Signal App
 
 ## Overview
 
-This document outlines the plan to integrate Single Sign-On (SSO) with Keycloak into the Signal app's registration flow. The goal is to present users with an SSO login page immediately when the app opens, and automatically populate the phone number field during onboarding using data from the SSO provider.
+Integrate Single Sign-On (SSO) with Keycloak into the Signal app's registration flow. Users will be presented with an SSO login page immediately when the app opens, and the phone number field will be automatically populated during onboarding using data from the SSO provider.
 
 ## SSO Configuration
 
@@ -10,31 +10,41 @@ This document outlines the plan to integrate Single Sign-On (SSO) with Keycloak 
 - **Host**: `auth.homesteadheritage.org`
 - **Realm**: `heritage`
 - **Client ID**: `signal_homesteadheritage_org`
+- **Redirect URI**: `heritagesignal://callback`
 - **User Info Endpoint**: `GET /realms/heritage/protocol/openid-connect/userinfo`
 
-## Current App Flow Analysis
+## Implementation Steps
 
-### Current Registration Flow
+### Step 1: Create SSO Infrastructure
 
-1. **App Launch**: `AppDelegate.swift` determines launch interface
-2. **Registration Splash**: `RegistrationSplashViewController.swift` shows initial welcome screen
-3. **Phone Number Entry**: `RegistrationPhoneNumberViewController.swift` handles phone number input
-4. **Verification**: SMS verification code entry
-5. **Profile Setup**: PIN creation and other setup steps
+#### 1.1 Create SSO Configuration
 
-### Key Files Identified
+**File**: `SignalServiceKit/Account/SSOConfig.swift`
 
-- `Signal/AppLaunch/AppDelegate.swift` - Determines whether to show registration or main app
-- `Signal/Registration/UserInterface/RegistrationSplashViewController.swift` - First screen users see
-- `Signal/Registration/UserInterface/RegistrationPhoneNumberViewController.swift` - Phone number entry
-- `Signal/Registration/RegistrationCoordinatorImpl.swift` - Manages registration flow
-- `Signal/Registration/RegistrationStep.swift` - Defines registration steps
+```swift
+import AppAuth
 
-## Proposed SSO Integration Plan
+struct SSOConfig {
+    static let baseURL = "https://auth.homesteadheritage.org"
+    static let realm = "heritage"
+    static let clientId = "signal_homesteadheritage_org"
+    static let clientSecret = "" // Configure if required by Keycloak
 
-### Phase 1: SSO Authentication Layer
+    // AppAuth configuration
+    static let authorizationEndpoint = "\(baseURL)/realms/\(realm)/protocol/openid-connect/auth"
+    static let tokenEndpoint = "\(baseURL)/realms/\(realm)/protocol/openid-connect/token"
+    static let userInfoEndpoint = "\(baseURL)/realms/\(realm)/protocol/openid-connect/userinfo"
+    static let endSessionEndpoint = "\(baseURL)/realms/\(realm)/protocol/openid-connect/logout"
 
-#### 1.1 Create SSO Service
+    // OAuth2 scopes
+    static let scopes = ["openid", "profile", "email", "phone", "roles", "groups"]
+
+    // Redirect URI for iOS app
+    static let redirectURI = "heritagesignal://callback"
+}
+```
+
+#### 1.2 Create SSO Service
 
 **File**: `SignalServiceKit/Account/SSOService.swift`
 
@@ -83,91 +93,7 @@ class SSOService: SSOServiceProtocol {
 }
 ```
 
-#### 1.2 Create SSO Configuration
-
-**File**: `SignalServiceKit/Account/SSOConfig.swift`
-
-```swift
-import AppAuth
-
-struct SSOConfig {
-    static let baseURL = "https://auth.homesteadheritage.org"
-    static let realm = "heritage"
-    static let clientId = "signal_homesteadheritage_org"
-    static let clientSecret = "" // Configure if required by Keycloak
-
-    // AppAuth configuration
-    static let authorizationEndpoint = "\(baseURL)/realms/\(realm)/protocol/openid-connect/auth"
-    static let tokenEndpoint = "\(baseURL)/realms/\(realm)/protocol/openid-connect/token"
-    static let userInfoEndpoint = "\(baseURL)/realms/\(realm)/protocol/openid-connect/userinfo"
-    static let endSessionEndpoint = "\(baseURL)/realms/\(realm)/protocol/openid-connect/logout"
-
-    // OAuth2 scopes
-    static let scopes = ["openid", "profile", "email", "phone", "roles", "groups"]
-
-    // Redirect URI for iOS app
-    static let redirectURI = "heritagesignal://callback"
-}
-```
-
-### Phase 2: Modify App Launch Flow
-
-#### 2.1 Update AppDelegate Launch Logic
-
-**File**: `Signal/AppLaunch/AppDelegate.swift`
-
-**Changes**:
-
-- Add SSO check before determining launch interface
-- If user is not authenticated via SSO, redirect to SSO flow
-- If user is authenticated, proceed with normal registration flow
-
-#### 2.2 Create SSO Authentication View Controller
-
-**File**: `Signal/Registration/UserInterface/SSOAuthenticationViewController.swift`
-
-**Features**:
-
-- Use AppAuth's `OIDAuthState` for OAuth2 authorization code flow
-- Leverage AppAuth's built-in web browser for Keycloak login
-- Handle authorization callbacks and token management
-- Extract access token and user info using AppAuth's token response
-
-### Phase 3: Integrate with Registration Flow
-
-#### 3.1 Add SSO Step to Registration
-
-**File**: `Signal/Registration/RegistrationStep.swift`
-
-**New Step**:
-
-```swift
-case ssoAuthentication(SSOAuthenticationState)
-```
-
-#### 3.2 Update Registration Coordinator
-
-**File**: `Signal/Registration/RegistrationCoordinatorImpl.swift`
-
-**Changes**:
-
-- Add SSO authentication as first step in registration flow
-- Handle SSO success/failure transitions
-- Pass SSO user info to subsequent steps
-
-#### 3.3 Modify Phone Number Entry
-
-**File**: `Signal/Registration/UserInterface/RegistrationPhoneNumberViewController.swift`
-
-**Changes**:
-
-- Pre-populate phone number field with SSO data
-- Add visual indicator that phone number came from SSO
-- Allow user to edit pre-populated number
-
-### Phase 4: Data Flow Integration
-
-#### 4.1 SSO User Info Storage
+#### 1.3 Create SSO User Info Store
 
 **File**: `SignalServiceKit/Account/SSOUserInfoStore.swift`
 
@@ -185,7 +111,7 @@ protocol SSOUserInfoStore {
 }
 ```
 
-#### 4.2 Role and Group Management
+#### 1.4 Create Role Manager
 
 **File**: `SignalServiceKit/Account/SSORoleManager.swift`
 
@@ -215,145 +141,9 @@ class SSORoleManager: SSORoleManagerProtocol {
 }
 ```
 
-#### 4.3 Registration State Updates
+### Step 2: Configure App for SSO
 
-**File**: `Signal/Registration/RegistrationCoordinatorImpl.swift`
-
-**Changes**:
-
-- Store SSO user info in registration state
-- Use SSO phone number as default in phone number entry
-- Handle cases where SSO doesn't provide phone number
-- Store user roles and groups for use throughout the app
-- Pass role/group information to other app components
-- Initialize role manager for app-wide access control
-
-## Implementation Steps
-
-### Step 1: Create SSO Infrastructure
-
-1. Create `SSOService.swift` with Keycloak integration
-2. Create `SSOConfig.swift` with configuration constants
-3. Create `SSOUserInfoStore.swift` for data persistence with role/group management
-4. Add necessary dependencies to project
-5. Create `SSORoleManager.swift` for role-based access control throughout the app
-
-### Step 2: Create SSO Authentication UI
-
-1. Create `SSOAuthenticationViewController.swift`
-2. Implement AppAuth's OAuth2 authorization code flow using `OIDAuthorizationService`
-3. Handle authorization callbacks and token extraction using AppAuth's built-in mechanisms
-4. Add proper error handling and user feedback
-5. Configure URL scheme handling for OAuth2 redirects
-
-### Step 3: Modify Registration Flow
-
-1. Add SSO step to `RegistrationStep.swift`
-2. Update `RegistrationCoordinatorImpl.swift` to handle SSO
-3. Modify `RegistrationPhoneNumberViewController.swift` to use SSO data
-4. Update navigation flow in `RegistrationNavigationController.swift`
-
-### Step 4: Update App Launch Logic
-
-1. Modify `AppDelegate.swift` to check SSO status
-2. Add SSO authentication as prerequisite for registration
-3. Handle SSO authentication failures gracefully
-
-### Step 5: Testing and Validation
-
-1. Test SSO authentication flow
-2. Verify phone number pre-population
-3. Test role and group data retrieval and storage
-4. Validate role-based access control functionality
-5. Test error scenarios (network issues, invalid tokens, etc.)
-6. Validate user experience and flow
-
-## Technical Considerations
-
-### Security
-
-- Use AppAuth's built-in secure token storage mechanisms
-- Leverage AppAuth's automatic token refresh capabilities
-- Handle token expiration gracefully using AppAuth's state management
-- Validate user info responses and token signatures
-- Use AppAuth's PKCE (Proof Key for Code Exchange) for enhanced security
-
-### Error Handling
-
-- Network connectivity issues
-- Invalid or expired tokens (handled by AppAuth's built-in mechanisms)
-- SSO server unavailability
-- User cancellation of SSO flow
-- AppAuth authorization errors and state management
-- Token refresh failures
-
-### User Experience
-
-- Clear indication that SSO is being used
-- Seamless transition from AppAuth's web browser to registration
-- Fallback options if SSO fails
-- Consistent branding with Heritage SSO
-- Leverage AppAuth's native iOS web browser experience
-- Smooth handling of authorization state transitions
-
-### Data Privacy
-
-- Only request necessary scopes from Keycloak (openid, profile, email, phone, roles, groups)
-- Clear SSO data when user logs out using AppAuth's end session endpoint
-- Respect user privacy preferences
-- Handle cases where phone number is not provided
-- Use AppAuth's secure token storage and automatic cleanup
-- Ensure role and group data is handled securely and only used for intended purposes
-
-## Dependencies
-
-### External Libraries
-
-- `AppAuth` (already included in Pods) - For OAuth2 authorization code flow, token management, and built-in web browser
-- `SafariServices` - For additional web view support if needed
-
-### Internal Dependencies
-
-- `SignalServiceKit` - For network requests and data storage
-- `SignalUI` - For UI components and theming
-- `PromiseKit` - For async operations
-
-## Configuration Requirements
-
-### Keycloak Setup
-
-- Ensure client `signal_homesteadheritage_org` is properly configured
-- Configure redirect URI `heritagesignal://callback` for iOS app
-- Set up proper scopes for user info access (openid, profile, email, phone, roles, groups)
-- Configure phone number attribute mapping in user profile
-- Configure role and group mapping in user profile and client scopes
-- Enable PKCE (Proof Key for Code Exchange) for enhanced security
-- Configure client as public client (no client secret required for mobile apps)
-- Ensure roles and groups are included in the ID token or userinfo response
-
-### iOS App Configuration
-
-- Add URL scheme `heritagesignal` for OAuth2 callbacks in Info.plist
-- Configure AppAuth's URL scheme handling in AppDelegate
-- Add necessary entitlements for network access
-- Configure AppAuth's authorization service in application delegate
-
-## Success Criteria
-
-1. Users are automatically redirected to SSO login when app opens
-2. SSO authentication completes successfully
-3. Phone number is pre-populated in registration flow
-4. User roles and groups are retrieved and stored from SSO
-5. Role-based access control works throughout the app
-6. User can proceed with normal Signal registration
-7. SSO data is properly stored and managed
-8. Error scenarios are handled gracefully
-
-## Implementation Notes
-
-### URL Scheme Configuration
-
-#### 1. Add URL Scheme to Info.plist
+#### 2.1 Add URL Scheme to Info.plist
 
 ```xml
 <key>CFBundleURLTypes</key>
@@ -369,7 +159,11 @@ class SSORoleManager: SSORoleManagerProtocol {
 </array>
 ```
 
-#### 2. Handle URL Callbacks in AppDelegate
+#### 2.2 Update AppDelegate for URL Handling
+
+**File**: `Signal/AppLaunch/AppDelegate.swift`
+
+Add URL callback handling:
 
 ```swift
 func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
@@ -381,12 +175,23 @@ func application(_ app: UIApplication, open url: URL, options: [UIApplication.Op
 }
 ```
 
-### AppAuth Integration Details
+### Step 3: Create SSO Authentication UI
 
-#### 3. Configure AppAuth Service
+#### 3.1 Create SSO Authentication View Controller
+
+**File**: `Signal/Registration/UserInterface/SSOAuthenticationViewController.swift`
+
+Features:
+
+- Use AppAuth's `OIDAuthState` for OAuth2 authorization code flow
+- Leverage AppAuth's built-in web browser for Keycloak login
+- Handle authorization callbacks and token management
+- Extract access token and user info using AppAuth's token response
+
+#### 3.2 Configure AppAuth Service
 
 ```swift
-// In AppDelegate or SSOService initialization
+// In SSOService implementation
 let configuration = OIDServiceConfiguration(
     authorizationEndpoint: URL(string: SSOConfig.authorizationEndpoint)!,
     tokenEndpoint: URL(string: SSOConfig.tokenEndpoint)!
@@ -403,47 +208,54 @@ let request = OIDAuthorizationRequest(
 )
 ```
 
-#### 4. Handle Authorization Response
+### Step 4: Integrate with Registration Flow
+
+#### 4.1 Add SSO Step to Registration
+
+**File**: `Signal/Registration/RegistrationStep.swift`
+
+Add new step:
 
 ```swift
-func handleAuthorizationResponse(_ response: OIDAuthorizationResponse) {
-    // Exchange authorization code for tokens
-    response.tokenExchangeRequest { request, error in
-        guard let request = request else {
-            // Handle error
-            return
-        }
-
-        OIDAuthorizationService.perform(request) { response, error in
-            // Handle token response and extract user info
-        }
-    }
-}
+case ssoAuthentication(SSOAuthenticationState)
 ```
 
-### Keycloak User Info Response Structure
+#### 4.2 Update Registration Coordinator
 
-#### 5. Expected User Info JSON Structure
+**File**: `Signal/Registration/RegistrationCoordinatorImpl.swift`
 
-```json
-{
-    "sub": "user-id",
-    "email": "user@example.com",
-    "name": "User Name",
-    "phone_number": "+1234567890",
-    "realm_access": {
-        "roles": ["user", "admin", "moderator"]
-    },
-    "resource_access": {
-        "signal-app": {
-            "roles": ["messaging", "admin"]
-        }
-    },
-    "groups": ["group1", "group2", "group3"]
-}
-```
+Changes:
 
-#### 6. Parse User Info Response
+- Add SSO authentication as first step in registration flow
+- Handle SSO success/failure transitions
+- Pass SSO user info to subsequent steps
+- Store user roles and groups for use throughout the app
+
+#### 4.3 Modify Phone Number Entry
+
+**File**: `Signal/Registration/UserInterface/RegistrationPhoneNumberViewController.swift`
+
+Changes:
+
+- Pre-populate phone number field with SSO data
+- Add visual indicator that phone number came from SSO
+- Allow user to edit pre-populated number
+
+### Step 5: Update App Launch Logic
+
+#### 5.1 Modify AppDelegate Launch Logic
+
+**File**: `Signal/AppLaunch/AppDelegate.swift`
+
+Changes:
+
+- Add SSO check before determining launch interface
+- If user is not authenticated via SSO, redirect to SSO flow
+- If user is authenticated, proceed with normal registration flow
+
+### Step 6: Handle User Info and Roles
+
+#### 6.1 Parse Keycloak User Info Response
 
 ```swift
 struct KeycloakUserInfo: Codable {
@@ -465,9 +277,27 @@ struct KeycloakUserInfo: Codable {
 }
 ```
 
-### Error Handling Patterns
+#### 6.2 Handle Authorization Response
 
-#### 7. Common Error Scenarios
+```swift
+func handleAuthorizationResponse(_ response: OIDAuthorizationResponse) {
+    // Exchange authorization code for tokens
+    response.tokenExchangeRequest { request, error in
+        guard let request = request else {
+            // Handle error
+            return
+        }
+
+        OIDAuthorizationService.perform(request) { response, error in
+            // Handle token response and extract user info
+        }
+    }
+}
+```
+
+### Step 7: Error Handling
+
+#### 7.1 Define Error Types
 
 ```swift
 enum SSOError: Error {
@@ -479,7 +309,11 @@ enum SSOError: Error {
     case missingPhoneNumber
     case roleAccessDenied
 }
+```
 
+#### 7.2 Error Handling Strategy
+
+```swift
 func handleSSOError(_ error: SSOError) {
     switch error {
     case .userCancelled:
@@ -496,9 +330,7 @@ func handleSSOError(_ error: SSOError) {
 }
 ```
 
-### Testing Checklist
-
-#### 8. SSO Integration Testing
+## Testing Checklist
 
 - [ ] SSO login flow completes successfully
 - [ ] User info is retrieved correctly (phone, roles, groups)
@@ -509,6 +341,23 @@ func handleSSOError(_ error: SSOError) {
 - [ ] User can cancel SSO flow and continue manually
 - [ ] App handles network connectivity issues
 - [ ] SSO logout clears all data properly
+
+## Keycloak Configuration Requirements
+
+- Configure client `signal_homesteadheritage_org` with redirect URI `heritagesignal://callback`
+- Set up scopes: `openid`, `profile`, `email`, `phone`, `roles`, `groups`
+- Configure phone number attribute mapping in user profile
+- Configure role and group mapping in user profile and client scopes
+- Enable PKCE (Proof Key for Code Exchange)
+- Configure as public client (no client secret required)
+- Ensure roles and groups are included in ID token or userinfo response
+
+## Dependencies
+
+- `AppAuth` (already included in Pods) - For OAuth2 flow and token management
+- `SignalServiceKit` - For network requests and data storage
+- `SignalUI` - For UI components and theming
+- `PromiseKit` - For async operations
 
 ## Future Enhancements
 
