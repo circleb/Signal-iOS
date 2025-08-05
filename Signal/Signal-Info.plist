@@ -46,6 +46,14 @@
 				<string>sgnl</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>heritagesignal</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>heritagesignal</string>
+			</array>
+		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>0</string>
