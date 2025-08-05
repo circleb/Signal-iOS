@@ -12,7 +12,7 @@ public protocol SSOUserInfoStore {
     func hasAnyGroup(_ groups: [String]) -> Bool
 }
 
-class SSOUserInfoStoreImpl: SSOUserInfoStore {
+public class SSOUserInfoStoreImpl: SSOUserInfoStore {
     private let userDefaults = UserDefaults.standard
     private let userInfoKey = "SSOUserInfo"
     private let rolesKey = "SSOUserRoles"
@@ -24,7 +24,7 @@ class SSOUserInfoStoreImpl: SSOUserInfoStore {
     private let nameKey = "SSOUserName"
     private let phoneNumberKey = "SSOUserPhoneNumber"
 
-    func storeUserInfo(_ userInfo: SSOUserInfo) {
+    public func storeUserInfo(_ userInfo: SSOUserInfo) {
         userDefaults.set(userInfo.roles, forKey: rolesKey)
         userDefaults.set(userInfo.groups, forKey: groupsKey)
         userDefaults.set(userInfo.accessToken, forKey: accessTokenKey)
@@ -35,7 +35,7 @@ class SSOUserInfoStoreImpl: SSOUserInfoStore {
         userDefaults.set(userInfo.phoneNumber, forKey: phoneNumberKey)
     }
 
-    func getUserInfo() -> SSOUserInfo? {
+    public func getUserInfo() -> SSOUserInfo? {
         guard let roles = userDefaults.array(forKey: rolesKey) as? [String],
               let accessToken = userDefaults.string(forKey: accessTokenKey),
               let sub = userDefaults.string(forKey: subKey) else {
@@ -62,7 +62,7 @@ class SSOUserInfoStoreImpl: SSOUserInfoStore {
         )
     }
 
-    func clearUserInfo() {
+    public func clearUserInfo() {
         userDefaults.removeObject(forKey: rolesKey)
         userDefaults.removeObject(forKey: groupsKey)
         userDefaults.removeObject(forKey: accessTokenKey)
@@ -73,28 +73,28 @@ class SSOUserInfoStoreImpl: SSOUserInfoStore {
         userDefaults.removeObject(forKey: phoneNumberKey)
     }
 
-    func getUserRoles() -> [String] {
+    public func getUserRoles() -> [String] {
         return userDefaults.array(forKey: rolesKey) as? [String] ?? []
     }
 
-    func getUserGroups() -> [String] {
+    public func getUserGroups() -> [String] {
         return userDefaults.array(forKey: groupsKey) as? [String] ?? []
     }
 
-    func hasRole(_ role: String) -> Bool {
+    public func hasRole(_ role: String) -> Bool {
         return getUserRoles().contains(role)
     }
 
-    func hasGroup(_ group: String) -> Bool {
+    public func hasGroup(_ group: String) -> Bool {
         return getUserGroups().contains(group)
     }
 
-    func hasAnyRole(_ roles: [String]) -> Bool {
+    public func hasAnyRole(_ roles: [String]) -> Bool {
         let userRoles = getUserRoles()
         return roles.contains { userRoles.contains($0) }
     }
 
-    func hasAnyGroup(_ groups: [String]) -> Bool {
+    public func hasAnyGroup(_ groups: [String]) -> Bool {
         let userGroups = getUserGroups()
         return groups.contains { userGroups.contains($0) }
     }

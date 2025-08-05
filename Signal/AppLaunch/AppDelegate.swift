@@ -1744,10 +1744,12 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         }
 
         // Handle SSO callback
-        if url.scheme == "heritagesignal" {
-            // TODO: Implement proper SSO callback handling
-            // return OIDAuthorizationService.handle(url)
-            return false
+        if url.scheme == "heritagesignal" && url.host == "oauth" && url.path == "/callback" {
+            Logger.info("AppDelegate: Handling SSO callback URL: \(url)")
+            // Use the global SSO service manager to handle the OAuth callback
+            let result = SSOServiceManager.shared.handleOAuthCallback(url: url)
+            Logger.info("AppDelegate: SSO callback handling result: \(result)")
+            return result
         }
 
         guard let parsedUrl = UrlOpener.parseUrl(url) else {

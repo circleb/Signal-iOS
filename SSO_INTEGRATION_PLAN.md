@@ -10,7 +10,7 @@ Integrate Single Sign-On (SSO) with Keycloak into the Signal app's registration 
 - **Host**: `auth.homesteadheritage.org`
 - **Realm**: `heritage`
 - **Client ID**: `signal_homesteadheritage_org`
-- **Redirect URI**: `heritagesignal://callback`
+- **Redirect URI**: `heritagesignal://oauth/callback`
 - **User Info Endpoint**: `GET /realms/heritage/protocol/openid-connect/userinfo`
 
 ## Implementation Steps

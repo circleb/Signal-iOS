@@ -35,31 +35,43 @@ public class SSORegistrationSplashViewController: OWSViewController {
 
     // UI Components
     private let stackView = UIStackView()
-    private let ssoLoginButton = OWSFlatButton.primaryButtonForRegistration(
-        title: "Sign in with Heritage SSO",
-        target: SSORegistrationSplashViewController.self,
-        selector: #selector(handleSSOLogin)
-    )
+    private lazy var ssoLoginButton: OWSFlatButton = {
+        let button = OWSFlatButton.primaryButtonForRegistration(
+            title: "Sign in with Heritage SSO",
+            target: self,
+            selector: #selector(handleSSOLogin)
+        )
+        return button
+    }()
     private let welcomeLabel = UILabel()
     private let setupOptionsStackView = UIStackView()
-    private let createAccountButton = OWSFlatButton.primaryButtonForRegistration(
-        title: "Create Account",
-        target: SSORegistrationSplashViewController.self,
-        selector: #selector(createAccountPressed)
-    )
-    private let transferAccountButton = OWSFlatButton.secondaryButtonForRegistration(
-        title: "Transfer Account",
-        target: SSORegistrationSplashViewController.self,
-        selector: #selector(transferAccountPressed)
-    )
+    private lazy var createAccountButton: OWSFlatButton = {
+        let button = OWSFlatButton.primaryButtonForRegistration(
+            title: "Create Account",
+            target: self,
+            selector: #selector(createAccountPressed)
+        )
+        return button
+    }()
+    private lazy var transferAccountButton: OWSFlatButton = {
+        let button = OWSFlatButton.secondaryButtonForRegistration(
+            title: "Transfer Account",
+            target: self,
+            selector: #selector(transferAccountPressed)
+        )
+        return button
+    }()
     private let loadingIndicator = UIActivityIndicatorView(style: .large)
     private let errorView = UIView()
     private let errorLabel = UILabel()
-    private let retryButton = OWSFlatButton.primaryButtonForRegistration(
-        title: "Retry",
-        target: SSORegistrationSplashViewController.self,
-        selector: #selector(handleSSOLogin)
-    )
+    private lazy var retryButton: OWSFlatButton = {
+        let button = OWSFlatButton.primaryButtonForRegistration(
+            title: "Retry",
+            target: self,
+            selector: #selector(handleSSOLogin)
+        )
+        return button
+    }()
 
     init(
         presenter: SSORegistrationSplashPresenter,

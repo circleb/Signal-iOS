@@ -1,6 +1,6 @@
 import AppAuth
 
-struct SSOConfig {
+public struct SSOConfig {
     static let baseURL = "https://auth.homesteadheritage.org"
     static let realm = "heritage"
     static let clientId = "signal_homesteadheritage_org"
@@ -12,8 +12,8 @@ struct SSOConfig {
     static let userInfoEndpoint = "\(baseURL)/realms/\(realm)/protocol/openid-connect/userinfo"
     static let endSessionEndpoint = "\(baseURL)/realms/\(realm)/protocol/openid-connect/logout"
 
-    // OAuth2 scopes
-    static let scopes = ["openid", "profile", "email", "phone", "roles", "groups"]
+    // OAuth2 scopes - start with standard OpenID Connect scopes
+    static let scopes = ["openid", "profile", "email"]
 
     // Redirect URI
     static let redirectURI = "heritagesignal://oauth/callback"
