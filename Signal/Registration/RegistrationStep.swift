@@ -9,6 +9,7 @@ public enum RegistrationStep: Equatable {
 
     // MARK: - Opening Steps
     case registrationSplash
+    case ssoRegistrationSplash
     case changeNumberSplash
     case permissions
 
@@ -142,6 +143,7 @@ public enum RegistrationStep: Equatable {
     public var logSafeString: String {
         switch self {
         case .registrationSplash: return "registrationSplash"
+        case .ssoRegistrationSplash: return "ssoRegistrationSplash"
         case .changeNumberSplash: return "changeNumberSplash"
         case .permissions: return "permissions"
         case .scanQuickRegistrationQrCode: return "scanQuickRegistrationQrCode"

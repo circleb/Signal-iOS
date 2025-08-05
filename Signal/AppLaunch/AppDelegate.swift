@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+import AppAuth
 import CryptoKit
 import GRDB
 import Intents
@@ -1739,6 +1740,13 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         AssertIsOnMainThread()
 
         if didAppLaunchFail {
+            return false
+        }
+
+        // Handle SSO callback
+        if url.scheme == "heritagesignal" {
+            // TODO: Implement proper SSO callback handling
+            // return OIDAuthorizationService.handle(url)
             return false
         }
 

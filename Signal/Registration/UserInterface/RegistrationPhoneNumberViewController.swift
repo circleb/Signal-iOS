@@ -29,6 +29,14 @@ class RegistrationPhoneNumberViewController: OWSViewController {
         self.phoneNumberInput = RegistrationPhoneNumberInputView(initialPhoneNumber: {
             switch state {
             case let .initialRegistration(state):
+                // Check for SSO phone number first
+                if let ssoUserInfo = SSOUserInfoStoreImpl().getUserInfo(),
+                   let phoneNumber = ssoUserInfo.phoneNumber,
+                   let e164 = E164(phoneNumber),
+                   let result = RegistrationPhoneNumberParser(phoneNumberUtil: SSKEnvironment.shared.phoneNumberUtilRef).parseE164(e164) {
+                    return result
+                }
+                // Fall back to previously entered E164
                 if let e164 = state.previouslyEnteredE164, let result = RegistrationPhoneNumberParser(phoneNumberUtil: SSKEnvironment.shared.phoneNumberUtilRef).parseE164(e164) {
                     return result
                 }
@@ -160,6 +168,17 @@ class RegistrationPhoneNumberViewController: OWSViewController {
     private var phoneStrokeNormal: UIView?
     private var phoneStrokeError: UIView?
 
+    private lazy var ssoIndicatorLabel: UILabel = {
+        let result = UILabel()
+        result.text = "Phone number from SSO"
+        result.textColor = Theme.secondaryTextAndIconColor
+        result.font = UIFont.dynamicTypeCaption1
+        result.textAlignment = .center
+        result.isHidden = true
+        result.accessibilityIdentifier = "registration.phonenumber.ssoIndicatorLabel"
+        return result
+    }()
+
     private lazy var validationWarningLabel: UILabel = {
         let result = UILabel()
         result.textColor = .ows_accentRed
@@ -238,6 +257,9 @@ class RegistrationPhoneNumberViewController: OWSViewController {
 
         stackView.addArrangedSubview(phoneNumberInput)
         stackView.setCustomSpacing(11, after: phoneNumberInput)
+
+        stackView.addArrangedSubview(ssoIndicatorLabel)
+        stackView.setCustomSpacing(8, after: ssoIndicatorLabel)
 
         stackView.addArrangedSubview(validationWarningLabel)
 
@@ -323,6 +345,16 @@ class RegistrationPhoneNumberViewController: OWSViewController {
             validationWarningLabel.text = validationError.warningLabelText(dateProvider: { now })
         } else {
             validationWarningLabel.alpha = 0
+        }
+
+        // Show SSO indicator if phone number came from SSO
+        if case .initialRegistration = state,
+           let ssoUserInfo = SSOUserInfoStoreImpl().getUserInfo(),
+           let phoneNumber = ssoUserInfo.phoneNumber,
+           !phoneNumber.isEmpty {
+            ssoIndicatorLabel.isHidden = false
+        } else {
+            ssoIndicatorLabel.isHidden = true
         }
         switch validationError {
         case nil, .rateLimited:

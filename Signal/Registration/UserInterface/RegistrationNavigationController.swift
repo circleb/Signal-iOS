@@ -166,10 +166,29 @@ public class RegistrationNavigationController: OWSNavigationController {
         )
     }
 
+    private func ssoRegistrationSplashController() -> Controller<SSORegistrationSplashViewController> {
+        Controller(
+            type: SSORegistrationSplashViewController.self,
+            make: { presenter in
+                let userInfoStore = SSOUserInfoStoreImpl()
+                let ssoService = SSOService(userInfoStore: userInfoStore)
+                return SSORegistrationSplashViewController(
+                    presenter: presenter,
+                    ssoService: ssoService,
+                    userInfoStore: userInfoStore
+                )
+            },
+            // No state to update.
+            update: nil
+        )
+    }
+
     private func controller(for step: RegistrationStep) -> AnyController? {
         switch step {
         case .registrationSplash:
             return self.registrationSplashController()
+        case .ssoRegistrationSplash:
+            return self.ssoRegistrationSplashController()
         case .changeNumberSplash:
             return Controller(
                 type: RegistrationChangeNumberSplashViewController.self,
@@ -492,6 +511,28 @@ extension RegistrationNavigationController: RegistrationSplashPresenter {
         Logger.info("Pushing device linking")
         let controller = RegistrationConfirmModeSwitchViewController(presenter: self)
         pushViewController(controller, animated: true, completion: nil)
+    }
+}
+
+extension RegistrationNavigationController: SSORegistrationSplashPresenter {
+
+    public func handleSSOSuccess(_ userInfo: SSOUserInfo) {
+        // Store SSO user info and continue with registration
+        // The phone number will be pre-populated in the next step
+        pushNextController(coordinator.continueFromSplash())
+    }
+
+    public func handleSSOError(_ error: SSOError) {
+        // Handle SSO error - for now, just continue with normal registration
+        // In the future, we could show a specific error screen
+        switch error {
+        case .missingPhoneNumber:
+            // Continue with manual phone number entry
+            pushNextController(coordinator.continueFromSplash())
+        default:
+            // For other errors, stay on the SSO screen and let user retry
+            break
+        }
     }
 }
 
