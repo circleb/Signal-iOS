@@ -1,4 +1,5 @@
 import Foundation
+import SignalServiceKit
 
 public struct SSOUserInfo {
     public let phoneNumber: String?
@@ -31,6 +32,10 @@ struct KeycloakUserInfo: Codable {
     let sub: String
     let email: String?
     let name: String?
+    let givenName: String?
+    let familyName: String?
+    let preferredUsername: String?
+    let emailVerified: Bool?
     let phoneNumber: String?
     let realmAccess: RealmAccess?
     let resourceAccess: [String: ResourceAccess]?
@@ -43,6 +48,18 @@ struct KeycloakUserInfo: Codable {
     struct ResourceAccess: Codable {
         let roles: [String]
     }
+    
+    // Custom coding keys to handle snake_case to camelCase conversion
+    enum CodingKeys: String, CodingKey {
+        case sub, email, name, groups
+        case givenName = "given_name"
+        case familyName = "family_name"
+        case preferredUsername = "preferred_username"
+        case emailVerified = "email_verified"
+        case phoneNumber = "phone"
+        case realmAccess = "realm_access"
+        case resourceAccess = "resource_access"
+    }
 }
 
 extension SSOUserInfo {
@@ -53,11 +70,40 @@ extension SSOUserInfo {
         self.sub = keycloakUserInfo.sub
         self.accessToken = accessToken
         self.refreshToken = refreshToken
-        self.roles = keycloakUserInfo.realmAccess?.roles ?? []
+        
+        // Extract all roles from both realm access and resource access
+        var allRoles: [String] = []
+        
+        // Add realm roles
+        if let realmRoles = keycloakUserInfo.realmAccess?.roles {
+            Logger.info("SSO: Found realm roles: \(realmRoles)")
+            allRoles.append(contentsOf: realmRoles)
+        } else {
+            Logger.info("SSO: No realm roles found")
+        }
+        
+        // Add resource roles
+        if let resourceAccess = keycloakUserInfo.resourceAccess {
+            Logger.info("SSO: Found resource access with \(resourceAccess.count) resources")
+            for (resourceName, access) in resourceAccess {
+                Logger.info("SSO: Resource '\(resourceName)' has roles: \(access.roles)")
+                allRoles.append(contentsOf: access.roles)
+            }
+        } else {
+            Logger.info("SSO: No resource access found")
+        }
+        
+        Logger.info("SSO: Total extracted roles: \(allRoles)")
+        
+        self.roles = allRoles
         self.groups = keycloakUserInfo.groups ?? []
+        
+        // Store realm access
         self.realmAccess = keycloakUserInfo.realmAccess?.roles.reduce(into: [:]) { result, role in
             result["realm_access"] = [role]
         }
+        
+        // Store resource access
         self.resourceAccess = keycloakUserInfo.resourceAccess?.reduce(into: [:]) { result, element in
             result[element.key] = element.value.roles
         }

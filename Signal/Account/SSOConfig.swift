@@ -19,12 +19,11 @@ public struct SSOConfig {
     static let redirectURI = "heritagesignal://oauth/callback"
 
     // Required roles for access
-    static let requiredRoles = ["signal_user", "heritage_member"]
-    static let requiredGroups = ["signal_users", "heritage_members"]
+    static let requiredRoles = ["heritage-member", "heritage-member-associate"]
+    static let requiredGroups = ["heritage_members"]
 
     // Feature flags based on roles
     static let roleBasedFeatures: [String: [String]] = [
-        "signal_user": ["messaging", "calls", "groups"],
         "heritage_member": ["messaging", "calls", "groups", "heritage_features"],
         "admin": ["messaging", "calls", "groups", "heritage_features", "admin_panel"]
     ]

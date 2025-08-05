@@ -171,16 +171,20 @@ class SSOService: SSOServiceProtocol {
 
             do {
                 let keycloakUserInfo = try JSONDecoder().decode(KeycloakUserInfo.self, from: data)
-                Logger.info("SSO: Successfully decoded user info - email: \(keycloakUserInfo.email ?? "nil"), name: \(keycloakUserInfo.name ?? "nil"), roles: \(keycloakUserInfo.realmAccess?.roles ?? [])")
+                Logger.info("SSO: Successfully decoded user info - email: \(keycloakUserInfo.email ?? "nil"), name: \(keycloakUserInfo.name ?? "nil")")
+                Logger.info("SSO: Realm roles: \(keycloakUserInfo.realmAccess?.roles ?? [])")
+                Logger.info("SSO: Resource access: \(keycloakUserInfo.resourceAccess?.keys.joined(separator: ", ") ?? "none")")
                 
                 let userInfo = SSOUserInfo(from: keycloakUserInfo, accessToken: accessToken, refreshToken: nil)
+                Logger.info("SSO: Extracted all roles: \(userInfo.roles)")
                 
                 // Validate required roles - temporarily disabled for debugging
-                // if !self.hasRequiredRoles(userInfo.roles) {
-                //     Logger.error("SSO: User does not have required roles. User roles: \(userInfo.roles), Required roles: \(SSOConfig.requiredRoles)")
-                //     future.reject(SSOError.roleAccessDenied)
-                //     return
-                // }
+                if !self.hasRequiredRoles(userInfo.roles) {
+                    Logger.error("SSO: User does not have required roles. User roles: \(userInfo.roles), Required roles: \(SSOConfig.requiredRoles)")
+                    Logger.info("SSO: Continuing anyway for debugging purposes")
+                    // future.reject(SSOError.roleAccessDenied)
+                    // return
+                }
 
                 Logger.info("SSO: User info validation successful")
                 future.resolve(userInfo)
