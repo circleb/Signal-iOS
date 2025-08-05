@@ -2,7 +2,7 @@
 
 ## Overview
 
-Integrate Single Sign-On (SSO) with Keycloak into the Signal app's registration flow. Users will be presented with an SSO login page immediately when the app opens, and the phone number field will be automatically populated during onboarding using data from the SSO provider.
+Integrate Single Sign-On (SSO) with Keycloak into the Signal app's registration flow. Users will first see the existing RegistrationSplashViewController, which will be modified to show an SSO login button. After successful SSO authentication, users will see a welcome message with their username and then the original options for setting up a Signal account or transferring from another device. The phone number field will be automatically populated during onboarding using data from the SSO provider.
 
 ## SSO Configuration
 
@@ -175,9 +175,116 @@ func application(_ app: UIApplication, open url: URL, options: [UIApplication.Op
 }
 ```
 
-### Step 3: Create SSO Authentication UI
+### Step 3: Modify RegistrationSplashViewController
 
-#### 3.1 Create SSO Authentication View Controller
+#### 3.1 Update RegistrationSplashViewController UI
+
+**File**: `Signal/Registration/UserInterface/RegistrationSplashViewController.swift`
+
+Changes:
+
+- Replace the existing "Create Account" and "Transfer Account" buttons with a single "Sign in with Heritage SSO" button
+- Add a welcome message section that will be shown after SSO authentication
+- Add the original setup buttons that will appear after successful SSO login
+
+#### 3.2 Add SSO Authentication State Management
+
+```swift
+enum RegistrationSplashState {
+    case initial // Show SSO login button
+    case authenticated(SSOUserInfo) // Show welcome message and setup options
+    case loading // Show loading indicator during SSO flow
+    case error(SSOError) // Show error state with retry option
+}
+
+class RegistrationSplashViewController: UIViewController {
+    private var currentState: RegistrationSplashState = .initial
+    private let ssoService: SSOServiceProtocol
+
+    // UI Components
+    private let ssoLoginButton: UIButton
+    private let welcomeLabel: UILabel
+    private let setupOptionsStackView: UIStackView
+    private let createAccountButton: UIButton
+    private let transferAccountButton: UIButton
+    private let loadingIndicator: UIActivityIndicatorView
+    private let errorView: UIView
+
+    // State management methods
+    private func updateUI(for state: RegistrationSplashState)
+    private func handleSSOLogin()
+    private func handleSSOSuccess(_ userInfo: SSOUserInfo)
+    private func handleSSOError(_ error: SSOError)
+}
+```
+
+#### 3.3 Implement SSO Authentication Flow
+
+```swift
+private func handleSSOLogin() {
+    updateUI(for: .loading)
+
+    ssoService.authenticate()
+        .done { [weak self] userInfo in
+            self?.handleSSOSuccess(userInfo)
+        }
+        .catch { [weak self] error in
+            self?.handleSSOError(error as? SSOError ?? .networkError(error))
+        }
+}
+
+private func handleSSOSuccess(_ userInfo: SSOUserInfo) {
+    // Store user info for use in registration flow
+    userInfoStore.storeUserInfo(userInfo)
+
+    // Update UI to show welcome message and setup options
+    updateUI(for: .authenticated(userInfo))
+}
+
+private func updateUI(for state: RegistrationSplashState) {
+    currentState = state
+
+    switch state {
+    case .initial:
+        ssoLoginButton.isHidden = false
+        welcomeLabel.isHidden = true
+        setupOptionsStackView.isHidden = true
+        loadingIndicator.isHidden = true
+        errorView.isHidden = true
+
+    case .loading:
+        ssoLoginButton.isHidden = true
+        welcomeLabel.isHidden = true
+        setupOptionsStackView.isHidden = true
+        loadingIndicator.isHidden = false
+        errorView.isHidden = true
+
+    case .authenticated(let userInfo):
+        ssoLoginButton.isHidden = true
+        welcomeLabel.isHidden = false
+        setupOptionsStackView.isHidden = false
+        loadingIndicator.isHidden = true
+        errorView.isHidden = true
+
+        // Set welcome message
+        welcomeLabel.text = "Welcome \(userInfo.name ?? userInfo.email ?? "User")!"
+
+    case .error(let error):
+        ssoLoginButton.isHidden = true
+        welcomeLabel.isHidden = true
+        setupOptionsStackView.isHidden = true
+        loadingIndicator.isHidden = true
+        errorView.isHidden = false
+
+        // Show error message with retry option
+        showErrorView(with: error)
+    }
+}
+```
+
+### Step 4: Create SSO Authentication View Controller
+
+#### 4.1 Create SSO Authentication View Controller
 
 **File**: `Signal/Registration/UserInterface/SSOAuthenticationViewController.swift`
 
@@ -188,7 +295,7 @@ Features:
 - Handle authorization callbacks and token management
 - Extract access token and user info using AppAuth's token response
 
-#### 3.2 Configure AppAuth Service
+#### 4.2 Configure AppAuth Service
 
 ```swift
 // In SSOService implementation
@@ -208,30 +315,20 @@ let request = OIDAuthorizationRequest(
 )
 ```
 
-### Step 4: Integrate with Registration Flow
+### Step 5: Integrate with Registration Flow
 
-#### 4.1 Add SSO Step to Registration
-
-**File**: `Signal/Registration/RegistrationStep.swift`
-
-Add new step:
-
-```swift
-case ssoAuthentication(SSOAuthenticationState)
-```
-
-#### 4.2 Update Registration Coordinator
+#### 5.1 Update Registration Coordinator
 
 **File**: `Signal/Registration/RegistrationCoordinatorImpl.swift`
 
 Changes:
 
-- Add SSO authentication as first step in registration flow
-- Handle SSO success/failure transitions
-- Pass SSO user info to subsequent steps
+- Modify the flow to start with RegistrationSplashViewController
+- Handle SSO authentication state transitions
+- Pass SSO user info to subsequent registration steps
 - Store user roles and groups for use throughout the app
 
-#### 4.3 Modify Phone Number Entry
+#### 5.2 Modify Phone Number Entry
 
 **File**: `Signal/Registration/UserInterface/RegistrationPhoneNumberViewController.swift`
 
@@ -240,18 +337,6 @@ Changes:
 - Pre-populate phone number field with SSO data
 - Add visual indicator that phone number came from SSO
 - Allow user to edit pre-populated number
-
-### Step 5: Update App Launch Logic
-
-#### 5.1 Modify AppDelegate Launch Logic
-
-**File**: `Signal/AppLaunch/AppDelegate.swift`
-
-Changes:
-
-- Add SSO check before determining launch interface
-- If user is not authenticated via SSO, redirect to SSO flow
-- If user is authenticated, proceed with normal registration flow
 
 ### Step 6: Handle User Info and Roles
 
@@ -317,28 +402,36 @@ enum SSOError: Error {
 func handleSSOError(_ error: SSOError) {
     switch error {
     case .userCancelled:
-        // User cancelled SSO flow - return to registration
+        // User cancelled SSO flow - return to initial state
+        updateUI(for: .initial)
     case .networkError:
         // Show retry option
+        updateUI(for: .error(error))
     case .invalidToken:
         // Trigger re-authentication
+        handleSSOLogin()
     case .missingPhoneNumber:
-        // Fall back to manual phone number entry
+        // Continue with manual phone number entry
+        proceedToRegistration()
     default:
         // Show generic error message
+        updateUI(for: .error(error))
     }
 }
 ```
 
 ## Testing Checklist
 
+- [ ] RegistrationSplashViewController shows SSO login button initially
 - [ ] SSO login flow completes successfully
+- [ ] Welcome message displays correctly with username
+- [ ] Original setup buttons appear after SSO authentication
 - [ ] User info is retrieved correctly (phone, roles, groups)
 - [ ] Phone number pre-populates in registration
 - [ ] Role-based access control works
 - [ ] Token refresh works automatically
 - [ ] Error scenarios are handled gracefully
-- [ ] User can cancel SSO flow and continue manually
+- [ ] User can cancel SSO flow and return to initial state
 - [ ] App handles network connectivity issues
 - [ ] SSO logout clears all data properly
 
