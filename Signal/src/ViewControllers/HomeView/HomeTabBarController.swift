@@ -23,8 +23,8 @@ class HomeTabBarController: UITabBarController {
     }
 
     enum Tabs: Int {
-        case stories = 0
-        case chatList = 1
+        case chatList = 0
+        case stories = 1
         case webApps = 2
         case calls = 3
 
@@ -236,11 +236,9 @@ class HomeTabBarController: UITabBarController {
     }
 
     private func tabsToShow(areStoriesEnabled: Bool) -> [Tabs] {
-        var tabs = [Tabs.stories]
+        var tabs = [Tabs.chatList]
         if areStoriesEnabled {
-            tabs.insert(Tabs.chatList, at: 0)
-        } else {
-            tabs = [Tabs.chatList]
+            tabs.append(Tabs.stories)
         }
         tabs.append(Tabs.webApps)
         tabs.append(Tabs.calls)
