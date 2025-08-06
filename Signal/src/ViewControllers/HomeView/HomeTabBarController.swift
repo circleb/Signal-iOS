@@ -26,6 +26,7 @@ class HomeTabBarController: UITabBarController {
         case chatList = 0
         case calls = 1
         case stories = 2
+        case webApps = 3
 
         var title: String {
             switch self {
@@ -44,6 +45,8 @@ class HomeTabBarController: UITabBarController {
                     "STORIES_TITLE",
                     comment: "Title for the stories view."
                 )
+            case .webApps:
+                return "Web Apps"
             }
         }
 
@@ -55,6 +58,8 @@ class HomeTabBarController: UITabBarController {
                 return UIImage(named: "tab-calls")
             case .stories:
                 return UIImage(named: "tab-stories")
+            case .webApps:
+                return UIImage(systemName: "globe")
             }
         }
 
@@ -66,6 +71,8 @@ class HomeTabBarController: UITabBarController {
                 return UIImage(named: "tab-calls")
             case .stories:
                 return UIImage(named: "tab-stories")
+            case .webApps:
+                return UIImage(systemName: "globe.fill")
             }
         }
 
@@ -85,6 +92,8 @@ class HomeTabBarController: UITabBarController {
                 return "calls"
             case .stories:
                 return "stories"
+            case .webApps:
+                return "webapps"
             }
         }
     }
@@ -104,6 +113,16 @@ class HomeTabBarController: UITabBarController {
     lazy var callsListViewController = CallsListViewController(appReadiness: appReadiness)
     lazy var callsListNavController = OWSNavigationController(rootViewController: callsListViewController)
     lazy var callsListTabBarItem = Tabs.calls.tabBarItem
+
+    // Web Apps
+    private lazy var webAppsService: WebAppsServiceProtocol = {
+        let cache = WebAppsStoreImpl(keyValueStore: KeyValueStore(collection: "WebApps"))
+        return WebAppsService(networkManager: SSKEnvironment.shared.networkManagerRef, cache: cache, databaseStorage: SSKEnvironment.shared.databaseStorageRef)
+    }()
+    
+    lazy var webAppsListViewController = WebAppsListViewController(webAppsService: webAppsService)
+    lazy var webAppsNavController = OWSNavigationController(rootViewController: webAppsListViewController)
+    lazy var webAppsTabBarItem = Tabs.webApps.tabBarItem
 
     // There are two things going on here that require this code. The first is a stored property can't
     // conditionally include itself with an @available property, so some type erasing hoops need to be
@@ -154,6 +173,8 @@ class HomeTabBarController: UITabBarController {
         let areStoriesEnabled = SSKEnvironment.shared.databaseStorageRef.read { StoryManager.areStoriesEnabled(transaction: $0) }
 
         updateTabBars(areStoriesEnabled: areStoriesEnabled)
+
+
 
         AppEnvironment.shared.badgeManager.addObserver(self)
         storyBadgeCountManager.beginObserving(observer: self)
@@ -209,6 +230,8 @@ class HomeTabBarController: UITabBarController {
             return (callsListNavController, callsListTabBarItem)
         case .stories:
             return (storiesNavController, storiesTabBarItem)
+        case .webApps:
+            return (webAppsNavController, webAppsTabBarItem)
         }
     }
 
@@ -217,6 +240,7 @@ class HomeTabBarController: UITabBarController {
         if areStoriesEnabled {
             tabs.append(Tabs.stories)
         }
+        tabs.append(Tabs.webApps)
         return tabs
     }
 
@@ -359,6 +383,8 @@ extension HomeTabBarController: UITabBarControllerDelegate {
                 tableView = storiesViewController.tableView
             case .calls:
                 tableView = callsListViewController.tableView
+            case .webApps:
+                tableView = webAppsListViewController.tableView
             }
 
             tableView.setContentOffset(CGPoint(x: 0, y: -tableView.safeAreaInsets.top), animated: true)
@@ -373,6 +399,8 @@ extension HomeTabBarController: UITabBarControllerDelegate {
         }
     }
 }
+
+
 
 public class OWSTabBar: UITabBar {
 

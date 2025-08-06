@@ -17,6 +17,7 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
     private var chatListNavController: OWSNavigationController { homeVC.chatListNavController }
     private var callsListNavController: OWSNavigationController { homeVC.callsListNavController }
     private var storiesNavController: OWSNavigationController { homeVC.storiesNavController }
+    private var webAppsNavController: OWSNavigationController { homeVC.webAppsNavController }
 
     private lazy var detailNavController = OWSNavigationController()
     private var lastActiveInterfaceOrientation = UIInterfaceOrientation.unknown
@@ -56,6 +57,8 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
             callsListNavController
         case .stories:
             storiesNavController
+        case .webApps:
+            webAppsNavController
         }
 
         if isCollapsed {

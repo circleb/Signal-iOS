@@ -1628,6 +1628,16 @@
 		A1A018521805C5E800A052A6 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A11CD70C17FA230600A2D1B1 /* QuartzCore.framework */; };
 		A1A018531805C60D00A052A6 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D221A091169C9E5E00537ABF /* CoreGraphics.framework */; };
 		A5E7C675248C5443007C949A /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = A5E7C673248C5442007C949A /* InfoPlist.strings */; };
+		B524D3882E4305F6004B1E4D /* WebAppsConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3842E4305F6004B1E4D /* WebAppsConfig.swift */; };
+		B524D3892E4305F6004B1E4D /* WebAppsError.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3852E4305F6004B1E4D /* WebAppsError.swift */; };
+		B524D38A2E4305F6004B1E4D /* WebApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3832E4305F6004B1E4D /* WebApp.swift */; };
+		B524D38B2E4305F6004B1E4D /* WebAppsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3872E4305F6004B1E4D /* WebAppsStore.swift */; };
+		B524D38C2E4305F6004B1E4D /* WebAppsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3862E4305F6004B1E4D /* WebAppsService.swift */; };
+		B524D3922E430639004B1E4D /* WebAppCategoryHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D38E2E430639004B1E4D /* WebAppCategoryHeaderView.swift */; };
+		B524D3932E430639004B1E4D /* WebAppsListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3902E430639004B1E4D /* WebAppsListViewController.swift */; };
+		B524D3942E430639004B1E4D /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D38D2E430639004B1E4D /* EmptyStateView.swift */; };
+		B524D3952E430639004B1E4D /* WebAppCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D38F2E430639004B1E4D /* WebAppCell.swift */; };
+		B524D3962E430639004B1E4D /* WebAppWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3912E430639004B1E4D /* WebAppWebViewController.swift */; };
 		B5D17C732E42711B00799EBD /* SSOAuthenticationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C712E42711B00799EBD /* SSOAuthenticationViewController.swift */; };
 		B5D17C742E42711B00799EBD /* SSORegistrationSplashViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C722E42711B00799EBD /* SSORegistrationSplashViewController.swift */; };
 		B5D17C852E4273B800799EBD /* SSOUserInfoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C832E4273B800799EBD /* SSOUserInfoStore.swift */; };
@@ -5571,6 +5581,16 @@
 		A8ED457CAD4F82DD1D1502C2 /* Pods-SignalUI.testable release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SignalUI.testable release.xcconfig"; path = "Target Support Files/Pods-SignalUI/Pods-SignalUI.testable release.xcconfig"; sourceTree = "<group>"; };
 		B2128C189D5273B9E83E03A2 /* Pods-SignalServiceKitTests.testable release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SignalServiceKitTests.testable release.xcconfig"; path = "Target Support Files/Pods-SignalServiceKitTests/Pods-SignalServiceKitTests.testable release.xcconfig"; sourceTree = "<group>"; };
 		B258EF5E9D1DB66CB6D51C70 /* Pods-SignalShareExtension.testable release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SignalShareExtension.testable release.xcconfig"; path = "Target Support Files/Pods-SignalShareExtension/Pods-SignalShareExtension.testable release.xcconfig"; sourceTree = "<group>"; };
+		B524D3832E4305F6004B1E4D /* WebApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebApp.swift; sourceTree = "<group>"; };
+		B524D3842E4305F6004B1E4D /* WebAppsConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppsConfig.swift; sourceTree = "<group>"; };
+		B524D3852E4305F6004B1E4D /* WebAppsError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppsError.swift; sourceTree = "<group>"; };
+		B524D3862E4305F6004B1E4D /* WebAppsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppsService.swift; sourceTree = "<group>"; };
+		B524D3872E4305F6004B1E4D /* WebAppsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppsStore.swift; sourceTree = "<group>"; };
+		B524D38D2E430639004B1E4D /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
+		B524D38E2E430639004B1E4D /* WebAppCategoryHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppCategoryHeaderView.swift; sourceTree = "<group>"; };
+		B524D38F2E430639004B1E4D /* WebAppCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppCell.swift; sourceTree = "<group>"; };
+		B524D3902E430639004B1E4D /* WebAppsListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppsListViewController.swift; sourceTree = "<group>"; };
+		B524D3912E430639004B1E4D /* WebAppWebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppWebViewController.swift; sourceTree = "<group>"; };
 		B5D17C712E42711B00799EBD /* SSOAuthenticationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAuthenticationViewController.swift; sourceTree = "<group>"; };
 		B5D17C722E42711B00799EBD /* SSORegistrationSplashViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSORegistrationSplashViewController.swift; sourceTree = "<group>"; };
 		B5D17C7F2E4273B800799EBD /* SSOConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOConfig.swift; sourceTree = "<group>"; };
@@ -8095,6 +8115,11 @@
 		3448BFC01EDF0EA7005B2D69 /* ConversationView */ = {
 			isa = PBXGroup;
 			children = (
+				B524D38D2E430639004B1E4D /* EmptyStateView.swift */,
+				B524D38E2E430639004B1E4D /* WebAppCategoryHeaderView.swift */,
+				B524D38F2E430639004B1E4D /* WebAppCell.swift */,
+				B524D3902E430639004B1E4D /* WebAppsListViewController.swift */,
+				B524D3912E430639004B1E4D /* WebAppWebViewController.swift */,
 				34D1F0951F867BFC0066283D /* CellViews */,
 				347C3839252CE6C900F3D941 /* Components */,
 				664013282BFEB9AF00F10FC4 /* DoubleTapToEdit */,
@@ -11074,6 +11099,11 @@
 		B5D17CAF2E4273C500799EBD /* Account */ = {
 			isa = PBXGroup;
 			children = (
+				B524D3832E4305F6004B1E4D /* WebApp.swift */,
+				B524D3842E4305F6004B1E4D /* WebAppsConfig.swift */,
+				B524D3852E4305F6004B1E4D /* WebAppsError.swift */,
+				B524D3862E4305F6004B1E4D /* WebAppsService.swift */,
+				B524D3872E4305F6004B1E4D /* WebAppsStore.swift */,
 				B5D17C8D2E4273C500799EBD /* PhoneNumberDiscoverabilityManager */,
 				B5D17C962E4273C500799EBD /* PreKeys */,
 				B5D17CA12E4273C500799EBD /* TSAccountManager */,
@@ -14935,7 +14965,7 @@
 				DefaultBuildSystemTypeForWorkspace = Original;
 				LastSwiftUpdateCheck = 1600;
 				LastTestingUpgradeCheck = 0600;
-				LastUpgradeCheck = 1600;
+				LastUpgradeCheck = 1640;
 				ORGANIZATIONNAME = "Open Whisper Systems";
 				TargetAttributes = {
 					342FFE8727245850000AC89F = {
@@ -16845,6 +16875,11 @@
 				32E03522273901710081EE11 /* BadgeConfigurationViewController.swift in Sources */,
 				881BB28A2743531D00B609B8 /* BadgeDetailsSheet.swift in Sources */,
 				500FE4E2288A373100FA090C /* BadgeGiftingAlreadyRedeemedSheet.swift in Sources */,
+				B524D3922E430639004B1E4D /* WebAppCategoryHeaderView.swift in Sources */,
+				B524D3932E430639004B1E4D /* WebAppsListViewController.swift in Sources */,
+				B524D3942E430639004B1E4D /* EmptyStateView.swift in Sources */,
+				B524D3952E430639004B1E4D /* WebAppCell.swift in Sources */,
+				B524D3962E430639004B1E4D /* WebAppWebViewController.swift in Sources */,
 				F9D83012282DBB1500399363 /* BadgeGiftingChooseBadgeViewController.swift in Sources */,
 				F9A335CC282F0DEC00B5F5FA /* BadgeGiftingChooseRecipientViewController.swift in Sources */,
 				F9E3720C2948E32800975224 /* BadgeGiftingConfirmationViewController+ApplePay.swift in Sources */,
@@ -18386,6 +18421,11 @@
 				F9C5CCFE289453B300548EEE /* OWSVerificationStateSyncMessage.m in Sources */,
 				F9C5CCFC289453B300548EEE /* OWSViewedReceiptsForLinkedDevicesMessage.m in Sources */,
 				F9C5CCFF289453B300548EEE /* OWSViewOnceMessageReadSyncMessage.m in Sources */,
+				B524D3882E4305F6004B1E4D /* WebAppsConfig.swift in Sources */,
+				B524D3892E4305F6004B1E4D /* WebAppsError.swift in Sources */,
+				B524D38A2E4305F6004B1E4D /* WebApp.swift in Sources */,
+				B524D38B2E4305F6004B1E4D /* WebAppsStore.swift in Sources */,
+				B524D38C2E4305F6004B1E4D /* WebAppsService.swift in Sources */,
 				668B5BFC2C7E46D30018CF36 /* PaletteChatColor+Constants.swift in Sources */,
 				F9C5CDCD289453B400548EEE /* ParamParser.swift in Sources */,
 				F9C5CD89289453B300548EEE /* PaymentFinder.swift in Sources */,
@@ -19541,6 +19581,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -19554,6 +19595,7 @@
 					"@loader_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++14";
 				PRODUCT_BUNDLE_IDENTIFIER = org.signal.SignalUI;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -19601,6 +19643,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -19618,6 +19661,7 @@
 					"@loader_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++14";
 				PRODUCT_BUNDLE_IDENTIFIER = org.signal.SignalUI;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = iphoneos;
@@ -19668,6 +19712,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -19685,6 +19730,7 @@
 					"@loader_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++14";
 				PRODUCT_BUNDLE_IDENTIFIER = org.signal.SignalUI;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = iphoneos;
@@ -19735,6 +19781,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -19752,6 +19799,7 @@
 					"@loader_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++14";
 				PRODUCT_BUNDLE_IDENTIFIER = org.signal.SignalUI;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = iphoneos;
@@ -21010,6 +21058,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -21023,6 +21072,7 @@
 					"@loader_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++17";
 				OTHER_SWIFT_FLAGS = "$(inherited) -Wwarning DeprecatedDeclaration";
 				PRODUCT_BUNDLE_IDENTIFIER = org.signal.SignalServiceKit;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -21052,6 +21102,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -21064,6 +21115,7 @@
 					"@loader_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++17";
 				OTHER_SWIFT_FLAGS = "$(inherited) -Wwarning DeprecatedDeclaration";
 				PRODUCT_BUNDLE_IDENTIFIER = org.signal.SignalServiceKit;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -21094,6 +21146,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -21106,6 +21159,7 @@
 					"@loader_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++17";
 				OTHER_SWIFT_FLAGS = "$(inherited) -Wwarning DeprecatedDeclaration";
 				PRODUCT_BUNDLE_IDENTIFIER = org.signal.SignalServiceKit;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -21136,6 +21190,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -21148,6 +21203,7 @@
 					"@loader_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++17";
 				OTHER_SWIFT_FLAGS = "$(inherited) -Wwarning DeprecatedDeclaration";
 				PRODUCT_BUNDLE_IDENTIFIER = org.signal.SignalServiceKit;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";

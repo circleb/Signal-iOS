@@ -875,7 +875,7 @@ extension WebAppsListViewController: UITableViewDataSource, UITableViewDelegate 
 
 ## API Integration Requirements
 
-- Ensure `homesteadheeritage.org/api/v1/webapps.php` is accessible
+- Ensure `https://my.homesteadheeritage.org/api/v1/webapps.php` is accessible
 - Verify JSON response format matches expected structure
 - Handle CORS if needed for webview loading
 - Implement proper error handling for API failures
