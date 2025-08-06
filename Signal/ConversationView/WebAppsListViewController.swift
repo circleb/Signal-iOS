@@ -43,7 +43,7 @@ class WebAppsListViewController: UIViewController {
     }
 
     private func setupUI() {
-        title = "More Apps"
+        title = "Portal"
         view.backgroundColor = Theme.backgroundColor
 
         // Setup table view

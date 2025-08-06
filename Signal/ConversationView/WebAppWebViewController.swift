@@ -54,7 +54,7 @@ class WebAppWebViewController: UIViewController {
         view.addSubview(webView)
         view.addSubview(loadingIndicator)
 
-        progressView.autoPinEdge(toSuperviewEdge: .top)
+        progressView.autoPinEdge(toSuperviewSafeArea: .top)
         progressView.autoPinWidthToSuperview()
         progressView.autoSetDimension(.height, toSize: 2)
 

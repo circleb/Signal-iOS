@@ -23,10 +23,10 @@ class HomeTabBarController: UITabBarController {
     }
 
     enum Tabs: Int {
-        case chatList = 0
-        case calls = 1
-        case stories = 2
-        case webApps = 3
+        case stories = 0
+        case chatList = 1
+        case webApps = 2
+        case calls = 3
 
         var title: String {
             switch self {
@@ -46,7 +46,7 @@ class HomeTabBarController: UITabBarController {
                     comment: "Title for the stories view."
                 )
             case .webApps:
-                return "More Apps"
+                return "Portal"
             }
         }
 
@@ -59,7 +59,7 @@ class HomeTabBarController: UITabBarController {
             case .stories:
                 return UIImage(named: "tab-stories")
             case .webApps:
-                return UIImage(systemName: "square.stack.fill")
+                return UIImage(systemName: "square.stack")
             }
         }
 
@@ -70,9 +70,9 @@ class HomeTabBarController: UITabBarController {
             case .calls:
                 return UIImage(named: "tab-calls")
             case .stories:
-                return UIImage(named: "tab-stories")
+                return UIImage(named: "tab-stories-fill")
             case .webApps:
-                return UIImage(systemName: "globe.fill")
+                return UIImage(systemName: "square.stack.fill")
             }
         }
 
@@ -236,11 +236,14 @@ class HomeTabBarController: UITabBarController {
     }
 
     private func tabsToShow(areStoriesEnabled: Bool) -> [Tabs] {
-        var tabs = [Tabs.chatList, Tabs.calls]
+        var tabs = [Tabs.stories]
         if areStoriesEnabled {
-            tabs.append(Tabs.stories)
+            tabs.insert(Tabs.chatList, at: 0)
+        } else {
+            tabs = [Tabs.chatList]
         }
         tabs.append(Tabs.webApps)
+        tabs.append(Tabs.calls)
         return tabs
     }
 
