@@ -30,11 +30,38 @@ class RegistrationPhoneNumberViewController: OWSViewController {
             switch state {
             case let .initialRegistration(state):
                 // Check for SSO phone number first
-                if let ssoUserInfo = SSOUserInfoStoreImpl().getUserInfo(),
-                   let phoneNumber = ssoUserInfo.phoneNumber,
-                   let e164 = E164(phoneNumber),
-                   let result = RegistrationPhoneNumberParser(phoneNumberUtil: SSKEnvironment.shared.phoneNumberUtilRef).parseE164(e164) {
-                    return result
+                if let ssoUserInfo = SSOUserInfoStoreImpl().getUserInfo() {
+                    Logger.info("SSO: Found stored user info - phone: \(ssoUserInfo.phoneNumber ?? "nil")")
+                    if let phoneNumber = ssoUserInfo.phoneNumber {
+                        Logger.info("SSO: Attempting to parse phone number: \(phoneNumber)")
+                        
+                        // Try to convert to E164 format if needed
+                        var formattedPhoneNumber = phoneNumber
+                        if !phoneNumber.hasPrefix("+") {
+                            // Remove any non-digit characters and add +1 prefix for US numbers
+                            let digitsOnly = phoneNumber.replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression)
+                            if digitsOnly.count == 10 {
+                                formattedPhoneNumber = "+1" + digitsOnly
+                                Logger.info("SSO: Formatted phone number to E164: \(formattedPhoneNumber)")
+                            }
+                        }
+                        
+                        if let e164 = E164(formattedPhoneNumber) {
+                            Logger.info("SSO: Successfully created E164: \(e164)")
+                            if let result = RegistrationPhoneNumberParser(phoneNumberUtil: SSKEnvironment.shared.phoneNumberUtilRef).parseE164(e164) {
+                                Logger.info("SSO: Successfully parsed phone number for registration")
+                                return result
+                            } else {
+                                Logger.error("SSO: Failed to parse E164 for registration")
+                            }
+                        } else {
+                            Logger.error("SSO: Failed to create E164 from phone number: \(formattedPhoneNumber)")
+                        }
+                    } else {
+                        Logger.info("SSO: No phone number in stored user info")
+                    }
+                } else {
+                    Logger.info("SSO: No stored user info found")
                 }
                 // Fall back to previously entered E164
                 if let e164 = state.previouslyEnteredE164, let result = RegistrationPhoneNumberParser(phoneNumberUtil: SSKEnvironment.shared.phoneNumberUtilRef).parseE164(e164) {

@@ -43,11 +43,12 @@ public class SSORegistrationSplashViewController: OWSViewController {
         )
         return button
     }()
+    private let howdyLabel = UILabel()
     private let welcomeLabel = UILabel()
     private let setupOptionsStackView = UIStackView()
     private lazy var createAccountButton: OWSFlatButton = {
         let button = OWSFlatButton.primaryButtonForRegistration(
-            title: "Create Account",
+            title: "Configure Chat",
             target: self,
             selector: #selector(createAccountPressed)
         )
@@ -55,7 +56,7 @@ public class SSORegistrationSplashViewController: OWSViewController {
     }()
     private lazy var transferAccountButton: OWSFlatButton = {
         let button = OWSFlatButton.secondaryButtonForRegistration(
-            title: "Transfer Account",
+            title: "Transfer chats from Signal",
             target: self,
             selector: #selector(transferAccountPressed)
         )
@@ -119,6 +120,16 @@ public class SSORegistrationSplashViewController: OWSViewController {
         heroImageView.accessibilityIdentifier = "registration.splash.heroImageView"
         stackView.addArrangedSubview(heroImageView)
         stackView.setCustomSpacing(22, after: heroImageView)
+
+        // Howdy Label (shown when authenticated)
+        howdyLabel.font = UIFont.dynamicTypeTitle2
+        howdyLabel.textColor = Theme.primaryTextColor
+        howdyLabel.textAlignment = .center
+        howdyLabel.numberOfLines = 0
+        howdyLabel.accessibilityIdentifier = "registration.splash.howdyLabel"
+        howdyLabel.isHidden = true
+        stackView.addArrangedSubview(howdyLabel)
+        stackView.setCustomSpacing(8, after: howdyLabel)
 
         // Title
         let titleText = {
@@ -240,6 +251,7 @@ public class SSORegistrationSplashViewController: OWSViewController {
         switch state {
         case .initial:
             ssoLoginButton.isHidden = false
+            howdyLabel.isHidden = true
             welcomeLabel.isHidden = true
             setupOptionsStackView.isHidden = true
             loadingIndicator.isHidden = true
@@ -247,6 +259,7 @@ public class SSORegistrationSplashViewController: OWSViewController {
 
         case .loading:
             ssoLoginButton.isHidden = true
+            howdyLabel.isHidden = true
             welcomeLabel.isHidden = true
             setupOptionsStackView.isHidden = true
             loadingIndicator.isHidden = false
@@ -255,18 +268,20 @@ public class SSORegistrationSplashViewController: OWSViewController {
 
         case .authenticated(let userInfo):
             ssoLoginButton.isHidden = true
-            welcomeLabel.isHidden = false
+            howdyLabel.isHidden = false
+            welcomeLabel.isHidden = true
             setupOptionsStackView.isHidden = false
             loadingIndicator.isHidden = true
             errorView.isHidden = true
             loadingIndicator.stopAnimating()
 
-            // Set welcome message
+            // Set howdy message
             let displayName = userInfo.name ?? userInfo.email ?? "User"
-            welcomeLabel.text = "Welcome \(displayName)!"
+            howdyLabel.text = "Howdy \(displayName)!"
 
         case .error(let error):
             ssoLoginButton.isHidden = true
+            howdyLabel.isHidden = true
             welcomeLabel.isHidden = true
             setupOptionsStackView.isHidden = true
             loadingIndicator.isHidden = true
