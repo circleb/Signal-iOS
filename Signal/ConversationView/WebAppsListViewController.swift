@@ -20,8 +20,8 @@ class WebAppsListViewController: UIViewController {
     private let emptyStateView = EmptyStateView()
 
     // Data
-    private var categories: [WebAppCategory] = []
-    private var filteredCategories: [WebAppCategory] = []
+    private var allWebApps: [WebApp] = []
+    private var filteredWebApps: [WebApp] = []
     private var isSearching = false
 
 
@@ -43,14 +43,13 @@ class WebAppsListViewController: UIViewController {
     }
 
     private func setupUI() {
-        title = "Web Apps"
+        title = "More Apps"
         view.backgroundColor = Theme.backgroundColor
 
         // Setup table view
         tableView.delegate = self
         tableView.dataSource = self
         tableView.register(WebAppCell.self, forCellReuseIdentifier: "WebAppCell")
-        tableView.register(WebAppCategoryHeaderView.self, forHeaderFooterViewReuseIdentifier: "CategoryHeader")
 
         // Setup refresh control
         refreshControl.addTarget(self, action: #selector(refreshWebApps), for: .valueChanged)
@@ -76,7 +75,7 @@ class WebAppsListViewController: UIViewController {
     private func setupSearchController() {
         searchController.searchResultsUpdater = self
         searchController.obscuresBackgroundDuringPresentation = false
-        searchController.searchBar.placeholder = "Search web apps..."
+        searchController.searchBar.placeholder = "Search apps..."
         navigationItem.searchController = searchController
         definesPresentationContext = true
     }
@@ -92,7 +91,7 @@ class WebAppsListViewController: UIViewController {
 
         _ = webAppsService.fetchWebApps()
             .done { [weak self] apps in
-                self?.categories = self?.webAppsService.getWebAppsByCategory() ?? []
+                self?.allWebApps = apps.sorted { $0.name < $1.name }
                 self?.updateUI()
             }
             .catch { [weak self] error in
@@ -109,12 +108,12 @@ class WebAppsListViewController: UIViewController {
             // Show filtered results
             tableView.reloadData()
         } else {
-            // Show all categories
-            filteredCategories = categories
+            // Show all web apps
+            filteredWebApps = allWebApps
             tableView.reloadData()
         }
 
-        emptyStateView.isHidden = !filteredCategories.isEmpty
+        emptyStateView.isHidden = !filteredWebApps.isEmpty
     }
 
     private func showError(_ error: Error) {
@@ -130,35 +129,24 @@ class WebAppsListViewController: UIViewController {
 
 extension WebAppsListViewController: UITableViewDataSource, UITableViewDelegate {
     func numberOfSections(in tableView: UITableView) -> Int {
-        return filteredCategories.count
+        return 1
     }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return filteredCategories[section].apps.count
+        return filteredWebApps.count
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "WebAppCell", for: indexPath) as! WebAppCell
-        let webApp = filteredCategories[indexPath.section].apps[indexPath.row]
+        let webApp = filteredWebApps[indexPath.row]
         cell.configure(with: webApp)
         return cell
-    }
-
-    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        let headerView = tableView.dequeueReusableHeaderFooterView(withIdentifier: "CategoryHeader") as! WebAppCategoryHeaderView
-        let category = filteredCategories[section]
-        headerView.configure(with: category)
-        return headerView
-    }
-
-    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        return 44
     }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
 
-        let webApp = filteredCategories[indexPath.section].apps[indexPath.row]
+        let webApp = filteredWebApps[indexPath.row]
         let webVC = WebAppWebViewController(webApp: webApp)
         navigationController?.pushViewController(webVC, animated: true)
     }
@@ -168,23 +156,14 @@ extension WebAppsListViewController: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
         guard let searchText = searchController.searchBar.text, !searchText.isEmpty else {
             isSearching = false
-            filteredCategories = categories
+            filteredWebApps = allWebApps
             tableView.reloadData()
             return
         }
 
         isSearching = true
         let searchResults = webAppsService.searchWebApps(query: searchText)
-
-        // Group search results by category
-        let grouped = Dictionary(grouping: searchResults) { $0.category }
-        filteredCategories = grouped.map { category, apps in
-            WebAppCategory(
-                name: category,
-                apps: apps.sorted { $0.name < $1.name },
-                icon: WebAppsConfig.categoryIcons[category] ?? "app.fill"
-            )
-        }.sorted { $0.name < $1.name }
+        filteredWebApps = searchResults.sorted { $0.name < $1.name }
 
         tableView.reloadData()
     }

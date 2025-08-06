@@ -46,7 +46,7 @@ class HomeTabBarController: UITabBarController {
                     comment: "Title for the stories view."
                 )
             case .webApps:
-                return "More"
+                return "More Apps"
             }
         }
 
@@ -59,7 +59,7 @@ class HomeTabBarController: UITabBarController {
             case .stories:
                 return UIImage(named: "tab-stories")
             case .webApps:
-                return UIImage(systemName: "ellipsis")
+                return UIImage(systemName: "square.stack.fill")
             }
         }
 
@@ -114,7 +114,7 @@ class HomeTabBarController: UITabBarController {
     lazy var callsListNavController = OWSNavigationController(rootViewController: callsListViewController)
     lazy var callsListTabBarItem = Tabs.calls.tabBarItem
 
-    // Web Apps
+    // More Apps
     private lazy var webAppsService: WebAppsServiceProtocol = {
         let cache = WebAppsStoreImpl(keyValueStore: KeyValueStore(collection: "WebApps"))
         return WebAppsService(networkManager: SSKEnvironment.shared.networkManagerRef, cache: cache, databaseStorage: SSKEnvironment.shared.databaseStorageRef)

@@ -54,7 +54,6 @@ class WebAppCell: UITableViewCell {
         contentView.addSubview(iconImageView)
         contentView.addSubview(nameLabel)
         contentView.addSubview(descriptionLabel)
-        contentView.addSubview(categoryLabel)
 
         backgroundImageView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16))
 
@@ -68,11 +67,7 @@ class WebAppCell: UITableViewCell {
 
         descriptionLabel.autoPinEdge(.leading, to: .leading, of: nameLabel)
         descriptionLabel.autoPinEdge(.top, to: .bottom, of: nameLabel, withOffset: 4)
-        descriptionLabel.autoPinEdge(toSuperviewEdge: .trailing, withInset: 16)
-
-        categoryLabel.autoPinEdge(.leading, to: .leading, of: descriptionLabel)
-        categoryLabel.autoPinEdge(.top, to: .bottom, of: descriptionLabel, withOffset: 8)
-        categoryLabel.autoPinEdge(toSuperviewEdge: .bottom, withInset: 16)
+        descriptionLabel.autoPinEdge(toSuperviewEdge: .bottom, withInset: 16)
     }
 
     func configure(with webApp: WebApp) {
