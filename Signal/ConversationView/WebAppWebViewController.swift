@@ -76,6 +76,9 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
         webView.scrollView.delegate = self
         webView.allowsBackForwardNavigationGestures = true
 
+        // Set custom user agent to identify Signal app web view
+        webView.customUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.3 Mobile/15E148 Safari/604.1 HCPApp/2.0"
+
         // Add progress observer
         webView.addObserver(self, forKeyPath: "estimatedProgress", options: .new, context: nil)
     }
