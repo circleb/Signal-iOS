@@ -9,7 +9,7 @@ import SignalUI
 import SignalServiceKit
 import PureLayout
 
-class WebAppWebViewController: UIViewController {
+class WebAppWebViewController: UIViewController, OWSNavigationChildController {
     private let webApp: WebApp
     private let webAppsService: WebAppsServiceProtocol
     private let webView = WKWebView()
@@ -53,16 +53,15 @@ class WebAppWebViewController: UIViewController {
         loadingIndicator.hidesWhenStopped = true
 
         // Layout
-        view.addSubview(progressView)
         view.addSubview(webView)
+        view.addSubview(progressView)
         view.addSubview(loadingIndicator)
 
-        progressView.autoPinEdge(toSuperviewSafeArea: .top)
+        webView.autoPinEdgesToSuperviewSafeArea()
+
+        progressView.autoPinEdge(.bottom, to: .bottom, of: webView)
         progressView.autoPinWidthToSuperview()
         progressView.autoSetDimension(.height, toSize: 2)
-
-        webView.autoPinEdge(.top, to: .bottom, of: progressView)
-        webView.autoPinEdgesToSuperviewSafeArea()
 
         loadingIndicator.autoCenterInSuperview()
     }
@@ -94,7 +93,7 @@ class WebAppWebViewController: UIViewController {
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         if keyPath == "estimatedProgress" {
             progressView.progress = Float(webView.estimatedProgress)
-            progressView.isHidden = webView.estimatedProgress == 1
+            progressView.isHidden = webView.estimatedProgress == 1.0
         }
     }
 
