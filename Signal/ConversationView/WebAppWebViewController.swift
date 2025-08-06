@@ -16,6 +16,11 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
     private let progressView = UIProgressView()
     private let loadingIndicator = UIActivityIndicatorView(style: .large)
     private var isLoadingBlockedMessage = false
+    
+    // Navigation bar shrinking properties
+    private var lastContentOffset: CGFloat = 0
+    private var isNavigationBarHidden = false
+    private let scrollThreshold: CGFloat = 10
 
     init(webApp: WebApp, webAppsService: WebAppsServiceProtocol) {
         self.webApp = webApp
@@ -68,6 +73,7 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
 
     private func setupWebView() {
         webView.navigationDelegate = self
+        webView.scrollView.delegate = self
         webView.allowsBackForwardNavigationGestures = true
 
         // Add progress observer
@@ -273,5 +279,61 @@ extension WebAppWebViewController: WKNavigationDelegate {
     private func isSpecialURL(_ url: URL) -> Bool {
         let specialSchemes = ["about", "data", "file", "javascript"]
         return specialSchemes.contains(url.scheme?.lowercased() ?? "")
+    }
+}
+
+extension WebAppWebViewController: UIScrollViewDelegate {
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let currentOffset = scrollView.contentOffset.y
+        let differenceFromStart = currentOffset - lastContentOffset
+        
+        // Only animate if we've scrolled more than the threshold
+        guard abs(differenceFromStart) > scrollThreshold else { return }
+        
+        if differenceFromStart > 0 && currentOffset > 0 {
+            // Scrolling down - hide navigation bar
+            if !isNavigationBarHidden {
+                hideNavigationBar()
+            }
+        } else if differenceFromStart < 0 {
+            // Scrolling up - show navigation bar
+            if isNavigationBarHidden {
+                showNavigationBar()
+            }
+        }
+        
+        lastContentOffset = currentOffset
+    }
+    
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        // If we're at the top, always show the navigation bar
+        if scrollView.contentOffset.y <= 0 {
+            showNavigationBar()
+        }
+    }
+    
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        // If we're at the top, always show the navigation bar
+        if scrollView.contentOffset.y <= 0 {
+            showNavigationBar()
+        }
+    }
+    
+    private func hideNavigationBar() {
+        guard !isNavigationBarHidden else { return }
+        
+        isNavigationBarHidden = true
+        UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseInOut], animations: {
+            self.navigationController?.setNavigationBarHidden(true, animated: false)
+        })
+    }
+    
+    private func showNavigationBar() {
+        guard isNavigationBarHidden else { return }
+        
+        isNavigationBarHidden = false
+        UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseInOut], animations: {
+            self.navigationController?.setNavigationBarHidden(false, animated: false)
+        })
     }
 } 
