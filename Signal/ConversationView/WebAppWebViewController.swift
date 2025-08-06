@@ -11,12 +11,15 @@ import PureLayout
 
 class WebAppWebViewController: UIViewController {
     private let webApp: WebApp
+    private let webAppsService: WebAppsServiceProtocol
     private let webView = WKWebView()
     private let progressView = UIProgressView()
     private let loadingIndicator = UIActivityIndicatorView(style: .large)
+    private var isLoadingBlockedMessage = false
 
-    init(webApp: WebApp) {
+    init(webApp: WebApp, webAppsService: WebAppsServiceProtocol) {
         self.webApp = webApp
+        self.webAppsService = webAppsService
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -113,6 +116,7 @@ class WebAppWebViewController: UIViewController {
 extension WebAppWebViewController: WKNavigationDelegate {
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         loadingIndicator.stopAnimating()
+        isLoadingBlockedMessage = false
     }
 
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
@@ -126,26 +130,30 @@ extension WebAppWebViewController: WKNavigationDelegate {
             return
         }
         
-        Logger.info("WebApp navigation to: \(url.absoluteString)")
-        Logger.info("Navigation type: \(navigationAction.navigationType.rawValue)")
-        Logger.info("Target frame: \(navigationAction.targetFrame?.isMainFrame ?? false)")
-        Logger.info("Permitted patterns: \(webApp.urlsPermitted)")
-        
-        // Allow certain types of navigation to stay in-app regardless of patterns
-        let shouldAlwaysAllow = shouldAllowNavigationInApp(navigationAction)
-        if shouldAlwaysAllow {
-            Logger.info("Navigation allowed by type/context")
+        // Allow special URLs and when loading blocked message
+        if isLoadingBlockedMessage || isSpecialURL(url) {
             decisionHandler(.allow)
             return
         }
         
-        // Check URL patterns only for link clicks and new window requests
+        Logger.info("WebApp navigation to: \(url.absoluteString)")
+        Logger.info("Permitted patterns: \(webApp.urlsPermitted)")
+        Logger.info("Global allow list: \(webAppsService.getCachedGlobalAllowList()?.map { $0.entry } ?? [])")
+        
+        // Check if URL is permitted based on urlsPermitted patterns
         let isPermitted = isURLPermitted(url)
         Logger.info("Navigation permitted by URL pattern: \(isPermitted)")
         
         if !isPermitted {
-            Logger.warn("Opening URL in external browser: \(url.absoluteString)")
-            UIApplication.shared.open(url)
+            Logger.warn("🚫 BLOCKED URL: \(url.absoluteString)")
+            Logger.warn("📋 WebApp: \(webApp.name) (entry: \(webApp.entry))")
+            Logger.warn("🔍 URL Patterns Checked: \(webApp.urlsPermitted)")
+            Logger.warn("❌ URL did not match any permitted patterns")
+            Logger.warn("🌐 Navigation Type: \(navigationAction.navigationType.rawValue)")
+            Logger.warn("📱 Target Frame: \(navigationAction.targetFrame?.isMainFrame ?? false ? "Main Frame" : "Sub Frame")")
+            
+            isLoadingBlockedMessage = true
+            showBlockedMessage()
             decisionHandler(.cancel)
             return
         }
@@ -153,65 +161,118 @@ extension WebAppWebViewController: WKNavigationDelegate {
         decisionHandler(.allow)
     }
     
-    private func shouldAllowNavigationInApp(_ navigationAction: WKNavigationAction) -> Bool {
-        // Always allow these types of navigation to stay in the web view
-        switch navigationAction.navigationType {
-        case .reload:
-            return true // Refresh should always work
-        case .backForward:
-            return true // Back/forward navigation should work
-        case .formSubmitted, .formResubmitted:
-            return true // Form submissions should work within the app
-        case .other:
-            // JavaScript-triggered navigation, redirects, etc.
-            // Allow if it's in the main frame
-            return navigationAction.targetFrame?.isMainFrame == true
-        case .linkActivated:
-            // Link clicks - check if it's trying to open in a new window
-            return navigationAction.targetFrame?.isMainFrame == true
-        @unknown default:
-            return false
-        }
-    }
-    
     private func isURLPermitted(_ url: URL) -> Bool {
+        // First check if URL is globally allowed
+        if webAppsService.isURLGloballyAllowed(url) {
+            Logger.info("✅ URL globally allowed: \(url.absoluteString)")
+            return true
+        }
+        
         // If no patterns specified, allow all URLs
         guard !webApp.urlsPermitted.isEmpty else {
             return true
         }
         
+        let urlString = url.absoluteString.lowercased()
+        
         return webApp.urlsPermitted.contains { pattern in
-            return matchesPattern(url: url, pattern: pattern)
+            return matchesPattern(urlString: urlString, pattern: pattern.lowercased())
         }
     }
     
-    private func matchesPattern(url: URL, pattern: String) -> Bool {
-        // Enhanced pattern matching with better wildcard support
-        let urlString = url.absoluteString
-        
-        // Handle simple cases first
+    private func matchesPattern(urlString: String, pattern: String) -> Bool {
+        // Handle wildcard patterns
         if pattern == "*" {
             return true
         }
         
-        // Convert pattern to regex with proper escaping
-        var regexPattern = pattern
-            .replacingOccurrences(of: ".", with: "\\.")  // Escape dots
-            .replacingOccurrences(of: "*", with: ".*")   // Convert wildcards
-        
-        // If pattern doesn't start with ^, make it match anywhere in the URL
-        if !regexPattern.hasPrefix("^") {
-            regexPattern = ".*" + regexPattern
+        // Simple wildcard matching
+        if pattern.contains("*") {
+            let regexPattern = pattern
+                .replacingOccurrences(of: ".", with: "\\.")
+                .replacingOccurrences(of: "*", with: ".*")
+            
+            do {
+                let regex = try NSRegularExpression(pattern: regexPattern, options: .caseInsensitive)
+                let range = NSRange(location: 0, length: urlString.count)
+                return regex.firstMatch(in: urlString, options: [], range: range) != nil
+            } catch {
+                Logger.warn("Invalid regex pattern: \(pattern), error: \(error)")
+                return false
+            }
         }
         
-        do {
-            let regex = try NSRegularExpression(pattern: regexPattern, options: .caseInsensitive)
-            let matches = regex.matches(in: urlString, options: [], range: NSRange(location: 0, length: urlString.count))
-            return !matches.isEmpty
-        } catch {
-            Logger.warn("Invalid regex pattern: \(pattern), error: \(error)")
-            // Fallback to simple contains check
-            return urlString.localizedCaseInsensitiveContains(pattern.replacingOccurrences(of: "*", with: ""))
-        }
+        // Simple substring matching
+        return urlString.contains(pattern)
+    }
+    
+    private func showBlockedMessage() {
+        let blockedHTML = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+                body {
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    background-color: #f8f9fa;
+                    margin: 0;
+                    padding: 20px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    min-height: 100vh;
+                }
+                .blocked-container {
+                    background: white;
+                    border-radius: 12px;
+                    padding: 40px;
+                    text-align: center;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                    max-width: 400px;
+                }
+                .blocked-icon {
+                    font-size: 48px;
+                    margin-bottom: 20px;
+                }
+                .blocked-title {
+                    font-size: 24px;
+                    font-weight: 600;
+                    color: #dc3545;
+                    margin-bottom: 12px;
+                }
+                .blocked-message {
+                    font-size: 16px;
+                    color: #6c757d;
+                    line-height: 1.5;
+                    margin-bottom: 20px;
+                }
+                .blocked-info {
+                    font-size: 14px;
+                    color: #adb5bd;
+                    background: #f8f9fa;
+                    padding: 12px;
+                    border-radius: 6px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="blocked-container">
+                <div class="blocked-icon">🚫</div>
+                <div class="blocked-title">Access Blocked</div>
+                <div class="blocked-message">
+                    Only approved websites are allowed in this web app.
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        webView.loadHTMLString(blockedHTML, baseURL: nil)
+    }
+    
+    private func isSpecialURL(_ url: URL) -> Bool {
+        let specialSchemes = ["about", "data", "file", "javascript"]
+        return specialSchemes.contains(url.scheme?.lowercased() ?? "")
     }
 } 

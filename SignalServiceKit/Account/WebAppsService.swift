@@ -7,12 +7,16 @@ import Foundation
 
 public protocol WebAppsServiceProtocol {
     func fetchWebApps() -> Promise<[WebApp]>
+    func fetchGlobalAllowList() -> Promise<[GlobalAllowEntry]>
     func getCachedWebApps() -> [WebApp]?
+    func getCachedGlobalAllowList() -> [GlobalAllowEntry]?
     func cacheWebApps(_ apps: [WebApp]) async
+    func cacheGlobalAllowList(_ entries: [GlobalAllowEntry]) async
     func clearCache() async
     func getWebAppsByCategory() -> [WebAppCategory]
     func searchWebApps(query: String) -> [WebApp]
     func getWebAppsByLocation(_ location: String) -> [WebApp]
+    func isURLGloballyAllowed(_ url: URL) -> Bool
 }
 
 public class WebAppsService: WebAppsServiceProtocol {
@@ -60,9 +64,49 @@ public class WebAppsService: WebAppsServiceProtocol {
         }
     }
 
+    public func fetchGlobalAllowList() -> Promise<[GlobalAllowEntry]> {
+        return Promise.wrapAsync {
+            guard let url = URL(string: WebAppsConfig.globalAllowEndpoint) else {
+                throw WebAppsError.invalidURL
+            }
+
+            // Use direct URLSession for external URLs instead of TSRequest/NetworkManager
+            let session = OWSURLSession(
+                securityPolicy: OWSURLSession.defaultSecurityPolicy,
+                configuration: OWSURLSession.defaultConfigurationWithoutCaching,
+                canUseSignalProxy: false
+            )
+            
+            var headers = HttpHeaders()
+            headers.addDefaultHeaders()
+            
+            let response = try await session.performRequest(
+                url.absoluteString,
+                method: .get,
+                headers: headers
+            )
+            
+            guard let data = response.responseBodyData,
+                  let globalAllowList = try? JSONDecoder().decode([GlobalAllowEntry].self, from: data) else {
+                throw WebAppsError.invalidResponse
+            }
+
+            await self.databaseStorage.awaitableWrite { tx in
+                self.cache.storeGlobalAllowList(globalAllowList, tx: tx)
+            }
+            return globalAllowList
+        }
+    }
+
     public func getCachedWebApps() -> [WebApp]? {
         return databaseStorage.read { tx in
             return cache.getWebApps(tx: tx)
+        }
+    }
+
+    public func getCachedGlobalAllowList() -> [GlobalAllowEntry]? {
+        return databaseStorage.read { tx in
+            return cache.getGlobalAllowList(tx: tx)
         }
     }
 
@@ -72,9 +116,16 @@ public class WebAppsService: WebAppsServiceProtocol {
         }
     }
 
+    public func cacheGlobalAllowList(_ entries: [GlobalAllowEntry]) async {
+        await databaseStorage.awaitableWrite { tx in
+            cache.storeGlobalAllowList(entries, tx: tx)
+        }
+    }
+
     public func clearCache() async {
         await databaseStorage.awaitableWrite { tx in
             cache.clearWebApps(tx: tx)
+            cache.clearGlobalAllowList(tx: tx)
         }
     }
 
@@ -105,5 +156,15 @@ public class WebAppsService: WebAppsServiceProtocol {
     public func getWebAppsByLocation(_ location: String) -> [WebApp] {
         let apps = getCachedWebApps() ?? []
         return apps.filter { $0.location.contains(location) }
+    }
+
+    public func isURLGloballyAllowed(_ url: URL) -> Bool {
+        let globalAllowList = getCachedGlobalAllowList() ?? []
+        let urlString = url.absoluteString.lowercased()
+        
+        return globalAllowList.contains { entry in
+            let entryLower = entry.entry.lowercased()
+            return urlString.contains(entryLower)
+        }
     }
 } 

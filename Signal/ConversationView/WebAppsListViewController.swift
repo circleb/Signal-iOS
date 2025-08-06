@@ -89,10 +89,15 @@ class WebAppsListViewController: UIViewController {
             loadingIndicator.startAnimating()
         }
 
+        // Fetch web apps first, then global allow list
         _ = webAppsService.fetchWebApps()
-            .done { [weak self] apps in
-                self?.allWebApps = apps.sorted { $0.name < $1.name }
+            .then { [weak self] webApps -> Promise<[GlobalAllowEntry]> in
+                self?.allWebApps = webApps.sorted { $0.name < $1.name }
+                return self?.webAppsService.fetchGlobalAllowList() ?? Promise.value([])
+            }
+            .done { [weak self] globalAllowList in
                 self?.updateUI()
+                Logger.info("📋 Loaded \(self?.allWebApps.count ?? 0) web apps and \(globalAllowList.count) global allow entries")
             }
             .catch { [weak self] error in
                 self?.showError(error)
@@ -147,7 +152,7 @@ extension WebAppsListViewController: UITableViewDataSource, UITableViewDelegate 
         tableView.deselectRow(at: indexPath, animated: true)
 
         let webApp = filteredWebApps[indexPath.row]
-        let webVC = WebAppWebViewController(webApp: webApp)
+        let webVC = WebAppWebViewController(webApp: webApp, webAppsService: webAppsService)
         navigationController?.pushViewController(webVC, animated: true)
     }
 }

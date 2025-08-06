@@ -7,8 +7,11 @@ import Foundation
 
 public protocol WebAppsStore {
     func storeWebApps(_ apps: [WebApp], tx: DBWriteTransaction)
+    func storeGlobalAllowList(_ entries: [GlobalAllowEntry], tx: DBWriteTransaction)
     func getWebApps(tx: DBReadTransaction) -> [WebApp]?
+    func getGlobalAllowList(tx: DBReadTransaction) -> [GlobalAllowEntry]?
     func clearWebApps(tx: DBWriteTransaction)
+    func clearGlobalAllowList(tx: DBWriteTransaction)
     func getLastFetchDate(tx: DBReadTransaction) -> Date?
     func isCacheExpired(tx: DBReadTransaction) -> Bool
     func getWebApp(by entry: String, tx: DBReadTransaction) -> WebApp?
@@ -29,6 +32,13 @@ public class WebAppsStoreImpl: WebAppsStore {
         }
     }
 
+    public func storeGlobalAllowList(_ entries: [GlobalAllowEntry], tx: DBWriteTransaction) {
+        if let data = try? JSONEncoder().encode(entries) {
+            keyValueStore.setData(data, key: WebAppsConfig.globalAllowCacheKey, transaction: tx)
+            keyValueStore.setDate(Date(), key: "\(WebAppsConfig.globalAllowCacheKey)_last_fetch", transaction: tx)
+        }
+    }
+
     public func getWebApps(tx: DBReadTransaction) -> [WebApp]? {
         guard let data = keyValueStore.getData(WebAppsConfig.cacheKey, transaction: tx),
               let apps = try? JSONDecoder().decode([WebApp].self, from: data) else {
@@ -37,9 +47,22 @@ public class WebAppsStoreImpl: WebAppsStore {
         return apps
     }
 
+    public func getGlobalAllowList(tx: DBReadTransaction) -> [GlobalAllowEntry]? {
+        guard let data = keyValueStore.getData(WebAppsConfig.globalAllowCacheKey, transaction: tx),
+              let entries = try? JSONDecoder().decode([GlobalAllowEntry].self, from: data) else {
+            return nil
+        }
+        return entries
+    }
+
     public func clearWebApps(tx: DBWriteTransaction) {
         keyValueStore.removeValue(forKey: WebAppsConfig.cacheKey, transaction: tx)
         keyValueStore.removeValue(forKey: "\(WebAppsConfig.cacheKey)_last_fetch", transaction: tx)
+    }
+
+    public func clearGlobalAllowList(tx: DBWriteTransaction) {
+        keyValueStore.removeValue(forKey: WebAppsConfig.globalAllowCacheKey, transaction: tx)
+        keyValueStore.removeValue(forKey: "\(WebAppsConfig.globalAllowCacheKey)_last_fetch", transaction: tx)
     }
 
     public func getLastFetchDate(tx: DBReadTransaction) -> Date? {

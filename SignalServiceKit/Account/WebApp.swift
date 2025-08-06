@@ -28,4 +28,14 @@ public struct WebAppCategory: Codable {
         self.apps = apps
         self.icon = icon
     }
+}
+
+public struct GlobalAllowEntry: Codable {
+    public let entry: String
+    public let name: String
+    
+    public init(entry: String, name: String) {
+        self.entry = entry
+        self.name = name
+    }
 } 
