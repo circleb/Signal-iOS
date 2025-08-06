@@ -46,7 +46,7 @@ class HomeTabBarController: UITabBarController {
                     comment: "Title for the stories view."
                 )
             case .webApps:
-                return "Web Apps"
+                return "More"
             }
         }
 
@@ -59,7 +59,7 @@ class HomeTabBarController: UITabBarController {
             case .stories:
                 return UIImage(named: "tab-stories")
             case .webApps:
-                return UIImage(systemName: "globe")
+                return UIImage(systemName: "ellipsis")
             }
         }
 
