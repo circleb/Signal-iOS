@@ -2,11 +2,11 @@
 
 ## Overview
 
-Integrate web apps from the Homestead Heritage API into the Signal app's existing tab view. Users will see a new "Web Apps" button in the tab bar that opens a popup list of available web applications. Each web app entry will open in a webview that loads the hosted application. The feature will fetch web app data from `homesteadheeritage.org/api/v1/webapps.php` and display them in a categorized, searchable interface.
+Integrate web apps from the Homestead Heritage API into the Signal app's existing tab view. Users will see a new "Web Apps" button in the tab bar that opens a popup list of available web applications. Each web app entry will open in a webview that loads the hosted application. The feature will fetch web app data from `homesteadheeritage.org/api/v2/webapps.php` and display them in a categorized, searchable interface.
 
 ## API Configuration
 
-- **API Endpoint**: `https://homesteadheeritage.org/api/v1/webapps.php`
+- **API Endpoint**: `https://homesteadheeritage.org/api/v2/webapps.php`
 - **Data Format**: JSON array of web app objects
 - **Authentication**: None required (public API)
 - **Caching**: Implement local caching for offline access
@@ -44,7 +44,7 @@ struct WebAppCategory: Codable {
 
 ```swift
 struct WebAppsConfig {
-    static let apiEndpoint = "https://homesteadheeritage.org/api/v1/webapps.php"
+    static let apiEndpoint = "https://homesteadheeritage.org/api/v2/webapps.php"
     static let cacheKey = "web_apps_cache"
     static let cacheExpirationInterval: TimeInterval = 3600 // 1 hour
 
@@ -875,7 +875,7 @@ extension WebAppsListViewController: UITableViewDataSource, UITableViewDelegate 
 
 ## API Integration Requirements
 
-- Ensure `https://my.homesteadheeritage.org/api/v1/webapps.php` is accessible
+- Ensure `https://my.homesteadheeritage.org/api/v2/webapps.php` is accessible
 - Verify JSON response format matches expected structure
 - Handle CORS if needed for webview loading
 - Implement proper error handling for API failures

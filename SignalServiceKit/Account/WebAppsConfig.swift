@@ -6,8 +6,8 @@
 import Foundation
 
 public struct WebAppsConfig {
-    static let apiEndpoint = "https://my.homesteadheritage.org/api/v1/webapps.php"
-    static let globalAllowEndpoint = "https://my.homesteadheritage.org/api/v1/globalallow.php"
+    static let apiEndpoint = "https://my.homesteadheritage.org/api/v2/webapps.php"
+    static let globalAllowEndpoint = "https://my.homesteadheritage.org/api/v2/globalallow.php"
     static let cacheKey = "web_apps_cache"
     static let globalAllowCacheKey = "global_allow_cache"
     static let cacheExpirationInterval: TimeInterval = 3600 // 1 hour
