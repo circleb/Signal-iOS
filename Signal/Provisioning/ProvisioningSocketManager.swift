@@ -237,6 +237,10 @@ public class ProvisioningSocketManager: ProvisioningSocketDelegate {
             case .transferred:
                 // Transferring back to a transfered device will result in hitting this.
                 return false
+            case .ssoOnly:
+                // SSO-only users shouldn't be in provisioning flow
+                owsFailDebug("SSO-only users shouldn't be provisioning")
+                return false
             case
                 .registered,
                 .provisioned,

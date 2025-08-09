@@ -89,14 +89,40 @@ public class RegistrationStateChangeManagerImpl: RegistrationStateChangeManager 
         authToken: String,
         tx: DBWriteTransaction
     ) {
-        tsAccountManager.initializeLocalIdentifiers(
-            e164: e164,
-            aci: aci,
-            pni: pni,
-            deviceId: .primary,
-            serverAuthToken: authToken,
-            tx: tx
-        )
+        // Check if we're converting from SSO-only to full registration
+        let currentState = tsAccountManager.registrationState(tx: tx)
+        let isConvertingFromSsoOnly: Bool
+        switch currentState {
+        case .ssoOnly:
+            isConvertingFromSsoOnly = true
+        default:
+            isConvertingFromSsoOnly = false
+        }
+        
+        if isConvertingFromSsoOnly {
+            // Convert SSO-only registration to full registration
+            tsAccountManager.convertSsoOnlyToFullRegistration(tx: tx)
+            
+            // Update the local identifiers with the new full registration data
+            tsAccountManager.initializeLocalIdentifiers(
+                e164: e164,
+                aci: aci,
+                pni: pni,
+                deviceId: .primary,
+                serverAuthToken: authToken,
+                tx: tx
+            )
+        } else {
+            // Normal registration flow
+            tsAccountManager.initializeLocalIdentifiers(
+                e164: e164,
+                aci: aci,
+                pni: pni,
+                deviceId: .primary,
+                serverAuthToken: authToken,
+                tx: tx
+            )
+        }
 
         didUpdateLocalIdentifiers(e164: e164, aci: aci, pni: pni, deviceId: .primary, tx: tx)
 

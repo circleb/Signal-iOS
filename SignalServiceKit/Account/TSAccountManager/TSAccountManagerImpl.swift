@@ -315,6 +315,60 @@ extension TSAccountManagerImpl: LocalIdentifiersSetter {
         return true
     }
 
+    public func initializeSsoOnlyRegistration(
+        e164: E164,
+        aci: Aci,
+        pni: Pni,
+        deviceId: DeviceId,
+        serverAuthToken: String,
+        tx: DBWriteTransaction
+    ) {
+        mutateWithLock(tx: tx) {
+            Self.regStateLogger.info("Initializing SSO-only registration")
+            
+            // Set local identifiers (same as full registration)
+            let oldNumber = kvStore.getString(Keys.localPhoneNumber, transaction: tx)
+            Self.regStateLogger.info("local number \(oldNumber ?? "nil") -> \(e164.stringValue)")
+            kvStore.setString(e164.stringValue, key: Keys.localPhoneNumber, transaction: tx)
+
+            let oldAci = Aci.parseFrom(aciString: kvStore.getString(Keys.localAci, transaction: tx))
+            Self.regStateLogger.info("local aci \(oldAci?.logString ?? "nil") -> \(aci)")
+            kvStore.setString(aci.serviceIdUppercaseString, key: Keys.localAci, transaction: tx)
+
+            let oldPni = Pni.parseFrom(pniString: kvStore.getString(Keys.localPni, transaction: tx))
+            Self.regStateLogger.info("local pni \(oldPni?.logString ?? "nil") -> \(pni)")
+            kvStore.setString(pni.rawUUID.uuidString, key: Keys.localPni, transaction: tx)
+
+            Self.regStateLogger.info("device id is primary? \(deviceId == .primary)")
+            kvStore.setUInt32(deviceId.uint32Value, key: Keys.deviceId, transaction: tx)
+            kvStore.setString(serverAuthToken, key: Keys.serverAuthToken, transaction: tx)
+
+            kvStore.setDate(dateProvider(), key: Keys.registrationDate, transaction: tx)
+            
+            // Mark as SSO-only registration
+            kvStore.setBool(true, key: Keys.isSsoOnly, transaction: tx)
+            
+            // Clear any existing registration state
+            kvStore.removeValues(
+                forKeys: [
+                    Keys.isDeregisteredOrDelinked,
+                    Keys.reregistrationPhoneNumber,
+                    Keys.reregistrationAci
+                ],
+                transaction: tx
+            )
+        }
+    }
+
+    public func convertSsoOnlyToFullRegistration(tx: DBWriteTransaction) {
+        mutateWithLock(tx: tx) {
+            Self.regStateLogger.info("Converting SSO-only to full registration")
+            
+            // Remove SSO-only flag
+            kvStore.removeValue(forKey: Keys.isSsoOnly, transaction: tx)
+        }
+    }
+
     public func cleanUpTransferStateOnAppLaunchIfNeeded() {
         guard getOrLoadAccountStateWithMaybeTransaction().isTransferInProgress else {
             // No need for cleanup if transfer wasn't already in progress.
@@ -646,6 +700,18 @@ extension TSAccountManagerImpl {
                 return .unregistered
             } else {
                 // We have local identifiers, so we are registered/provisioned.
+                // Check if this is SSO-only registration first
+                let isSsoOnly = kvStore.getBool(
+                    Keys.isSsoOnly,
+                    defaultValue: false,
+                    transaction: tx
+                )
+                
+                if isSsoOnly {
+                    logger?.info("SSO-only registration")
+                    return .ssoOnly
+                }
+                
                 switch isPrimaryDevice {
                 case true:
                     logger?.info("Registered")
@@ -686,6 +752,8 @@ extension TSAccountManagerImpl {
             static let lastSetIsDiscoverableByPhoneNumber = "TSAccountManager_LastSetIsDiscoverableByPhoneNumberKey"
 
             static let isManualMessageFetchEnabled = "TSAccountManager_ManualMessageFetchKey"
+            
+            static let isSsoOnly = "TSAccountManager_IsSsoOnlyKey"
         }
     }
 }

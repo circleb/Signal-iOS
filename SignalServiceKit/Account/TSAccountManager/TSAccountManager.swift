@@ -187,6 +187,21 @@ public protocol LocalIdentifiersSetter {
     /// Returns true if value changed, false otherwise.
     func setWasTransferred(_ wasTransferred: Bool, tx: DBWriteTransaction) -> Bool
 
+    /// Initialize SSO-only registration state after successful SSO authentication.
+    /// This allows access to web apps but not chats, stories, or calls.
+    func initializeSsoOnlyRegistration(
+        e164: E164,
+        aci: Aci,
+        pni: Pni,
+        deviceId: DeviceId,
+        serverAuthToken: String,
+        tx: DBWriteTransaction
+    )
+
+    /// Convert SSO-only registration to full registration.
+    /// This should be called when the user completes the full registration flow.
+    func convertSsoOnlyToFullRegistration(tx: DBWriteTransaction)
+
     /**
      * After we succesully transfer, we need to do some cleanup the next time
      * the app launches.

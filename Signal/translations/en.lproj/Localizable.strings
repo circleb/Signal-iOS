@@ -9366,3 +9366,24 @@
 
 /* Info Message when you update disappearing messages duration. Embeds a {{time amount}} before messages disappear. see the *_TIME_AMOUNT strings for context. */
 "YOU_UPDATED_DISAPPEARING_MESSAGES_CONFIGURATION" = "You set disappearing message time to %@.";
+
+/* Limited registration state - title for chats tab onboarding prompt */
+"LIMITED_REGISTRATION_CHATS_TITLE" = "Complete Registration";
+
+/* Limited registration state - message explaining that chats require full registration */
+"LIMITED_REGISTRATION_CHATS_MESSAGE" = "To use chats, you need to complete your Signal registration with a phone number and verification code.";
+
+/* Limited registration state - title for stories tab onboarding prompt */
+"LIMITED_REGISTRATION_STORIES_TITLE" = "Complete Registration";
+
+/* Limited registration state - message explaining that stories require full registration */
+"LIMITED_REGISTRATION_STORIES_MESSAGE" = "To use stories, you need to complete your Signal registration with a phone number and verification code.";
+
+/* Limited registration state - title for calls tab onboarding prompt */
+"LIMITED_REGISTRATION_CALLS_TITLE" = "Complete Registration";
+
+/* Limited registration state - message explaining that calls require full registration */
+"LIMITED_REGISTRATION_CALLS_MESSAGE" = "To use calls, you need to complete your Signal registration with a phone number and verification code.";
+
+/* Limited registration state - button to complete full registration */
+"LIMITED_REGISTRATION_COMPLETE_REGISTRATION" = "Complete Registration";

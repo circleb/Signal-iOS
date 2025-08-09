@@ -11,9 +11,15 @@ import SignalUI
 class HomeTabBarController: UITabBarController {
 
     private let appReadiness: AppReadinessSetter
+    private let limitedRegistrationManager: LimitedRegistrationManagerProtocol
 
     init(appReadiness: AppReadinessSetter) {
         self.appReadiness = appReadiness
+        self.limitedRegistrationManager = LimitedRegistrationManager(
+            tsAccountManager: DependenciesBridge.shared.tsAccountManager,
+            registrationCoordinatorLoader: RegistrationCoordinatorLoaderImpl(dependencies: .from(SSKEnvironment.shared)),
+            appReadiness: appReadiness
+        )
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -23,9 +29,9 @@ class HomeTabBarController: UITabBarController {
     }
 
     enum Tabs: Int {
-        case chatList = 0
-        case stories = 1
-        case webApps = 2
+        case webApps = 0
+        case chatList = 1
+        case stories = 2
         case calls = 3
 
         var title: String {
@@ -236,11 +242,11 @@ class HomeTabBarController: UITabBarController {
     }
 
     private func tabsToShow(areStoriesEnabled: Bool) -> [Tabs] {
-        var tabs = [Tabs.chatList]
+        var tabs = [Tabs.webApps]
+        tabs.append(Tabs.chatList)
         if areStoriesEnabled {
             tabs.append(Tabs.stories)
         }
-        tabs.append(Tabs.webApps)
         tabs.append(Tabs.calls)
         return tabs
     }
@@ -374,6 +380,23 @@ extension HomeTabBarController: StoryBadgeCountObserver {
 
 extension HomeTabBarController: UITabBarControllerDelegate {
     func tabBarController(_ tabBarController: UITabBarController, shouldSelect viewController: UIViewController) -> Bool {
+        // Check if we're in limited registration state and handle accordingly
+        let selectedTab: LimitedRegistrationTab?
+        switch viewController {
+        case chatListNavController:
+            selectedTab = .chats
+        case storiesNavController:
+            selectedTab = .stories
+        case callsListNavController:
+            selectedTab = .calls
+        default:
+            selectedTab = nil
+        }
+        
+        if let tab = selectedTab {
+            return limitedRegistrationManager.handleTabSelection(tab, from: self)
+        }
+        
         // If we re-select the active tab, scroll to the top.
         if selectedViewController == viewController {
             let tableView: UITableView

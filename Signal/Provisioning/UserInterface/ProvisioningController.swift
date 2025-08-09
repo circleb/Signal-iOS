@@ -89,6 +89,11 @@ class ProvisioningController: NSObject {
             SignalApp.resetAppDataAndExit(
                 keyFetcher: SSKEnvironment.shared.databaseStorageRef.keyFetcher
             )
+        case (_, .ssoOnly):
+            // SSO-only users shouldn't be in provisioning flow
+            SignalApp.resetAppDataAndExit(
+                keyFetcher: SSKEnvironment.shared.databaseStorageRef.keyFetcher
+            )
         default:
             break
         }

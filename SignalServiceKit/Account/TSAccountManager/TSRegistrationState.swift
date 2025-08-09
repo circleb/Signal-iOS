@@ -24,6 +24,10 @@ public enum TSRegistrationState {
     /// Provisioned as a linked device. "Normal" state.
     case provisioned
 
+    /// SSO-only registration state. User has authenticated via SSO but hasn't completed full registration.
+    /// This allows access to web apps but not chats, stories, or calls.
+    case ssoOnly
+
     /// Deregistered after having been registered, typically due
     /// to an error in a server response informing us we've been
     /// deregistered. Applies to primary devices only.
@@ -63,7 +67,7 @@ extension TSRegistrationState {
                 .transferringIncoming,
                 .transferred:
             return false
-        case .registered, .provisioned:
+        case .registered, .provisioned, .ssoOnly:
             return true
         }
     }
@@ -73,7 +77,7 @@ extension TSRegistrationState {
         case .unregistered, .transferringIncoming:
             return false
         case
-                .registered, .provisioned,
+                .registered, .provisioned, .ssoOnly,
                 .reregistering, .relinking,
                 .deregistered, .delinked,
                 .transferringPrimaryOutgoing, .transferringLinkedOutgoing,
@@ -91,7 +95,7 @@ extension TSRegistrationState {
         case .transferred:
             // Irrelevant what this was, return nil.
             return nil
-        case .registered, .deregistered, .reregistering, .transferringPrimaryOutgoing:
+        case .registered, .deregistered, .reregistering, .transferringPrimaryOutgoing, .ssoOnly:
             return true
         case .provisioned, .delinked, .relinking, .transferringLinkedOutgoing:
             return false
@@ -104,7 +108,7 @@ extension TSRegistrationState {
             return true
         case
                 .unregistered,
-                .provisioned,
+                .provisioned, .ssoOnly,
                 .reregistering,
                 .relinking,
                 .deregistered, .delinked,
@@ -119,13 +123,26 @@ extension TSRegistrationState {
         switch self {
         case
                 .unregistered, .reregistering, .relinking,
-                .registered, .provisioned,
+                .registered, .provisioned, .ssoOnly,
                 .transferringPrimaryOutgoing, .transferringLinkedOutgoing,
                 .transferringIncoming,
                 .transferred:
             return false
         case .deregistered, .delinked:
             return true
+        }
+    }
+
+    public var isFullyRegistered: Bool {
+        switch self {
+        case .registered, .provisioned:
+            return true
+        case
+                .unregistered, .reregistering, .relinking,
+                .deregistered, .delinked,
+                .transferringPrimaryOutgoing, .transferringLinkedOutgoing,
+                .transferringIncoming, .transferred, .ssoOnly:
+            return false
         }
     }
 
@@ -143,6 +160,8 @@ extension TSRegistrationState {
             return "registered"
         case .provisioned:
             return "provisioned"
+        case .ssoOnly:
+            return "ssoOnly"
         case .deregistered:
             return "deregistered"
         case .delinked:
