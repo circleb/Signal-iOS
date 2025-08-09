@@ -523,21 +523,66 @@ extension RegistrationNavigationController: SSORegistrationSplashPresenter {
             // Extract phone number from SSO user info if available
             let phoneNumber = userInfo.phoneNumber ?? "0000000000" // Fallback if no phone number
             
-            // For now, we'll use placeholder values since we don't have real SSO integration yet
-            // In production, these would come from the SSO provider
-            let deviceId: DeviceId = .primary
-            let serverAuthToken = "sso-temp-token" // In production, this would come from SSO
+            // Generate proper identity key pairs for ACI and PNI
+            let aciIdentityKeyPair = ECKeyPair.generateKeyPair()
+            let pniIdentityKeyPair = ECKeyPair.generateKeyPair()
             
-            // Initialize SSO-only registration with placeholder identifiers
-            // TODO: Replace with actual SSO-provided identifiers
+            // Generate ACI and PNI from UUIDs (these are separate from identity keys)
+            let aci = Aci(fromUUID: UUID())
+            let pni = Pni(fromUUID: UUID())
+            
+            let deviceId: DeviceId = .primary
+            let serverAuthToken = userInfo.accessToken // Use actual SSO access token
+            
+            // Store the identity key pairs
+            DependenciesBridge.shared.identityManager.setIdentityKeyPair(aciIdentityKeyPair, for: .aci, tx: tx)
+            DependenciesBridge.shared.identityManager.setIdentityKeyPair(pniIdentityKeyPair, for: .pni, tx: tx)
+            
+            // Initialize SSO-only registration with proper identifiers
             (DependenciesBridge.shared.tsAccountManager as! (any TSAccountManager & LocalIdentifiersSetter)).initializeSsoOnlyRegistration(
                 e164: E164(phoneNumber)!,
-                aci: Aci(fromUUID: UUID()), // Placeholder - will be replaced during full registration
-                pni: Pni(fromUUID: UUID()), // Placeholder - will be replaced during full registration
+                aci: aci,
+                pni: pni,
                 deviceId: deviceId,
                 serverAuthToken: serverAuthToken,
                 tx: tx
             )
+            
+            // Set local identifiers in storage service manager
+            SSKEnvironment.shared.storageServiceManagerRef.setLocalIdentifiers(LocalIdentifiers(aci: aci, pni: pni, e164: E164(phoneNumber)!))
+            
+            // Create local recipient record and set up device IDs (required for message sending)
+            let recipient = DependenciesBridge.shared.recipientMerger.applyMergeForLocalAccount(
+                aci: aci,
+                phoneNumber: E164(phoneNumber)!,
+                pni: pni,
+                tx: tx
+            )
+            
+            // Always add the .primary DeviceId as well as our own. This is how linked
+            // devices know to send their initial sync messages to the primary.
+            DependenciesBridge.shared.recipientManager.modifyAndSave(
+                recipient,
+                deviceIdsToAdd: [deviceId, .primary],
+                deviceIdsToRemove: [],
+                shouldUpdateStorageService: false,
+                tx: tx
+            )
+            
+            // Create a basic local user profile (required for storage service account record creation)
+            let localUserProfile = OWSUserProfile.getOrBuildUserProfileForLocalUser(
+                userProfileWriter: .registration,
+                tx: tx
+            )
+            
+            // Set a basic profile key if one doesn't exist
+            if localUserProfile.profileKey == nil {
+                localUserProfile.update(
+                    profileKey: .setTo(Aes256Key.generateRandom()),
+                    userProfileWriter: .registration,
+                    transaction: tx
+                )
+            }
         }
         
         // Show the main app with limited functionality
