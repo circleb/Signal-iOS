@@ -4805,15 +4805,6 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
     private func shouldRestoreFromStorageService() -> Bool {
         switch mode {
         case .registering, .reRegistering:
-            // Don't restore from storage service if we're in SSO-only registration state
-            // since we're creating a fresh account and don't need to restore any data
-            let registrationState: TSRegistrationState = deps.db.read { tx in
-                deps.tsAccountManager.registrationState(tx: tx)
-            }
-            if case .ssoOnly = registrationState {
-                return false
-            }
-            
             return !inMemoryState.hasRestoredFromStorageService
                 && !inMemoryState.hasSkippedRestoreFromStorageService
                 && inMemoryState.restoreMethod?.backupType == nil

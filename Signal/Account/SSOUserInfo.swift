@@ -76,15 +76,24 @@ extension SSOUserInfo {
         
         // Add realm roles
         if let realmRoles = keycloakUserInfo.realmAccess?.roles {
+            Logger.info("SSO: Found realm roles: \(realmRoles)")
             allRoles.append(contentsOf: realmRoles)
+        } else {
+            Logger.info("SSO: No realm roles found")
         }
         
         // Add resource roles
         if let resourceAccess = keycloakUserInfo.resourceAccess {
-            for (_, access) in resourceAccess {
+            Logger.info("SSO: Found resource access with \(resourceAccess.count) resources")
+            for (resourceName, access) in resourceAccess {
+                Logger.info("SSO: Resource '\(resourceName)' has roles: \(access.roles)")
                 allRoles.append(contentsOf: access.roles)
             }
+        } else {
+            Logger.info("SSO: No resource access found")
         }
+        
+        Logger.info("SSO: Total extracted roles: \(allRoles)")
         
         self.roles = allRoles
         self.groups = keycloakUserInfo.groups ?? []

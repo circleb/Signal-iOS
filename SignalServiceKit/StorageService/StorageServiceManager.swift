@@ -1652,10 +1652,7 @@ class StorageServiceOperation {
 
                 state.save(clearConsecutiveConflicts: true, transaction: transaction)
 
-                // If the remote manifest was missing the local account, we marked it as updated above.
-                // Ensure we back up pending account changes immediately so the account record is uploaded.
-                let shouldForceBackupForLocalAccount = (state.localAccountChangeState == .updated)
-                if backupAfterSuccess || shouldForceBackupForLocalAccount {
+                if backupAfterSuccess {
                     storageServiceManager.backupPendingChanges(authedDevice: self.authedDevice)
                 }
             }

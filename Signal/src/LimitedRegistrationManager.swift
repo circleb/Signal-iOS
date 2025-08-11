@@ -129,20 +129,16 @@ class LimitedRegistrationManager: LimitedRegistrationManagerProtocol {
     }
     
     private func startFullRegistration(from viewController: UIViewController) {
-        // Start the full registration flow, but skip the SSO splash since user has already authenticated
+        // Start the full registration flow
         let coordinator = SSKEnvironment.shared.databaseStorageRef.write { tx in
             return registrationCoordinatorLoader.coordinator(forDesiredMode: .registering, transaction: tx)
         }
         
-        // Mark that the splash has been shown and should be skipped
-        // This will make the registration flow continue from phone number entry
-        coordinator.continueFromSplash().done { _ in
-            let navController = RegistrationNavigationController.withCoordinator(
-                coordinator,
-                appReadiness: self.appReadiness
-            )
-            
-            viewController.present(navController, animated: true)
-        }
+        let navController = RegistrationNavigationController.withCoordinator(
+            coordinator,
+            appReadiness: appReadiness
+        )
+        
+        viewController.present(navController, animated: true)
     }
 }
