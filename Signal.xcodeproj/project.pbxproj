@@ -1638,7 +1638,6 @@
 		B524D3942E430639004B1E4D /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D38D2E430639004B1E4D /* EmptyStateView.swift */; };
 		B524D3952E430639004B1E4D /* WebAppCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D38F2E430639004B1E4D /* WebAppCell.swift */; };
 		B524D3962E430639004B1E4D /* WebAppWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3912E430639004B1E4D /* WebAppWebViewController.swift */; };
-		B58433732E46B9FF0076BB4E /* LimitedRegistrationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58433722E46B9FF0076BB4E /* LimitedRegistrationManager.swift */; };
 		B5D17C732E42711B00799EBD /* SSOAuthenticationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C712E42711B00799EBD /* SSOAuthenticationViewController.swift */; };
 		B5D17C742E42711B00799EBD /* SSORegistrationSplashViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C722E42711B00799EBD /* SSORegistrationSplashViewController.swift */; };
 		B5D17C852E4273B800799EBD /* SSOUserInfoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C832E4273B800799EBD /* SSOUserInfoStore.swift */; };
@@ -5592,7 +5591,6 @@
 		B524D38F2E430639004B1E4D /* WebAppCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppCell.swift; sourceTree = "<group>"; };
 		B524D3902E430639004B1E4D /* WebAppsListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppsListViewController.swift; sourceTree = "<group>"; };
 		B524D3912E430639004B1E4D /* WebAppWebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppWebViewController.swift; sourceTree = "<group>"; };
-		B58433722E46B9FF0076BB4E /* LimitedRegistrationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LimitedRegistrationManager.swift; sourceTree = "<group>"; };
 		B5D17C712E42711B00799EBD /* SSOAuthenticationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAuthenticationViewController.swift; sourceTree = "<group>"; };
 		B5D17C722E42711B00799EBD /* SSORegistrationSplashViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSORegistrationSplashViewController.swift; sourceTree = "<group>"; };
 		B5D17C7F2E4273B800799EBD /* SSOConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOConfig.swift; sourceTree = "<group>"; };
@@ -10500,7 +10498,6 @@
 		76EB03C118170B33006006FC /* src */ = {
 			isa = PBXGroup;
 			children = (
-				B58433722E46B9FF0076BB4E /* LimitedRegistrationManager.swift */,
 				45CD81A41DBFF8CF004C9430 /* Storyboards */,
 				450DF2061E0DD28D003D14BE /* UserInterface */,
 				6698FC12297F38AC004EFC30 /* ViewControllerContext */,
@@ -17420,7 +17417,6 @@
 				66AAC2C829CB9ED900566AD6 /* RegistrationChangePhoneNumberConfirmationViewController.swift in Sources */,
 				66AAC2C629CB942F00566AD6 /* RegistrationChangePhoneNumberViewController.swift in Sources */,
 				C15C31152D9B3F7F0071E54C /* RegistrationChoiceButton.swift in Sources */,
-				B58433732E46B9FF0076BB4E /* LimitedRegistrationManager.swift in Sources */,
 				C1F09BA12BB32E5900F9E7F5 /* RegistrationChooseRestoreMethodViewController.swift in Sources */,
 				6659CCB129CD4650000C24C0 /* RegistrationConfirmModeSwitchViewController.swift in Sources */,
 				6600F39629919ECC00B1EDB7 /* RegistrationCoodinatorShims.swift in Sources */,

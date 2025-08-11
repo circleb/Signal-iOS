@@ -5,7 +5,6 @@
 
 public import SignalServiceKit
 public import SignalUI
-import LibSignalClient
 
 public class RegistrationNavigationController: OWSNavigationController {
 
@@ -518,30 +517,9 @@ extension RegistrationNavigationController: RegistrationSplashPresenter {
 extension RegistrationNavigationController: SSORegistrationSplashPresenter {
 
     public func handleSSOSuccess(_ userInfo: SSOUserInfo) {
-        // Initialize SSO-only registration and show main app
-        SSKEnvironment.shared.databaseStorageRef.write { tx in
-            // Extract phone number from SSO user info if available
-            let phoneNumber = userInfo.phoneNumber ?? "0000000000" // Fallback if no phone number
-            
-            // For now, we'll use placeholder values since we don't have real SSO integration yet
-            // In production, these would come from the SSO provider
-            let deviceId: DeviceId = .primary
-            let serverAuthToken = "sso-temp-token" // In production, this would come from SSO
-            
-            // Initialize SSO-only registration with placeholder identifiers
-            // TODO: Replace with actual SSO-provided identifiers
-            (DependenciesBridge.shared.tsAccountManager as! (any TSAccountManager & LocalIdentifiersSetter)).initializeSsoOnlyRegistration(
-                e164: E164(phoneNumber)!,
-                aci: Aci(fromUUID: UUID()), // Placeholder - will be replaced during full registration
-                pni: Pni(fromUUID: UUID()), // Placeholder - will be replaced during full registration
-                deviceId: deviceId,
-                serverAuthToken: serverAuthToken,
-                tx: tx
-            )
-        }
-        
-        // Show the main app with limited functionality
-        SignalApp.shared.showConversationSplitView(appReadiness: appReadiness)
+        // Store SSO user info and continue with registration
+        // The phone number will be pre-populated in the next step
+        pushNextController(coordinator.continueFromSplash())
     }
 
     public func handleSSOError(_ error: SSOError) {
@@ -736,7 +714,7 @@ extension RegistrationNavigationController: RegistrationReglockTimeoutPresenter 
 }
 
 extension RegistrationNavigationController: RegistrationEnterAccountEntropyPoolPresenter {
-    func next(accountEntropyPool: SignalServiceKit.AccountEntropyPool) {
+    func next(accountEntropyPool: AccountEntropyPool) {
         let guarantee = coordinator.updateAccountEntropyPool(accountEntropyPool)
         pushNextController(guarantee)
     }

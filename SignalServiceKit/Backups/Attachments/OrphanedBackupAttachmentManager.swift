@@ -240,10 +240,8 @@ public class OrphanedBackupAttachmentManagerImpl: OrphanedBackupAttachmentManage
                     .relinking,
                     .delinked,
                     .transferringLinkedOutgoing,
-                    .provisioned,
-                    .ssoOnly:
+                    .provisioned:
                 // Linked devices never issue these delete requests.
-                // SSO-only users don't have full registration, so skip this operation.
                 // Cancel the task so we never run it again.
                 return .cancelled
             case .registered:

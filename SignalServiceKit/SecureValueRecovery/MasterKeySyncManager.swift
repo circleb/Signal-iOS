@@ -55,7 +55,7 @@ class MasterKeySyncManagerImpl: MasterKeySyncManager {
         case .delinked, .deregistered, .unregistered, .transferred,
                 .transferringIncoming, .transferringLinkedOutgoing,
                 .transferringPrimaryOutgoing,
-                .reregistering, .relinking, .ssoOnly:
+                .reregistering, .relinking:
             logger.info("Skipping; not registered")
             return
         }

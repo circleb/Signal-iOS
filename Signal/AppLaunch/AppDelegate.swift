@@ -871,11 +871,6 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             // We're already registered.
             return .chatList
 
-        case .ssoOnly:
-            // User has SSO authentication but hasn't completed full registration.
-            // Show main app with limited functionality (web apps only).
-            return .chatList
-
         case .reregistering(let reregNumber, let reregAci):
             if let reregE164 = E164(reregNumber), let reregAci {
                 Logger.info("Found legacy re-registration; continuing in new registration")
