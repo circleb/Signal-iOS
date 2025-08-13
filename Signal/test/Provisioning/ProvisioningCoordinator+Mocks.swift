@@ -4,7 +4,7 @@
 //
 
 import Foundation
-@testable public import Signal
+@testable public import HCP
 @testable public import SignalServiceKit
 
 extension ProvisioningCoordinatorImpl {

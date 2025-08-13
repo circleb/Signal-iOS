@@ -241,7 +241,7 @@ if __name__ == "__main__":
         print("Skipping Xcode project sort!", flush=True)
     else:
         print("Sorting Xcode project...", flush=True)
-        proc = subprocess.run(["Scripts/sort-Xcode-project-file", "Signal.xcodeproj"])
+        proc = subprocess.run(["Scripts/sort-Xcode-project-file", "HCP.xcodeproj"])
         if proc.returncode != 0:
             result = False
     print("")

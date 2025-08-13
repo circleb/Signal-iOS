@@ -427,7 +427,6 @@
 		34FB6A5325D2D10400E599B1 /* PaymentsViewUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34FB6A5225D2D10400E599B1 /* PaymentsViewUtils.swift */; };
 		34FB6A5525D2E17200E599B1 /* PaymentModelCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34FB6A5425D2E17200E599B1 /* PaymentModelCell.swift */; };
 		34FCCA04264AEDFE00A63EDE /* CustomColorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34FCCA03264AEDFE00A63EDE /* CustomColorViewController.swift */; };
-		3A76BFCA35862EF0AEF90AA4 /* Pods_Signal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7637889F054ED534BDB69BB7 /* Pods_Signal.framework */; };
 		4503F1BE20470A5B00CEE724 /* classic-quiet.aifc in Resources */ = {isa = PBXBuildFile; fileRef = 4503F1BB20470A5B00CEE724 /* classic-quiet.aifc */; };
 		4503F1BF20470A5B00CEE724 /* classic.aifc in Resources */ = {isa = PBXBuildFile; fileRef = 4503F1BC20470A5B00CEE724 /* classic.aifc */; };
 		45069FC629D3A7C800D0DD14 /* WideMediaTileViewLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45069FC529D3A7C800D0DD14 /* WideMediaTileViewLayout.swift */; };
@@ -1322,6 +1321,7 @@
 		727328052CA661A10080E2C7 /* HttpSecurityPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 727328042CA6619A0080E2C7 /* HttpSecurityPolicy.swift */; };
 		727328072CA6CF570080E2C7 /* Certificates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 727328062CA6CF530080E2C7 /* Certificates.swift */; };
 		7273280B2CA797370080E2C7 /* OWSReadTracking.h in Headers */ = {isa = PBXBuildFile; fileRef = 7273280A2CA797320080E2C7 /* OWSReadTracking.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		72896929018B214D9090F7D5 /* Pods_HCP.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 258A6B48F9B7D5ACA4E74738 /* Pods_HCP.framework */; };
 		728BFE472C5BEC5C008F20F1 /* Randomness.swift in Sources */ = {isa = PBXBuildFile; fileRef = 728BFE462C5BEC5C008F20F1 /* Randomness.swift */; };
 		728BFE4A2C5BFDA7008F20F1 /* RandomnessTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 728BFE482C5BF9CE008F20F1 /* RandomnessTest.swift */; };
 		728BFE4C2C5C3427008F20F1 /* Aes256Key.swift in Sources */ = {isa = PBXBuildFile; fileRef = 728BFE4B2C5C3427008F20F1 /* Aes256Key.swift */; };
@@ -3924,6 +3924,7 @@
 		17E6048F28A17BD200127680 /* ZkGroupIntegrationTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ZkGroupIntegrationTest.swift; sourceTree = "<group>"; };
 		17EC850B29133CDB00319C82 /* CancelledGroupRing.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CancelledGroupRing.swift; sourceTree = "<group>"; };
 		20C58E4AAD7DA1C2217D494D /* Pods-SignalNSE.profiling.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SignalNSE.profiling.xcconfig"; path = "Target Support Files/Pods-SignalNSE/Pods-SignalNSE.profiling.xcconfig"; sourceTree = "<group>"; };
+		258A6B48F9B7D5ACA4E74738 /* Pods_HCP.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_HCP.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		25FD0F59206206F269A15EBC /* Pods_SignalUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SignalUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3236FCC32592B67B006D33B9 /* NameCollisionReviewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NameCollisionReviewCell.swift; sourceTree = "<group>"; };
 		32525F9427C74B1A0099E801 /* GroupCallManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallManager.swift; sourceTree = "<group>"; };
@@ -4338,6 +4339,7 @@
 		3CCCC98CD6C31C72487AADA3 /* Pods-SignalServiceKitTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SignalServiceKitTests.debug.xcconfig"; path = "Target Support Files/Pods-SignalServiceKitTests/Pods-SignalServiceKitTests.debug.xcconfig"; sourceTree = "<group>"; };
 		3DEB4A29F5B3AF3EF99AAA18 /* Pods-SignalShareExtension.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SignalShareExtension.debug.xcconfig"; path = "Target Support Files/Pods-SignalShareExtension/Pods-SignalShareExtension.debug.xcconfig"; sourceTree = "<group>"; };
 		400992D63E715ADE46E8394C /* Pods-Signal.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Signal.debug.xcconfig"; path = "Target Support Files/Pods-Signal/Pods-Signal.debug.xcconfig"; sourceTree = "<group>"; };
+		4337D5A2500AA2B944BBC52F /* Pods-HCP.testable release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-HCP.testable release.xcconfig"; path = "Target Support Files/Pods-HCP/Pods-HCP.testable release.xcconfig"; sourceTree = "<group>"; };
 		442420D895777573C8239C29 /* Pods_SignalNSE.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SignalNSE.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		4503F1BB20470A5B00CEE724 /* classic-quiet.aifc */ = {isa = PBXFileReference; lastKnownFileType = file; path = "classic-quiet.aifc"; sourceTree = "<group>"; };
 		4503F1BC20470A5B00CEE724 /* classic.aifc */ = {isa = PBXFileReference; lastKnownFileType = file; path = classic.aifc; sourceTree = "<group>"; };
@@ -5162,6 +5164,7 @@
 		66E793E42BC0D8A600929E5E /* MessageStickerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageStickerManager.swift; sourceTree = "<group>"; };
 		66E828582C13599800F91D06 /* OrphanedAttachmentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrphanedAttachmentStore.swift; sourceTree = "<group>"; };
 		66E8285A2C139DCD00F91D06 /* QuotedReplyAttachmentDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuotedReplyAttachmentDataSource.swift; sourceTree = "<group>"; };
+		66E8BECEE2CC3A30C6D6527E /* Pods-HCP.app store release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-HCP.app store release.xcconfig"; path = "Target Support Files/Pods-HCP/Pods-HCP.app store release.xcconfig"; sourceTree = "<group>"; };
 		66EB029A2BAB9F1C004F0580 /* ReferencedAttachment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReferencedAttachment.swift; sourceTree = "<group>"; };
 		66F0F1DC29C1230C008C0ECE /* RegistrationCoordinatorLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationCoordinatorLoader.swift; sourceTree = "<group>"; };
 		66F0F1DE29C12363008C0ECE /* RegistrationCoordinatorDependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationCoordinatorDependencies.swift; sourceTree = "<group>"; };
@@ -5255,7 +5258,6 @@
 		762EBBCF2A2FB759002FD28F /* AttachmentSharing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttachmentSharing.swift; sourceTree = "<group>"; };
 		762EBBD12A2FE370002FD28F /* BlockListUIUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockListUIUtils.swift; sourceTree = "<group>"; };
 		7634F08C2A21963600BB93D5 /* Sounds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sounds.swift; sourceTree = "<group>"; };
-		7637889F054ED534BDB69BB7 /* Pods_Signal.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Signal.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		76387BEF28F4ED73002C7BA5 /* CaseIterable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaseIterable.swift; sourceTree = "<group>"; };
 		763A15FF2AEC3A490081D7E5 /* OWSContact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OWSContact.swift; sourceTree = "<group>"; };
 		763D7DDA27E155ED002EA7E6 /* RoundMediaButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundMediaButton.swift; sourceTree = "<group>"; };
@@ -5565,6 +5567,7 @@
 		88F5FA9228EBD484007AA1BF /* StorySharing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorySharing.swift; sourceTree = "<group>"; };
 		88F5FA9528EF7E02007AA1BF /* StorySharingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorySharingTests.swift; sourceTree = "<group>"; };
 		88FE237D249C22080041670F /* ConversationViewController+Scroll.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConversationViewController+Scroll.swift"; sourceTree = "<group>"; };
+		8A348EBB2ECF1E2E611F2933 /* Pods-HCP.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-HCP.debug.xcconfig"; path = "Target Support Files/Pods-HCP/Pods-HCP.debug.xcconfig"; sourceTree = "<group>"; };
 		8DD12F3C5AF0FC7B64EEBA4C /* Pods-SignalShareExtension.app store release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SignalShareExtension.app store release.xcconfig"; path = "Target Support Files/Pods-SignalShareExtension/Pods-SignalShareExtension.app store release.xcconfig"; sourceTree = "<group>"; };
 		9151B28508BEF348E156DFAC /* Pods-SignalUI.app store release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SignalUI.app store release.xcconfig"; path = "Target Support Files/Pods-SignalUI/Pods-SignalUI.app store release.xcconfig"; sourceTree = "<group>"; };
 		926F7E80AD50AF89F6CC21BE /* Pods-SignalUITests.profiling.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SignalUITests.profiling.xcconfig"; path = "Target Support Files/Pods-SignalUITests/Pods-SignalUITests.profiling.xcconfig"; sourceTree = "<group>"; };
@@ -5816,7 +5819,7 @@
 		CED02F56BEE060978346D243 /* Pods_SignalShareExtension.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SignalShareExtension.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2179CFB16BB0B3A0006F3AB /* CoreTelephony.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreTelephony.framework; path = System/Library/Frameworks/CoreTelephony.framework; sourceTree = SDKROOT; };
 		D2179CFD16BB0B480006F3AB /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
-		D221A089169C9E5E00537ABF /* Signal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Signal.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D221A089169C9E5E00537ABF /* HCP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HCP.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D221A08D169C9E5E00537ABF /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		D221A08F169C9E5E00537ABF /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		D221A091169C9E5E00537ABF /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -7093,6 +7096,7 @@
 		E44AD4E524E98F430035D7B8 /* PhotoCaptureDismiss.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoCaptureDismiss.swift; sourceTree = "<group>"; };
 		E75DD3DF2810CDBD00E32C36 /* SubscriptionModelsTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SubscriptionModelsTest.swift; sourceTree = "<group>"; };
 		E7D7C93E28B580AC003F043B /* Bundle+OWS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Bundle+OWS.swift"; sourceTree = "<group>"; };
+		E8488819DFA17331175B449E /* Pods-HCP.profiling.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-HCP.profiling.xcconfig"; path = "Target Support Files/Pods-HCP/Pods-HCP.profiling.xcconfig"; sourceTree = "<group>"; };
 		F00385FD273F6388000B5ABD /* DonationUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DonationUtilities.swift; sourceTree = "<group>"; };
 		F00385FE273F6388000B5ABD /* Stripe.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Stripe.swift; sourceTree = "<group>"; };
 		F02564D7274EDF4600D7B48A /* BadgeIssueSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgeIssueSheet.swift; sourceTree = "<group>"; };
@@ -7805,7 +7809,7 @@
 				4CC1ECF9211A47CE00CC13BE /* StoreKit.framework in Frameworks */,
 				D2179CFE16BB0B480006F3AB /* SystemConfiguration.framework in Frameworks */,
 				D221A08E169C9E5E00537ABF /* UIKit.framework in Frameworks */,
-				3A76BFCA35862EF0AEF90AA4 /* Pods_Signal.framework in Frameworks */,
+				72896929018B214D9090F7D5 /* Pods_HCP.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -7896,6 +7900,10 @@
 				55D882F8CE52AC8570AA468E /* Pods-SignalUITests.app store release.xcconfig */,
 				926F7E80AD50AF89F6CC21BE /* Pods-SignalUITests.profiling.xcconfig */,
 				CDC39E0A65EE9113BB39D798 /* Pods-SignalUITests.testable release.xcconfig */,
+				8A348EBB2ECF1E2E611F2933 /* Pods-HCP.debug.xcconfig */,
+				66E8BECEE2CC3A30C6D6527E /* Pods-HCP.app store release.xcconfig */,
+				E8488819DFA17331175B449E /* Pods-HCP.profiling.xcconfig */,
+				4337D5A2500AA2B944BBC52F /* Pods-HCP.testable release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -11394,7 +11402,7 @@
 		D221A08A169C9E5E00537ABF /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				D221A089169C9E5E00537ABF /* Signal.app */,
+				D221A089169C9E5E00537ABF /* HCP.app */,
 				342FFE8827245850000AC89F /* SignalNSE.appex */,
 				F9C5C897289451B900548EEE /* SignalServiceKit.framework */,
 				F9C5C89E289451B900548EEE /* SignalServiceKitTests.xctest */,
@@ -11441,7 +11449,6 @@
 				D2179CFD16BB0B480006F3AB /* SystemConfiguration.framework */,
 				D221A08D169C9E5E00537ABF /* UIKit.framework */,
 				B69CD25019773E79005CE69A /* XCTest.framework */,
-				7637889F054ED534BDB69BB7 /* Pods_Signal.framework */,
 				442420D895777573C8239C29 /* Pods_SignalNSE.framework */,
 				BEBF24FCDC562B9BA6F70DFF /* Pods_SignalServiceKit.framework */,
 				385D4E9FEDE1F12FAB2690FF /* Pods_SignalServiceKitTests.framework */,
@@ -11449,6 +11456,7 @@
 				F45EE174ED4A6E7753718ECF /* Pods_SignalTests.framework */,
 				25FD0F59206206F269A15EBC /* Pods_SignalUI.framework */,
 				98DB4FAD5A3977575CE0E21F /* Pods_SignalUITests.framework */,
+				258A6B48F9B7D5ACA4E74738 /* Pods_HCP.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -14869,9 +14877,9 @@
 			productReference = 453518681FC635DD00210559 /* SignalShareExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
-		D221A088169C9E5E00537ABF /* Signal */ = {
+		D221A088169C9E5E00537ABF /* HCP */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = D221A0BC169C9E5F00537ABF /* Build configuration list for PBXNativeTarget "Signal" */;
+			buildConfigurationList = D221A0BC169C9E5F00537ABF /* Build configuration list for PBXNativeTarget "HCP" */;
 			buildPhases = (
 				11E45AD9452B6E83397235B9 /* [CP] Check Pods Manifest.lock */,
 				D221A085169C9E5E00537ABF /* Sources */,
@@ -14890,9 +14898,9 @@
 				342FFE8E27245851000AC89F /* PBXTargetDependency */,
 				F9C5C8A9289451B900548EEE /* PBXTargetDependency */,
 			);
-			name = Signal;
+			name = HCP;
 			productName = RedPhone;
-			productReference = D221A089169C9E5E00537ABF /* Signal.app */;
+			productReference = D221A089169C9E5E00537ABF /* HCP.app */;
 			productType = "com.apple.product-type.application";
 		};
 		D221A0A9169C9E5F00537ABF /* SignalTests */ = {
@@ -15047,7 +15055,7 @@
 					};
 				};
 			};
-			buildConfigurationList = D221A083169C9E5E00537ABF /* Build configuration list for PBXProject "Signal" */;
+			buildConfigurationList = D221A083169C9E5E00537ABF /* Build configuration list for PBXProject "HCP" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -15104,7 +15112,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				D221A088169C9E5E00537ABF /* Signal */,
+				D221A088169C9E5E00537ABF /* HCP */,
 				D221A0A9169C9E5F00537ABF /* SignalTests */,
 				453518671FC635DD00210559 /* SignalShareExtension */,
 				342FFE8727245850000AC89F /* SignalNSE */,
@@ -16217,7 +16225,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-Signal-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-HCP-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -16289,7 +16297,7 @@
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Signal/Pods-Signal-frameworks.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-HCP/Pods-HCP-frameworks.sh",
 				"${BUILT_PRODUCTS_DIR}/GRDB.swift/GRDB.framework",
 				"${BUILT_PRODUCTS_DIR}/LibSignalClient/LibSignalClient.framework",
 				"${BUILT_PRODUCTS_DIR}/Mantle/Mantle.framework",
@@ -16336,7 +16344,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Signal/Pods-Signal-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-HCP/Pods-HCP-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		77072914365B779137CEF8F3 /* [CP] Check Pods Manifest.lock */ = {
@@ -19122,7 +19130,7 @@
 		};
 		34A954B6271A471300B05242 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = D221A088169C9E5E00537ABF /* Signal */;
+			target = D221A088169C9E5E00537ABF /* HCP */;
 			targetProxy = 34A954B5271A471300B05242 /* PBXContainerItemProxy */;
 		};
 		34A954BC271A471300B05242 /* PBXTargetDependency */ = {
@@ -19162,7 +19170,7 @@
 		};
 		B6AFCEBB19A93DA60098CFCB /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = D221A088169C9E5E00537ABF /* Signal */;
+			target = D221A088169C9E5E00537ABF /* HCP */;
 			targetProxy = B6AFCEBA19A93DA60098CFCB /* PBXContainerItemProxy */;
 		};
 		F9C5C8A1289451B900548EEE /* PBXTargetDependency */ = {
@@ -19172,7 +19180,7 @@
 		};
 		F9C5C8A3289451B900548EEE /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = D221A088169C9E5E00537ABF /* Signal */;
+			target = D221A088169C9E5E00537ABF /* HCP */;
 			targetProxy = F9C5C8A2289451B900548EEE /* PBXContainerItemProxy */;
 		};
 		F9C5C8A9289451B900548EEE /* PBXTargetDependency */ = {
@@ -19371,7 +19379,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				INFOPLIST_FILE = SignalNSE/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = SignalNSE;
+                INFOPLIST_KEY_CFBundleDisplayName = HCPNSE;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -19426,7 +19434,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = SignalNSE/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = SignalNSE;
+                INFOPLIST_KEY_CFBundleDisplayName = HCPNSE;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -19484,7 +19492,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = SignalNSE/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = SignalNSE;
+                INFOPLIST_KEY_CFBundleDisplayName = HCPNSE;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -19542,7 +19550,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = SignalNSE/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = SignalNSE;
+                INFOPLIST_KEY_CFBundleDisplayName = HCPNSE;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -20230,7 +20238,7 @@
 		};
 		4C10B17B23176CEB0099396B /* Testable Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 887E9D09B9BD28B42155450C /* Pods-Signal.testable release.xcconfig */;
+			baseConfigurationReference = 4337D5A2500AA2B944BBC52F /* Pods-HCP.testable release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon-color AppIcon-bubbles AppIcon-white AppIcon-dark AppIcon-dark-variant AppIcon-chat AppIcon-yellow AppIcon-news AppIcon-notes AppIcon-weather AppIcon-wave";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -20251,6 +20259,7 @@
 				);
 				GCC_STRICT_ALIASING = NO;
 				INFOPLIST_FILE = "$(SRCROOT)/Signal/Signal-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = HCP;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -20259,7 +20268,7 @@
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal";
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = org.homesteadheritage.signal;
-				PRODUCT_NAME = Signal;
+				PRODUCT_NAME = HCP;
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -20486,7 +20495,7 @@
 		};
 		88238EA824EAD2FD00F28079 /* Profiling */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 05286C218468CB58F1548C5B /* Pods-Signal.profiling.xcconfig */;
+			baseConfigurationReference = E8488819DFA17331175B449E /* Pods-HCP.profiling.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon-color AppIcon-bubbles AppIcon-white AppIcon-dark AppIcon-dark-variant AppIcon-chat AppIcon-yellow AppIcon-news AppIcon-notes AppIcon-weather AppIcon-wave";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -20507,6 +20516,7 @@
 				);
 				GCC_STRICT_ALIASING = NO;
 				INFOPLIST_FILE = "$(SRCROOT)/Signal/Signal-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = HCP;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -20515,7 +20525,7 @@
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal";
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = org.homesteadheritage.signal;
-				PRODUCT_NAME = Signal;
+				PRODUCT_NAME = HCP;
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -20845,7 +20855,7 @@
 		};
 		D221A0BD169C9E5F00537ABF /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 400992D63E715ADE46E8394C /* Pods-Signal.debug.xcconfig */;
+			baseConfigurationReference = 8A348EBB2ECF1E2E611F2933 /* Pods-HCP.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon-color AppIcon-bubbles AppIcon-white AppIcon-dark AppIcon-dark-variant AppIcon-chat AppIcon-yellow AppIcon-news AppIcon-notes AppIcon-weather AppIcon-wave";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -20868,6 +20878,7 @@
 				);
 				GCC_STRICT_ALIASING = NO;
 				INFOPLIST_FILE = "$(SRCROOT)/Signal/Signal-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = HCP;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -20876,7 +20887,7 @@
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal";
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = org.homesteadheritage.signal;
-				PRODUCT_NAME = Signal;
+				PRODUCT_NAME = HCP;
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -20887,7 +20898,7 @@
 		};
 		D221A0BE169C9E5F00537ABF /* App Store Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A2AD39EBADE5B73B9016A7BE /* Pods-Signal.app store release.xcconfig */;
+			baseConfigurationReference = 66E8BECEE2CC3A30C6D6527E /* Pods-HCP.app store release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon-color AppIcon-bubbles AppIcon-white AppIcon-dark AppIcon-dark-variant AppIcon-chat AppIcon-yellow AppIcon-news AppIcon-notes AppIcon-weather AppIcon-wave";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -20908,6 +20919,7 @@
 				);
 				GCC_STRICT_ALIASING = NO;
 				INFOPLIST_FILE = "$(SRCROOT)/Signal/Signal-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = HCP;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -20916,7 +20928,7 @@
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal";
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = org.homesteadheritage.signal;
-				PRODUCT_NAME = Signal;
+				PRODUCT_NAME = HCP;
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -21492,7 +21504,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = "App Store Release";
 		};
-		D221A083169C9E5E00537ABF /* Build configuration list for PBXProject "Signal" */ = {
+		D221A083169C9E5E00537ABF /* Build configuration list for PBXProject "HCP" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D221A0BA169C9E5F00537ABF /* Debug */,
@@ -21503,7 +21515,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = "App Store Release";
 		};
-		D221A0BC169C9E5F00537ABF /* Build configuration list for PBXNativeTarget "Signal" */ = {
+		D221A0BC169C9E5F00537ABF /* Build configuration list for PBXNativeTarget "HCP" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D221A0BD169C9E5F00537ABF /* Debug */,

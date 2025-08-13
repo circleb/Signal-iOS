@@ -7,7 +7,7 @@ import LibSignalClient
 import XCTest
 
 @testable import SignalServiceKit
-@testable import Signal
+@testable import HCP
 
 class GRDBFinderTest: SignalBaseTest {
     override func setUp() {

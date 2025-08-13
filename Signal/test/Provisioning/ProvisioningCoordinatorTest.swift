@@ -7,7 +7,7 @@ import Foundation
 public import XCTest
 import LibSignalClient
 
-@testable import Signal
+@testable import HCP
 @testable import SignalServiceKit
 
 public class ProvisioningCoordinatorTest: XCTestCase {

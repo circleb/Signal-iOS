@@ -4,7 +4,7 @@
 //
 
 import XCTest
-@testable import Signal
+@testable import HCP
 
 /// Do bitmap images parse correctly from other images?
 class BitmapsImageParsingTest: XCTestCase {

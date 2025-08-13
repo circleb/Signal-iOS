@@ -5,7 +5,7 @@
 
 import XCTest
 import AuthenticationServices
-@testable import Signal
+@testable import HCP
 
 final class ASWebAuthenticationSessionUtilTest: XCTestCase {
     func testSuccess() {

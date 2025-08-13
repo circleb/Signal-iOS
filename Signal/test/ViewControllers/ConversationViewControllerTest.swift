@@ -5,7 +5,7 @@
 
 import XCTest
 
-@testable import Signal
+@testable import HCP
 
 class ConversationViewControllerTest: SignalBaseTest {
 

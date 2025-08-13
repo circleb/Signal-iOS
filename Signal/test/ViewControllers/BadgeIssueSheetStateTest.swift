@@ -4,7 +4,7 @@
 //
 
 import XCTest
-@testable import Signal
+@testable import HCP
 import SignalServiceKit
 
 class BadgeIssueSheetStateTest: XCTestCase {

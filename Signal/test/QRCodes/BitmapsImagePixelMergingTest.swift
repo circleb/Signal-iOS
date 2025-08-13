@@ -4,7 +4,7 @@
 //
 
 import XCTest
-@testable import Signal
+@testable import HCP
 
 /// Do bitmap images correctly merge adjacent pixels?
 class BitmapsImagePixelMergingTest: XCTestCase {

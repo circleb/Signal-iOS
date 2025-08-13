@@ -8,7 +8,7 @@ import SignalRingRTC
 import SignalServiceKit
 import SignalUI
 
-final class CallLinkCall: Signal.GroupCall {
+final class CallLinkCall: HCP.GroupCall {
     let callLink: CallLink
     let adminPasskey: Data?
     let callLinkState: SignalServiceKit.CallLinkState

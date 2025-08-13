@@ -80,7 +80,7 @@ extension CallStrings {
     static var shareLinkViaSignal: String {
         return OWSLocalizedString(
             "CALL_LINK_SHARE_VIA_SIGNAL",
-            comment: "Button to open UI to share a Call Link with someone on Signal."
+            comment: "Button to open UI to share a Call Link with someone on HCP."
         )
     }
 

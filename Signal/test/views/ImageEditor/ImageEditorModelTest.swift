@@ -4,7 +4,7 @@
 //
 
 import XCTest
-@testable import Signal
+@testable import HCP
 @testable import SignalUI
 
 class ImageEditorModelTest: XCTestCase {

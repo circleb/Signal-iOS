@@ -229,7 +229,7 @@ class UrlOpener {
                         appReadiness: appReadiness
                     )
                     Logger.info("[Donations] Completed iDEAL donation")
-                } catch Signal.DonationJobError.timeout {
+                } catch HCP.DonationJobError.timeout {
                     // This is an expected error case for pending donations
                 } catch {
                     // Unexpected. Log a warning

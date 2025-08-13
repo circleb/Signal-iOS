@@ -4,7 +4,7 @@
 //
 
 import XCTest
-@testable import Signal
+@testable import HCP
 
 class DisplayableTextTest: XCTestCase {
     func testDisplayableText() {

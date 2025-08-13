@@ -14,7 +14,7 @@ protocol GroupThreadCallDelegate: AnyObject {
     @MainActor func groupThreadCallRequestGroupMembers(_ call: GroupThreadCall)
 }
 
-final class GroupThreadCall: Signal.GroupCall {
+final class GroupThreadCall: HCP.GroupCall {
     private weak var delegate: (any GroupThreadCallDelegate)?
 
     let groupId: GroupIdentifier

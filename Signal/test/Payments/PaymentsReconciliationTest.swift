@@ -6,7 +6,7 @@
 import XCTest
 @testable import SignalServiceKit
 @testable import SignalUI
-@testable import Signal
+@testable import HCP
 @testable import MobileCoin
 
 private struct MockTransactionHistoryItem: MCTransactionHistoryItem {

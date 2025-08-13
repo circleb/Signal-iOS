@@ -4,7 +4,7 @@
 //
 
 import XCTest
-@testable import Signal
+@testable import HCP
 
 /// Do we correctly compute "centered deadzones" of images?
 class BitmapsImageCenteredDeadzoneTest: XCTestCase {

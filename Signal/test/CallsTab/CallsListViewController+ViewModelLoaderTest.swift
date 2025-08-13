@@ -6,7 +6,7 @@
 import XCTest
 import SignalServiceKit
 
-@testable import Signal
+@testable import HCP
 
 final class CallsListViewControllerViewModelLoaderTest: XCTestCase {
     typealias CallViewModel = CallsListViewController.CallViewModel

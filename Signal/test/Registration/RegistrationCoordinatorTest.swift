@@ -7,7 +7,7 @@ import Foundation
 import LibSignalClient
 import Testing
 
-@testable import Signal
+@testable import HCP
 @testable import SignalServiceKit
 
 public class RegistrationCoordinatorTest {

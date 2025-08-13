@@ -4,7 +4,7 @@
 //
 
 import LibSignalClient
-@testable import Signal
+@testable import HCP
 import XCTest
 
 class DeviceProvisioningURLTest: XCTestCase {

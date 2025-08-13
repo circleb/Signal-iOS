@@ -15,10 +15,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "F9C5C896289451B900548EEE"
-               BuildableName = "SignalServiceKit.framework"
-               BlueprintName = "SignalServiceKit"
-               ReferencedContainer = "container:Signal.xcodeproj">
+               BlueprintIdentifier = "34A954A7271A471200B05242"
+               BuildableName = "SignalUI.framework"
+               BlueprintName = "SignalUI"
+               ReferencedContainer = "container:HCP.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -50,10 +50,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "F9C5C896289451B900548EEE"
-            BuildableName = "SignalServiceKit.framework"
-            BlueprintName = "SignalServiceKit"
-            ReferencedContainer = "container:Signal.xcodeproj">
+            BlueprintIdentifier = "34A954A7271A471200B05242"
+            BuildableName = "SignalUI.framework"
+            BlueprintName = "SignalUI"
+            ReferencedContainer = "container:HCP.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </ProfileAction>

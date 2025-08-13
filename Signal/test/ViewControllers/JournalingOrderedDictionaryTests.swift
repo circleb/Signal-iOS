@@ -5,7 +5,7 @@
 
 import XCTest
 
-@testable import Signal
+@testable import HCP
 
 private enum StringChange: CustomDebugStringConvertible, Equatable {
     var debugDescription: String {

@@ -6,7 +6,7 @@
 import SignalServiceKit
 import XCTest
 
-@testable import Signal
+@testable import HCP
 
 final class CallRecordLoaderTest: XCTestCase {
     private var mockCallRecordQuerier: MockCallRecordQuerier!

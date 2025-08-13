@@ -6,7 +6,7 @@
 import Testing
 
 @testable import SignalServiceKit
-@testable import Signal
+@testable import HCP
 
 @MainActor
 @Suite(.serialized)

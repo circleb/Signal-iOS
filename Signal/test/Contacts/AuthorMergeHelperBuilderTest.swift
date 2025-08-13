@@ -7,7 +7,7 @@ import GRDB
 import LibSignalClient
 import XCTest
 
-@testable import Signal
+@testable import HCP
 @testable import SignalServiceKit
 
 final class AuthorMergeHelperBuilderTest: XCTestCase {

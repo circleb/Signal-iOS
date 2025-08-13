@@ -6,7 +6,7 @@
 import WebRTC
 import XCTest
 
-@testable import Signal
+@testable import HCP
 
 final class TurnServerInfoTest: XCTestCase {
     func testParseTurnServers() throws {

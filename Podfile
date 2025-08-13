@@ -58,8 +58,8 @@ def ui_pods
   pod 'MobileCoin/CoreHTTP', git: 'https://github.com/mobilecoinofficial/MobileCoin-Swift', tag: 'v6.0.3'
 end
 
-target 'Signal' do
-  project 'Signal.xcodeproj', 'Debug' => :debug, 'Release' => :release
+target 'HCP' do
+  project 'HCP.xcodeproj', 'Debug' => :debug, 'Release' => :release
 
   pod 'AppAuth'
 
@@ -135,7 +135,7 @@ end
 # We want some warning to be treated as errors.
 #
 # NOTE: We have to manually keep this list in sync with what's in our
-# Signal.xcodeproj config in Xcode go to:
+# HCP.xcodeproj config in Xcode go to:
 #   Signal Project > Build Settings > Other Warning Flags
 def configure_warning_flags(installer)
   installer.pods_project.targets.each do |target|

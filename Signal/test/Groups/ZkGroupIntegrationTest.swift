@@ -7,7 +7,7 @@ import LibSignalClient
 import SignalServiceKit
 import XCTest
 
-@testable import Signal
+@testable import HCP
 
 class ZkGroupIntegrationTest: XCTestCase {
     func testServerParamsAreUpToDate() {

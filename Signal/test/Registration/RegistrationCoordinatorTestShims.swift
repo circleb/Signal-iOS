@@ -6,7 +6,7 @@
 import Foundation
 import LibSignalClient
 @testable public import SignalServiceKit
-@testable public import Signal
+@testable public import HCP
 
 extension RegistrationCoordinatorImpl {
 

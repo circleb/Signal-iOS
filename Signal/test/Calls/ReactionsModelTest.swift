@@ -6,7 +6,7 @@
 import LibSignalClient
 import XCTest
 
-@testable import Signal
+@testable import HCP
 
 final class ReactionsModelTest: XCTestCase {
     private func changesMatchExpected(

@@ -6,7 +6,7 @@
 import SignalServiceKit
 import Testing
 
-@testable import Signal
+@testable import HCP
 
 class BackupSettingsAttachmentTrackerTest<Update: Equatable> {
     struct ExpectedUpdate {
