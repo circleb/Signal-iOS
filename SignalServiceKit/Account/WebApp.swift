@@ -16,6 +16,21 @@ public struct WebApp: Codable {
     public let location: [String]    // Where to show the app
     public let type: String          // App type (sublist, rss, etc.)
     public let parent: String        // Parent app reference
+    public let kcRole: String?       // Required Keycloak role for access
+    
+    public init(entry: String, name: String, description: String, icon: String, image: String, category: String, urlsPermitted: [String], location: [String], type: String, parent: String, kcRole: String? = nil) {
+        self.entry = entry
+        self.name = name
+        self.description = description
+        self.icon = icon
+        self.image = image
+        self.category = category
+        self.urlsPermitted = urlsPermitted
+        self.location = location
+        self.type = type
+        self.parent = parent
+        self.kcRole = kcRole
+    }
 }
 
 public struct WebAppCategory: Codable {

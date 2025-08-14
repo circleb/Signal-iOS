@@ -14,9 +14,13 @@ public protocol WebAppsServiceProtocol {
     func cacheGlobalAllowList(_ entries: [GlobalAllowEntry]) async
     func clearCache() async
     func getWebAppsByCategory() -> [WebAppCategory]
+    func getWebAppsByCategory(userRoles: [String]) -> [WebAppCategory]
     func searchWebApps(query: String) -> [WebApp]
+    func searchWebApps(query: String, userRoles: [String]) -> [WebApp]
     func getWebAppsByLocation(_ location: String) -> [WebApp]
+    func getWebAppsByLocation(_ location: String, userRoles: [String]) -> [WebApp]
     func isURLGloballyAllowed(_ url: URL) -> Bool
+    func filterWebAppsByRole(_ apps: [WebApp], userRoles: [String]) -> [WebApp]
 }
 
 public class WebAppsService: WebAppsServiceProtocol {
@@ -142,6 +146,20 @@ public class WebAppsService: WebAppsServiceProtocol {
         }.sorted { $0.name < $1.name }
     }
 
+    public func getWebAppsByCategory(userRoles: [String]) -> [WebAppCategory] {
+        let apps = getCachedWebApps() ?? []
+        let filteredApps = filterWebAppsByRole(apps, userRoles: userRoles)
+        let grouped = Dictionary(grouping: filteredApps) { $0.category }
+
+        return grouped.map { category, apps in
+            WebAppCategory(
+                name: category,
+                apps: apps.sorted { $0.name < $1.name },
+                icon: WebAppsConfig.categoryIcons[category] ?? "app.fill"
+            )
+        }.sorted { $0.name < $1.name }
+    }
+
     public func searchWebApps(query: String) -> [WebApp] {
         let apps = getCachedWebApps() ?? []
         let lowercasedQuery = query.lowercased()
@@ -153,9 +171,27 @@ public class WebAppsService: WebAppsServiceProtocol {
         }
     }
 
+    public func searchWebApps(query: String, userRoles: [String]) -> [WebApp] {
+        let apps = getCachedWebApps() ?? []
+        let filteredApps = filterWebAppsByRole(apps, userRoles: userRoles)
+        let lowercasedQuery = query.lowercased()
+
+        return filteredApps.filter { app in
+            app.name.lowercased().contains(lowercasedQuery) ||
+            app.description.lowercased().contains(lowercasedQuery) ||
+            app.category.lowercased().contains(lowercasedQuery)
+        }
+    }
+
     public func getWebAppsByLocation(_ location: String) -> [WebApp] {
         let apps = getCachedWebApps() ?? []
         return apps.filter { $0.location.contains(location) }
+    }
+
+    public func getWebAppsByLocation(_ location: String, userRoles: [String]) -> [WebApp] {
+        let apps = getCachedWebApps() ?? []
+        let filteredApps = filterWebAppsByRole(apps, userRoles: userRoles)
+        return filteredApps.filter { $0.location.contains(location) }
     }
 
     public func isURLGloballyAllowed(_ url: URL) -> Bool {
@@ -165,6 +201,18 @@ public class WebAppsService: WebAppsServiceProtocol {
         return globalAllowList.contains { entry in
             let entryLower = entry.entry.lowercased()
             return urlString.contains(entryLower)
+        }
+    }
+
+    public func filterWebAppsByRole(_ apps: [WebApp], userRoles: [String]) -> [WebApp] {
+        return apps.filter { app in
+            // If no kcRole is specified, the app is accessible to everyone
+            guard let requiredRole = app.kcRole else {
+                return true
+            }
+            
+            // Check if user has the required role
+            return userRoles.contains(requiredRole)
         }
     }
 } 

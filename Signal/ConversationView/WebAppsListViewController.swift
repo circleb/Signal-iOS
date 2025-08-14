@@ -11,6 +11,7 @@ import SignalServiceKit
 
 class WebAppsListViewController: UIViewController {
     private let webAppsService: WebAppsServiceProtocol
+    private let userInfoStore: SSOUserInfoStore
     private let searchController = UISearchController(searchResultsController: nil)
 
     // UI Components
@@ -26,8 +27,9 @@ class WebAppsListViewController: UIViewController {
 
 
 
-    init(webAppsService: WebAppsServiceProtocol) {
+    init(webAppsService: WebAppsServiceProtocol, userInfoStore: SSOUserInfoStore = SSOUserInfoStoreImpl()) {
         self.webAppsService = webAppsService
+        self.userInfoStore = userInfoStore
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -113,8 +115,9 @@ class WebAppsListViewController: UIViewController {
             // Show filtered results
             tableView.reloadData()
         } else {
-            // Show all web apps
-            filteredWebApps = allWebApps
+            // Filter webapps based on user roles
+            let userRoles = userInfoStore.getUserRoles()
+            filteredWebApps = webAppsService.filterWebAppsByRole(allWebApps, userRoles: userRoles)
             tableView.reloadData()
         }
 
@@ -152,7 +155,7 @@ extension WebAppsListViewController: UITableViewDataSource, UITableViewDelegate 
         tableView.deselectRow(at: indexPath, animated: true)
 
         let webApp = filteredWebApps[indexPath.row]
-        let webVC = WebAppWebViewController(webApp: webApp, webAppsService: webAppsService)
+        let webVC = WebAppWebViewController(webApp: webApp, webAppsService: webAppsService, userInfoStore: userInfoStore)
         navigationController?.pushViewController(webVC, animated: true)
     }
 }
@@ -161,13 +164,16 @@ extension WebAppsListViewController: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
         guard let searchText = searchController.searchBar.text, !searchText.isEmpty else {
             isSearching = false
-            filteredWebApps = allWebApps
+            // Filter webapps based on user roles when clearing search
+            let userRoles = userInfoStore.getUserRoles()
+            filteredWebApps = webAppsService.filterWebAppsByRole(allWebApps, userRoles: userRoles)
             tableView.reloadData()
             return
         }
 
         isSearching = true
-        let searchResults = webAppsService.searchWebApps(query: searchText)
+        let userRoles = userInfoStore.getUserRoles()
+        let searchResults = webAppsService.searchWebApps(query: searchText, userRoles: userRoles)
         filteredWebApps = searchResults.sorted { $0.name < $1.name }
 
         tableView.reloadData()

@@ -12,16 +12,17 @@ import PureLayout
 class WebAppWebViewController: UIViewController, OWSNavigationChildController {
     private let webApp: WebApp
     private let webAppsService: WebAppsServiceProtocol
+    private let userInfoStore: SSOUserInfoStore
     private let webView = WKWebView()
     private let progressView = UIProgressView()
     private let loadingIndicator = UIActivityIndicatorView(style: .large)
     private var isLoadingBlockedMessage = false
     
 
-
-    init(webApp: WebApp, webAppsService: WebAppsServiceProtocol) {
+    init(webApp: WebApp, webAppsService: WebAppsServiceProtocol, userInfoStore: SSOUserInfoStore = SSOUserInfoStoreImpl()) {
         self.webApp = webApp
         self.webAppsService = webAppsService
+        self.userInfoStore = userInfoStore
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -95,6 +96,15 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
     }
 
     private func loadWebApp() {
+        // Check if user has required role for this webapp
+        if let requiredRole = webApp.kcRole {
+            let userRoles = userInfoStore.getUserRoles()
+            if !userRoles.contains(requiredRole) {
+                showAccessDeniedError(requiredRole: requiredRole)
+                return
+            }
+        }
+        
         guard let url = URL(string: "https://\(webApp.entry)") else {
             showError(WebAppsError.invalidURL)
             return
@@ -104,6 +114,18 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
 
         let request = URLRequest(url: url)
         webView.load(request)
+    }
+    
+    private func showAccessDeniedError(requiredRole: String) {
+        let alert = UIAlertController(
+            title: "Access Denied",
+            message: "You need the '\(requiredRole)' role to access this application.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
+            self.navigationController?.popViewController(animated: true)
+        })
+        present(alert, animated: true)
     }
 
     @objc private func refreshWebApp() {
