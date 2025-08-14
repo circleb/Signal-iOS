@@ -17,10 +17,7 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
     private let loadingIndicator = UIActivityIndicatorView(style: .large)
     private var isLoadingBlockedMessage = false
     
-    // Navigation bar shrinking properties
-    private var lastContentOffset: CGFloat = 0
-    private var isNavigationBarHidden = false
-    private let scrollThreshold: CGFloat = 10
+
 
     init(webApp: WebApp, webAppsService: WebAppsServiceProtocol) {
         self.webApp = webApp
@@ -40,15 +37,30 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
     }
 
     private func setupUI() {
-        title = webApp.name
         view.backgroundColor = .white
 
-        // Navigation bar setup
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
+        // Navigation bar setup with back, forward, and refresh buttons
+        let backButton = UIBarButtonItem(
+            image: UIImage(systemName: "chevron.left"),
+            style: .plain,
+            target: self,
+            action: #selector(goBack)
+        )
+        
+        let forwardButton = UIBarButtonItem(
+            image: UIImage(systemName: "chevron.right"),
+            style: .plain,
+            target: self,
+            action: #selector(goForward)
+        )
+        
+        let refreshButton = UIBarButtonItem(
             barButtonSystemItem: .refresh,
             target: self,
             action: #selector(refreshWebApp)
         )
+        
+        navigationItem.rightBarButtonItems = [refreshButton, forwardButton, backButton]
 
         // Progress view
         progressView.progressTintColor = .ows_accentBlue
@@ -73,7 +85,6 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
 
     private func setupWebView() {
         webView.navigationDelegate = self
-        webView.scrollView.delegate = self
         webView.allowsBackForwardNavigationGestures = true
 
         // Set custom user agent to identify Signal app web view
@@ -97,6 +108,18 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
 
     @objc private func refreshWebApp() {
         webView.reload()
+    }
+    
+    @objc private func goBack() {
+        if webView.canGoBack {
+            webView.goBack()
+        }
+    }
+    
+    @objc private func goForward() {
+        if webView.canGoForward {
+            webView.goForward()
+        }
     }
 
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
@@ -285,58 +308,4 @@ extension WebAppWebViewController: WKNavigationDelegate {
     }
 }
 
-extension WebAppWebViewController: UIScrollViewDelegate {
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        let currentOffset = scrollView.contentOffset.y
-        let differenceFromStart = currentOffset - lastContentOffset
-        
-        // Only animate if we've scrolled more than the threshold
-        guard abs(differenceFromStart) > scrollThreshold else { return }
-        
-        if differenceFromStart > 0 && currentOffset > 0 {
-            // Scrolling down - hide navigation bar
-            if !isNavigationBarHidden {
-                hideNavigationBar()
-            }
-        } else if differenceFromStart < 0 {
-            // Scrolling up - show navigation bar
-            if isNavigationBarHidden {
-                showNavigationBar()
-            }
-        }
-        
-        lastContentOffset = currentOffset
-    }
-    
-    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
-        // If we're at the top, always show the navigation bar
-        if scrollView.contentOffset.y <= 0 {
-            showNavigationBar()
-        }
-    }
-    
-    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        // If we're at the top, always show the navigation bar
-        if scrollView.contentOffset.y <= 0 {
-            showNavigationBar()
-        }
-    }
-    
-    private func hideNavigationBar() {
-        guard !isNavigationBarHidden else { return }
-        
-        isNavigationBarHidden = true
-        UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseInOut], animations: {
-            self.navigationController?.setNavigationBarHidden(true, animated: false)
-        })
-    }
-    
-    private func showNavigationBar() {
-        guard isNavigationBarHidden else { return }
-        
-        isNavigationBarHidden = false
-        UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseInOut], animations: {
-            self.navigationController?.setNavigationBarHidden(false, animated: false)
-        })
-    }
-} 
+ 
