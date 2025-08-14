@@ -12,8 +12,15 @@ public struct SSOConfig {
     static let userInfoEndpoint = "\(baseURL)/realms/\(realm)/protocol/openid-connect/userinfo"
     static let endSessionEndpoint = "\(baseURL)/realms/\(realm)/protocol/openid-connect/logout"
 
-    // OAuth2 scopes - start with standard OpenID Connect scopes
-    static let scopes = ["openid", "profile", "email"]
+    // OAuth2 scopes - only request scopes that are configured on the Keycloak server
+    static let scopes = [
+        "openid", 
+        "profile", 
+        "email",
+        "offline_access",  // For refresh tokens
+        "phone",           // For phone number access
+        "roles"            // For role-based access control
+    ]
 
     // Redirect URI
     static let redirectURI = "heritagesignal://oauth/callback"
