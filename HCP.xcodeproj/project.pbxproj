@@ -19379,7 +19379,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				INFOPLIST_FILE = SignalNSE/Info.plist;
-                INFOPLIST_KEY_CFBundleDisplayName = HCPNSE;
+				INFOPLIST_KEY_CFBundleDisplayName = HCPNSE;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -19434,7 +19434,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = SignalNSE/Info.plist;
-                INFOPLIST_KEY_CFBundleDisplayName = HCPNSE;
+				INFOPLIST_KEY_CFBundleDisplayName = HCPNSE;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -19492,7 +19492,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = SignalNSE/Info.plist;
-                INFOPLIST_KEY_CFBundleDisplayName = HCPNSE;
+				INFOPLIST_KEY_CFBundleDisplayName = HCPNSE;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -19550,7 +19550,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = SignalNSE/Info.plist;
-                INFOPLIST_KEY_CFBundleDisplayName = HCPNSE;
+				INFOPLIST_KEY_CFBundleDisplayName = HCPNSE;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
