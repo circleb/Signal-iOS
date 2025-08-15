@@ -36,12 +36,10 @@ public struct WebApp: Codable {
 public struct WebAppCategory: Codable {
     public let name: String
     public let apps: [WebApp]
-    public let icon: String
     
-    public init(name: String, apps: [WebApp], icon: String) {
+    public init(name: String, apps: [WebApp]) {
         self.name = name
         self.apps = apps
-        self.icon = icon
     }
 }
 

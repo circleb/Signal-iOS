@@ -10,7 +10,6 @@ import PureLayout
 
 class WebAppCategoryHeaderView: UITableViewHeaderFooterView {
     private let titleLabel = UILabel()
-    private let iconImageView = UIImageView()
 
     override init(reuseIdentifier: String?) {
         super.init(reuseIdentifier: reuseIdentifier)
@@ -28,29 +27,11 @@ class WebAppCategoryHeaderView: UITableViewHeaderFooterView {
         titleLabel.font = .dynamicTypeHeadline
         titleLabel.textColor = Theme.primaryTextColor
 
-        iconImageView.contentMode = .scaleAspectFit
-        iconImageView.tintColor = .ows_accentBlue
-
-        contentView.addSubview(iconImageView)
         contentView.addSubview(titleLabel)
 
-        iconImageView.autoSetDimensions(to: CGSize(width: 20, height: 20))
-        iconImageView.autoPinEdge(toSuperviewEdge: .leading, withInset: 16)
-        iconImageView.autoPinEdge(toSuperviewEdge: .top, withInset: 12)
-
-        titleLabel.autoPinEdge(.leading, to: .trailing, of: iconImageView, withOffset: 8)
-        titleLabel.autoPinEdge(.top, to: .top, of: iconImageView)
+        titleLabel.autoPinEdge(toSuperviewEdge: .leading, withInset: 16)
+        titleLabel.autoPinEdge(toSuperviewEdge: .top, withInset: 12)
         titleLabel.autoPinEdge(toSuperviewEdge: .trailing, withInset: 16)
         titleLabel.autoPinEdge(toSuperviewEdge: .bottom, withInset: 8)
-    }
-
-    func configure(with category: WebAppCategory) {
-        titleLabel.text = category.name
-
-        if let icon = UIImage(systemName: category.icon) {
-            iconImageView.image = icon
-        } else {
-            iconImageView.image = UIImage(systemName: "folder.fill")
-        }
     }
 } 

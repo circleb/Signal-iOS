@@ -7,10 +7,13 @@ import Foundation
 
 public protocol WebAppsStore {
     func storeWebApps(_ apps: [WebApp], tx: DBWriteTransaction)
+    func storeCategorizedWebApps(_ categories: [WebAppCategory], tx: DBWriteTransaction)
     func storeGlobalAllowList(_ entries: [GlobalAllowEntry], tx: DBWriteTransaction)
     func getWebApps(tx: DBReadTransaction) -> [WebApp]?
+    func getCategorizedWebApps(tx: DBReadTransaction) -> [WebAppCategory]?
     func getGlobalAllowList(tx: DBReadTransaction) -> [GlobalAllowEntry]?
     func clearWebApps(tx: DBWriteTransaction)
+    func clearCategorizedWebApps(tx: DBWriteTransaction)
     func clearGlobalAllowList(tx: DBWriteTransaction)
     func getLastFetchDate(tx: DBReadTransaction) -> Date?
     func isCacheExpired(tx: DBReadTransaction) -> Bool
@@ -32,6 +35,12 @@ public class WebAppsStoreImpl: WebAppsStore {
         }
     }
 
+    public func storeCategorizedWebApps(_ categories: [WebAppCategory], tx: DBWriteTransaction) {
+        if let data = try? JSONEncoder().encode(categories) {
+            keyValueStore.setData(data, key: "\(WebAppsConfig.cacheKey)_categorized", transaction: tx)
+        }
+    }
+
     public func storeGlobalAllowList(_ entries: [GlobalAllowEntry], tx: DBWriteTransaction) {
         if let data = try? JSONEncoder().encode(entries) {
             keyValueStore.setData(data, key: WebAppsConfig.globalAllowCacheKey, transaction: tx)
@@ -47,6 +56,14 @@ public class WebAppsStoreImpl: WebAppsStore {
         return apps
     }
 
+    public func getCategorizedWebApps(tx: DBReadTransaction) -> [WebAppCategory]? {
+        guard let data = keyValueStore.getData("\(WebAppsConfig.cacheKey)_categorized", transaction: tx),
+              let categories = try? JSONDecoder().decode([WebAppCategory].self, from: data) else {
+            return nil
+        }
+        return categories
+    }
+
     public func getGlobalAllowList(tx: DBReadTransaction) -> [GlobalAllowEntry]? {
         guard let data = keyValueStore.getData(WebAppsConfig.globalAllowCacheKey, transaction: tx),
               let entries = try? JSONDecoder().decode([GlobalAllowEntry].self, from: data) else {
@@ -58,6 +75,10 @@ public class WebAppsStoreImpl: WebAppsStore {
     public func clearWebApps(tx: DBWriteTransaction) {
         keyValueStore.removeValue(forKey: WebAppsConfig.cacheKey, transaction: tx)
         keyValueStore.removeValue(forKey: "\(WebAppsConfig.cacheKey)_last_fetch", transaction: tx)
+    }
+
+    public func clearCategorizedWebApps(tx: DBWriteTransaction) {
+        keyValueStore.removeValue(forKey: "\(WebAppsConfig.cacheKey)_categorized", transaction: tx)
     }
 
     public func clearGlobalAllowList(tx: DBWriteTransaction) {
