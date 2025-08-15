@@ -7325,7 +7325,7 @@
 "SET_WALLPAPER_TITLE" = "Chatachtergrond kiezen";
 
 /* Title for the 'account' link in settings. */
-"SETTINGS_ACCOUNT" = "Account";
+"SETTINGS_ACCOUNT" = "Signal Account";
 
 /* Label for button in settings to get your account data report */
 "SETTINGS_ACCOUNT_DATA_REPORT_BUTTON" = "Jouw accountgegevens";
