@@ -1638,7 +1638,6 @@
 		B524D3942E430639004B1E4D /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D38D2E430639004B1E4D /* EmptyStateView.swift */; };
 		B524D3952E430639004B1E4D /* WebAppCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D38F2E430639004B1E4D /* WebAppCell.swift */; };
 		B524D3962E430639004B1E4D /* WebAppWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3912E430639004B1E4D /* WebAppWebViewController.swift */; };
-		B563C08B2E4F8C7F008B6098 /* SSOAccountSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B563C08A2E4F8C7F008B6098 /* SSOAccountSettingsViewController.swift */; };
 		B5D17C732E42711B00799EBD /* SSOAuthenticationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C712E42711B00799EBD /* SSOAuthenticationViewController.swift */; };
 		B5D17C742E42711B00799EBD /* SSORegistrationSplashViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C722E42711B00799EBD /* SSORegistrationSplashViewController.swift */; };
 		B5D17C852E4273B800799EBD /* SSOUserInfoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C832E4273B800799EBD /* SSOUserInfoStore.swift */; };
@@ -5603,14 +5602,13 @@
 		B524D38F2E430639004B1E4D /* WebAppCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppCell.swift; sourceTree = "<group>"; };
 		B524D3902E430639004B1E4D /* WebAppsListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppsListViewController.swift; sourceTree = "<group>"; };
 		B524D3912E430639004B1E4D /* WebAppWebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppWebViewController.swift; sourceTree = "<group>"; };
-		B563C08A2E4F8C7F008B6098 /* SSOAccountSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAccountSettingsViewController.swift; sourceTree = "<group>"; };
 		B5D17C712E42711B00799EBD /* SSOAuthenticationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAuthenticationViewController.swift; sourceTree = "<group>"; };
 		B5D17C722E42711B00799EBD /* SSORegistrationSplashViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSORegistrationSplashViewController.swift; sourceTree = "<group>"; };
-		B5D17C7F2E4273B800799EBD /* SSOConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SSOConfig.swift; path = SignalServiceKit/Account/SSOConfig.swift; sourceTree = SOURCE_ROOT; };
-		B5D17C802E4273B800799EBD /* SSORoleManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SSORoleManager.swift; path = SignalServiceKit/Account/SSORoleManager.swift; sourceTree = SOURCE_ROOT; };
-		B5D17C812E4273B800799EBD /* SSOService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SSOService.swift; path = SignalServiceKit/Account/SSOService.swift; sourceTree = SOURCE_ROOT; };
-		B5D17C822E4273B800799EBD /* SSOUserInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SSOUserInfo.swift; path = SignalServiceKit/Account/SSOUserInfo.swift; sourceTree = SOURCE_ROOT; };
-		B5D17C832E4273B800799EBD /* SSOUserInfoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SSOUserInfoStore.swift; path = SignalServiceKit/Account/SSOUserInfoStore.swift; sourceTree = SOURCE_ROOT; };
+		B5D17C7F2E4273B800799EBD /* SSOConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOConfig.swift; sourceTree = "<group>"; };
+		B5D17C802E4273B800799EBD /* SSORoleManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSORoleManager.swift; sourceTree = "<group>"; };
+		B5D17C812E4273B800799EBD /* SSOService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOService.swift; sourceTree = "<group>"; };
+		B5D17C822E4273B800799EBD /* SSOUserInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOUserInfo.swift; sourceTree = "<group>"; };
+		B5D17C832E4273B800799EBD /* SSOUserInfoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOUserInfoStore.swift; sourceTree = "<group>"; };
 		B5D17C8A2E4273C500799EBD /* MockPhoneNumberDiscoverabilityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockPhoneNumberDiscoverabilityManager.swift; sourceTree = "<group>"; };
 		B5D17C8B2E4273C500799EBD /* PhoneNumberDiscoverabilityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberDiscoverabilityManager.swift; sourceTree = "<group>"; };
 		B5D17C8C2E4273C500799EBD /* PhoneNumberDiscoverabilityManagerImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberDiscoverabilityManagerImpl.swift; sourceTree = "<group>"; };
@@ -10527,7 +10525,6 @@
 		76EB03C118170B33006006FC /* src */ = {
 			isa = PBXGroup;
 			children = (
-				B563C08A2E4F8C7F008B6098 /* SSOAccountSettingsViewController.swift */,
 				45CD81A41DBFF8CF004C9430 /* Storyboards */,
 				450DF2061E0DD28D003D14BE /* UserInterface */,
 				6698FC12297F38AC004EFC30 /* ViewControllerContext */,
@@ -17058,7 +17055,6 @@
 				34A4D8832677C59400A794E7 /* ConversationViewController+Misc.swift in Sources */,
 				34A4D88F267A402100A794E7 /* ConversationViewController+Notifications.swift in Sources */,
 				4CD675C522E7CF22008010D2 /* ConversationViewController+OWS.swift in Sources */,
-				B563C08B2E4F8C7F008B6098 /* SSOAccountSettingsViewController.swift in Sources */,
 				88FE237E249C22080041670F /* ConversationViewController+Scroll.swift in Sources */,
 				3426A36A255D9D7C0036407F /* ConversationViewController+Selection.swift in Sources */,
 				D95DA7ED28B560D1003996BA /* ConversationViewController+SystemMessageItems.swift in Sources */,

@@ -28,51 +28,29 @@ public struct SSOUserInfo {
 }
 
 // Keycloak specific user info structure
-public struct KeycloakUserInfo: Codable {
-    public let sub: String
-    public let email: String?
-    public let name: String?
-    public let givenName: String?
-    public let familyName: String?
-    public let preferredUsername: String?
-    public let emailVerified: Bool?
-    public let phoneNumber: String?
-    public let realmAccess: RealmAccess?
-    public let resourceAccess: [String: ResourceAccess]?
-    public let groups: [String]?
+struct KeycloakUserInfo: Codable {
+    let sub: String
+    let email: String?
+    let name: String?
+    let givenName: String?
+    let familyName: String?
+    let preferredUsername: String?
+    let emailVerified: Bool?
+    let phoneNumber: String?
+    let realmAccess: RealmAccess?
+    let resourceAccess: [String: ResourceAccess]?
+    let groups: [String]?
 
-    public struct RealmAccess: Codable {
-        public let roles: [String]
-        
-        public init(roles: [String]) {
-            self.roles = roles
-        }
+    struct RealmAccess: Codable {
+        let roles: [String]
     }
 
-    public struct ResourceAccess: Codable {
-        public let roles: [String]
-        
-        public init(roles: [String]) {
-            self.roles = roles
-        }
-    }
-    
-    public init(sub: String, email: String?, name: String?, givenName: String?, familyName: String?, preferredUsername: String?, emailVerified: Bool?, phoneNumber: String?, realmAccess: RealmAccess?, resourceAccess: [String: ResourceAccess]?, groups: [String]?) {
-        self.sub = sub
-        self.email = email
-        self.name = name
-        self.givenName = givenName
-        self.familyName = familyName
-        self.preferredUsername = preferredUsername
-        self.emailVerified = emailVerified
-        self.phoneNumber = phoneNumber
-        self.realmAccess = realmAccess
-        self.resourceAccess = resourceAccess
-        self.groups = groups
+    struct ResourceAccess: Codable {
+        let roles: [String]
     }
     
     // Custom coding keys to handle snake_case to camelCase conversion
-    public enum CodingKeys: String, CodingKey {
+    enum CodingKeys: String, CodingKey {
         case sub, email, name, groups
         case givenName = "given_name"
         case familyName = "family_name"
@@ -85,7 +63,7 @@ public struct KeycloakUserInfo: Codable {
 }
 
 extension SSOUserInfo {
-    public init(from keycloakUserInfo: KeycloakUserInfo, accessToken: String, refreshToken: String?) {
+    init(from keycloakUserInfo: KeycloakUserInfo, accessToken: String, refreshToken: String?) {
         self.phoneNumber = keycloakUserInfo.phoneNumber
         self.email = keycloakUserInfo.email
         self.name = keycloakUserInfo.name

@@ -14,8 +14,6 @@ public protocol SSOUserInfoStore {
 
 public class SSOUserInfoStoreImpl: SSOUserInfoStore {
     private let userDefaults = UserDefaults.standard
-    
-    public init() {}
     private let userInfoKey = "SSOUserInfo"
     private let rolesKey = "SSOUserRoles"
     private let groupsKey = "SSOUserGroups"
