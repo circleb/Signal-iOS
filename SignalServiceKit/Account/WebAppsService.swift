@@ -24,12 +24,13 @@ public protocol WebAppsServiceProtocol {
     func getWebAppsByLocation(_ location: String, userRoles: [String]) -> [WebApp]
     func isURLGloballyAllowed(_ url: URL) -> Bool
     func filterWebAppsByRole(_ apps: [WebApp], userRoles: [String]) -> [WebApp]
+    func getPinnedURLsService() -> PinnedURLsServiceProtocol
 }
 
 public class WebAppsService: WebAppsServiceProtocol {
     private let networkManager: NetworkManager
     private let cache: WebAppsStore
-    private let databaseStorage: SDSDatabaseStorage
+    internal let databaseStorage: SDSDatabaseStorage
 
     public init(networkManager: NetworkManager, cache: WebAppsStore, databaseStorage: SDSDatabaseStorage) {
         self.networkManager = networkManager
@@ -260,5 +261,14 @@ public class WebAppsService: WebAppsServiceProtocol {
             // Check if user has the required role
             return userRoles.contains(requiredRole)
         }
+    }
+    
+    public func getPinnedURLsService() -> PinnedURLsServiceProtocol {
+        // Create a new KeyValueStore instance for Bookmarks
+        let pinnedURLsKeyValueStore = KeyValueStore(collection: "PinnedURLs")
+        return PinnedURLsService(
+            store: PinnedURLsStoreImpl(keyValueStore: pinnedURLsKeyValueStore),
+            databaseStorage: databaseStorage
+        )
     }
 } 

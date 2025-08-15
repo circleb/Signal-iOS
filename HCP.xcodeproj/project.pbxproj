@@ -1673,6 +1673,14 @@
 		B5D17CCE2E4273C500799EBD /* IdentityKeyMismatchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17CA32E4273C500799EBD /* IdentityKeyMismatchManager.swift */; };
 		B5D17CCF2E4273C500799EBD /* MockPreKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C8E2E4273C500799EBD /* MockPreKeyManager.swift */; };
 		B5D17CD02E4273C500799EBD /* TSRegistrationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17CA02E4273C500799EBD /* TSRegistrationState.swift */; };
+		B5F037412E4EF50600F529AF /* PinnedURLsStoreImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F0373E2E4EF50500F529AF /* PinnedURLsStoreImpl.swift */; };
+		B5F037422E4EF50600F529AF /* PinnedURLsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F0373C2E4EF50500F529AF /* PinnedURLsService.swift */; };
+		B5F037432E4EF50600F529AF /* PinnedURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F0373B2E4EF50500F529AF /* PinnedURL.swift */; };
+		B5F037442E4EF50600F529AF /* PinnedURLsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F0373D2E4EF50500F529AF /* PinnedURLsStore.swift */; };
+		B5F037452E4EF50600F529AF /* WebAppsConfig+Pinning.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F0373F2E4EF50500F529AF /* WebAppsConfig+Pinning.swift */; };
+		B5F0374A2E4EF51B00F529AF /* PinnedURLSectionHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F037482E4EF51B00F529AF /* PinnedURLSectionHeaderView.swift */; };
+		B5F0374B2E4EF51B00F529AF /* PinnedURLCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F037472E4EF51B00F529AF /* PinnedURLCell.swift */; };
+		B5F0374C2E4EF51B00F529AF /* PinnedURLsListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F037492E4EF51B00F529AF /* PinnedURLsListViewController.swift */; };
 		B60EDE041A05A01700D73516 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B60EDE031A05A01700D73516 /* AudioToolbox.framework */; };
 		B66DBF4A19D5BBC8006EA940 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B66DBF4919D5BBC8006EA940 /* Images.xcassets */; };
 		B69CD25119773E79005CE69A /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B69CD25019773E79005CE69A /* XCTest.framework */; };
@@ -5629,6 +5637,14 @@
 		B5D17CA72E4273C500799EBD /* PniDistributionSyncMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PniDistributionSyncMessage.swift; sourceTree = "<group>"; };
 		B5D17CA82E4273C500799EBD /* ProfileKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileKey.swift; sourceTree = "<group>"; };
 		B5D17CA92E4273C500799EBD /* ServiceId.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceId.swift; sourceTree = "<group>"; };
+		B5F0373B2E4EF50500F529AF /* PinnedURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedURL.swift; sourceTree = "<group>"; };
+		B5F0373C2E4EF50500F529AF /* PinnedURLsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedURLsService.swift; sourceTree = "<group>"; };
+		B5F0373D2E4EF50500F529AF /* PinnedURLsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedURLsStore.swift; sourceTree = "<group>"; };
+		B5F0373E2E4EF50500F529AF /* PinnedURLsStoreImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedURLsStoreImpl.swift; sourceTree = "<group>"; };
+		B5F0373F2E4EF50500F529AF /* WebAppsConfig+Pinning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WebAppsConfig+Pinning.swift"; sourceTree = "<group>"; };
+		B5F037472E4EF51B00F529AF /* PinnedURLCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedURLCell.swift; sourceTree = "<group>"; };
+		B5F037482E4EF51B00F529AF /* PinnedURLSectionHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedURLSectionHeaderView.swift; sourceTree = "<group>"; };
+		B5F037492E4EF51B00F529AF /* PinnedURLsListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedURLsListViewController.swift; sourceTree = "<group>"; };
 		B60EDE031A05A01700D73516 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		B634CBB31AB10D2300C49B99 /* hr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = hr; path = translations/hr.lproj/Localizable.strings; sourceTree = "<group>"; };
 		B634CBB51AB10D5400C49B99 /* ro */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ro; path = translations/ro.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -8123,6 +8139,9 @@
 		3448BFC01EDF0EA7005B2D69 /* ConversationView */ = {
 			isa = PBXGroup;
 			children = (
+				B5F037472E4EF51B00F529AF /* PinnedURLCell.swift */,
+				B5F037482E4EF51B00F529AF /* PinnedURLSectionHeaderView.swift */,
+				B5F037492E4EF51B00F529AF /* PinnedURLsListViewController.swift */,
 				B524D38D2E430639004B1E4D /* EmptyStateView.swift */,
 				B524D38E2E430639004B1E4D /* WebAppCategoryHeaderView.swift */,
 				B524D38F2E430639004B1E4D /* WebAppCell.swift */,
@@ -11107,6 +11126,11 @@
 		B5D17CAF2E4273C500799EBD /* Account */ = {
 			isa = PBXGroup;
 			children = (
+				B5F0373B2E4EF50500F529AF /* PinnedURL.swift */,
+				B5F0373C2E4EF50500F529AF /* PinnedURLsService.swift */,
+				B5F0373D2E4EF50500F529AF /* PinnedURLsStore.swift */,
+				B5F0373E2E4EF50500F529AF /* PinnedURLsStoreImpl.swift */,
+				B5F0373F2E4EF50500F529AF /* WebAppsConfig+Pinning.swift */,
 				B524D3832E4305F6004B1E4D /* WebApp.swift */,
 				B524D3842E4305F6004B1E4D /* WebAppsConfig.swift */,
 				B524D3852E4305F6004B1E4D /* WebAppsError.swift */,
@@ -17059,6 +17083,9 @@
 				348815C2255341F300D4F4C4 /* CVComponentAudioAttachment.swift in Sources */,
 				347C3847252CE6C900F3D941 /* CVComponentBodyMedia.swift in Sources */,
 				347C3843252CE6C900F3D941 /* CVComponentBodyText.swift in Sources */,
+				B5F0374A2E4EF51B00F529AF /* PinnedURLSectionHeaderView.swift in Sources */,
+				B5F0374B2E4EF51B00F529AF /* PinnedURLCell.swift in Sources */,
+				B5F0374C2E4EF51B00F529AF /* PinnedURLsListViewController.swift in Sources */,
 				3426A37A2563F0EA0036407F /* CVComponentBottomButtons.swift in Sources */,
 				3470C87A2555DE5F00F5847C /* CVComponentContactShare.swift in Sources */,
 				347C3849252D004C00F3D941 /* CVComponentDateHeader.swift in Sources */,
@@ -18550,6 +18577,11 @@
 				D9F6553C29D6547F002A330A /* SDSCodableModelDatabaseInterface+Save.swift in Sources */,
 				D9F6553D29D6547F002A330A /* SDSCodableModelDatabaseInterface.swift in Sources */,
 				72A132A72CA25EF0000ACED6 /* SDSCrossProcess.swift in Sources */,
+				B5F037412E4EF50600F529AF /* PinnedURLsStoreImpl.swift in Sources */,
+				B5F037422E4EF50600F529AF /* PinnedURLsService.swift in Sources */,
+				B5F037432E4EF50600F529AF /* PinnedURL.swift in Sources */,
+				B5F037442E4EF50600F529AF /* PinnedURLsStore.swift in Sources */,
+				B5F037452E4EF50600F529AF /* WebAppsConfig+Pinning.swift in Sources */,
 				F9C5CD2B289453B300548EEE /* SDSDatabaseStorage+Objc.m in Sources */,
 				F9C5CD1A289453B300548EEE /* SDSDatabaseStorage.swift in Sources */,
 				6673FF8B297B6FA800F96CFD /* SDSDB.swift in Sources */,

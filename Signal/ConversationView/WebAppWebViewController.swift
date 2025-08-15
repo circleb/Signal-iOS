@@ -18,12 +18,54 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
     private let loadingIndicator = UIActivityIndicatorView(style: .large)
     private var isLoadingBlockedMessage = false
     
+    // Pinning functionality
+    private var pinnedURLsService: PinnedURLsServiceProtocol {
+        return webAppsService.getPinnedURLsService()
+    }
+    
 
     init(webApp: WebApp, webAppsService: WebAppsServiceProtocol, userInfoStore: SSOUserInfoStore = SSOUserInfoStoreImpl()) {
         self.webApp = webApp
         self.webAppsService = webAppsService
         self.userInfoStore = userInfoStore
         super.init(nibName: nil, bundle: nil)
+    }
+    
+    // Convenience initializer for opening Bookmarks
+    convenience init(url: URL, title: String) {
+        // Create a dummy WebApp for the Bookmark
+        let dummyWebApp = WebApp(
+            entry: url.host ?? "bookmark",
+            name: title,
+            description: "Bookmark",
+            icon: "link",
+            image: "",
+            category: "Bookmark",
+            urlsPermitted: [url.absoluteString],
+            location: [],
+            type: "bookmark",
+            parent: ""
+        )
+        
+        // Create WebAppsService instance
+        let cache = WebAppsStoreImpl(keyValueStore: KeyValueStore(collection: "WebApps"))
+        let webAppsService = WebAppsService(
+            networkManager: SSKEnvironment.shared.networkManagerRef,
+            cache: cache,
+            databaseStorage: SSKEnvironment.shared.databaseStorageRef
+        )
+        
+        self.init(
+            webApp: dummyWebApp,
+            webAppsService: webAppsService,
+            userInfoStore: SSOUserInfoStoreImpl()
+        )
+        
+        // Override the title
+        self.title = title
+        
+        // Load the specific URL instead of the webapp entry
+        self.loadSpecificURL(url)
     }
 
     required init?(coder: NSCoder) {
@@ -34,6 +76,7 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
         super.viewDidLoad()
         setupUI()
         setupWebView()
+        setupPinningButtons()
         loadWebApp()
     }
 
@@ -110,10 +153,21 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
             return
         }
 
+        loadSpecificURL(url)
+    }
+    
+    private func loadSpecificURL(_ url: URL) {
         loadingIndicator.startAnimating()
-
         let request = URLRequest(url: url)
         webView.load(request)
+    }
+    
+    private func setupPinningButtons() {
+        // Only show pinning buttons for real webapps, not Bookmarks
+        if webApp.type != "bookmark" {
+            setupPinButton()
+            setupPinnedURLsButton()
+        }
     }
     
     private func showAccessDeniedError(requiredRole: String) {
@@ -327,6 +381,166 @@ extension WebAppWebViewController: WKNavigationDelegate {
     private func isSpecialURL(_ url: URL) -> Bool {
         let specialSchemes = ["about", "data", "file", "javascript"]
         return specialSchemes.contains(url.scheme?.lowercased() ?? "")
+    }
+    
+    // MARK: - Pinning Functionality
+    
+    private func setupPinButton() {
+        let pinButton = UIBarButtonItem(
+            image: UIImage(systemName: "star"),
+            style: .plain,
+            target: self,
+            action: #selector(pinButtonTapped)
+        )
+
+        // Add pin button to navigation bar
+        if var rightBarButtonItems = navigationItem.rightBarButtonItems {
+            rightBarButtonItems.append(pinButton)
+            navigationItem.rightBarButtonItems = rightBarButtonItems
+        } else {
+            navigationItem.rightBarButtonItem = pinButton
+        }
+    }
+
+    @objc private func pinButtonTapped() {
+        showPinURLAlert()
+    }
+
+    private func showPinURLAlert() {
+        let alert = UIAlertController(title: "Add Bookmark", message: nil, preferredStyle: .alert)
+
+        alert.addTextField { textField in
+            textField.placeholder = "Title for this bookmark"
+            textField.text = self.webView.title ?? "Bookmark"
+        }
+
+        let pinAction = UIAlertAction(title: "Save", style: .default) { [weak self] _ in
+            guard let self = self,
+                  let title = alert.textFields?[0].text,
+                  !title.isEmpty,
+                  let currentURL = self.webView.url?.absoluteString else {
+                return
+            }
+
+            let icon = "link"
+
+            Task {
+                do {
+                    try await self.pinnedURLsService.pinURL(
+                        currentURL,
+                        title: title,
+                        webApp: self.webApp,
+                        icon: icon
+                    )
+
+                    DispatchQueue.main.async {
+                        self.showPinSuccessAlert()
+                    }
+                } catch {
+                    DispatchQueue.main.async {
+                        self.showPinErrorAlert(error)
+                    }
+                }
+            }
+        }
+
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+
+        alert.addAction(pinAction)
+        alert.addAction(cancelAction)
+
+        present(alert, animated: true)
+    }
+
+    private func showPinSuccessAlert() {
+        let alert = UIAlertController(
+            title: "URL Bookmark",
+            message: "This URL has been added to your Bookmarks.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+
+    private func showPinErrorAlert(_ error: Error) {
+        let alert = UIAlertController(
+            title: "Error",
+            message: "Failed to pin URL: \(error.localizedDescription)",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+
+    private func setupPinnedURLsButton() {
+        let pinnedURLsButton = UIBarButtonItem(
+            image: UIImage(systemName: "bookmark"),
+            style: .plain,
+            target: self,
+            action: #selector(pinnedURLsButtonTapped)
+        )
+
+        // Add to right side of navigation bar (next to pin button)
+        if var rightBarButtonItems = navigationItem.rightBarButtonItems {
+            rightBarButtonItems.append(pinnedURLsButton)
+            navigationItem.rightBarButtonItems = rightBarButtonItems
+        } else {
+            navigationItem.rightBarButtonItem = pinnedURLsButton
+        }
+    }
+
+    @objc private func pinnedURLsButtonTapped() {
+        showPinnedURLsDropdown()
+    }
+    
+    private func showPinnedURLsDropdown() {
+        let pinnedURLs = pinnedURLsService.getPinnedURLs(for: webApp)
+        
+        if pinnedURLs.isEmpty {
+            // Show empty state alert
+            let alert = UIAlertController(
+                title: "No Bookmarks",
+                message: "You haven't pinned any URLs for this webapp yet. Use the star button to pin the current page.",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+            return
+        }
+        
+        // Create action sheet with Bookmarks
+        let actionSheet = UIAlertController(title: "Bookmarks", message: nil, preferredStyle: .actionSheet)
+        
+        // Add actions for each Bookmark
+        for pinnedURL in pinnedURLs {
+            let action = UIAlertAction(title: pinnedURL.title, style: .default) { [weak self] _ in
+                self?.openPinnedURL(pinnedURL)
+            }
+            actionSheet.addAction(action)
+        }
+        
+        // Add cancel action
+        actionSheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        
+        // Present the action sheet
+        if let popover = actionSheet.popoverPresentationController {
+            // For iPad, set the source view to the bookmark button
+            popover.barButtonItem = navigationItem.rightBarButtonItems?.last
+        }
+        
+        present(actionSheet, animated: true)
+    }
+    
+    private func openPinnedURL(_ pinnedURL: PinnedURL) {
+        // Record access
+        Task {
+            await pinnedURLsService.recordAccess(for: pinnedURL.id)
+        }
+        
+        // Open URL in webview
+        if let url = URL(string: pinnedURL.url) {
+            loadSpecificURL(url)
+        }
     }
 }
 

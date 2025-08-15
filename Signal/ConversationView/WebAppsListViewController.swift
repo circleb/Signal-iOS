@@ -13,7 +13,7 @@ class WebAppsListViewController: UIViewController {
     private let webAppsService: WebAppsServiceProtocol
     private let userInfoStore: SSOUserInfoStore
     private let searchController = UISearchController(searchResultsController: nil)
-
+    
     // UI Components
     let tableView = UITableView()
     private let refreshControl = UIRefreshControl()
@@ -88,7 +88,7 @@ class WebAppsListViewController: UIViewController {
         navigationItem.searchController = searchController
         definesPresentationContext = true
     }
-
+    
     @objc private func refreshWebApps() {
         loadWebApps(showLoading: false)
     }
