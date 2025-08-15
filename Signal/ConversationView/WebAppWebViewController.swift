@@ -165,7 +165,6 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
     private func setupPinningButtons() {
         // Only show pinning buttons for real webapps, not Bookmarks
         if webApp.type != "bookmark" {
-            setupPinButton()
             setupPinnedURLsButton()
         }
     }
@@ -385,27 +384,6 @@ extension WebAppWebViewController: WKNavigationDelegate {
     
     // MARK: - Pinning Functionality
     
-    private func setupPinButton() {
-        let pinButton = UIBarButtonItem(
-            image: UIImage(systemName: "star"),
-            style: .plain,
-            target: self,
-            action: #selector(pinButtonTapped)
-        )
-
-        // Add pin button to navigation bar
-        if var rightBarButtonItems = navigationItem.rightBarButtonItems {
-            rightBarButtonItems.append(pinButton)
-            navigationItem.rightBarButtonItems = rightBarButtonItems
-        } else {
-            navigationItem.rightBarButtonItem = pinButton
-        }
-    }
-
-    @objc private func pinButtonTapped() {
-        showPinURLAlert()
-    }
-
     private func showPinURLAlert() {
         let alert = UIAlertController(title: "Add Bookmark", message: nil, preferredStyle: .alert)
 
@@ -496,22 +474,16 @@ extension WebAppWebViewController: WKNavigationDelegate {
     private func showPinnedURLsDropdown() {
         let pinnedURLs = pinnedURLsService.getPinnedURLs(for: webApp)
         
-        if pinnedURLs.isEmpty {
-            // Show empty state alert
-            let alert = UIAlertController(
-                title: "No Bookmarks",
-                message: "You haven't pinned any URLs for this webapp yet. Use the star button to pin the current page.",
-                preferredStyle: .alert
-            )
-            alert.addAction(UIAlertAction(title: "OK", style: .default))
-            present(alert, animated: true)
-            return
-        }
-        
         // Create action sheet with Bookmarks
         let actionSheet = UIAlertController(title: "Bookmarks", message: nil, preferredStyle: .actionSheet)
         
-        // Add actions for each Bookmark
+        // Add "Add Current Page" as the first option
+        let addCurrentPageAction = UIAlertAction(title: "Add Current Page", style: .default) { [weak self] _ in
+            self?.showPinURLAlert()
+        }
+        actionSheet.addAction(addCurrentPageAction)
+        
+        // Add actions for each existing Bookmark
         for pinnedURL in pinnedURLs {
             let action = UIAlertAction(title: pinnedURL.title, style: .default) { [weak self] _ in
                 self?.openPinnedURL(pinnedURL)
