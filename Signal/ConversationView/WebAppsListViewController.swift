@@ -12,6 +12,7 @@ import SignalServiceKit
 class WebAppsListViewController: UIViewController {
     private let webAppsService: WebAppsServiceProtocol
     private let userInfoStore: SSOUserInfoStore
+    private let ssoService: SSOServiceProtocol
     private let searchController = UISearchController(searchResultsController: nil)
     
     // UI Components
@@ -19,6 +20,11 @@ class WebAppsListViewController: UIViewController {
     private let refreshControl = UIRefreshControl()
     private let loadingIndicator = UIActivityIndicatorView(style: .large)
     private let emptyStateView = EmptyStateView()
+    
+    // SSO Components
+    private var ssoAvatarView: SSOAvatarView!
+    private var contextMenuButton: ContextMenuButton!
+    private var ssoMenuActions: SSOAccountMenuActions!
 
     // Data
     private var allWebApps: [WebApp] = []
@@ -28,21 +34,36 @@ class WebAppsListViewController: UIViewController {
 
 
 
-    init(webAppsService: WebAppsServiceProtocol, userInfoStore: SSOUserInfoStore = SSOUserInfoStoreImpl()) {
+    init(webAppsService: WebAppsServiceProtocol, 
+         userInfoStore: SSOUserInfoStore = SSOUserInfoStoreImpl(),
+         ssoService: SSOServiceProtocol) {
         self.webAppsService = webAppsService
         self.userInfoStore = userInfoStore
+        self.ssoService = ssoService
         super.init(nibName: nil, bundle: nil)
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         setupSearchController()
+        setupSSOComponents()
+        setupNotifications()
+        checkSSOStatus()
         loadWebApps()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        checkSSOStatus()
     }
 
     private func setupUI() {
@@ -87,6 +108,118 @@ class WebAppsListViewController: UIViewController {
         searchController.searchBar.placeholder = "Search apps..."
         navigationItem.searchController = searchController
         definesPresentationContext = true
+    }
+    
+    private func setupSSOComponents() {
+        // Create SSO avatar view
+        ssoAvatarView = SSOAvatarView(size: .small, userInfoStore: userInfoStore)
+        
+        // Create menu actions
+        ssoMenuActions = SSOAccountMenuActions(
+            userInfoStore: userInfoStore,
+            ssoService: ssoService,
+            presentingViewController: self
+        )
+        
+        // Create context menu button and position it over the avatar
+        contextMenuButton = ContextMenuButton(empty: ())
+        contextMenuButton.backgroundColor = .clear
+        contextMenuButton.isUserInteractionEnabled = true
+        
+        // Create container view to hold both avatar and context menu button
+        let containerView = UIView()
+        containerView.addSubview(ssoAvatarView)
+        containerView.addSubview(contextMenuButton)
+        
+        // Position the context menu button over the avatar
+        ssoAvatarView.autoPinEdgesToSuperviewEdges()
+        contextMenuButton.autoPinEdgesToSuperviewEdges()
+        
+        // Set as left bar button item
+        let barButtonItem = UIBarButtonItem(customView: containerView)
+        navigationItem.leftBarButtonItem = barButtonItem
+        
+        // Update menu actions
+        updateMenuActions()
+    }
+    
+    private func setupNotifications() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(ssoUserDidSignIn),
+            name: .ssoUserDidSignIn,
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(ssoUserDidSignOut),
+            name: .ssoUserDidSignOut,
+            object: nil
+        )
+    }
+    
+
+    
+    private func updateMenuActions() {
+        let actions = ssoMenuActions.createMenuActions()
+        contextMenuButton.setActions(actions: actions)
+    }
+    
+
+    
+    @objc private func ssoUserDidSignIn() {
+        DispatchQueue.main.async { [weak self] in
+            self?.ssoAvatarView.updateAvatar()
+            self?.updateMenuActions()
+        }
+    }
+    
+    @objc private func ssoUserDidSignOut() {
+        DispatchQueue.main.async { [weak self] in
+            self?.ssoAvatarView.updateAvatar()
+            self?.updateMenuActions()
+            self?.checkSSOStatus()
+        }
+    }
+    
+    private func checkSSOStatus() {
+        guard (userInfoStore.getUserInfo()) != nil else {
+            // User is not signed in, show sign-in overlay
+            showSignInOverlay()
+            return
+        }
+        
+        // User is signed in, hide any existing overlay
+        hideSignInOverlay()
+    }
+    
+    private func showSignInOverlay() {
+        // Don't show multiple overlays
+        if navigationController?.topViewController is SSOAuthenticationViewController {
+            return
+        }
+        
+        let signInController = SSOAuthenticationViewController(
+            ssoService: ssoService,
+            userInfoStore: userInfoStore
+        )
+        signInController.delegate = self
+        
+        // Push onto navigation stack to get inline Safari sheet, but make it full screen
+        navigationController?.pushViewController(signInController, animated: true)
+        
+        // Hide the tab bar to simulate full-screen coverage
+        tabBarController?.tabBar.isHidden = true
+    }
+    
+    private func hideSignInOverlay() {
+        if navigationController?.topViewController is SSOAuthenticationViewController {
+            navigationController?.popViewController(animated: true)
+        }
+        
+        // Show the tab bar again
+        tabBarController?.tabBar.isHidden = false
     }
     
     @objc private func refreshWebApps() {
@@ -232,5 +365,25 @@ extension WebAppsListViewController: UISearchResultsUpdating {
         DispatchQueue.main.async { [weak self] in
             self?.tableView.reloadData()
         }
+    }
+}
+
+extension WebAppsListViewController: SSOAuthenticationViewControllerDelegate {
+    func ssoAuthenticationViewController(_ controller: SSOAuthenticationViewController, didAuthenticate userInfo: SSOUserInfo) {
+        // User successfully signed in, hide overlay and update UI
+        hideSignInOverlay()
+        ssoAvatarView.updateAvatar()
+        updateMenuActions()
+        loadWebApps() // Reload web apps with new user roles
+    }
+    
+    func ssoAuthenticationViewController(_ controller: SSOAuthenticationViewController, didFailWithError error: SSOError) {
+        // Handle SSO error - for now, just keep the overlay visible
+        // The user can retry or the overlay will remain until they sign in
+    }
+    
+    func ssoAuthenticationViewControllerDidCancel(_ controller: SSOAuthenticationViewController) {
+        // User cancelled sign-in, keep overlay visible
+        // The overlay will remain visible until user signs in or app is closed
     }
 } 

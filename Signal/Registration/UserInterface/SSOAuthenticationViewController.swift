@@ -79,11 +79,21 @@ class SSOAuthenticationViewController: OWSViewController {
         stackView.autoPinEdgesToSuperviewMargins()
 
         // Title
-        titleLabel.text = "Welcome to Signal"
+        let titleText = {
+            if TSConstants.isUsingProductionService {
+                return OWSLocalizedString(
+                    "ONBOARDING_SPLASH_TITLE",
+                    comment: "Title of the 'onboarding splash' view."
+                )
+            } else {
+                return "Internal Staging Build\n\(AppVersionImpl.shared.currentAppVersion)"
+            }
+        }()
+        let titleLabel = UILabel.titleLabelForRegistration(text: titleText)
         titleLabel.font = UIFont.dynamicTypeTitle1
         titleLabel.textColor = Theme.primaryTextColor
         titleLabel.textAlignment = .center
-        titleLabel.accessibilityIdentifier = "sso.auth.titleLabel"
+        titleLabel.accessibilityIdentifier = "registration.splash.titleLabel"
         stackView.addArrangedSubview(titleLabel)
 
         // Subtitle

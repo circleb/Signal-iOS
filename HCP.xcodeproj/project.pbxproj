@@ -1638,6 +1638,9 @@
 		B524D3942E430639004B1E4D /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D38D2E430639004B1E4D /* EmptyStateView.swift */; };
 		B524D3952E430639004B1E4D /* WebAppCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D38F2E430639004B1E4D /* WebAppCell.swift */; };
 		B524D3962E430639004B1E4D /* WebAppWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3912E430639004B1E4D /* WebAppWebViewController.swift */; };
+		B5B894402E4FA7C900472CA9 /* SSOAvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5B8943E2E4FA7C900472CA9 /* SSOAvatarView.swift */; };
+		B5B894412E4FA7C900472CA9 /* SSOAccountMenuActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5B8943C2E4FA7C900472CA9 /* SSOAccountMenuActions.swift */; };
+		B5B894432E4FA7C900472CA9 /* SSOAccountWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5B8943D2E4FA7C900472CA9 /* SSOAccountWebViewController.swift */; };
 		B5D17C732E42711B00799EBD /* SSOAuthenticationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C712E42711B00799EBD /* SSOAuthenticationViewController.swift */; };
 		B5D17C742E42711B00799EBD /* SSORegistrationSplashViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C722E42711B00799EBD /* SSORegistrationSplashViewController.swift */; };
 		B5D17C852E4273B800799EBD /* SSOUserInfoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C832E4273B800799EBD /* SSOUserInfoStore.swift */; };
@@ -5602,6 +5605,9 @@
 		B524D38F2E430639004B1E4D /* WebAppCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppCell.swift; sourceTree = "<group>"; };
 		B524D3902E430639004B1E4D /* WebAppsListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppsListViewController.swift; sourceTree = "<group>"; };
 		B524D3912E430639004B1E4D /* WebAppWebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppWebViewController.swift; sourceTree = "<group>"; };
+		B5B8943C2E4FA7C900472CA9 /* SSOAccountMenuActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAccountMenuActions.swift; sourceTree = "<group>"; };
+		B5B8943D2E4FA7C900472CA9 /* SSOAccountWebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAccountWebViewController.swift; sourceTree = "<group>"; };
+		B5B8943E2E4FA7C900472CA9 /* SSOAvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAvatarView.swift; sourceTree = "<group>"; };
 		B5D17C712E42711B00799EBD /* SSOAuthenticationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAuthenticationViewController.swift; sourceTree = "<group>"; };
 		B5D17C722E42711B00799EBD /* SSORegistrationSplashViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSORegistrationSplashViewController.swift; sourceTree = "<group>"; };
 		B5D17C7F2E4273B800799EBD /* SSOConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOConfig.swift; sourceTree = "<group>"; };
@@ -8139,6 +8145,9 @@
 		3448BFC01EDF0EA7005B2D69 /* ConversationView */ = {
 			isa = PBXGroup;
 			children = (
+				B5B8943C2E4FA7C900472CA9 /* SSOAccountMenuActions.swift */,
+				B5B8943D2E4FA7C900472CA9 /* SSOAccountWebViewController.swift */,
+				B5B8943E2E4FA7C900472CA9 /* SSOAvatarView.swift */,
 				B5F037472E4EF51B00F529AF /* PinnedURLCell.swift */,
 				B5F037482E4EF51B00F529AF /* PinnedURLSectionHeaderView.swift */,
 				B5F037492E4EF51B00F529AF /* PinnedURLsListViewController.swift */,
@@ -16965,6 +16974,9 @@
 				D9E43BF42CC194140001536E /* CallMemberView.swift in Sources */,
 				D9E43BF52CC194140001536E /* CallMemberWaitingAndErrorView.swift in Sources */,
 				D9E43C1D2CC194140001536E /* CallRecordLoader.swift in Sources */,
+				B5B894402E4FA7C900472CA9 /* SSOAvatarView.swift in Sources */,
+				B5B894412E4FA7C900472CA9 /* SSOAccountMenuActions.swift in Sources */,
+				B5B894432E4FA7C900472CA9 /* SSOAccountWebViewController.swift in Sources */,
 				D9E43C1E2CC194140001536E /* CallService.swift in Sources */,
 				D9E43C1F2CC194140001536E /* CallServiceState.swift in Sources */,
 				D9E43BF72CC194140001536E /* CallsListViewController+Strings.swift in Sources */,

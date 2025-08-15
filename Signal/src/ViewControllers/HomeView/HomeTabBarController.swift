@@ -120,7 +120,15 @@ class HomeTabBarController: UITabBarController {
         return WebAppsService(networkManager: SSKEnvironment.shared.networkManagerRef, cache: cache, databaseStorage: SSKEnvironment.shared.databaseStorageRef)
     }()
     
-    lazy var webAppsListViewController = WebAppsListViewController(webAppsService: webAppsService, userInfoStore: SSOUserInfoStoreImpl())
+    private lazy var ssoService: SSOServiceProtocol = {
+        return SSOService(userInfoStore: SSOUserInfoStoreImpl())
+    }()
+    
+    lazy var webAppsListViewController = WebAppsListViewController(
+        webAppsService: webAppsService, 
+        userInfoStore: SSOUserInfoStoreImpl(),
+        ssoService: ssoService
+    )
     lazy var webAppsNavController = OWSNavigationController(rootViewController: webAppsListViewController)
     lazy var webAppsTabBarItem = Tabs.webApps.tabBarItem
 
