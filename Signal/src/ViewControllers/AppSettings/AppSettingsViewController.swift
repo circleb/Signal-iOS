@@ -162,6 +162,18 @@ class AppSettingsViewController: OWSTableViewController2 {
                 self?.navigationController?.pushViewController(vc, animated: true)
             }
         ))
+        
+        // Add Heritage SSO Account section
+        let userInfoStore = SSOUserInfoStoreImpl()
+        let ssoService = SSOService(userInfoStore: userInfoStore)
+        section1.add(.disclosureItem(
+            icon: .settingsAccount,
+            withText: OWSLocalizedString("SETTINGS_SSO_ACCOUNT", comment: "Title for the Heritage SSO account settings."),
+            actionBlock: { [weak self] in
+                let vc = SSOAccountSettingsViewController(userInfoStore: userInfoStore, ssoService: ssoService)
+                self?.navigationController?.pushViewController(vc, animated: true)
+            }
+        ))
         if isPrimaryDevice {
             section1.add(.disclosureItem(
                 icon: .settingsLinkedDevices,

@@ -1,8 +1,7 @@
 import AppAuth
-import SignalServiceKit
 import Foundation
 
-protocol SSOServiceProtocol {
+public protocol SSOServiceProtocol {
     func authenticate() -> Promise<SSOUserInfo>
     func getUserInfo(accessToken: String) -> Promise<SSOUserInfo>
     func refreshToken() -> Promise<SSOUserInfo>
@@ -21,24 +20,24 @@ public enum SSOError: Error {
 }
 
 // Global SSO service manager to handle OAuth callbacks
-class SSOServiceManager {
-    static let shared = SSOServiceManager()
+public class SSOServiceManager {
+    public static let shared = SSOServiceManager()
     
     private var currentService: SSOService?
     
     private init() {}
     
-    func registerService(_ service: SSOService) {
+    public func registerService(_ service: SSOService) {
         Logger.info("SSOServiceManager: Registering SSO service")
         currentService = service
     }
     
-    func unregisterService() {
+    public func unregisterService() {
         Logger.info("SSOServiceManager: Unregistering SSO service")
         currentService = nil
     }
     
-    func handleOAuthCallback(url: URL) -> Bool {
+    public func handleOAuthCallback(url: URL) -> Bool {
         Logger.info("SSOServiceManager: Handling OAuth callback")
         
         guard let service = currentService else {
@@ -52,12 +51,12 @@ class SSOServiceManager {
     }
 }
 
-class SSOService: SSOServiceProtocol {
+public class SSOService: SSOServiceProtocol {
     private var authState: OIDAuthState?
     private var currentAuthorizationFlow: OIDExternalUserAgentSession?
     private let userInfoStore: SSOUserInfoStore
 
-    init(userInfoStore: SSOUserInfoStore) {
+    public init(userInfoStore: SSOUserInfoStore) {
         self.userInfoStore = userInfoStore
     }
 
@@ -241,14 +240,14 @@ class SSOService: SSOServiceProtocol {
         return promise
     }
 
-    private func hasRequiredRoles(_ userRoles: [String]) -> Bool {
+    public func hasRequiredRoles(_ userRoles: [String]) -> Bool {
         let hasAnyRequiredRole = SSOConfig.requiredRoles.contains { requiredRole in
             userRoles.contains(requiredRole)
         }
         return hasAnyRequiredRole
     }
     
-    func handleOAuthCallback(url: URL) -> Bool {
+    public func handleOAuthCallback(url: URL) -> Bool {
         Logger.info("SSO: Received OAuth callback URL: \(url)")
         
         guard let currentFlow = currentAuthorizationFlow else {

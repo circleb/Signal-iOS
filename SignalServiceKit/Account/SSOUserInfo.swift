@@ -1,5 +1,4 @@
 import Foundation
-import SignalServiceKit
 
 public struct SSOUserInfo {
     public let phoneNumber: String?
