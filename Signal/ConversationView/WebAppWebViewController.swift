@@ -83,7 +83,7 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
     private func setupUI() {
         view.backgroundColor = .white
 
-        // Navigation bar setup with back, forward, and refresh buttons
+        // Navigation bar setup with back, forward, and refresh buttons on the left
         let backButton = UIBarButtonItem(
             image: UIImage(systemName: "chevron.left"),
             style: .plain,
@@ -104,7 +104,9 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
             action: #selector(refreshWebApp)
         )
         
-        navigationItem.rightBarButtonItems = [refreshButton, forwardButton, backButton]
+        // Move buttons to left side and hide the navigation back button
+        navigationItem.leftBarButtonItems = [backButton, forwardButton, refreshButton]
+        navigationItem.hidesBackButton = true
 
         // Progress view
         progressView.progressTintColor = .ows_accentBlue
@@ -747,5 +749,3 @@ class PinnedURLCompactCell: UITableViewCell {
         iconImageView.image = nil
     }
 }
-
- 
