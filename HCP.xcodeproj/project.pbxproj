@@ -14922,6 +14922,7 @@
 				453518771FC635DD00210559 /* Embed Foundation Extensions */,
 				4535189F1FC63DBF00210559 /* Embed Frameworks */,
 				71D9A11BAC977B7A24A418F9 /* [CP] Embed Pods Frameworks */,
+				B55908582E518AAF002835CD /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -15072,9 +15073,7 @@
 						};
 					};
 					D221A0A9169C9E5F00537ABF = {
-						DevelopmentTeam = U68MSDN6DR;
 						LastSwiftMigration = 1020;
-						ProvisioningStyle = Automatic;
 						TestTargetID = D221A088169C9E5E00537ABF;
 					};
 					F9C5C896289451B900548EEE = {
@@ -16509,6 +16508,23 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SignalTests/Pods-SignalTests-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
+		};
+		B55908582E518AAF002835CD /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nset -euo pipefail\n\nNAME_LIST=(\"WebRTC\")  # add more names if needed\nDEST=\"${DWARF_DSYM_FOLDER_PATH}\"\n\necho \"Copying third-party dSYMs to: $DEST\"\n\ncopy_if_found () {\n  local name=\"$1\"\n  # Common locations: SPM artifacts, Pods, or vendor folder\n  CANDIDATES=$(find \"${SRCROOT}\" \\\n    \"${BUILD_DIR}\" \\\n    \"${PROJECT_DIR}\" \\\n    -type d \\( -name \"${name}.dSYM\" -o -name \"${name}.framework.dSYM\" \\) 2>/dev/null | uniq)\n  if [ -n \"$CANDIDATES\" ]; then\n    echo \"Found dSYM(s) for ${name}:\"\n    echo \"$CANDIDATES\"\n    while IFS= read -r ds; do\n      rsync -a \"$ds\" \"$DEST\"\n    done <<< \"$CANDIDATES\"\n  else\n    echo \"WARNING: No dSYM found for ${name}\"\n  fi\n}\n\nfor N in \"${NAME_LIST[@]}\"; do copy_if_found \"$N\"; done\n";
 		};
 		BA554C8416CF2755D3F9AD08 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -19429,9 +19445,11 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal.SignalNSE";
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = org.homesteadheritage.signal.SignalNSE;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp.SignalNSE";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = "$(SIGNAL_BUNDLEID_PREFIX).hcp.SignalNSE";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = "$(SIGNAL_BUNDLEID_PREFIX)";
 				SKIP_INSTALL = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -19484,10 +19502,12 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal.SignalNSE";
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = org.homesteadheritage.signal.SignalNSE;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp.SignalNSE";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = "$(SIGNAL_BUNDLEID_PREFIX).hcp.SignalNSE";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = "$(SIGNAL_BUNDLEID_PREFIX)";
 				SKIP_INSTALL = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -19542,10 +19562,12 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal.SignalNSE";
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = org.homesteadheritage.signal.SignalNSE;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp.SignalNSE";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = "$(SIGNAL_BUNDLEID_PREFIX).hcp.SignalNSE";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = "$(SIGNAL_BUNDLEID_PREFIX)";
 				SKIP_INSTALL = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -19600,10 +19622,12 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal.SignalNSE";
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = org.homesteadheritage.signal.SignalNSE;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp.SignalNSE";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = "$(SIGNAL_BUNDLEID_PREFIX).hcp.SignalNSE";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = "$(SIGNAL_BUNDLEID_PREFIX)";
 				SKIP_INSTALL = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -19640,6 +19664,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 Signal Messenger, LLC";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -19648,8 +19673,10 @@
 				);
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++14";
-				PRODUCT_BUNDLE_IDENTIFIER = org.signal.SignalUI;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp.SignalUI";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = "$(SIGNAL_BUNDLEID_PREFIX)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -19706,6 +19733,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 Signal Messenger, LLC";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -19714,9 +19742,11 @@
 				);
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++14";
-				PRODUCT_BUNDLE_IDENTIFIER = org.signal.SignalUI;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp.SignalUI";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = iphoneos;
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = "$(SIGNAL_BUNDLEID_PREFIX)";
 				SKIP_INSTALL = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -19775,6 +19805,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 Signal Messenger, LLC";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -19783,9 +19814,11 @@
 				);
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++14";
-				PRODUCT_BUNDLE_IDENTIFIER = org.signal.SignalUI;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp.SignalUI";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = iphoneos;
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = "$(SIGNAL_BUNDLEID_PREFIX)";
 				SKIP_INSTALL = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -19844,6 +19877,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 Signal Messenger, LLC";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -19852,9 +19886,11 @@
 				);
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++14";
-				PRODUCT_BUNDLE_IDENTIFIER = org.signal.SignalUI;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp.SignalUI";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = iphoneos;
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = "$(SIGNAL_BUNDLEID_PREFIX)";
 				SKIP_INSTALL = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -19888,14 +19924,17 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 Signal Messenger, LLC";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = org.signal.SignalUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp.SignalUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = "$(SIGNAL_BUNDLEID_PREFIX)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -19944,15 +19983,18 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 Signal Messenger, LLC";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = org.signal.SignalUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp.SignalUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = "$(SIGNAL_BUNDLEID_PREFIX)";
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -20003,15 +20045,18 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 Signal Messenger, LLC";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = org.signal.SignalUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp.SignalUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = "$(SIGNAL_BUNDLEID_PREFIX)";
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -20062,15 +20107,18 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 Signal Messenger, LLC";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = org.signal.SignalUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp.SignalUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = "$(SIGNAL_BUNDLEID_PREFIX)";
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -20110,8 +20158,10 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal.shareextension";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp.shareextension";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = "$(SIGNAL_BUNDLEID_PREFIX)";
 				SKIP_INSTALL = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -20164,9 +20214,11 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal.shareextension";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp.shareextension";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = "$(SIGNAL_BUNDLEID_PREFIX)";
 				SKIP_INSTALL = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -20310,11 +20362,13 @@
 				);
 				LLVM_LTO = NO;
 				OTHER_LDFLAGS = "$(inherited)";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal";
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = org.homesteadheritage.signal;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = "$(SIGNAL_BUNDLEID_PREFIX).hcp";
 				PRODUCT_NAME = HCP;
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				SDKROOT = iphoneos;
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = brazosapps;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
 			};
@@ -20372,6 +20426,8 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = SignalTests;
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = "$(SIGNAL_BUNDLEID_PREFIX)";
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				TEST_HOST = "$(BUNDLE_LOADER)";
@@ -20425,9 +20481,11 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal.shareextension";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp.shareextension";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = "$(SIGNAL_BUNDLEID_PREFIX)";
 				SKIP_INSTALL = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -20567,11 +20625,13 @@
 				);
 				LLVM_LTO = NO;
 				OTHER_LDFLAGS = "$(inherited)";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal";
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = org.homesteadheritage.signal;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = "$(SIGNAL_BUNDLEID_PREFIX).hcp";
 				PRODUCT_NAME = HCP;
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				SDKROOT = iphoneos;
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = brazosapps;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
 			};
@@ -20583,7 +20643,9 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Signal.app/Signal";
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = JVP5CFJTCN;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				EXCLUDED_ARCHS = "";
 				FRAMEWORK_SEARCH_PATHS = (
@@ -20628,7 +20690,11 @@
 					"$(inherited)",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).${PRODUCT_NAME:rfc1034identifier}";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = "$(SIGNAL_BUNDLEID_PREFIX).${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = SignalTests;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = "$(SIGNAL_BUNDLEID_PREFIX)";
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				TEST_HOST = "$(BUNDLE_LOADER)";
@@ -20682,9 +20748,11 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal.shareextension";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp.shareextension";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = "$(SIGNAL_BUNDLEID_PREFIX)";
 				SKIP_INSTALL = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -20929,11 +20997,13 @@
 				);
 				LLVM_LTO = NO;
 				OTHER_LDFLAGS = "$(inherited)";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal";
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = org.homesteadheritage.signal;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = "$(SIGNAL_BUNDLEID_PREFIX).hcp";
 				PRODUCT_NAME = HCP;
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				SDKROOT = iphoneos;
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = brazosapps;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
@@ -20970,11 +21040,13 @@
 				);
 				LLVM_LTO = NO;
 				OTHER_LDFLAGS = "$(inherited)";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal";
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = org.homesteadheritage.signal;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = "$(SIGNAL_BUNDLEID_PREFIX).hcp";
 				PRODUCT_NAME = HCP;
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				SDKROOT = iphoneos;
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = brazosapps;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
 			};
@@ -21033,6 +21105,8 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = SignalTests;
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = "$(SIGNAL_BUNDLEID_PREFIX)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				TEST_HOST = "$(BUNDLE_LOADER)";
 				VALID_ARCHS = "arm64 armv7s armv7 i386 x86_64";
@@ -21091,6 +21165,8 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = SignalTests;
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = "$(SIGNAL_BUNDLEID_PREFIX)";
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				TEST_HOST = "$(BUNDLE_LOADER)";
@@ -21121,6 +21197,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "SignalServiceKit/SignalServiceKit-Prefix.pch";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 Signal Messenger, LLC";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -21130,8 +21207,10 @@
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++17";
 				OTHER_SWIFT_FLAGS = "$(inherited) -Wwarning DeprecatedDeclaration";
-				PRODUCT_BUNDLE_IDENTIFIER = org.signal.SignalServiceKit;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp.SignalServiceKit";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = "$(SIGNAL_BUNDLEID_PREFIX)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -21164,6 +21243,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "SignalServiceKit/SignalServiceKit-Prefix.pch";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 Signal Messenger, LLC";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -21173,9 +21253,11 @@
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++17";
 				OTHER_SWIFT_FLAGS = "$(inherited) -Wwarning DeprecatedDeclaration";
-				PRODUCT_BUNDLE_IDENTIFIER = org.signal.SignalServiceKit;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp.SignalServiceKit";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = iphoneos;
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = "$(SIGNAL_BUNDLEID_PREFIX)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_TREAT_WARNINGS_AS_ERRORS = NO;
@@ -21208,6 +21290,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "SignalServiceKit/SignalServiceKit-Prefix.pch";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 Signal Messenger, LLC";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -21217,9 +21300,11 @@
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++17";
 				OTHER_SWIFT_FLAGS = "$(inherited) -Wwarning DeprecatedDeclaration";
-				PRODUCT_BUNDLE_IDENTIFIER = org.signal.SignalServiceKit;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp.SignalServiceKit";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = iphoneos;
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = "$(SIGNAL_BUNDLEID_PREFIX)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_TREAT_WARNINGS_AS_ERRORS = NO;
@@ -21252,6 +21337,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "SignalServiceKit/SignalServiceKit-Prefix.pch";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 Signal Messenger, LLC";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -21261,9 +21347,11 @@
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++17";
 				OTHER_SWIFT_FLAGS = "$(inherited) -Wwarning DeprecatedDeclaration";
-				PRODUCT_BUNDLE_IDENTIFIER = org.signal.SignalServiceKit;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp.SignalServiceKit";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = iphoneos;
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = "$(SIGNAL_BUNDLEID_PREFIX)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_TREAT_WARNINGS_AS_ERRORS = NO;
@@ -21299,14 +21387,17 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 Signal Messenger, LLC";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = org.signal.SignalServiceKitTests;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp.SignalServiceKitTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = brazosapps;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -21358,15 +21449,18 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 Signal Messenger, LLC";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = org.signal.SignalServiceKitTests;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp.SignalServiceKitTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = brazosapps;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -21420,15 +21514,18 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 Signal Messenger, LLC";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = org.signal.SignalServiceKitTests;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp.SignalServiceKitTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = brazosapps;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -21482,15 +21579,18 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 Signal Messenger, LLC";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = org.signal.SignalServiceKitTests;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).hcp.SignalServiceKitTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SIGNAL_BUNDLEID_PREFIX = brazosapps;
+				SIGNAL_MERCHANTID = brazosapps;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";

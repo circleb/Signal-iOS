@@ -110,6 +110,7 @@ post_install do |installer|
   fix_ringrtc_project_symlink(installer)
   fetch_ringrtc
   copy_acknowledgements
+  configure_webrtc_dsym_generation(installer)
 end
 
 # Works around CocoaPods behavior designed for static libraries.
@@ -206,12 +207,14 @@ def strip_valid_archs(installer)
   end
 end
 
-#update_framework_scripts updates Pod-Signal-frameworks.sh to fix a bug in the .XCFramework->.framework
+#update_framework_scripts updates Pod-HCP-frameworks.sh to fix a bug in the .XCFramework->.framework
 #conversation process, by ensuring symlinks are properly respected in the XCFramework.
 #See https://github.com/CocoaPods/CocoaPods/issues/7587
 def update_frameworks_script(installer)
-    fw_script = File.read('Pods/Target Support Files/Pods-Signal/Pods-Signal-frameworks.sh')
-    fw_script_mod = fw_script.gsub('      lipo -remove "$arch" -output "$binary" "$binary"
+    fw_script_path = 'Pods/Target Support Files/Pods-HCP/Pods-HCP-frameworks.sh'
+    if File.exist?(fw_script_path)
+        fw_script = File.read(fw_script_path)
+        fw_script_mod = fw_script.gsub('      lipo -remove "$arch" -output "$binary" "$binary"
 ', '      realBinary="${binary}"
       if [ -L "${realBinary}" ]; then
         echo "Symlinked..."
@@ -219,7 +222,8 @@ def update_frameworks_script(installer)
         realBinary="${dirname}/$(readlink "${realBinary}")"
       fi
       lipo -remove "${arch}" -output "${realBinary}" "${realBinary}" || exit 1')
-    File.open('Pods/Target Support Files/Pods-Signal/Pods-Signal-frameworks.sh', "w") { |file| file << fw_script_mod }
+        File.open(fw_script_path, "w") { |file| file << fw_script_mod }
+    end
 end
 
 # Disable warnings on any Pod not currently being modified
@@ -277,16 +281,23 @@ def copy_acknowledgements
 
   def get_specifier_groups(acknowledgements_files)
     acknowledgements_files.map do |file|
-      extract_cmd = ['plutil', '-extract', 'PreferenceSpecifiers', 'json', '-o', '-', file]
+      next unless File.exist?(file)
+      
+      begin
+        extract_cmd = ['plutil', '-extract', 'PreferenceSpecifiers', 'json', '-o', '-', file]
 
-      io = IO.popen(extract_cmd, unsetenv_others: true, exception: true)
-      result = JSON.parse(io.read)
-      io.close
-      status = $?
-      raise status unless status.exitstatus == 0
+        io = IO.popen(extract_cmd, unsetenv_others: true, exception: true)
+        result = JSON.parse(io.read)
+        io.close
+        status = $?
+        next unless status.exitstatus == 0
 
-      result
-    end
+        result
+      rescue => e
+        puts "Warning: Could not process acknowledgements file #{file}: #{e.message}"
+        next
+      end
+    end.compact
   end
 
   def get_acknowledgements_specifiers(group)
@@ -382,4 +393,26 @@ def copy_acknowledgements
   final_specifiers = [header_specifier] + cleaned_acknowledgements_specifiers + [footer_specifier]
 
   write_output_file(final_specifiers)
+end
+
+# Configure WebRTC dSYM generation to handle missing dSYM files from XCFramework
+def configure_webrtc_dsym_generation(installer)
+  # Add a build phase to generate dSYM for WebRTC framework
+  installer.pods_project.targets.each do |target|
+    if target.name == 'HCP'
+      # Find the "Copy Bundle Resources" phase or create a new one
+      copy_phase = target.build_phases.find { |phase| phase.is_a?(Xcodeproj::Project::Object::PBXResourcesBuildPhase) }
+      
+      if copy_phase
+        # Add our dSYM generation script as a build phase
+        script_phase = target.new_shell_script_build_phase('Generate WebRTC dSYM')
+        script_phase.shell_script = '${PODS_ROOT}/../Scripts/generate_webrtc_dsym.sh'
+        script_phase.input_paths = ['${PODS_XCFRAMEWORKS_BUILD_DIR}/SignalRingRTC/WebRTC/WebRTC.framework']
+        script_phase.output_paths = ['${DWARF_DSYM_FOLDER_PATH}/WebRTC.framework.dSYM']
+        
+        # Move the script phase to run after the frameworks are copied
+        target.build_phases.insert(target.build_phases.index(copy_phase) + 1, script_phase)
+      end
+    end
+  end
 end
