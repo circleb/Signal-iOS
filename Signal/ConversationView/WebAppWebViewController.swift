@@ -452,7 +452,7 @@ extension WebAppWebViewController: WKNavigationDelegate {
 
     private func setupPinnedURLsButton() {
         let pinnedURLsButton = UIBarButtonItem(
-            image: UIImage(systemName: "bookmark"),
+            image: UIImage(systemName: "book"),
             style: .plain,
             target: self,
             action: #selector(pinnedURLsButtonTapped)
@@ -468,40 +468,34 @@ extension WebAppWebViewController: WKNavigationDelegate {
     }
 
     @objc private func pinnedURLsButtonTapped() {
-        showPinnedURLsDropdown()
+        showPinnedURLsHalfSheet()
     }
     
-    private func showPinnedURLsDropdown() {
+    private func showPinnedURLsHalfSheet() {
         let pinnedURLs = pinnedURLsService.getPinnedURLs(for: webApp)
-        
-        // Create action sheet with Bookmarks
-        let actionSheet = UIAlertController(title: "Bookmarks", message: nil, preferredStyle: .actionSheet)
-        
-        // Add "Add Current Page" as the first option
-        let addCurrentPageAction = UIAlertAction(title: "Add Current Page", style: .default) { [weak self] _ in
-            self?.showPinURLAlert()
-        }
-        actionSheet.addAction(addCurrentPageAction)
-        
-        // Add actions for each existing Bookmark
-        for pinnedURL in pinnedURLs {
-            let action = UIAlertAction(title: pinnedURL.title, style: .default) { [weak self] _ in
+        let halfSheetVC = PinnedURLsHalfSheetViewController(
+            pinnedURLs: pinnedURLs,
+            pinnedURLsService: pinnedURLsService,
+            onAddBookmark: { [weak self] in
+                self?.showPinURLAlert()
+            },
+            onSelectBookmark: { [weak self] pinnedURL in
                 self?.openPinnedURL(pinnedURL)
             }
-            actionSheet.addAction(action)
+        )
+        
+        let navigationController = UINavigationController(rootViewController: halfSheetVC)
+        
+        if let sheet = navigationController.sheetPresentationController {
+            sheet.detents = [UISheetPresentationController.Detent.medium(), UISheetPresentationController.Detent.large()]
+            sheet.prefersGrabberVisible = true
+            sheet.preferredCornerRadius = 20
         }
         
-        // Add cancel action
-        actionSheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        
-        // Present the action sheet
-        if let popover = actionSheet.popoverPresentationController {
-            // For iPad, set the source view to the bookmark button
-            popover.barButtonItem = navigationItem.rightBarButtonItems?.last
-        }
-        
-        present(actionSheet, animated: true)
+        present(navigationController, animated: true)
     }
+    
+
     
     private func openPinnedURL(_ pinnedURL: PinnedURL) {
         // Record access
@@ -513,6 +507,244 @@ extension WebAppWebViewController: WKNavigationDelegate {
         if let url = URL(string: pinnedURL.url) {
             loadSpecificURL(url)
         }
+    }
+}
+
+// MARK: - PinnedURLsHalfSheetViewController
+
+class PinnedURLsHalfSheetViewController: UIViewController {
+    private var pinnedURLs: [PinnedURL]
+    private let pinnedURLsService: PinnedURLsServiceProtocol
+    private let onAddBookmark: () -> Void
+    private let onSelectBookmark: (PinnedURL) -> Void
+    
+    private let tableView = UITableView()
+    private let addButton = UIButton(type: .system)
+    
+    init(
+        pinnedURLs: [PinnedURL],
+        pinnedURLsService: PinnedURLsServiceProtocol,
+        onAddBookmark: @escaping () -> Void,
+        onSelectBookmark: @escaping (PinnedURL) -> Void
+    ) {
+        self.pinnedURLs = pinnedURLs
+        self.pinnedURLsService = pinnedURLsService
+        self.onAddBookmark = onAddBookmark
+        self.onSelectBookmark = onSelectBookmark
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupUI()
+    }
+    
+    private func setupUI() {
+        view.backgroundColor = Theme.backgroundColor
+        
+        // Setup navigation bar
+        navigationItem.title = "Bookmarks"
+        navigationItem.leftBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .close,
+            target: self,
+            action: #selector(dismissTapped)
+        )
+        
+        // Setup add button
+        addButton.setTitle("Add Current Page", for: .normal)
+        addButton.setTitleColor(.ows_accentBlue, for: .normal)
+        addButton.titleLabel?.font = .preferredFont(forTextStyle: .body)
+        addButton.addTarget(self, action: #selector(addBookmarkTapped), for: .touchUpInside)
+        
+        // Setup table view
+        tableView.delegate = self
+        tableView.dataSource = self
+        tableView.register(PinnedURLCompactCell.self, forCellReuseIdentifier: "PinnedURLCompactCell")
+        tableView.backgroundColor = .clear
+        tableView.separatorStyle = .singleLine
+        tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        
+        // Layout
+        view.addSubview(addButton)
+        view.addSubview(tableView)
+        
+        addButton.autoPinEdge(.top, to: .top, of: view, withOffset: 60)
+        addButton.autoPinEdge(.leading, to: .leading, of: view, withOffset: 16)
+        addButton.autoPinEdge(.trailing, to: .trailing, of: view, withOffset: -16)
+        
+        tableView.autoPinEdge(.top, to: .bottom, of: addButton, withOffset: 16)
+        tableView.autoPinEdge(.leading, to: .leading, of: view)
+        tableView.autoPinEdge(.trailing, to: .trailing, of: view)
+        tableView.autoPinEdge(.bottom, to: .bottom, of: view)
+    }
+    
+    @objc private func dismissTapped() {
+        dismiss(animated: true)
+    }
+    
+    @objc private func addBookmarkTapped() {
+        dismiss(animated: true) {
+            self.onAddBookmark()
+        }
+    }
+}
+
+// MARK: - UITableViewDataSource
+
+extension PinnedURLsHalfSheetViewController: UITableViewDataSource {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return pinnedURLs.count
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "PinnedURLCompactCell", for: indexPath) as! PinnedURLCompactCell
+        let pinnedURL = pinnedURLs[indexPath.row]
+        cell.configure(with: pinnedURL)
+        return cell
+    }
+}
+
+// MARK: - UITableViewDelegate
+
+extension PinnedURLsHalfSheetViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        let pinnedURL = pinnedURLs[indexPath.row]
+        dismiss(animated: true) {
+            self.onSelectBookmark(pinnedURL)
+        }
+    }
+    
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete {
+            let pinnedURL = pinnedURLs[indexPath.row]
+            deleteBookmark(pinnedURL, at: indexPath)
+        }
+    }
+    
+    private func deleteBookmark(_ pinnedURL: PinnedURL, at indexPath: IndexPath) {
+        Task {
+            do {
+                try await pinnedURLsService.unpinURL(pinnedURL.id)
+                
+                DispatchQueue.main.async {
+                    // Remove from data source and update UI
+                    self.pinnedURLs.remove(at: indexPath.row)
+                    
+                    // Update the table view
+                    self.tableView.deleteRows(at: [indexPath], with: .fade)
+                    
+                    // Show success feedback
+                    self.showDeleteSuccessToast()
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self.showDeleteErrorAlert(error)
+                }
+            }
+        }
+    }
+    
+    private func showDeleteSuccessToast() {
+        let toastController = ToastController(text: "Bookmark deleted")
+        toastController.presentToastView(
+            from: .bottom,
+            of: self.view,
+            inset: 40
+        )
+    }
+    
+    private func showDeleteErrorAlert(_ error: Error) {
+        let alert = UIAlertController(
+            title: "Error",
+            message: "Failed to delete bookmark: \(error.localizedDescription)",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+}
+
+// MARK: - PinnedURLCompactCell
+
+class PinnedURLCompactCell: UITableViewCell {
+    private let titleLabel = UILabel()
+    private let urlLabel = UILabel()
+    private let iconImageView = UIImageView()
+    
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        setupUI()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func setupUI() {
+        backgroundColor = .clear
+        selectionStyle = .default
+        
+        // Setup icon
+        iconImageView.contentMode = .scaleAspectFit
+        iconImageView.tintColor = .ows_accentBlue
+        
+        // Setup title label
+        titleLabel.font = .preferredFont(forTextStyle: .body)
+        titleLabel.textColor = Theme.primaryTextColor
+        titleLabel.numberOfLines = 1
+        
+        // Setup URL label
+        urlLabel.font = .preferredFont(forTextStyle: .caption1)
+        urlLabel.textColor = Theme.secondaryTextAndIconColor
+        urlLabel.numberOfLines = 1
+        
+        // Layout
+        contentView.addSubview(iconImageView)
+        contentView.addSubview(titleLabel)
+        contentView.addSubview(urlLabel)
+        
+        iconImageView.autoSetDimensions(to: CGSize(width: 20, height: 20))
+        iconImageView.autoPinEdge(.leading, to: .leading, of: contentView, withOffset: 16)
+        iconImageView.autoAlignAxis(.horizontal, toSameAxisOf: contentView)
+        
+        titleLabel.autoPinEdge(.leading, to: .trailing, of: iconImageView, withOffset: 12)
+        titleLabel.autoPinEdge(.trailing, to: .trailing, of: contentView, withOffset: -16)
+        titleLabel.autoPinEdge(.top, to: .top, of: contentView, withOffset: 8)
+        
+        urlLabel.autoPinEdge(.leading, to: .leading, of: titleLabel)
+        urlLabel.autoPinEdge(.trailing, to: .trailing, of: titleLabel)
+        urlLabel.autoPinEdge(.top, to: .bottom, of: titleLabel, withOffset: 2)
+        urlLabel.autoPinEdge(.bottom, to: .bottom, of: contentView, withOffset: -8)
+    }
+    
+    func configure(with pinnedURL: PinnedURL) {
+        titleLabel.text = pinnedURL.title
+        
+        // Format URL for display
+        if let url = URL(string: pinnedURL.url) {
+            urlLabel.text = url.host ?? pinnedURL.url
+        } else {
+            urlLabel.text = pinnedURL.url
+        }
+        
+        // Set icon
+        if let iconName = pinnedURL.icon {
+            iconImageView.image = UIImage(systemName: iconName)
+        } else {
+            iconImageView.image = UIImage(systemName: "link")
+        }
+    }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        titleLabel.text = nil
+        urlLabel.text = nil
+        iconImageView.image = nil
     }
 }
 
