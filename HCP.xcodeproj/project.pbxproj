@@ -14922,7 +14922,6 @@
 				453518771FC635DD00210559 /* Embed Foundation Extensions */,
 				4535189F1FC63DBF00210559 /* Embed Frameworks */,
 				71D9A11BAC977B7A24A418F9 /* [CP] Embed Pods Frameworks */,
-				B55908582E518AAF002835CD /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -16508,23 +16507,6 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SignalTests/Pods-SignalTests-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
-		};
-		B55908582E518AAF002835CD /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nset -euo pipefail\n\nNAME_LIST=(\"WebRTC\")  # add more names if needed\nDEST=\"${DWARF_DSYM_FOLDER_PATH}\"\n\necho \"Copying third-party dSYMs to: $DEST\"\n\ncopy_if_found () {\n  local name=\"$1\"\n  # Common locations: SPM artifacts, Pods, or vendor folder\n  CANDIDATES=$(find \"${SRCROOT}\" \\\n    \"${BUILD_DIR}\" \\\n    \"${PROJECT_DIR}\" \\\n    -type d \\( -name \"${name}.dSYM\" -o -name \"${name}.framework.dSYM\" \\) 2>/dev/null | uniq)\n  if [ -n \"$CANDIDATES\" ]; then\n    echo \"Found dSYM(s) for ${name}:\"\n    echo \"$CANDIDATES\"\n    while IFS= read -r ds; do\n      rsync -a \"$ds\" \"$DEST\"\n    done <<< \"$CANDIDATES\"\n  else\n    echo \"WARNING: No dSYM found for ${name}\"\n  fi\n}\n\nfor N in \"${NAME_LIST[@]}\"; do copy_if_found \"$N\"; done\n";
 		};
 		BA554C8416CF2755D3F9AD08 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -20978,7 +20960,7 @@
 				CODE_SIGN_ENTITLEMENTS = Signal/Signal.entitlements;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
-				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = JVP5CFJTCN;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
