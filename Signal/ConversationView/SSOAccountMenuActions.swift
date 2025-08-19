@@ -117,6 +117,9 @@ class SSOAccountMenuActions {
         
         presentingViewController.present(loadingAlert, animated: true)
         
+        // Clear web app cookies before signing out
+        WebAppWebViewController.clearAllCookies()
+        
         // Perform sign out
         ssoService.signOut()
             .done { [weak self] in

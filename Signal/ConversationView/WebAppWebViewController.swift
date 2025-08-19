@@ -14,6 +14,7 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
     private let webAppsService: WebAppsServiceProtocol
     private let userInfoStore: SSOUserInfoStore
     private let webView = WKWebView()
+    private static var restoredCookies = false
     private let progressView = UIProgressView()
     private let loadingIndicator = UIActivityIndicatorView(style: .large)
     private var isLoadingBlockedMessage = false
@@ -77,6 +78,13 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
         setupUI()
         setupWebView()
         setupPinningButtons()
+        
+        // Restore cookies if not already done
+        if !WebAppWebViewController.restoredCookies {
+            restoreCookies()
+            WebAppWebViewController.restoredCookies = true
+        }
+        
         loadWebApp()
     }
 
@@ -164,6 +172,65 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
         webView.load(request)
     }
     
+    private func saveCookies() {
+        let dataStore = WKWebsiteDataStore.default()
+        dataStore.httpCookieStore.getAllCookies { cookies in
+            let cookiesData = cookies.map { cookie in
+                return [
+                    "name": cookie.name,
+                    "value": cookie.value,
+                    "domain": cookie.domain,
+                    "path": cookie.path,
+                    "secure": cookie.isSecure,
+                    "expiresDate": cookie.expiresDate ?? Date.distantFuture
+                ] as [String : Any]
+            }
+            UserDefaults.standard.set(cookiesData, forKey: "webapp_cookies")
+            Logger.info("Saved \(cookies.count) cookies to UserDefaults")
+        }
+    }
+    
+    private func restoreCookies() {
+        let dataStore = WKWebsiteDataStore.default()
+        if let cookiesData = UserDefaults.standard.array(forKey: "webapp_cookies") as? [[String: Any]] {
+            for cookieData in cookiesData {
+                if let cookie = HTTPCookie(properties: [
+                    .name: cookieData["name"]!,
+                    .value: cookieData["value"]!,
+                    .domain: cookieData["domain"]!,
+                    .path: cookieData["path"]!,
+                    .secure: cookieData["secure"]!,
+                    .expires: cookieData["expiresDate"]!
+                ]) {
+                    dataStore.httpCookieStore.setCookie(cookie, completionHandler: nil)
+                }
+            }
+            Logger.info("Restored \(cookiesData.count) cookies from UserDefaults")
+        }
+    }
+    
+    // Static method to clear cookies when user signs out
+    static func clearAllCookies() {
+        // Remove saved cookies from UserDefaults
+        UserDefaults.standard.removeObject(forKey: "webapp_cookies")
+        
+        // Clear cookies from WKWebsiteDataStore
+        let dataStore = WKWebsiteDataStore.default()
+        dataStore.httpCookieStore.getAllCookies { cookies in
+            for cookie in cookies {
+                dataStore.httpCookieStore.delete(cookie) {
+                    Logger.info("Deleted cookie: \(cookie.name) for domain: \(cookie.domain)")
+                }
+            }
+            Logger.info("Cleared \(cookies.count) cookies from WKWebsiteDataStore")
+        }
+        
+        // Reset the restored cookies flag
+        restoredCookies = false
+        
+        Logger.info("Cleared all saved cookies and reset restoration flag")
+    }
+    
     private func setupPinningButtons() {
         // Only show pinning buttons for real webapps, not Bookmarks
         if webApp.type != "bookmark" {
@@ -225,6 +292,9 @@ extension WebAppWebViewController: WKNavigationDelegate {
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         loadingIndicator.stopAnimating()
         isLoadingBlockedMessage = false
+        
+        // Save cookies after each page load
+        saveCookies()
     }
 
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
