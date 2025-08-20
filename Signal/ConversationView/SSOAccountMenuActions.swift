@@ -32,6 +32,9 @@ class SSOAccountMenuActions {
         // Account Management
         actions.append(createAccountManagementAction())
         
+        // Feature Request
+        actions.append(createFeatureRequestAction()) // TODO: Uncomment when SSOFeatureRequestViewController is added to project
+        
         // Sign Out
         actions.append(createSignOutAction())
         
@@ -68,6 +71,16 @@ class SSOAccountMenuActions {
         )
     }
     
+    private func createFeatureRequestAction() -> UIAction {
+        return UIAction(
+            title: "Feature Request",
+            image: UIImage(systemName: "lightbulb.max"),
+            handler: { [weak self] _ in
+                self?.handleFeatureRequest()
+            }
+        )
+    }
+    
     private func createSignOutAction() -> UIAction {
         return UIAction(
             title: "Sign Out",
@@ -84,6 +97,15 @@ class SSOAccountMenuActions {
         
         let accountWebVC = SSOAccountWebViewController()
         let navController = UINavigationController(rootViewController: accountWebVC)
+        navController.modalPresentationStyle = .fullScreen
+        presentingViewController.present(navController, animated: true)
+    }
+    
+    private func handleFeatureRequest() {
+        guard let presentingViewController = presentingViewController else { return }
+        
+        let featureRequestVC = SSOFeatureRequestViewController()
+        let navController = UINavigationController(rootViewController: featureRequestVC)
         navController.modalPresentationStyle = .fullScreen
         presentingViewController.present(navController, animated: true)
     }

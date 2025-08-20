@@ -1684,6 +1684,7 @@
 		B5F0374A2E4EF51B00F529AF /* PinnedURLSectionHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F037482E4EF51B00F529AF /* PinnedURLSectionHeaderView.swift */; };
 		B5F0374B2E4EF51B00F529AF /* PinnedURLCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F037472E4EF51B00F529AF /* PinnedURLCell.swift */; };
 		B5F0374C2E4EF51B00F529AF /* PinnedURLsListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F037492E4EF51B00F529AF /* PinnedURLsListViewController.swift */; };
+		B5F1D1C32E551912007FA412 /* SSOFeatureRequestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F1D1C22E551912007FA412 /* SSOFeatureRequestViewController.swift */; };
 		B60EDE041A05A01700D73516 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B60EDE031A05A01700D73516 /* AudioToolbox.framework */; };
 		B66DBF4A19D5BBC8006EA940 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B66DBF4919D5BBC8006EA940 /* Images.xcassets */; };
 		B69CD25119773E79005CE69A /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B69CD25019773E79005CE69A /* XCTest.framework */; };
@@ -5651,6 +5652,7 @@
 		B5F037472E4EF51B00F529AF /* PinnedURLCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedURLCell.swift; sourceTree = "<group>"; };
 		B5F037482E4EF51B00F529AF /* PinnedURLSectionHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedURLSectionHeaderView.swift; sourceTree = "<group>"; };
 		B5F037492E4EF51B00F529AF /* PinnedURLsListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedURLsListViewController.swift; sourceTree = "<group>"; };
+		B5F1D1C22E551912007FA412 /* SSOFeatureRequestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOFeatureRequestViewController.swift; sourceTree = "<group>"; };
 		B60EDE031A05A01700D73516 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		B634CBB31AB10D2300C49B99 /* hr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = hr; path = translations/hr.lproj/Localizable.strings; sourceTree = "<group>"; };
 		B634CBB51AB10D5400C49B99 /* ro */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ro; path = translations/ro.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -8145,6 +8147,7 @@
 		3448BFC01EDF0EA7005B2D69 /* ConversationView */ = {
 			isa = PBXGroup;
 			children = (
+				B5F1D1C22E551912007FA412 /* SSOFeatureRequestViewController.swift */,
 				B5B8943C2E4FA7C900472CA9 /* SSOAccountMenuActions.swift */,
 				B5B8943D2E4FA7C900472CA9 /* SSOAccountWebViewController.swift */,
 				B5B8943E2E4FA7C900472CA9 /* SSOAvatarView.swift */,
@@ -16886,6 +16889,7 @@
 				450B0FC929FB301700B9A458 /* AudioMessageView.swift in Sources */,
 				45A1684D2A1C308800C2432D /* AudioPresentation.swift in Sources */,
 				D9E43C122CC194140001536E /* AudioSession+WebRTC.swift in Sources */,
+				B5F1D1C32E551912007FA412 /* SSOFeatureRequestViewController.swift in Sources */,
 				D9E43C132CC194140001536E /* AudioSource.swift in Sources */,
 				8813F6E12330082900ADEC6A /* AudioWaveformProgressView.swift in Sources */,
 				50B6BCB12AEC4F4D0010FB3B /* AuthorMergeHelperBuilder.swift in Sources */,
