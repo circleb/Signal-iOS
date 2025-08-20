@@ -254,12 +254,14 @@ public class WebAppsService: WebAppsServiceProtocol {
     public func filterWebAppsByRole(_ apps: [WebApp], userRoles: [String]) -> [WebApp] {
         return apps.filter { app in
             // If no kcRole is specified, the app is accessible to everyone
-            guard let requiredRole = app.kcRole else {
+            guard let requiredRoles = app.kcRole else {
                 return true
             }
             
-            // Check if user has the required role
-            return userRoles.contains(requiredRole)
+            // Check if user has at least one of the required roles
+            return requiredRoles.contains { requiredRole in
+                userRoles.contains(requiredRole)
+            }
         }
     }
     

@@ -150,10 +150,14 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
 
     private func loadWebApp() {
         // Check if user has required role for this webapp
-        if let requiredRole = webApp.kcRole {
+        if let requiredRoles = webApp.kcRole {
             let userRoles = userInfoStore.getUserRoles()
-            if !userRoles.contains(requiredRole) {
-                showAccessDeniedError(requiredRole: requiredRole)
+            // User needs to have at least one of the required roles
+            let hasRequiredRole = requiredRoles.contains { requiredRole in
+                userRoles.contains(requiredRole)
+            }
+            if !hasRequiredRole {
+                showAccessDeniedError(requiredRoles: requiredRoles)
                 return
             }
         }
@@ -238,10 +242,11 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
         }
     }
     
-    private func showAccessDeniedError(requiredRole: String) {
+    private func showAccessDeniedError(requiredRoles: [String]) {
+        let rolesText = requiredRoles.joined(separator: ", ")
         let alert = UIAlertController(
             title: "Access Denied",
-            message: "You need the '\(requiredRole)' role to access this application.",
+            message: "You need one of the following roles to access this application: \(rolesText)",
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
