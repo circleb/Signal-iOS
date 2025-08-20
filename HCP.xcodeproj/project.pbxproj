@@ -1640,7 +1640,6 @@
 		B524D3962E430639004B1E4D /* WebAppWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3912E430639004B1E4D /* WebAppWebViewController.swift */; };
 		B5B894402E4FA7C900472CA9 /* SSOAvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5B8943E2E4FA7C900472CA9 /* SSOAvatarView.swift */; };
 		B5B894412E4FA7C900472CA9 /* SSOAccountMenuActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5B8943C2E4FA7C900472CA9 /* SSOAccountMenuActions.swift */; };
-		B5B894432E4FA7C900472CA9 /* SSOAccountWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5B8943D2E4FA7C900472CA9 /* SSOAccountWebViewController.swift */; };
 		B5D17C732E42711B00799EBD /* SSOAuthenticationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C712E42711B00799EBD /* SSOAuthenticationViewController.swift */; };
 		B5D17C742E42711B00799EBD /* SSORegistrationSplashViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C722E42711B00799EBD /* SSORegistrationSplashViewController.swift */; };
 		B5D17C852E4273B800799EBD /* SSOUserInfoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C832E4273B800799EBD /* SSOUserInfoStore.swift */; };
@@ -1684,7 +1683,7 @@
 		B5F0374A2E4EF51B00F529AF /* PinnedURLSectionHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F037482E4EF51B00F529AF /* PinnedURLSectionHeaderView.swift */; };
 		B5F0374B2E4EF51B00F529AF /* PinnedURLCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F037472E4EF51B00F529AF /* PinnedURLCell.swift */; };
 		B5F0374C2E4EF51B00F529AF /* PinnedURLsListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F037492E4EF51B00F529AF /* PinnedURLsListViewController.swift */; };
-		B5F1D1C32E551912007FA412 /* SSOFeatureRequestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F1D1C22E551912007FA412 /* SSOFeatureRequestViewController.swift */; };
+		B5F1D1C52E56232F007FA412 /* SSOWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F1D1C42E56232F007FA412 /* SSOWebViewController.swift */; };
 		B60EDE041A05A01700D73516 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B60EDE031A05A01700D73516 /* AudioToolbox.framework */; };
 		B66DBF4A19D5BBC8006EA940 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B66DBF4919D5BBC8006EA940 /* Images.xcassets */; };
 		B69CD25119773E79005CE69A /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B69CD25019773E79005CE69A /* XCTest.framework */; };
@@ -5607,7 +5606,6 @@
 		B524D3902E430639004B1E4D /* WebAppsListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppsListViewController.swift; sourceTree = "<group>"; };
 		B524D3912E430639004B1E4D /* WebAppWebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppWebViewController.swift; sourceTree = "<group>"; };
 		B5B8943C2E4FA7C900472CA9 /* SSOAccountMenuActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAccountMenuActions.swift; sourceTree = "<group>"; };
-		B5B8943D2E4FA7C900472CA9 /* SSOAccountWebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAccountWebViewController.swift; sourceTree = "<group>"; };
 		B5B8943E2E4FA7C900472CA9 /* SSOAvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAvatarView.swift; sourceTree = "<group>"; };
 		B5D17C712E42711B00799EBD /* SSOAuthenticationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAuthenticationViewController.swift; sourceTree = "<group>"; };
 		B5D17C722E42711B00799EBD /* SSORegistrationSplashViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSORegistrationSplashViewController.swift; sourceTree = "<group>"; };
@@ -5652,7 +5650,7 @@
 		B5F037472E4EF51B00F529AF /* PinnedURLCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedURLCell.swift; sourceTree = "<group>"; };
 		B5F037482E4EF51B00F529AF /* PinnedURLSectionHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedURLSectionHeaderView.swift; sourceTree = "<group>"; };
 		B5F037492E4EF51B00F529AF /* PinnedURLsListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedURLsListViewController.swift; sourceTree = "<group>"; };
-		B5F1D1C22E551912007FA412 /* SSOFeatureRequestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOFeatureRequestViewController.swift; sourceTree = "<group>"; };
+		B5F1D1C42E56232F007FA412 /* SSOWebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOWebViewController.swift; sourceTree = "<group>"; };
 		B60EDE031A05A01700D73516 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		B634CBB31AB10D2300C49B99 /* hr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = hr; path = translations/hr.lproj/Localizable.strings; sourceTree = "<group>"; };
 		B634CBB51AB10D5400C49B99 /* ro */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ro; path = translations/ro.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -8147,9 +8145,8 @@
 		3448BFC01EDF0EA7005B2D69 /* ConversationView */ = {
 			isa = PBXGroup;
 			children = (
-				B5F1D1C22E551912007FA412 /* SSOFeatureRequestViewController.swift */,
+				B5F1D1C42E56232F007FA412 /* SSOWebViewController.swift */,
 				B5B8943C2E4FA7C900472CA9 /* SSOAccountMenuActions.swift */,
-				B5B8943D2E4FA7C900472CA9 /* SSOAccountWebViewController.swift */,
 				B5B8943E2E4FA7C900472CA9 /* SSOAvatarView.swift */,
 				B5F037472E4EF51B00F529AF /* PinnedURLCell.swift */,
 				B5F037482E4EF51B00F529AF /* PinnedURLSectionHeaderView.swift */,
@@ -16889,7 +16886,6 @@
 				450B0FC929FB301700B9A458 /* AudioMessageView.swift in Sources */,
 				45A1684D2A1C308800C2432D /* AudioPresentation.swift in Sources */,
 				D9E43C122CC194140001536E /* AudioSession+WebRTC.swift in Sources */,
-				B5F1D1C32E551912007FA412 /* SSOFeatureRequestViewController.swift in Sources */,
 				D9E43C132CC194140001536E /* AudioSource.swift in Sources */,
 				8813F6E12330082900ADEC6A /* AudioWaveformProgressView.swift in Sources */,
 				50B6BCB12AEC4F4D0010FB3B /* AuthorMergeHelperBuilder.swift in Sources */,
@@ -16978,7 +16974,6 @@
 				D9E43C1D2CC194140001536E /* CallRecordLoader.swift in Sources */,
 				B5B894402E4FA7C900472CA9 /* SSOAvatarView.swift in Sources */,
 				B5B894412E4FA7C900472CA9 /* SSOAccountMenuActions.swift in Sources */,
-				B5B894432E4FA7C900472CA9 /* SSOAccountWebViewController.swift in Sources */,
 				D9E43C1E2CC194140001536E /* CallService.swift in Sources */,
 				D9E43C1F2CC194140001536E /* CallServiceState.swift in Sources */,
 				D9E43BF72CC194140001536E /* CallsListViewController+Strings.swift in Sources */,
@@ -17071,6 +17066,7 @@
 				4CD675C522E7CF22008010D2 /* ConversationViewController+OWS.swift in Sources */,
 				88FE237E249C22080041670F /* ConversationViewController+Scroll.swift in Sources */,
 				3426A36A255D9D7C0036407F /* ConversationViewController+Selection.swift in Sources */,
+				B5F1D1C52E56232F007FA412 /* SSOWebViewController.swift in Sources */,
 				D95DA7ED28B560D1003996BA /* ConversationViewController+SystemMessageItems.swift in Sources */,
 				34A4D88B26795AF800A794E7 /* ConversationViewController+UI.swift in Sources */,
 				34A4D8892679296600A794E7 /* ConversationViewController+UIScrollView.swift in Sources */,

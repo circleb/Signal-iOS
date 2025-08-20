@@ -93,20 +93,25 @@ class SSOAccountMenuActions {
     }
     
     private func handleAccountManagement() {
-        guard let presentingViewController = presentingViewController else { return }
-        
-        let accountWebVC = SSOAccountWebViewController()
-        let navController = UINavigationController(rootViewController: accountWebVC)
-        navController.modalPresentationStyle = .fullScreen
-        presentingViewController.present(navController, animated: true)
+        presentSSOURL(
+            url: URL(string: "https://my.homesteadheritage.org/profile")!,
+            title: "Account Management"
+        )
     }
     
     private func handleFeatureRequest() {
+        presentSSOURL(
+            url: URL(string: "https://my.homesteadheritage.org/feature-request")!,
+            title: "Feature Request"
+        )
+    }
+    
+    private func presentSSOURL(url: URL, title: String) {
         guard let presentingViewController = presentingViewController else { return }
         
-        let featureRequestVC = SSOFeatureRequestViewController()
-        let navController = UINavigationController(rootViewController: featureRequestVC)
-        navController.modalPresentationStyle = .fullScreen
+        let webVC = SSOWebViewController(url: url, title: title)
+        let navController = UINavigationController(rootViewController: webVC)
+        navController.modalPresentationStyle = .pageSheet
         presentingViewController.present(navController, animated: true)
     }
     

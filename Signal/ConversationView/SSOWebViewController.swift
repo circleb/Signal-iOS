@@ -8,8 +8,10 @@ import WebKit
 import SignalServiceKit
 import SignalUI
 
-class SSOFeatureRequestViewController: OWSViewController {
+class SSOWebViewController: UIViewController {
     
+    private let url: URL
+    private let pageTitle: String
     private let userInfoStore: SSOUserInfoStore
     private let webView = WKWebView()
     private let progressView = UIProgressView(progressViewStyle: .default)
@@ -26,9 +28,11 @@ class SSOFeatureRequestViewController: OWSViewController {
         }
     }
     
-    init(userInfoStore: SSOUserInfoStore = SSOUserInfoStoreImpl()) {
+    init(url: URL, title: String, userInfoStore: SSOUserInfoStore = SSOUserInfoStoreImpl()) {
+        self.url = url
+        self.pageTitle = title
         self.userInfoStore = userInfoStore
-        super.init()
+        super.init(nibName: nil, bundle: nil)
     }
     
     required init?(coder: NSCoder) {
@@ -39,11 +43,11 @@ class SSOFeatureRequestViewController: OWSViewController {
         super.viewDidLoad()
         setupUI()
         setupWebView()
-        loadFeatureRequestPage()
+        loadURL()
     }
     
     private func setupUI() {
-        title = "Feature Request"
+        self.title = pageTitle
         view.backgroundColor = Theme.backgroundColor
         
         // Navigation bar setup
@@ -73,22 +77,16 @@ class SSOFeatureRequestViewController: OWSViewController {
         
         // Add progress observer
         webView.addObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress), options: .new, context: nil)
-        webView.customUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.3 Mobile/15E148 Safari/604.1 HCPApp/2.0 (HCP-FeatureRequest)"
+        webView.customUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.3 Mobile/15E148 Safari/604.1 HCPApp/2.0"
     }
     
-    private func loadFeatureRequestPage() {
+    private func loadURL() {
         guard let userInfo = userInfoStore.getUserInfo() else {
             showError("No SSO authentication found. Please sign in again.")
             return
         }
         
         let accessToken = userInfo.accessToken
-        
-        let urlString = "https://my.homesteadheritage.org/feature-request"
-        guard let url = URL(string: urlString) else {
-            showError("Invalid URL")
-            return
-        }
         
         var request = URLRequest(url: url)
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
@@ -130,7 +128,7 @@ class SSOFeatureRequestViewController: OWSViewController {
 
 // MARK: - WKNavigationDelegate
 
-extension SSOFeatureRequestViewController: WKNavigationDelegate {
+extension SSOWebViewController: WKNavigationDelegate {
     
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
         estimatedProgress = 0.0
@@ -151,7 +149,7 @@ extension SSOFeatureRequestViewController: WKNavigationDelegate {
     }
     
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-        // Allow all navigation for feature request page
+        // Allow all navigation
         decisionHandler(.allow)
     }
 }
