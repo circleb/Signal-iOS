@@ -18,10 +18,15 @@ class WebAppCell: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         setupUI()
+        setupThemeObserver()
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 
     private func setupUI() {
@@ -68,6 +73,27 @@ class WebAppCell: UITableViewCell {
         descriptionLabel.autoPinEdge(.leading, to: .leading, of: nameLabel)
         descriptionLabel.autoPinEdge(.top, to: .bottom, of: nameLabel, withOffset: 4)
         descriptionLabel.autoPinEdge(toSuperviewEdge: .bottom, withInset: 16)
+    }
+
+    private func setupThemeObserver() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(themeDidChange),
+            name: .themeDidChange,
+            object: nil
+        )
+    }
+
+    @objc
+    private func themeDidChange() {
+        applyTheme()
+    }
+
+    private func applyTheme() {
+        iconImageView.tintColor = Theme.primaryTextColor
+        nameLabel.textColor = Theme.primaryTextColor
+        descriptionLabel.textColor = Theme.secondaryTextAndIconColor
+        categoryLabel.textColor = .ows_accentBlue
     }
 
     func configure(with webApp: WebApp) {

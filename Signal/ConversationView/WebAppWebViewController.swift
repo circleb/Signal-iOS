@@ -9,7 +9,7 @@ import SignalUI
 import SignalServiceKit
 import PureLayout
 
-class WebAppWebViewController: UIViewController, OWSNavigationChildController {
+class WebAppWebViewController: UIViewController, OWSNavigationChildController, WKNavigationDelegate {
     private let webApp: WebApp
     private let webAppsService: WebAppsServiceProtocol
     private let userInfoStore: SSOUserInfoStore
@@ -24,7 +24,6 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
         return webAppsService.getPinnedURLsService()
     }
     
-
     init(webApp: WebApp, webAppsService: WebAppsServiceProtocol, userInfoStore: SSOUserInfoStore = SSOUserInfoStoreImpl()) {
         self.webApp = webApp
         self.webAppsService = webAppsService
@@ -68,11 +67,11 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
         // Load the specific URL instead of the webapp entry
         self.loadSpecificURL(url)
     }
-
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
@@ -87,10 +86,16 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
         
         loadWebApp()
     }
-
+    
     private func setupUI() {
-        view.backgroundColor = .white
-
+        view.backgroundColor = .systemBackground
+        
+        // Configure navigation bar for transparent background with blur
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithDefaultBackground() // gives you the system blur
+        navigationController?.navigationBar.standardAppearance = appearance
+        navigationController?.navigationBar.scrollEdgeAppearance = appearance
+        
         // Navigation bar setup with back, forward, and refresh buttons on the left
         let backButton = UIBarButtonItem(
             image: UIImage(systemName: "chevron.left"),
@@ -112,42 +117,51 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
             action: #selector(refreshWebApp)
         )
         
-        // Move buttons to left side and hide the navigation back button
-        navigationItem.leftBarButtonItems = [backButton, forwardButton, refreshButton]
+        // Add close button for sheet presentation
+        let closeButton = UIBarButtonItem(
+            image: UIImage(systemName: "xmark"),
+            style: .plain,
+            target: self,
+            action: #selector(closeButtonTapped)
+        )
+        
+        navigationItem.leftBarButtonItems = [closeButton, backButton, forwardButton]
+        navigationItem.rightBarButtonItem = refreshButton
         navigationItem.hidesBackButton = true
-
+        
         // Progress view
         progressView.progressTintColor = .ows_accentBlue
         progressView.trackTintColor = Theme.backgroundColor
-
+        
         // Loading indicator
         loadingIndicator.hidesWhenStopped = true
-
+        
         // Layout
         view.addSubview(webView)
         view.addSubview(progressView)
         view.addSubview(loadingIndicator)
-
-        webView.autoPinEdgesToSuperviewSafeArea()
-
-        progressView.autoPinEdge(.bottom, to: .bottom, of: webView)
+        
+        // Pin webview to superview edges to allow overflow behind navigation bar
+        webView.autoPinEdgesToSuperviewEdges()
+        
+        progressView.autoPinEdge(.top, to: .top, of: webView)
         progressView.autoPinWidthToSuperview()
         progressView.autoSetDimension(.height, toSize: 2)
-
+        
         loadingIndicator.autoCenterInSuperview()
     }
-
+    
     private func setupWebView() {
         webView.navigationDelegate = self
         webView.allowsBackForwardNavigationGestures = true
-
+        
         // Set custom user agent to identify Signal app web view
         webView.customUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.3 Mobile/15E148 Safari/604.1 HCPApp/2.0"
-
+        
         // Add progress observer
         webView.addObserver(self, forKeyPath: "estimatedProgress", options: .new, context: nil)
     }
-
+    
     private func loadWebApp() {
         // Check if user has required role for this webapp
         if let requiredRoles = webApp.kcRole {
@@ -166,7 +180,7 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
             showError(WebAppsError.invalidURL)
             return
         }
-
+        
         loadSpecificURL(url)
     }
     
@@ -250,11 +264,11 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
-            self.navigationController?.popViewController(animated: true)
+            self.dismiss(animated: true)
         })
         present(alert, animated: true)
     }
-
+    
     @objc private func refreshWebApp() {
         webView.reload()
     }
@@ -270,14 +284,18 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
             webView.goForward()
         }
     }
-
+    
+    @objc private func closeButtonTapped() {
+        dismiss(animated: true)
+    }
+    
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         if keyPath == "estimatedProgress" {
             progressView.progress = Float(webView.estimatedProgress)
             progressView.isHidden = webView.estimatedProgress == 1.0
         }
     }
-
+    
     private func showError(_ error: Error) {
         let alert = UIAlertController(
             title: "Error",
@@ -287,13 +305,15 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController {
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }
-
+    
     deinit {
         webView.removeObserver(self, forKeyPath: "estimatedProgress")
     }
 }
 
-extension WebAppWebViewController: WKNavigationDelegate {
+// MARK: - WKNavigationDelegate
+
+extension WebAppWebViewController {
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         loadingIndicator.stopAnimating()
         isLoadingBlockedMessage = false
@@ -301,12 +321,12 @@ extension WebAppWebViewController: WKNavigationDelegate {
         // Save cookies after each page load
         saveCookies()
     }
-
+    
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
         loadingIndicator.stopAnimating()
         showError(error)
     }
-
+    
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         guard let url = navigationAction.request.url else {
             decisionHandler(.allow)
@@ -463,12 +483,12 @@ extension WebAppWebViewController: WKNavigationDelegate {
     
     private func showPinURLAlert() {
         let alert = UIAlertController(title: "Add Bookmark", message: nil, preferredStyle: .alert)
-
+        
         alert.addTextField { textField in
             textField.placeholder = "Title for this bookmark"
             textField.text = self.webView.title ?? "Bookmark"
         }
-
+        
         let pinAction = UIAlertAction(title: "Save", style: .default) { [weak self] _ in
             guard let self = self,
                   let title = alert.textFields?[0].text,
@@ -476,9 +496,9 @@ extension WebAppWebViewController: WKNavigationDelegate {
                   let currentURL = self.webView.url?.absoluteString else {
                 return
             }
-
+            
             let icon = "link"
-
+            
             Task {
                 do {
                     try await self.pinnedURLsService.pinURL(
@@ -487,7 +507,7 @@ extension WebAppWebViewController: WKNavigationDelegate {
                         webApp: self.webApp,
                         icon: icon
                     )
-
+                    
                     DispatchQueue.main.async {
                         self.showPinSuccessAlert()
                     }
@@ -498,15 +518,15 @@ extension WebAppWebViewController: WKNavigationDelegate {
                 }
             }
         }
-
+        
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
-
+        
         alert.addAction(pinAction)
         alert.addAction(cancelAction)
-
+        
         present(alert, animated: true)
     }
-
+    
     private func showPinSuccessAlert() {
         let alert = UIAlertController(
             title: "URL Bookmark",
@@ -516,7 +536,7 @@ extension WebAppWebViewController: WKNavigationDelegate {
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }
-
+    
     private func showPinErrorAlert(_ error: Error) {
         let alert = UIAlertController(
             title: "Error",
@@ -526,7 +546,7 @@ extension WebAppWebViewController: WKNavigationDelegate {
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }
-
+    
     private func setupPinnedURLsButton() {
         let pinnedURLsButton = UIBarButtonItem(
             image: UIImage(systemName: "book"),
@@ -534,16 +554,16 @@ extension WebAppWebViewController: WKNavigationDelegate {
             target: self,
             action: #selector(pinnedURLsButtonTapped)
         )
-
-        // Add to right side of navigation bar (next to pin button)
+        
+        // Add to right side of navigation bar (next to close button)
         if var rightBarButtonItems = navigationItem.rightBarButtonItems {
-            rightBarButtonItems.append(pinnedURLsButton)
+            rightBarButtonItems.insert(pinnedURLsButton, at: 0) // Insert before close button
             navigationItem.rightBarButtonItems = rightBarButtonItems
         } else {
             navigationItem.rightBarButtonItem = pinnedURLsButton
         }
     }
-
+    
     @objc private func pinnedURLsButtonTapped() {
         showPinnedURLsHalfSheet()
     }
@@ -571,8 +591,6 @@ extension WebAppWebViewController: WKNavigationDelegate {
         
         present(navigationController, animated: true)
     }
-    
-
     
     private func openPinnedURL(_ pinnedURL: PinnedURL) {
         // Record access

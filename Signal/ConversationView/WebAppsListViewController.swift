@@ -333,7 +333,17 @@ extension WebAppsListViewController: UITableViewDataSource, UITableViewDelegate 
 
         let webApp = filteredCategories[indexPath.section].apps[indexPath.row]
         let webVC = WebAppWebViewController(webApp: webApp, webAppsService: webAppsService, userInfoStore: userInfoStore)
-        navigationController?.pushViewController(webVC, animated: true)
+        
+        // Present as a sheet that slides up from the bottom
+        let navigationController = UINavigationController(rootViewController: webVC)
+        
+        if let sheet = navigationController.sheetPresentationController {
+            sheet.detents = [.large()]
+            sheet.prefersGrabberVisible = true
+            sheet.preferredCornerRadius = 20
+        }
+        
+        present(navigationController, animated: true)
     }
 }
 

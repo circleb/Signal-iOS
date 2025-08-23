@@ -14,10 +14,34 @@ class WebAppCategoryHeaderView: UITableViewHeaderFooterView {
     override init(reuseIdentifier: String?) {
         super.init(reuseIdentifier: reuseIdentifier)
         setupUI()
+        setupThemeObserver()
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    private func setupThemeObserver() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(themeDidChange),
+            name: .themeDidChange,
+            object: nil
+        )
+    }
+
+    @objc
+    private func themeDidChange() {
+        applyTheme()
+    }
+
+    private func applyTheme() {
+        titleLabel.textColor = Theme.primaryTextColor
+        backgroundView?.backgroundColor = Theme.backgroundColor
     }
 
     private func setupUI() {
