@@ -8,6 +8,7 @@ import WebKit
 import SignalUI
 import SignalServiceKit
 import PureLayout
+import SwiftUI
 
 class WebAppWebViewController: UIViewController, OWSNavigationChildController, WKNavigationDelegate {
     private let webApp: WebApp
@@ -18,6 +19,7 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController, W
     private let progressView = UIProgressView()
     private let loadingIndicator = UIActivityIndicatorView(style: .large)
     private var isLoadingBlockedMessage = false
+    private var blockedURL: String?
     
     // Pinning functionality
     private var pinnedURLsService: PinnedURLsServiceProtocol {
@@ -355,6 +357,7 @@ extension WebAppWebViewController {
             Logger.warn("🌐 Navigation Type: \(navigationAction.navigationType.rawValue)")
             Logger.warn("📱 Target Frame: \(navigationAction.targetFrame?.isMainFrame ?? false ? "Main Frame" : "Sub Frame")")
             
+            blockedURL = url.absoluteString
             isLoadingBlockedMessage = true
             showBlockedMessage()
             decisionHandler(.cancel)
@@ -410,68 +413,75 @@ extension WebAppWebViewController {
     }
     
     private func showBlockedMessage() {
-        let blockedHTML = """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <style>
-                body {
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                    background-color: #f8f9fa;
-                    margin: 0;
-                    padding: 20px;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    min-height: 100vh;
-                }
-                .blocked-container {
-                    background: white;
-                    border-radius: 12px;
-                    padding: 40px;
-                    text-align: center;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                    max-width: 400px;
-                }
-                .blocked-icon {
-                    font-size: 48px;
-                    margin-bottom: 20px;
-                }
-                .blocked-title {
-                    font-size: 24px;
-                    font-weight: 600;
-                    color: #dc3545;
-                    margin-bottom: 12px;
-                }
-                .blocked-message {
-                    font-size: 16px;
-                    color: #6c757d;
-                    line-height: 1.5;
-                    margin-bottom: 20px;
-                }
-                .blocked-info {
-                    font-size: 14px;
-                    color: #adb5bd;
-                    background: #f8f9fa;
-                    padding: 12px;
-                    border-radius: 6px;
-                }
-            </style>
-        </head>
-        <body>
-            <div class="blocked-container">
-                <div class="blocked-icon">🚫</div>
-                <div class="blocked-title">Access Blocked</div>
-                <div class="blocked-message">
-                    Only approved websites are allowed in this web app.
-                </div>
-            </div>
-        </body>
-        </html>
-        """
+        // Hide the web view and show the native blocked message
+        webView.isHidden = true
+        loadingIndicator.stopAnimating()
         
-        webView.loadHTMLString(blockedHTML, baseURL: nil)
+        // Hide the navigation bar
+        navigationController?.setNavigationBarHidden(true, animated: true)
+        
+        // Create and add the blocked message view
+        let blockedMessageView = BlockedMessageView(
+            blockedURL: blockedURL ?? "Unknown URL",
+            onGoBack: { [weak self] in
+                self?.handleGoBackFromBlockedMessage()
+            },
+            onRequestAccess: { [weak self] in
+                self?.showAccessRequestForm()
+            }
+        )
+        
+        let hostingController = HostingController(wrappedView: blockedMessageView)
+        addChild(hostingController)
+        view.addSubview(hostingController.view)
+        hostingController.view.autoPinEdgesToSuperviewEdges()
+        hostingController.didMove(toParent: self)
+    }
+    
+    private func handleGoBackFromBlockedMessage() {
+        // Remove the blocked message view
+        for child in children {
+            if child is HostingController<BlockedMessageView> {
+                child.willMove(toParent: nil)
+                child.view.removeFromSuperview()
+                child.removeFromParent()
+                break
+            }
+        }
+        
+        // Show the navigation bar again
+        navigationController?.setNavigationBarHidden(false, animated: true)
+        
+        // Show the web view again and go back
+        webView.isHidden = false
+        isLoadingBlockedMessage = false
+        blockedURL = nil
+        
+        if webView.canGoBack {
+            webView.goBack()
+        }
+    }
+    
+    private func showAccessRequestForm() {
+        guard let blockedURL = blockedURL,
+              let userInfo = userInfoStore.getUserInfo() else {
+            return
+        }
+        
+        let formView = AccessRequestFormView(
+            blockedURL: blockedURL,
+            userInfo: userInfo
+        )
+        
+        let hostingController = HostingController(wrappedView: formView)
+        
+        if let sheet = hostingController.sheetPresentationController {
+            sheet.detents = [.large()]
+            sheet.prefersGrabberVisible = true
+            sheet.preferredCornerRadius = 20
+        }
+        
+        present(hostingController, animated: true)
     }
     
     private func isSpecialURL(_ url: URL) -> Bool {
