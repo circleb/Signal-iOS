@@ -1417,14 +1417,21 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             return
         }
         
+        // Get SSO user info if available
+        let userInfoStore = SSOUserInfoStoreImpl()
+        let ssoUserInfo = userInfoStore.getUserInfo()
+        
         // Gather device information
-        let deviceInfo: [String: Any] = [
+        var deviceInfo: [String: Any] = [
             "device_token": deviceToken,
-            "device_model": AppVersionImpl.shared.hardwareInfoString,
-            "ios_version": AppVersionImpl.shared.iosVersionString,
             "app_version": AppVersionImpl.shared.currentAppVersion,
             "timestamp": ISO8601DateFormatter().string(from: Date())
         ]
+        
+        // Add SSO user email if available
+        if let userInfo = ssoUserInfo, let email = userInfo.email {
+            deviceInfo["sso_user_email"] = email
+        }
         
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: deviceInfo, options: [])
