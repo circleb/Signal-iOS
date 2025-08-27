@@ -292,6 +292,49 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
         homeVC.storiesViewController.showMyStories(animated: animated)
     }
 
+    func presentWebApp(_ webApp: WebApp, animated: Bool) {
+        AssertIsOnMainThread()
+
+        // On iOS 13, there is a bug with UISplitViewController that causes the `isCollapsed` state to
+        // get out of sync while the app isn't active and the orientation has changed while backgrounded.
+        // This results in web apps opening up in the wrong pane when you were in portrait and then
+        // try and open the app in landscape. We work around this by dispatching to the next runloop
+        // at which point things have stabilized.
+        if let windowScene = view.window?.windowScene, windowScene.activationState != .foregroundActive, lastActiveInterfaceOrientation != windowScene.interfaceOrientation {
+            lastActiveInterfaceOrientation = windowScene.interfaceOrientation
+            DispatchQueue.main.async { self.presentWebApp(webApp, animated: animated) }
+            return
+        }
+
+        if homeVC.selectedHomeTab != .webApps {
+            guard homeVC.presentedViewController == nil else {
+                homeVC.dismiss(animated: true) {
+                    self.presentWebApp(webApp, animated: animated)
+                }
+                return
+            }
+
+            // Ensure the tab bar is on the web apps tab.
+            homeVC.selectedHomeTab = .webApps
+        }
+
+        // Create the web app view controller
+        let webVC = WebAppWebViewController(
+            webApp: webApp,
+            webAppsService: homeVC.webAppsService,
+            userInfoStore: SSOUserInfoStoreImpl()
+        )
+
+        if isCollapsed {
+            // When collapsed, push directly onto the web apps navigation controller
+            homeVC.webAppsNavController.pushViewController(webVC, animated: animated)
+        } else {
+            // When expanded, use the detail pane
+            detailNavController.viewControllers = [webVC]
+            viewControllers = [homeVC, detailNavController]
+        }
+    }
+
     override var shouldAutorotate: Bool {
         if let presentedViewController = presentedViewController {
             return presentedViewController.shouldAutorotate

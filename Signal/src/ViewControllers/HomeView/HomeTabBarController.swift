@@ -115,7 +115,7 @@ class HomeTabBarController: UITabBarController {
     lazy var callsListTabBarItem = Tabs.calls.tabBarItem
 
     // More Apps
-    private lazy var webAppsService: WebAppsServiceProtocol = {
+    lazy var webAppsService: WebAppsServiceProtocol = {
         let cache = WebAppsStoreImpl(keyValueStore: KeyValueStore(collection: "WebApps"))
         return WebAppsService(networkManager: SSKEnvironment.shared.networkManagerRef, cache: cache, databaseStorage: SSKEnvironment.shared.databaseStorageRef)
     }()

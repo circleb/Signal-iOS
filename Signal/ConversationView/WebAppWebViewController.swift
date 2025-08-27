@@ -31,6 +31,10 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController, W
         self.webAppsService = webAppsService
         self.userInfoStore = userInfoStore
         super.init(nibName: nil, bundle: nil)
+        
+        // Set title and hide bottom bar when pushed (like ConversationViewController)
+        self.title = webApp.name
+        self.hidesBottomBarWhenPushed = true
     }
     
     // Convenience initializer for opening Bookmarks
@@ -98,6 +102,8 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController, W
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
         
+        // Check if we're in collapsed mode (iPhone or narrow iPad)
+        let isCollapsed = splitViewController?.isCollapsed ?? true
         // Navigation bar setup with back, forward, and refresh buttons on the left
         let backButton = UIBarButtonItem(
             image: UIImage(systemName: "chevron.left"),
@@ -105,7 +111,7 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController, W
             target: self,
             action: #selector(goBack)
         )
-        
+
         let forwardButton = UIBarButtonItem(
             image: UIImage(systemName: "chevron.right"),
             style: .plain,
@@ -119,17 +125,25 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController, W
             action: #selector(refreshWebApp)
         )
         
-        // Add close button for sheet presentation
-        let closeButton = UIBarButtonItem(
-            image: UIImage(systemName: "xmark"),
-            style: .plain,
-            target: self,
-            action: #selector(closeButtonTapped)
-        )
-        
-        navigationItem.leftBarButtonItems = [closeButton, backButton, forwardButton]
-        navigationItem.rightBarButtonItem = refreshButton
-        navigationItem.hidesBackButton = true
+        if isCollapsed {
+            // On iPhone/narrow iPad, show close button instead of back button
+            let closeButton = UIBarButtonItem(
+                image: UIImage(systemName: "xmark"),
+                style: .plain,
+                target: self,
+                action: #selector(closeButtonTapped)
+            )
+            
+            navigationItem.leftBarButtonItems = [closeButton, backButton, forwardButton]
+            navigationItem.rightBarButtonItem = refreshButton
+            navigationItem.hidesBackButton = true
+            navigationItem.title = nil // Hide title in collapsed view
+        } else {
+            // On wide iPad, show standard back button for split view navigation
+            navigationItem.leftBarButtonItems = [backButton, forwardButton]
+            navigationItem.rightBarButtonItem = refreshButton
+            // Title is already set in init, keep it for expanded view
+        }
         
         // Progress view
         progressView.progressTintColor = .ows_accentBlue
@@ -275,21 +289,23 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController, W
         webView.reload()
     }
     
+    @objc private func closeButtonTapped() {
+        navigationController?.popViewController(animated: true)
+    }
+    
     @objc private func goBack() {
         if webView.canGoBack {
             webView.goBack()
         }
     }
-    
+
     @objc private func goForward() {
         if webView.canGoForward {
             webView.goForward()
         }
     }
     
-    @objc private func closeButtonTapped() {
-        dismiss(animated: true)
-    }
+
     
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         if keyPath == "estimatedProgress" {
@@ -565,12 +581,12 @@ extension WebAppWebViewController {
             action: #selector(pinnedURLsButtonTapped)
         )
         
-        // Add to right side of navigation bar (next to close button)
+        // Add to right side of navigation bar
         if var rightBarButtonItems = navigationItem.rightBarButtonItems {
-            rightBarButtonItems.insert(pinnedURLsButton, at: 0) // Insert before close button
+            rightBarButtonItems.insert(pinnedURLsButton, at: 0)
             navigationItem.rightBarButtonItems = rightBarButtonItems
         } else {
-            navigationItem.rightBarButtonItem = pinnedURLsButton
+            navigationItem.rightBarButtonItems = [pinnedURLsButton]
         }
     }
     
