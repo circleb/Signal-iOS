@@ -1486,6 +1486,10 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             Logger.info("")
         }
 
+        // Log notification for webhook debugging
+        print("Received remote notification: \(userInfo)")
+        print("App state: \(application.applicationState.rawValue)")
+
         Task {
             defer {
                 // TODO: Report the actual outcome.
