@@ -93,8 +93,17 @@ class ProvisioningController: NSObject {
             break
         }
 
+        // Use SSO-enabled splash view controller for secondary provisioning
         let vc = ProvisioningSplashViewController(provisioningController: provisioningController)
+        
+        // Enable SSO integration
+        Logger.info("Setting up SSO for secondary provisioning")
+        let userInfoStore = SSOUserInfoStoreImpl()
+        let ssoService = SSOService(userInfoStore: userInfoStore)
+        vc.enableSSO(ssoService: ssoService, userInfoStore: userInfoStore)
+        
         navController.setViewControllers([vc], animated: false)
+        Logger.info("Secondary provisioning flow started with SSO enabled")
 
         CurrentAppContext().mainWindow?.rootViewController = navController
     }
@@ -143,6 +152,15 @@ class ProvisioningController: NSObject {
     private func submitLogs() {
         DebugLogs.submitLogs(supportTag: "Onboarding", dumper: .fromGlobals())
     }
+
+    // MARK: - SSO Integration (Future Implementation)
+    
+    // TODO: Integrate SSO authentication as the first step in secondary provisioning
+    // This will require:
+    // 1. Modifying ProvisioningSplashViewController to include SSO login
+    // 2. Adding SSO service integration
+    // 3. Handling SSO authentication flow
+    // 4. Pre-populating user information from SSO
 
     // MARK: - Transitions
 
@@ -751,3 +769,5 @@ private extension CommonStrings {
         )
     }
 }
+
+// MARK: - Future SSO Integration
