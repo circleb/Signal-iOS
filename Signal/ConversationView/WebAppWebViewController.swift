@@ -95,12 +95,23 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController, W
     
     private func setupUI() {
         view.backgroundColor = .systemBackground
-        
+       
         // Configure navigation bar for transparent background with blur
         let appearance = UINavigationBarAppearance()
         appearance.configureWithDefaultBackground() // gives you the system blur
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
+
+        if let navBar = navigationController?.navigationBar {
+            progressView.translatesAutoresizingMaskIntoConstraints = false
+            navBar.addSubview(progressView)
+            NSLayoutConstraint.activate([
+                progressView.leadingAnchor.constraint(equalTo: navBar.leadingAnchor),
+                progressView.trailingAnchor.constraint(equalTo: navBar.trailingAnchor),
+                progressView.bottomAnchor.constraint(equalTo: navBar.bottomAnchor), // <- bottom, not top
+                progressView.heightAnchor.constraint(equalToConstant: 2)
+            ])
+        }
         
         // Check if we're in collapsed mode (iPhone or narrow iPad)
         let isCollapsed = splitViewController?.isCollapsed ?? true
@@ -152,19 +163,12 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController, W
         // Loading indicator
         loadingIndicator.hidesWhenStopped = true
         
-        // Layout
         view.addSubview(webView)
-        view.addSubview(progressView)
         view.addSubview(loadingIndicator)
-        
-        // Pin webview to superview edges to allow overflow behind navigation bar
         webView.autoPinEdgesToSuperviewEdges()
-        
-        progressView.autoPinEdge(.top, to: .top, of: webView)
-        progressView.autoPinWidthToSuperview()
-        progressView.autoSetDimension(.height, toSize: 2)
-        
+        loadingIndicator.hidesWhenStopped = true
         loadingIndicator.autoCenterInSuperview()
+        loadingIndicator.autoSetDimensions(to: CGSize(width: 40, height: 40))
     }
     
     private func setupWebView() {
