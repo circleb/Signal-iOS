@@ -211,6 +211,12 @@ class WebAppsListViewController: UIViewController {
         
         // Hide the tab bar to simulate full-screen coverage
         tabBarController?.tabBar.isHidden = true
+        
+        // On iPad, also reset the detail view to show the placeholder (Signal logo)
+        // This ensures the full screen is covered including the detail view
+        if let splitViewController = splitViewController as? ConversationSplitViewController {
+            splitViewController.closeSelectedConversation(animated: true)
+        }
     }
     
     private func hideSignInOverlay() {
@@ -220,6 +226,9 @@ class WebAppsListViewController: UIViewController {
         
         // Show the tab bar again
         tabBarController?.tabBar.isHidden = false
+        
+        // Note: The detail view will be restored when the user selects a web app
+        // No need to explicitly restore it here as it will happen naturally
     }
     
     @objc private func refreshWebApps() {
