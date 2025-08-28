@@ -70,13 +70,50 @@ class SSOAuthenticationViewController: OWSViewController {
         stackView.spacing = 24
         stackView.directionalLayoutMargins = {
             let horizontalSizeClass = traitCollection.horizontalSizeClass
-            var result = NSDirectionalEdgeInsets.layoutMarginsForRegistration(horizontalSizeClass)
-            result.top = 60
+            var result = NSDirectionalEdgeInsets()
+            
+            switch horizontalSizeClass {
+            case .compact:
+                // iPhone in portrait or split view
+                result.leading = 16
+                result.trailing = 16
+                result.top = 30
+                result.bottom = 20
+            case .regular:
+                // iPad in landscape or regular split view
+                result.leading = 24
+                result.trailing = 24
+                result.top = 40
+                result.bottom = 30
+            case .unspecified:
+                // Fallback
+                result.leading = 20
+                result.trailing = 20
+                result.top = 35
+                result.bottom = 25
+            @unknown default:
+                // Future cases
+                result.leading = 20
+                result.trailing = 20
+                result.top = 35
+                result.bottom = 25
+            }
+            
             return result
         }()
         stackView.isLayoutMarginsRelativeArrangement = true
         view.addSubview(stackView)
         stackView.autoPinEdgesToSuperviewMargins()
+
+        let heroImage = UIImage(named: "onboarding_splash_hero")
+        let heroImageView = UIImageView(image: heroImage)
+        heroImageView.contentMode = .scaleAspectFit
+        heroImageView.layer.minificationFilter = .trilinear
+        heroImageView.layer.magnificationFilter = .trilinear
+        heroImageView.setCompressionResistanceLow()
+        heroImageView.setContentHuggingVerticalLow()
+        heroImageView.accessibilityIdentifier = "onboarding.splash." + "heroImageView"
+        stackView.addArrangedSubview(heroImageView)
 
         // Title
         let titleText = {
@@ -218,6 +255,8 @@ class SSOAuthenticationViewController: OWSViewController {
 }
 
 #if DEBUG
+import SwiftUI
+
 private class PreviewSSOAuthenticationViewControllerDelegate: SSOAuthenticationViewControllerDelegate {
     func ssoAuthenticationViewController(_ controller: SSOAuthenticationViewController, didAuthenticate userInfo: SSOUserInfo) {
         print("SSO Authentication successful: \(userInfo.name ?? "Unknown")")
