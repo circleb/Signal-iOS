@@ -67,6 +67,18 @@ class ProvisioningTransferChoiceViewController: ProvisioningBaseViewController {
         let explanationLabel = self.createExplanationLabel(explanationText: explanationText)
         explanationLabel.font = .dynamicTypeBody
 
+        // Add iPad warning if user is on iPad
+        let ipadWarningLabel = UILabel()
+        ipadWarningLabel.text = OWSLocalizedString(
+            "ONBOARDING_CHOOSE_RESTORE_METHOD_IPAD_WARNING",
+            comment: "Warning message for iPad users about phone requirement"
+        )
+        ipadWarningLabel.font = .dynamicTypeBody2.medium()
+        ipadWarningLabel.textColor = .systemOrange
+        ipadWarningLabel.numberOfLines = 0
+        ipadWarningLabel.textAlignment = .center
+        ipadWarningLabel.isHidden = UIDevice.current.userInterfaceIdiom != .pad
+
         let transferButton = choiceButton(
             title: transferTitle,
             body: transferBody,
@@ -84,7 +96,9 @@ class ProvisioningTransferChoiceViewController: ProvisioningBaseViewController {
         let topStackView = UIStackView(arrangedSubviews: [
             titleLabel,
             UIView.spacer(withHeight: 12),
-            explanationLabel
+            explanationLabel,
+            UIView.spacer(withHeight: 8),
+            ipadWarningLabel
         ])
         topStackView.axis = .vertical
         topStackView.alignment = .fill

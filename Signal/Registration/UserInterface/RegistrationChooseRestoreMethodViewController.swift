@@ -55,6 +55,18 @@ class RegistrationChooseRestoreMethodViewController: OWSViewController {
         return result
     }()
 
+    private lazy var ipadWarningLabel: UILabel = {
+        let result = UILabel.explanationLabelForRegistration(
+            text: OWSLocalizedString(
+                "ONBOARDING_CHOOSE_RESTORE_METHOD_IPAD_WARNING",
+                comment: "Warning message for iPad users about phone requirement"
+            )
+        )
+        result.textColor = .systemOrange
+        result.font = .dynamicTypeBody2.medium()
+        return result
+    }()
+
     private func choiceButton(
         title: String,
         body: String,
@@ -147,6 +159,11 @@ class RegistrationChooseRestoreMethodViewController: OWSViewController {
             titleLabel,
             explanationLabel,
         ])
+        
+        // Add iPad warning if user is on iPad
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            stackView.addArrangedSubview(ipadWarningLabel)
+        }
         switch self.restorePath {
         case .quickRestore:
             stackView.addArrangedSubviews([
@@ -190,6 +207,11 @@ class RegistrationChooseRestoreMethodViewController: OWSViewController {
         view.backgroundColor = Theme.backgroundColor
         titleLabel.textColor = .colorForRegistrationTitleLabel
         explanationLabel.textColor = .colorForRegistrationExplanationLabel
+        
+        // Update warning label styling for current theme
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            ipadWarningLabel.textColor = Theme.isDarkThemeEnabled ? .systemOrange : .systemOrange
+        }
     }
 
     // MARK: Events
