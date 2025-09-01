@@ -66,13 +66,23 @@ public class SSORegistrationSplashViewController: OWSViewController {
     private let errorView = UIView()
     private let errorLabel = UILabel()
     private lazy var retryButton: OWSFlatButton = {
-        let button = OWSFlatButton.primaryButtonForRegistration(
-            title: "Retry",
-            target: self,
-            selector: #selector(handleSSOLogin)
-        )
+        let button = OWSFlatButton()
+        button.setTitle(title: "Retry", font: UIFont.dynamicTypeBodyClamped.semibold(), titleColor: .white)
+        button.setBackgroundColors(upColor: .ows_accentBlue)
+        button.useDefaultCornerRadius()
+        button.setSize(width: 280, height: 44)
+        button.addTarget(target: self, selector: #selector(handleSSOLogin))
+        
+        // Force the button to maintain its height by overriding any internal constraints
+        button.autoSetDimension(.height, toSize: 44, relation: .equal)
+        
         return button
     }()
+    
+    // UI elements for dynamic stack view management
+    private var heroImageView: UIImageView!
+    private var titleLabel: UILabel!
+    private var explanationButton: UIButton!
 
     init(
         presenter: SSORegistrationSplashPresenter,
@@ -111,7 +121,7 @@ public class SSORegistrationSplashViewController: OWSViewController {
 
         // Hero image
         let heroImage = UIImage(named: "onboarding_splash_hero")
-        let heroImageView = UIImageView(image: heroImage)
+        heroImageView = UIImageView(image: heroImage)
         heroImageView.contentMode = .scaleAspectFit
         heroImageView.layer.minificationFilter = .trilinear
         heroImageView.layer.magnificationFilter = .trilinear
@@ -142,7 +152,7 @@ public class SSORegistrationSplashViewController: OWSViewController {
                 return "Internal Staging Build\n\(AppVersionImpl.shared.currentAppVersion)"
             }
         }()
-        let titleLabel = UILabel.titleLabelForRegistration(text: titleText)
+        titleLabel = UILabel.titleLabelForRegistration(text: titleText)
         titleLabel.accessibilityIdentifier = "registration.splash.titleLabel"
         stackView.addArrangedSubview(titleLabel)
         stackView.setCustomSpacing(12, after: titleLabel)
@@ -168,7 +178,7 @@ public class SSORegistrationSplashViewController: OWSViewController {
 
         // Setup Options Stack View
         setupOptionsStackView.axis = .vertical
-        setupOptionsStackView.spacing = 16
+        setupOptionsStackView.spacing = 8
         setupOptionsStackView.accessibilityIdentifier = "registration.splash.setupOptionsStackView"
         stackView.addArrangedSubview(setupOptionsStackView)
 
@@ -197,31 +207,28 @@ public class SSORegistrationSplashViewController: OWSViewController {
         loadingIndicator.accessibilityIdentifier = "registration.splash.loadingIndicator"
         stackView.addArrangedSubview(loadingIndicator)
 
-        // Error View
-        errorView.accessibilityIdentifier = "registration.splash.errorView"
-        stackView.addArrangedSubview(errorView)
-
+        // Error Label - add directly to stack view instead of wrapping in error view
         errorLabel.font = UIFont.dynamicTypeBody
         errorLabel.textColor = .ows_accentRed
         errorLabel.textAlignment = .center
         errorLabel.numberOfLines = 0
         errorLabel.accessibilityIdentifier = "registration.splash.errorLabel"
-        errorView.addSubview(errorLabel)
-        errorLabel.autoPinEdgesToSuperviewMargins()
-
+        errorLabel.isHidden = true  // Initially hidden
+        stackView.addArrangedSubview(errorLabel)
+        
+        // Retry Button - add directly to stack view instead of wrapping in error view
         retryButton.accessibilityIdentifier = "registration.splash.retryButton"
-        errorView.addSubview(retryButton)
-        retryButton.autoPinEdge(ALEdge.top, to: ALEdge.bottom, of: errorLabel, withOffset: 16)
-        retryButton.autoPinEdge(toSuperviewEdge: ALEdge.bottom)
-        retryButton.autoSetDimension(ALDimension.width, toSize: 280)
-        retryButton.autoHCenterInSuperview()
-        NSLayoutConstraint.autoSetPriority(.defaultLow) {
-            retryButton.autoPinEdge(toSuperviewEdge: ALEdge.leading)
-            retryButton.autoPinEdge(toSuperviewEdge: ALEdge.trailing)
-        }
+        retryButton.isHidden = true  // Initially hidden
+        stackView.addArrangedSubview(retryButton)
+        
+        // Set custom spacing between error label and retry button
+        stackView.setCustomSpacing(16, after: errorLabel)
+        
+        // Set custom spacing after retry button to prevent overlap with terms button
+        stackView.setCustomSpacing(24, after: retryButton)
 
         // Terms and Privacy Policy
-        let explanationButton = UIButton()
+        explanationButton = UIButton()
         explanationButton.setTitle(
             OWSLocalizedString(
                 "ONBOARDING_SPLASH_TERM_AND_PRIVACY_POLICY",
@@ -255,7 +262,9 @@ public class SSORegistrationSplashViewController: OWSViewController {
             welcomeLabel.isHidden = true
             setupOptionsStackView.isHidden = true
             loadingIndicator.isHidden = true
-            errorView.isHidden = true
+            errorLabel.isHidden = true  // Hide error label
+            retryButton.isHidden = true  // Hide retry button
+            explanationButton.isHidden = false  // Show terms link in initial state
 
         case .loading:
             ssoLoginButton.isHidden = true
@@ -263,7 +272,9 @@ public class SSORegistrationSplashViewController: OWSViewController {
             welcomeLabel.isHidden = true
             setupOptionsStackView.isHidden = true
             loadingIndicator.isHidden = false
-            errorView.isHidden = true
+            errorLabel.isHidden = true  // Hide error label
+            retryButton.isHidden = true  // Hide retry button
+            explanationButton.isHidden = false  // Show terms link in loading state
             loadingIndicator.startAnimating()
 
         case .authenticated(let userInfo):
@@ -272,12 +283,16 @@ public class SSORegistrationSplashViewController: OWSViewController {
             welcomeLabel.isHidden = true
             setupOptionsStackView.isHidden = false
             loadingIndicator.isHidden = true
-            errorView.isHidden = true
+            errorLabel.isHidden = true  // Hide error label
+            retryButton.isHidden = true  // Hide retry button
             loadingIndicator.stopAnimating()
 
             // Set howdy message
             let displayName = userInfo.name ?? userInfo.email ?? "User"
             howdyLabel.text = "Howdy \(displayName)!"
+            
+            // Show terms link in authenticated state
+            explanationButton.isHidden = false
 
         case .error(let error):
             ssoLoginButton.isHidden = true
@@ -285,7 +300,9 @@ public class SSORegistrationSplashViewController: OWSViewController {
             welcomeLabel.isHidden = true
             setupOptionsStackView.isHidden = true
             loadingIndicator.isHidden = true
-            errorView.isHidden = false
+            errorLabel.isHidden = false  // Show error label directly
+            retryButton.isHidden = false  // Show retry button directly
+            explanationButton.isHidden = true  // Hide terms link in error state
             loadingIndicator.stopAnimating()
 
             // Show error message
@@ -301,6 +318,24 @@ public class SSORegistrationSplashViewController: OWSViewController {
             default:
                 errorLabel.text = "An error occurred during SSO login. Please try again."
             }
+            
+            // Force layout update to ensure retry button is visible and properly sized
+            view.setNeedsLayout()
+            view.layoutIfNeeded()
+            
+            // Additional layout update for the error view specifically
+            errorView.setNeedsLayout()
+            errorView.layoutIfNeeded()
+            
+            // Debug: Print button frame to see what's happening
+            print("Retry button frame: \(retryButton.frame)")
+            print("Retry button bounds: \(retryButton.bounds)")
+            print("Retry button height: \(retryButton.frame.height)")
+            print("Retry button internal button height: \(retryButton.button.frame.height)")
+            print("Retry button constraints: \(retryButton.constraints)")
+            
+            // Ensure the retry button is properly configured
+            // The button title and size are already set in setupUI()
         }
     }
 
@@ -361,6 +396,16 @@ public class SSORegistrationSplashViewController: OWSViewController {
         let safariVC = SFSafariViewController(url: TSConstants.legalTermsUrl)
         present(safariVC, animated: true)
     }
+    
+    // MARK: - Preview Support
+    
+    #if DEBUG
+    /// Sets the preview state for SwiftUI previews
+    /// This method is only available in debug builds and should not be used in production
+    func setPreviewState(_ state: RegistrationSplashState) {
+        updateUI(for: state)
+    }
+    #endif
 }
 
 // MARK: - RestoreOrTransferPickerController
@@ -445,7 +490,7 @@ private class PreviewSSORegistrationSplashPresenter: SSORegistrationSplashPresen
 }
 
 @available(iOS 17, *)
-#Preview {
+#Preview("Initial State") {
     let presenter = PreviewSSORegistrationSplashPresenter()
     let userInfoStore = SSOUserInfoStoreImpl()
     let ssoService = SSOService(userInfoStore: userInfoStore)
@@ -454,5 +499,67 @@ private class PreviewSSORegistrationSplashPresenter: SSORegistrationSplashPresen
         ssoService: ssoService,
         userInfoStore: userInfoStore
     )
+}
+
+@available(iOS 17, *)
+#Preview("User Cancelled SSO") {
+    let presenter = PreviewSSORegistrationSplashPresenter()
+    let userInfoStore = SSOUserInfoStoreImpl()
+    let ssoService = SSOService(userInfoStore: userInfoStore)
+    let viewController = SSORegistrationSplashViewController(
+        presenter: presenter,
+        ssoService: ssoService,
+        userInfoStore: userInfoStore
+    )
+    
+    // Ensure the view is loaded and laid out before setting the preview state
+    viewController.loadViewIfNeeded()
+    viewController.view.layoutIfNeeded()
+    
+    // Use the safe preview method to show the user cancelled error state
+    viewController.setPreviewState(.error(.userCancelled))
+    
+    return viewController
+}
+
+@available(iOS 17, *)
+#Preview("Network Error") {
+    let presenter = PreviewSSORegistrationSplashPresenter()
+    let userInfoStore = SSOUserInfoStoreImpl()
+    let ssoService = SSOService(userInfoStore: userInfoStore)
+    let viewController = SSORegistrationSplashViewController(
+        presenter: presenter,
+        ssoService: ssoService,
+        userInfoStore: userInfoStore
+    )
+    
+    // Ensure the view is loaded and laid out before setting the preview state
+    viewController.loadViewIfNeeded()
+    viewController.view.layoutIfNeeded()
+    
+    let networkError = NSError(domain: "NSURLErrorDomain", code: -1009, userInfo: nil)
+    viewController.setPreviewState(.error(.networkError(networkError)))
+    
+    return viewController
+}
+
+@available(iOS 17, *)
+#Preview("Missing Phone Number") {
+    let presenter = PreviewSSORegistrationSplashPresenter()
+    let userInfoStore = SSOUserInfoStoreImpl()
+    let ssoService = SSOService(userInfoStore: userInfoStore)
+    let viewController = SSORegistrationSplashViewController(
+        presenter: presenter,
+        ssoService: ssoService,
+        userInfoStore: userInfoStore
+    )
+    
+    // Ensure the view is loaded and laid out before setting the preview state
+    viewController.loadViewIfNeeded()
+    viewController.view.layoutIfNeeded()
+    
+    viewController.setPreviewState(.error(.missingPhoneNumber))
+    
+    return viewController
 }
 #endif 

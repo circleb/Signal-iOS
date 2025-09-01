@@ -198,16 +198,12 @@ class ProvisioningSplashViewController: ProvisioningBaseViewController {
         // Show error and allow retry
         let alert = UIAlertController(
             title: "SSO Login Failed",
-            message: "Please try again or continue without SSO authentication.",
+            message: "Please try again.",
             preferredStyle: .alert
         )
         
         alert.addAction(UIAlertAction(title: "Retry", style: .default) { [weak self] _ in
             self?.handleSSOLogin()
-        })
-        
-        alert.addAction(UIAlertAction(title: "Continue Without SSO", style: .cancel) { [weak self] _ in
-            self?.continueWithoutSSO()
         })
         
         present(alert, animated: true)

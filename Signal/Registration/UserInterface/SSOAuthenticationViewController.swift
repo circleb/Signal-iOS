@@ -41,7 +41,7 @@ class SSOAuthenticationViewController: OWSViewController {
     private let errorLabel = UILabel()
     private lazy var retryButton: OWSFlatButton = {
         let button = OWSFlatButton.primaryButtonForRegistration(
-            title: "Retry",
+            title: "Retry SSO Login",
             target: self,
             selector: #selector(handleSSOLogin)
         )
