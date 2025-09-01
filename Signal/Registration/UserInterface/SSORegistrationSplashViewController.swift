@@ -69,7 +69,7 @@ public class SSORegistrationSplashViewController: OWSViewController {
         let button = OWSFlatButton()
         button.setTitle(title: "Retry", font: UIFont.dynamicTypeBodyClamped.semibold(), titleColor: .white)
         button.setBackgroundColors(upColor: .ows_accentBlue)
-        button.useDefaultCornerRadius()
+        button.cornerRadius = 12
         button.setSize(width: 280, height: 44)
         button.addTarget(target: self, selector: #selector(handleSSOLogin))
         
