@@ -65,7 +65,7 @@
 "ACCOUNT_DATA_REPORT_TITLE" = "Your Account Data";
 
 /* Label for 'invite' button in contact view. */
-"ACTION_INVITE" = "Invite to HCP";
+"ACTION_INVITE" = "Invite to Signal";
 
 /* Label for button that lets you send a message to a contact. */
 "ACTION_SEND_MESSAGE" = "Send Message";
@@ -839,7 +839,7 @@
 "BACKUP_SETTINGS_WELCOME_TO_BACKUPS_SHEET_SECONDARY_BUTTON" = "Back Up Later";
 
 /* Title for a sheet shown after the user enables backups. */
-"BACKUP_SETTINGS_WELCOME_TO_BACKUPS_SHEET_TITLE" = "Welcome to HCP Backups. Start your backup now.";
+"BACKUP_SETTINGS_WELCOME_TO_BACKUPS_SHEET_TITLE" = "Welcome to Signal Backups. Start your backup now.";
 
 /* Title for the 'Backup' settings menu. */
 "BACKUPS_SETTINGS_TITLE" = "HCP Backups";
@@ -850,7 +850,7 @@
 /* The title for the badge configuration page */
 "BADGE_CONFIGURATION_TITLE" = "Badges";
 
-/* When viewing someone else's badge, you'll see a sheet. If they got the badge by donating, a \"Donate to HCP\" button will be shown. This is the text in that button. */
+/* When viewing someone else's badge, you'll see a sheet. If they got the badge by donating, a \"Donate to Signal\" button will be shown. This is the text in that button. */
 "BADGE_DETAILS_DONATE_TO_SIGNAL" = "Donate Now";
 
 /* When viewing someone else's donor badge, you'll see a sheet. This is the title on that sheet. Embeds {badge owner's short name} */
@@ -883,7 +883,7 @@
 /* Title for a sheet explaining that a bank transfer donation is complete, and that you have received a badge. */
 "BADGE_THANKS_BANK_DONATION_COMPLETE_TITLE" = "Donation Complete";
 
-/* When you make a donation to HCP, you will receive a badge. A thank-you sheet appears when this happens. This is the body text on that sheet. */
+/* When you make a donation to Signal, you will receive a badge. A thank-you sheet appears when this happens. This is the body text on that sheet. */
 "BADGE_THANKS_BODY" = "You can choose to display this badge on your profile to show off your support.";
 
 /* Label prompting the user to display the new badge on their profile on the badge thank you sheet. */
@@ -892,7 +892,7 @@
 /* Label prompting the user to feature the new badge on their profile on the badge thank you sheet. */
 "BADGE_THANKS_MAKE_FEATURED" = "Make Featured Badge";
 
-/* When you make a donation to HCP, you will receive a badge. A thank-you sheet appears when this happens. This is the title of that sheet. */
+/* When you make a donation to Signal, you will receive a badge. A thank-you sheet appears when this happens. This is the title of that sheet. */
 "BADGE_THANKS_TITLE" = "Thanks for your support!";
 
 /* Footer explaining that only one badge can be featured at a time on the thank you sheet. */
@@ -904,16 +904,16 @@
 /* On the bank transfer donation screen, a small amount of information text is shown. This is that text. It should (1) instruct users to enter their bank information (2) tell them that HCP does not collect or store their personal information. */
 "BANK_DONATION_SUBHEADER_TEXT" = "Enter your bank details. HCP does not collect or store your personal information.";
 
-/* Users can donate to HCP with a bank account. We are required to show them a mandate with information about bank transfers. This is a label for a button to agree to the mandate. */
+/* Users can donate to Signal with a bank account. We are required to show them a mandate with information about bank transfers. This is a label for a button to agree to the mandate. */
 "BANK_MANDATE_AGREE" = "Agree";
 
-/* Users can donate to HCP with a bank account. We are required to show them a mandate with information about bank transfers. This is a label for a button that shows more of the mandate if it is not all visible. */
+/* Users can donate to Signal with a bank account. We are required to show them a mandate with information about bank transfers. This is a label for a button that shows more of the mandate if it is not all visible. */
 "BANK_MANDATE_READ_MORE" = "Read More";
 
-/* Users can donate to HCP with a bank account. We are required to show them a mandate with information about bank transfers. This is a subtitle about the payment processor Stripe above that mandate. */
-"BANK_MANDATE_SUBTITLE" = "Stripe processes donations made to HCP. HCP does not collect or store your personal information.";
+/* Users can donate to Signal with a bank account. We are required to show them a mandate with information about bank transfers. This is a subtitle about the payment processor Stripe above that mandate. */
+"BANK_MANDATE_SUBTITLE" = "Stripe processes donations made to Signal. HCP does not collect or store your personal information.";
 
-/* Users can donate to HCP with a bank account. We are required to show them a mandate with information about bank transfers. This is the title above that mandate. */
+/* Users can donate to Signal with a bank account. We are required to show them a mandate with information about bank transfers. This is the title above that mandate. */
 "BANK_MANDATE_TITLE" = "Bank Transfer";
 
 /* Accessibility label for banner close button */
@@ -1414,28 +1414,28 @@
 /* Alert shown when the user needs to exchange messages to see the safety number. */
 "CANT_VERIFY_IDENTITY_EXCHANGE_MESSAGES" = "A safety number will be created with this person after you exchange messages with them.";
 
-/* Users can donate to HCP with a credit or debit card. If their card number is invalid, this generic error message will be shown. Try to use a short string to make space in the UI. */
+/* Users can donate to Signal with a credit or debit card. If their card number is invalid, this generic error message will be shown. Try to use a short string to make space in the UI. */
 "CARD_DONATION_CARD_NUMBER_GENERIC_ERROR" = "Invalid card number";
 
-/* Users can donate to HCP with a credit or debit card. This is the label for the card number field on that screen. */
+/* Users can donate to Signal with a credit or debit card. This is the label for the card number field on that screen. */
 "CARD_DONATION_CARD_NUMBER_LABEL" = "Card Number";
 
-/* Users can donate to HCP with a credit or debit card. If their card verification code (CVV) is invalid for reasons we cannot determine, this generic error message will be shown. Try to use a short string to make space in the UI. */
+/* Users can donate to Signal with a credit or debit card. If their card verification code (CVV) is invalid for reasons we cannot determine, this generic error message will be shown. Try to use a short string to make space in the UI. */
 "CARD_DONATION_CVV_GENERIC_ERROR" = "Invalid CVV";
 
-/* Users can donate to HCP with a credit or debit card. This is the label for the card verification code (CVV) field on that screen. */
+/* Users can donate to Signal with a credit or debit card. This is the label for the card verification code (CVV) field on that screen. */
 "CARD_DONATION_CVV_LABEL" = "CVV";
 
-/* Users can donate to HCP with a credit or debit card. If their card verification code (CVV) is too long, this error will be shown. Try to use a short string to make space in the UI. */
+/* Users can donate to Signal with a credit or debit card. If their card verification code (CVV) is too long, this error will be shown. Try to use a short string to make space in the UI. */
 "CARD_DONATION_CVV_TOO_LONG_ERROR" = "Code too long";
 
-/* Users can donate to HCP with a credit or debit card. If their expiration date is invalid, this generic error message will be shown. Try to use a short string to make space in the UI. */
+/* Users can donate to Signal with a credit or debit card. If their expiration date is invalid, this generic error message will be shown. Try to use a short string to make space in the UI. */
 "CARD_DONATION_EXPIRATION_DATE_GENERIC_ERROR" = "Invalid exp. date";
 
-/* Users can donate to HCP with a credit or debit card. This is the label for the expiration date field on that screen. Try to use a short string to make space in the UI. (For example, the English text uses \"Exp. Date\" instead of \"Expiration Date\"). */
+/* Users can donate to Signal with a credit or debit card. This is the label for the expiration date field on that screen. Try to use a short string to make space in the UI. (For example, the English text uses \"Exp. Date\" instead of \"Expiration Date\"). */
 "CARD_DONATION_EXPIRATION_DATE_LABEL" = "Exp. Date";
 
-/* Users can donate to HCP with a credit or debit card. This is the label for the card expiration date field on that screen. */
+/* Users can donate to Signal with a credit or debit card. This is the label for the card expiration date field on that screen. */
 "CARD_DONATION_EXPIRATION_DATE_PLACEHOLDER" = "MM/YY";
 
 /* Users can choose to learn more about their credit/debit card donations, which will open a sheet with additional information. This is the body text of that sheet. */
@@ -2587,10 +2587,10 @@
 /* Section title for the 'domain fronting country' view. */
 "DOMAIN_FRONTING_COUNTRY_VIEW_SECTION_HEADER" = "Censorship Circumvention Location";
 
-/* Users can donate to HCP with a credit or debit card. This is the heading on that screen, telling them how much they'll donate. Embeds {{formatted amount of money}}, such as \"$20\". */
+/* Users can donate to Signal with a credit or debit card. This is the heading on that screen, telling them how much they'll donate. Embeds {{formatted amount of money}}, such as \"$20\". */
 "DONATE_BUTTON" = "Donate %1$@";
 
-/* Users can donate to HCP with a credit or debit card. This is the heading on that screen, telling them how much they'll donate every month. Embeds {{formatted amount of money}}, such as \"$20\". */
+/* Users can donate to Signal with a credit or debit card. This is the heading on that screen, telling them how much they'll donate every month. Embeds {{formatted amount of money}}, such as \"$20\". */
 "DONATE_BUTTON_MONTHLY" = "Donate %1$@/month";
 
 /* When users make donations, they can choose which payment method they want to use. This is the text on the button that lets them choose to pay with bank transfer. */
@@ -2609,13 +2609,13 @@
 "DONATE_CHOOSE_PAYMENT_METHOD_SHEET_SUBTITLE_FOR_ONE_TIME_DONATION" = "Get the %1$@ badge for 30 days";
 
 /* When users make donations on a friend's behalf, they see a sheet that lets them pick a payment method. This is the title on that sheet. Embeds {{amount of money}}, such as \"$5\". */
-"DONATE_CHOOSE_PAYMENT_METHOD_SHEET_TITLE_FOR_DONATION_ON_BEHALF_OF_A_FRIEND" = "%1$@ Donation to HCP";
+"DONATE_CHOOSE_PAYMENT_METHOD_SHEET_TITLE_FOR_DONATION_ON_BEHALF_OF_A_FRIEND" = "%1$@ Donation to Signal";
 
 /* When users make monthly donations, they see a sheet that lets them pick a payment method. This is the title on that sheet. Embeds {{amount of money per month}}, such as \"$5/month\". */
-"DONATE_CHOOSE_PAYMENT_METHOD_SHEET_TITLE_FOR_MONTHLY_DONATION" = "Donate %1$@ to HCP";
+"DONATE_CHOOSE_PAYMENT_METHOD_SHEET_TITLE_FOR_MONTHLY_DONATION" = "Donate %1$@ to Signal";
 
 /* When users make one-time donations, they see a sheet that lets them pick a payment method. This is the title on that sheet. Embeds {{amount of money}}, such as \"$5\". */
-"DONATE_CHOOSE_PAYMENT_METHOD_SHEET_TITLE_FOR_ONE_TIME_DONATION" = "Donate %1$@ to HCP";
+"DONATE_CHOOSE_PAYMENT_METHOD_SHEET_TITLE_FOR_ONE_TIME_DONATION" = "Donate %1$@ to Signal";
 
 /* Users can donate on a friend's behalf and can optionally add a message. This is tells users about that optional message. */
 "DONATE_ON_BEHALF_OF_A_FRIEND_ADDITIONAL_MESSAGE_INFO" = "The recipient will be notified of the donation in a 1 on 1 message. Add your own message below.";
@@ -2647,10 +2647,10 @@
 /* Message in an alert presented when the user tries to update their recurring donation, but already has a recurring donation that is currently processing via non-bank payment. */
 "DONATE_SCREEN_ERROR_MESSAGE_PLEASE_WAIT_BEFORE_UPDATING_YOUR_SUBSCRIPTION" = "Your donation is still being processed. This can take a few minutes depending on your connection. Please wait until this donation completes before updating your subscription.";
 
-/* If the user tries to donate to HCP but no amount is selected, this error message is shown. */
+/* If the user tries to donate to Signal but no amount is selected, this error message is shown. */
 "DONATE_SCREEN_ERROR_NO_AMOUNT_SELECTED" = "Select an amount to donate.";
 
-/* If the user tries to donate to HCP but they've entered an amount that's too small, this error message is shown. Embeds {{currency string}}, such as \"$5\". */
+/* If the user tries to donate to Signal but they've entered an amount that's too small, this error message is shown. Embeds {{currency string}}, such as \"$5\". */
 "DONATE_SCREEN_ERROR_SELECT_A_LARGER_AMOUNT_FORMAT" = "The minimum amount you can donate is %1$@.";
 
 /* Title for an alert presented when the user tries to make a donation, but already has a donation that is currently awaiting authorization. */
@@ -2762,7 +2762,7 @@
 "DONATION_ON_BEHALF_OF_A_FRIEND_PREVIEW_OUTGOING" = "✨ You donated for %1$@";
 
 /* You received a donation from a friend. This is the title of that message in the chat. Embeds {{short contact name}}. */
-"DONATION_ON_BEHALF_OF_A_FRIEND_RECEIVED_TITLE_FORMAT" = "%1$@ donated to HCP on your behalf";
+"DONATION_ON_BEHALF_OF_A_FRIEND_RECEIVED_TITLE_FORMAT" = "%1$@ donated to Signal on your behalf";
 
 /* Users can donate on a friend's behalf. This is the error message that appears if the try to do this, but the recipient is blocked. */
 "DONATION_ON_BEHALF_OF_A_FRIEND_RECIPIENT_IS_BLOCKED_ERROR_BODY" = "You can’t make a donation for this user because you blocked them.";
@@ -2786,7 +2786,7 @@
 "DONATION_ON_BEHALF_OF_A_FRIEND_SENT_TITLE_FORMAT" = "Donation on behalf of %1$@";
 
 /* When you donate on behalf of a friend, a thank-you sheet will appear. This is the text on that sheet. Embeds {{recipient name}}. */
-"DONATION_ON_BEHALF_OF_A_FRIEND_THANKS_BODY_FORMAT" = "You’ve made a donation to HCP on behalf of %1$@. They’ll be given the option to show their support on their profile.";
+"DONATION_ON_BEHALF_OF_A_FRIEND_THANKS_BODY_FORMAT" = "You’ve made a donation to Signal on behalf of %1$@. They’ll be given the option to show their support on their profile.";
 
 /* When you donate on behalf of a friend, a thank-you sheet will appear. This is the title on that sheet. */
 "DONATION_ON_BEHALF_OF_A_FRIEND_THANKS_TITLE" = "Thanks for your support!";
@@ -2795,19 +2795,19 @@
 "DONATION_ON_BEHALF_OF_A_FRIEND_VIEW" = "View";
 
 /* A friend has donated on your behalf and you received a badge. This text says that you received a badge, and from whom. Embeds {{contact's short name, such as a first name}}. */
-"DONATION_ON_BEHALF_OF_A_FRIEND_YOU_RECEIVED_A_BADGE_FORMAT" = "%1$@ made a donation to HCP on your behalf! Show your support for HCP on your profile.";
+"DONATION_ON_BEHALF_OF_A_FRIEND_YOU_RECEIVED_A_BADGE_FORMAT" = "%1$@ made a donation to Signal on your behalf! Show your support for Signal on your profile.";
 
-/* There is a screen where users can read more about their donation to HCP. This is the 1st paragraph of that screen. */
+/* There is a screen where users can read more about their donation to Signal. This is the 1st paragraph of that screen. */
 "DONATION_READ_MORE_SCREEN_PARAGRAPH_1" = "Private messaging. No ads, no trackers, no surveillance.";
 
-/* There is a screen where users can read more about their donation to HCP. This is the 2nd paragraph of that screen. */
-"DONATION_READ_MORE_SCREEN_PARAGRAPH_2" = "HCP is supported by donations, meaning that your privacy is at the center of everything we do. HCP is built for you; not your data and not for profit.";
+/* There is a screen where users can read more about their donation to Signal. This is the 2nd paragraph of that screen. */
+"DONATION_READ_MORE_SCREEN_PARAGRAPH_2" = "Signal is supported by donations, meaning that your privacy is at the center of everything we do. HCP is built for you; not your data and not for profit.";
 
-/* There is a screen where users can read more about their donation to HCP. This is the 3rd paragraph of that screen. */
+/* There is a screen where users can read more about their donation to Signal. This is the 3rd paragraph of that screen. */
 "DONATION_READ_MORE_SCREEN_PARAGRAPH_3" = "If you can, please donate today to keep HCP fun, dependable, and available for everyone.";
 
-/* There is a screen where users can read more about their donation to HCP. This is the title of that screen. */
-"DONATION_READ_MORE_SCREEN_TITLE" = "HCP is different.";
+/* There is a screen where users can read more about their donation to Signal. This is the title of that screen. */
+"DONATION_READ_MORE_SCREEN_TITLE" = "Signal is different.";
 
 /* Section title for donation amount on receipts */
 "DONATION_RECEIPT_AMOUNT" = "Amount";
@@ -2858,7 +2858,7 @@
 "DONATION_SCREEN_DONATE_BUTTON" = "Donate";
 
 /* On donation screens, a small amount of information text is shown. This is the subtitle for that text. */
-"DONATION_SCREENS_HEADER_DESCRIPTION" = "Private messaging, funded by you. No ads, no tracking, no compromise. Donate now to support HCP.";
+"DONATION_SCREENS_HEADER_DESCRIPTION" = "Private messaging, funded by you. No ads, no tracking, no compromise. Donate now to support Signal.";
 
 /* On donation screens, a small amount of information text is shown. Users can click this link to learn more information. */
 "DONATION_SCREENS_HEADER_READ_MORE" = "Read more";
@@ -2935,8 +2935,8 @@
 /* Title for the \"donate for a friend\" button on the donation view. */
 "DONATION_VIEW_DONATE_ON_BEHALF_OF_A_FRIEND" = "Donate for a Friend";
 
-/* Text describing to the user that they're going to pay a donation to HCP */
-"DONATION_VIEW_DONATION_TO_SIGNAL" = "Donation to HCP";
+/* Text describing to the user that they're going to pay a donation to Signal */
+"DONATION_VIEW_DONATION_TO_SIGNAL" = "Donation to Signal";
 
 /* Title for the 'Donor FAQ' button on the donation screen */
 "DONATION_VIEW_DONOR_FAQ" = "Donor FAQ";
@@ -2947,8 +2947,8 @@
 /* Title for the 'Badges' button on the donation screen */
 "DONATION_VIEW_MANAGE_BADGES" = "Badges";
 
-/* Text describing to the user that they're going to pay a monthly donation to HCP */
-"DONATION_VIEW_MONTHLY_DONATION_TO_SIGNAL" = "Monthly Donation to HCP";
+/* Text describing to the user that they're going to pay a monthly donation to Signal */
+"DONATION_VIEW_MONTHLY_DONATION_TO_SIGNAL" = "Monthly Donation to Signal";
 
 /* Title for the 'more' section on the donation screen */
 "DONATION_VIEW_MORE_SECTION_TITLE" = "More";
@@ -2959,8 +2959,8 @@
 /* Title for the \"other ways to donate\" section on the donation view. */
 "DONATION_VIEW_OTHER_WAYS_TO_DONATE_TITLE" = "Other Ways to Donate";
 
-/* Title on the 'Donate to HCP' screen */
-"DONATION_VIEW_TITLE" = "Donate to HCP";
+/* Title on the 'Donate to Signal' screen */
+"DONATION_VIEW_TITLE" = "Donate to Signal";
 
 /* Label for the currency picker button in donation views */
 "DONATIONS_CURRENCY_PICKER_LABEL" = "Currency";
@@ -3011,7 +3011,7 @@
 "EMAIL_INVITE_BODY" = "Hey,\n\nLately I've been using HCP to keep the chats on my iPhone private. I'd like you to install it too, so we can be confident that only you and I can read our messages or hear our calls.\n\nHCP is available for iPhone, Android, and Desktop. Get it here: %@\n\nHCP works like your existing messaging app. We can send pictures and video, make calls, and start group chats. The best part is, no one else can see any of it, not even the people who make HCP!\n\nYou can read more about HCP here: %@";
 
 /* subject of email sent to contacts when inviting to install HCP */
-"EMAIL_INVITE_SUBJECT" = "Let's switch to HCP";
+"EMAIL_INVITE_SUBJECT" = "Let's switch to Signal";
 
 /* Description for the fallback support sheet if user cannot send email */
 "EMAIL_SIGNAL_MESSAGE" = "Your device isn't configured to send email. To send a support request, set up email on your device or email support@signal.org";
@@ -4358,7 +4358,7 @@
 "INVITE_FLOW_REQUIRES_CONTACT_ACCESS_TITLE" = "Allow Contact Access";
 
 /* Label for the cell that presents the 'invite contacts' workflow. */
-"INVITE_FRIENDS_CONTACT_TABLE_BUTTON" = "Invite Friends to HCP";
+"INVITE_FRIENDS_CONTACT_TABLE_BUTTON" = "Invite Friends to Signal";
 
 /* Header label above a section for more options for adding contacts */
 "INVITE_FRIENDS_CONTACT_TABLE_HEADER" = "More";
@@ -6665,7 +6665,7 @@
 "RECIPIENT_PICKER_INVITE_MESSAGE" = "%1$@ is not a HCP user. Would you like to invite this number?";
 
 /* Alert title. Shown after selecting a phone number that isn't a HCP user. */
-"RECIPIENT_PICKER_INVITE_TITLE" = "Invite to HCP";
+"RECIPIENT_PICKER_INVITE_TITLE" = "Invite to Signal";
 
 /* Alert title explaining what happens if you forget your 'two-factor auth pin'. */
 "REGISTER_2FA_FORGOT_PIN_ALERT_TITLE" = "Need Help?";
@@ -7264,10 +7264,10 @@
 /* String describing standard quality sent media */
 "SENT_MEDIA_QUALITY_STANDARD" = "Standard";
 
-/* Users can donate to HCP with a bank account. This is the label for email field on that screen. */
+/* Users can donate to Signal with a bank account. This is the label for email field on that screen. */
 "SEPA_DONATION_EMAIL_LABEL" = "Email";
 
-/* Users can donate to HCP with a bank account. This is placeholder text for the email field before the user starts typing. */
+/* Users can donate to Signal with a bank account. This is placeholder text for the email field before the user starts typing. */
 "SEPA_DONATION_EMAIL_PLACEHOLDER" = "Email Address";
 
 /* SEPA bank account donation error for insufficient funds. */
@@ -7285,28 +7285,28 @@
 /* SEPA bank account donation error for the payment not being authorizing by the account holder. */
 "SEPA_DONATION_ERROR_PAYMENT_NOT_AUTHORIZED" = "This payment was revoked by the account holder and could not be processed. You haven’t been charged.";
 
-/* Users can donate to HCP with a bank account. If their internation bank account number (IBAN) contains characters other than letters and numbers, this error will be shown. Try to use a short string to make space in the UI. */
+/* Users can donate to Signal with a bank account. If their internation bank account number (IBAN) contains characters other than letters and numbers, this error will be shown. Try to use a short string to make space in the UI. */
 "SEPA_DONATION_IBAN_INVALID_CHARACTERS_ERROR" = "IBAN can only contain A-Z and 0-9";
 
-/* Users can donate to HCP with a bank account. If their internation bank account number (IBAN) does not pass validation, this error will be shown. Try to use a short string to make space in the UI. */
+/* Users can donate to Signal with a bank account. If their internation bank account number (IBAN) does not pass validation, this error will be shown. Try to use a short string to make space in the UI. */
 "SEPA_DONATION_IBAN_INVALID_CHECK_ERROR" = "Invalid IBAN number";
 
-/* Users can donate to HCP with a bank account. If their internation bank account number (IBAN) has an unsupported country code, this error will be shown. Try to use a short string to make space in the UI. */
+/* Users can donate to Signal with a bank account. If their internation bank account number (IBAN) has an unsupported country code, this error will be shown. Try to use a short string to make space in the UI. */
 "SEPA_DONATION_IBAN_INVALID_COUNTRY_ERROR" = "IBAN country code is not supported";
 
-/* Users can donate to HCP with a bank account. This is the label for IBAN (internation bank account number) field on that screen. */
+/* Users can donate to Signal with a bank account. This is the label for IBAN (internation bank account number) field on that screen. */
 "SEPA_DONATION_IBAN_LABEL" = "IBAN";
 
-/* Users can donate to HCP with a bank account. If their internation bank account number (IBAN) is too long, this error will be shown. Try to use a short string to make space in the UI. */
+/* Users can donate to Signal with a bank account. If their internation bank account number (IBAN) is too long, this error will be shown. Try to use a short string to make space in the UI. */
 "SEPA_DONATION_IBAN_TOO_LONG_ERROR" = "IBAN is too long";
 
-/* Users can donate to HCP with a bank account. If their internation bank account number (IBAN) is too long, this error will be shown. Try to use a short string to make space in the UI. */
+/* Users can donate to Signal with a bank account. If their internation bank account number (IBAN) is too long, this error will be shown. Try to use a short string to make space in the UI. */
 "SEPA_DONATION_IBAN_TOO_SHORT_ERROR" = "IBAN is too short";
 
-/* Users can donate to HCP with a bank account. This is the label for name field on that screen. */
+/* Users can donate to Signal with a bank account. This is the label for name field on that screen. */
 "SEPA_DONATION_NAME_LABEL" = "Name";
 
-/* Users can donate to HCP with a bank account. This is placeholder text for the name field before the user starts typing. */
+/* Users can donate to Signal with a bank account. This is placeholder text for the name field before the user starts typing. */
 "SEPA_DONATION_NAME_PLACEHOLDER" = "Name on Bank Account";
 
 /* Description for the session refresh alert */
@@ -7535,7 +7535,7 @@
 "SETTINGS_DISAPPEARING_MESSAGES_FOOTER" = "Set a default disappearing message timer for all new chats started by you.";
 
 /* Title for the 'donate to signal' link in settings. */
-"SETTINGS_DONATE" = "Donate to HCP";
+"SETTINGS_DONATE" = "Donate to Signal";
 
 /* Title for help button and help pages in app settings. */
 "SETTINGS_HELP" = "Help";
@@ -7679,10 +7679,10 @@
 "SETTINGS_PAYMENTS_DEACTIVATE_TITLE" = "Deactivate Payments";
 
 /* Explanation of the 'deactivate payments with balance' process in the 'deactivate payments' settings. */
-"SETTINGS_PAYMENTS_DEACTIVATE_WITH_BALANCE_EXPLANATION" = "It’s recommended that you transfer your funds to another wallet address before deactivating payments. If you choose not to transfer your funds now, they will remain in your wallet linked to HCP if you reactivate payments.";
+"SETTINGS_PAYMENTS_DEACTIVATE_WITH_BALANCE_EXPLANATION" = "It’s recommended that you transfer your funds to another wallet address before deactivating payments. If you choose not to transfer your funds now, they will remain in your wallet linked to Signal if you reactivate payments.";
 
 /* Description for the 'deactivate payments confirmation' UI in the payment settings. */
-"SETTINGS_PAYMENTS_DEACTIVATE_WITHOUT_TRANSFER_CONFIRM_DESCRIPTION" = "Your balance will remain in your wallet linked to HCP if you choose to reactivate payments.";
+"SETTINGS_PAYMENTS_DEACTIVATE_WITHOUT_TRANSFER_CONFIRM_DESCRIPTION" = "Your balance will remain in your wallet linked to Signal if you choose to reactivate payments.";
 
 /* Title for the 'deactivate payments confirmation' UI in the payment settings. */
 "SETTINGS_PAYMENTS_DEACTIVATE_WITHOUT_TRANSFER_CONFIRM_TITLE" = "Deactivate Without Transferring?";
