@@ -307,14 +307,10 @@ extension WebAppsListViewController: UITableViewDataSource, UITableViewDelegate 
         return filteredCategories[section].apps.count
     }
 
-    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        guard section < filteredCategories.count else { return nil }
-        return filteredCategories[section].name
-    }
-
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         guard section < filteredCategories.count else { return nil }
         let headerView = tableView.dequeueReusableHeaderFooterView(withIdentifier: "CategoryHeader") as! WebAppCategoryHeaderView
+        headerView.configure(with: filteredCategories[section].name)
         return headerView
     }
 

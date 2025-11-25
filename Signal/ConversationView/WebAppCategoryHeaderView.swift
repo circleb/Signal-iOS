@@ -58,4 +58,8 @@ class WebAppCategoryHeaderView: UITableViewHeaderFooterView {
         titleLabel.autoPinEdge(toSuperviewEdge: .trailing, withInset: 16)
         titleLabel.autoPinEdge(toSuperviewEdge: .bottom, withInset: 8)
     }
+    
+    func configure(with title: String) {
+        titleLabel.text = title
+    }
 } 
