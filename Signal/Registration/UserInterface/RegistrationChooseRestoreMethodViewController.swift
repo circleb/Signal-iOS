@@ -213,7 +213,7 @@ class RegistrationChooseRestoreMethodViewController: OWSViewController {
             )
         )
         label.textColor = .systemOrange
-        label.font = .dynamicTypeBody2.medium()
+        label.font = .dynamicTypeFootnote.medium()
         label.textAlignment = .center
         stackView.addArrangedSubview(label)
         stackView.setCustomSpacing(24, after: label)
