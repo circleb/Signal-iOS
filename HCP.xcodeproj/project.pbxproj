@@ -511,7 +511,6 @@
 		45E7A6A81E71CA7E00D44FB5 /* DisplayableTextFilterTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45E7A6A61E71CA7E00D44FB5 /* DisplayableTextFilterTest.swift */; };
 		45F32C232057297A00A300D5 /* MediaPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45F32C1D205718B000A300D5 /* MediaPageViewController.swift */; };
 		45F32C242057297A00A300D5 /* MessageDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34CA1C261F7156F300E51C51 /* MessageDetailViewController.swift */; };
-		46B99B83D9513F2B8641EAB1 /* Pods_SignalNSE.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7F965533D71CA51BE6704CC4 /* Pods_SignalNSE.framework */; };
 		4C0CF6FA2386295400C9F818 /* tap_to_focus.json in Resources */ = {isa = PBXBuildFile; fileRef = 4C0CF6F92386295400C9F818 /* tap_to_focus.json */; };
 		4C1885D2218F8E1C00B67051 /* PhotoGridViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C1885D1218F8E1C00B67051 /* PhotoGridViewCell.swift */; };
 		4C20B2B920CA10DE001BAC90 /* ConversationSearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C20B2B820CA10DE001BAC90 /* ConversationSearchViewController.swift */; };
@@ -951,8 +950,6 @@
 		66586D3929005A1B00DDA9B9 /* story_viewer_onboarding_3.json in Resources */ = {isa = PBXBuildFile; fileRef = 66586D3629005A1B00DDA9B9 /* story_viewer_onboarding_3.json */; };
 		66586D4129009C0000DDA9B9 /* TextAttachment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66586D4029009C0000DDA9B9 /* TextAttachment.swift */; };
 		6659A0262A7C11A800066AB7 /* PrekeyManagerImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6659A0252A7C11A800066AB7 /* PrekeyManagerImpl.swift */; };
-		6659A0282A7C11ED00066AB7 /* MockPreKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6659A0272A7C11ED00066AB7 /* MockPreKeyManager.swift */; };
-		6659A0312A7C5B9700066AB7 /* PreKeyUploadBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6659A0302A7C5B9700066AB7 /* PreKeyUploadBundle.swift */; };
 		6659A0392A81933B00066AB7 /* ProvisioningPermissionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6659A0382A81933B00066AB7 /* ProvisioningPermissionsViewController.swift */; };
 		6659CCB129CD4650000C24C0 /* RegistrationConfirmModeSwitchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6659CCB029CD4650000C24C0 /* RegistrationConfirmModeSwitchViewController.swift */; };
 		665C0D5C2ADF538100539A37 /* BackupArchiveManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 665C0D5B2ADF538100539A37 /* BackupArchiveManager.swift */; };
@@ -1665,11 +1662,7 @@
 		A1A018521805C5E800A052A6 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A11CD70C17FA230600A2D1B1 /* QuartzCore.framework */; };
 		A1A018531805C60D00A052A6 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D221A091169C9E5E00537ABF /* CoreGraphics.framework */; };
 		A5E7C675248C5443007C949A /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = A5E7C673248C5442007C949A /* InfoPlist.strings */; };
-		B524D3882E4305F6004B1E4D /* WebAppsConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3842E4305F6004B1E4D /* WebAppsConfig.swift */; };
-		B524D3892E4305F6004B1E4D /* WebAppsError.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3852E4305F6004B1E4D /* WebAppsError.swift */; };
-		B524D38A2E4305F6004B1E4D /* WebApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3832E4305F6004B1E4D /* WebApp.swift */; };
-		B524D38B2E4305F6004B1E4D /* WebAppsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3872E4305F6004B1E4D /* WebAppsStore.swift */; };
-		B524D38C2E4305F6004B1E4D /* WebAppsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3862E4305F6004B1E4D /* WebAppsService.swift */; };
+
 		B524D3922E430639004B1E4D /* WebAppCategoryHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D38E2E430639004B1E4D /* WebAppCategoryHeaderView.swift */; };
 		B524D3932E430639004B1E4D /* WebAppsListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3902E430639004B1E4D /* WebAppsListViewController.swift */; };
 		B524D3942E430639004B1E4D /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D38D2E430639004B1E4D /* EmptyStateView.swift */; };
@@ -1677,6 +1670,33 @@
 		B524D3962E430639004B1E4D /* WebAppWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3912E430639004B1E4D /* WebAppWebViewController.swift */; };
 		B57FD4B12E5A554100DEA1C6 /* AccessRequestFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57FD4AF2E5A554100DEA1C6 /* AccessRequestFormView.swift */; };
 		B57FD4B22E5A554100DEA1C6 /* BlockedMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57FD4B02E5A554100DEA1C6 /* BlockedMessageView.swift */; };
+		B58EC7882ED56DAE00708A56 /* ServiceId.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC77D2ED56DAE00708A56 /* ServiceId.swift */; };
+		B58EC7892ED56DAE00708A56 /* WebAppsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC7862ED56DAE00708A56 /* WebAppsService.swift */; };
+		B58EC78A2ED56DAE00708A56 /* ProfileKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC77B2ED56DAE00708A56 /* ProfileKey.swift */; };
+		B58EC78B2ED56DAE00708A56 /* IdentityKeyChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC76D2ED56DAE00708A56 /* IdentityKeyChecker.swift */; };
+		B58EC78C2ED56DAE00708A56 /* WebApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC7822ED56DAE00708A56 /* WebApp.swift */; };
+		B58EC78D2ED56DAE00708A56 /* TSAccountManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC77E2ED56DAE00708A56 /* TSAccountManager.swift */; };
+		B58EC78E2ED56DAE00708A56 /* PinnedURLsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC7762ED56DAE00708A56 /* PinnedURLsService.swift */; };
+		B58EC78F2ED56DAE00708A56 /* PhoneNumberDiscoverabilityManagerImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC7742ED56DAE00708A56 /* PhoneNumberDiscoverabilityManagerImpl.swift */; };
+		B58EC7902ED56DAE00708A56 /* WebAppsConfig+Pinning.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC7842ED56DAE00708A56 /* WebAppsConfig+Pinning.swift */; };
+		B58EC7912ED56DAE00708A56 /* TSAccountManagerObjcBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC7802ED56DAE00708A56 /* TSAccountManagerObjcBridge.swift */; };
+		B58EC7922ED56DAE00708A56 /* WebAppsConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC7832ED56DAE00708A56 /* WebAppsConfig.swift */; };
+		B58EC7932ED56DAE00708A56 /* WebAppsError.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC7852ED56DAE00708A56 /* WebAppsError.swift */; };
+		B58EC7942ED56DAE00708A56 /* MockTSAccountManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC7712ED56DAE00708A56 /* MockTSAccountManager.swift */; };
+		B58EC7952ED56DAE00708A56 /* MockPhoneNumberDiscoverabilityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC7702ED56DAE00708A56 /* MockPhoneNumberDiscoverabilityManager.swift */; };
+		B58EC7962ED56DAE00708A56 /* PhoneNumberDiscoverabilityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC7732ED56DAE00708A56 /* PhoneNumberDiscoverabilityManager.swift */; };
+		B58EC7972ED56DAE00708A56 /* PinnedURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC7752ED56DAE00708A56 /* PinnedURL.swift */; };
+		B58EC7982ED56DAE00708A56 /* PniDistributionSyncMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC77A2ED56DAE00708A56 /* PniDistributionSyncMessage.swift */; };
+		B58EC7992ED56DAE00708A56 /* WebAppsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC7872ED56DAE00708A56 /* WebAppsStore.swift */; };
+		B58EC79A2ED56DAE00708A56 /* LocalIdentifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC76F2ED56DAE00708A56 /* LocalIdentifiers.swift */; };
+		B58EC79B2ED56DAE00708A56 /* RegistrationIdGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC77C2ED56DAE00708A56 /* RegistrationIdGenerator.swift */; };
+		B58EC79C2ED56DAE00708A56 /* IdentityKeyMismatchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC76E2ED56DAE00708A56 /* IdentityKeyMismatchManager.swift */; };
+		B58EC79D2ED56DAE00708A56 /* OWSIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC7722ED56DAE00708A56 /* OWSIdentity.swift */; };
+		B58EC79E2ED56DAE00708A56 /* PinnedURLsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC7772ED56DAE00708A56 /* PinnedURLsStore.swift */; };
+		B58EC79F2ED56DAE00708A56 /* PniDistributionParameterBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC7792ED56DAE00708A56 /* PniDistributionParameterBuilder.swift */; };
+		B58EC7A02ED56DAE00708A56 /* TSRegistrationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC7812ED56DAE00708A56 /* TSRegistrationState.swift */; };
+		B58EC7A12ED56DAE00708A56 /* PinnedURLsStoreImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC7782ED56DAE00708A56 /* PinnedURLsStoreImpl.swift */; };
+		B58EC7A22ED56DAE00708A56 /* TSAccountManagerImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC77F2ED56DAE00708A56 /* TSAccountManagerImpl.swift */; };
 		B5B894402E4FA7C900472CA9 /* SSOAvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5B8943E2E4FA7C900472CA9 /* SSOAvatarView.swift */; };
 		B5B894412E4FA7C900472CA9 /* SSOAccountMenuActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5B8943C2E4FA7C900472CA9 /* SSOAccountMenuActions.swift */; };
 		B5D17C732E42711B00799EBD /* SSOAuthenticationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C712E42711B00799EBD /* SSOAuthenticationViewController.swift */; };
@@ -1686,37 +1706,7 @@
 		B5D17C872E4273B800799EBD /* SSORoleManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C802E4273B800799EBD /* SSORoleManager.swift */; };
 		B5D17C882E4273B800799EBD /* SSOService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C812E4273B800799EBD /* SSOService.swift */; };
 		B5D17C892E4273B800799EBD /* SSOUserInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C822E4273B800799EBD /* SSOUserInfo.swift */; };
-		B5D17CB02E4273C500799EBD /* TSAccountManagerImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C9E2E4273C500799EBD /* TSAccountManagerImpl.swift */; };
-		B5D17CB12E4273C500799EBD /* RegistrationIdGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C9C2E4273C500799EBD /* RegistrationIdGenerator.swift */; };
-		B5D17CB22E4273C500799EBD /* PhoneNumberDiscoverabilityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C8B2E4273C500799EBD /* PhoneNumberDiscoverabilityManager.swift */; };
-		B5D17CB42E4273C500799EBD /* IdentityKeyChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17CA22E4273C500799EBD /* IdentityKeyChecker.swift */; };
-		B5D17CB52E4273C500799EBD /* MockPhoneNumberDiscoverabilityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C8A2E4273C500799EBD /* MockPhoneNumberDiscoverabilityManager.swift */; };
-		B5D17CB62E4273C500799EBD /* PhoneNumberDiscoverabilityManagerImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C8C2E4273C500799EBD /* PhoneNumberDiscoverabilityManagerImpl.swift */; };
-		B5D17CB72E4273C500799EBD /* MockRegistrationStateChangeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C972E4273C500799EBD /* MockRegistrationStateChangeManager.swift */; };
-		B5D17CB82E4273C500799EBD /* PniDistributionSyncMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17CA72E4273C500799EBD /* PniDistributionSyncMessage.swift */; };
-		B5D17CBA2E4273C500799EBD /* LocalIdentifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17CA42E4273C500799EBD /* LocalIdentifiers.swift */; };
-		B5D17CBB2E4273C500799EBD /* ServiceId.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17CA92E4273C500799EBD /* ServiceId.swift */; };
 
-		B5D17CBF2E4273C500799EBD /* PniDistributionParameterBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17CA62E4273C500799EBD /* PniDistributionParameterBuilder.swift */; };
-
-		B5D17CC32E4273C500799EBD /* OWSIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17CA52E4273C500799EBD /* OWSIdentity.swift */; };
-
-		B5D17CC52E4273C500799EBD /* TSAccountManagerObjcBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C9F2E4273C500799EBD /* TSAccountManagerObjcBridge.swift */; };
-
-		B5D17CC72E4273C500799EBD /* RegistrationStateChangeManagerImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C992E4273C500799EBD /* RegistrationStateChangeManagerImpl.swift */; };
-		B5D17CC82E4273C500799EBD /* RegistrationStateChangeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C982E4273C500799EBD /* RegistrationStateChangeManager.swift */; };
-		B5D17CCA2E4273C500799EBD /* TSAccountManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C9D2E4273C500799EBD /* TSAccountManager.swift */; };
-		B5D17CCB2E4273C500799EBD /* ProfileKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17CA82E4273C500799EBD /* ProfileKey.swift */; };
-
-		B5D17CCD2E4273C500799EBD /* MockTSAccountManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C9B2E4273C500799EBD /* MockTSAccountManager.swift */; };
-		B5D17CCE2E4273C500799EBD /* IdentityKeyMismatchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17CA32E4273C500799EBD /* IdentityKeyMismatchManager.swift */; };
-
-		B5D17CD02E4273C500799EBD /* TSRegistrationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17CA02E4273C500799EBD /* TSRegistrationState.swift */; };
-		B5F037412E4EF50600F529AF /* PinnedURLsStoreImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F0373E2E4EF50500F529AF /* PinnedURLsStoreImpl.swift */; };
-		B5F037422E4EF50600F529AF /* PinnedURLsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F0373C2E4EF50500F529AF /* PinnedURLsService.swift */; };
-		B5F037432E4EF50600F529AF /* PinnedURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F0373B2E4EF50500F529AF /* PinnedURL.swift */; };
-		B5F037442E4EF50600F529AF /* PinnedURLsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F0373D2E4EF50500F529AF /* PinnedURLsStore.swift */; };
-		B5F037452E4EF50600F529AF /* WebAppsConfig+Pinning.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F0373F2E4EF50500F529AF /* WebAppsConfig+Pinning.swift */; };
 		B5F0374A2E4EF51B00F529AF /* PinnedURLSectionHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F037482E4EF51B00F529AF /* PinnedURLSectionHeaderView.swift */; };
 		B5F0374B2E4EF51B00F529AF /* PinnedURLCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F037472E4EF51B00F529AF /* PinnedURLCell.swift */; };
 		B5F0374C2E4EF51B00F529AF /* PinnedURLsListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F037492E4EF51B00F529AF /* PinnedURLsListViewController.swift */; };
@@ -1832,7 +1822,6 @@
 		C16AFACB2BE9CA6F00838FFB /* HmacStreamTransform.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16AFACA2BE9CA6F00838FFB /* HmacStreamTransform.swift */; };
 		C16B8B752B8940D40030BA24 /* OWSOutgoingSentMessageTranscript.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16B8B742B8940D40030BA24 /* OWSOutgoingSentMessageTranscript.swift */; };
 		C17310A72BD9D45400B7A151 /* BackupServiceAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17310A62BD9D45400B7A151 /* BackupServiceAuth.swift */; };
-		C17345BB2A5E000300C6426D /* PreKeyTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17345BA2A5E000300C6426D /* PreKeyTarget.swift */; };
 		C17586642E2AC3CE008B3A13 /* MediaRootBackupKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17586632E2AC3CE008B3A13 /* MediaRootBackupKey.swift */; };
 		C17586662E2AC52D008B3A13 /* BackupKeyMaterial.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17586652E2AC520008B3A13 /* BackupKeyMaterial.swift */; };
 		C176B48A299DA25500B1900D /* PhoneNumberPrivacySettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C176B489299DA25500B1900D /* PhoneNumberPrivacySettingsViewController.swift */; };
@@ -4480,7 +4469,6 @@
 		45E5A6981F61E6DD001E4A8A /* MarqueeLabel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MarqueeLabel.swift; sourceTree = "<group>"; };
 		45E7A6A61E71CA7E00D44FB5 /* DisplayableTextFilterTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DisplayableTextFilterTest.swift; sourceTree = "<group>"; };
 		45F32C1D205718B000A300D5 /* MediaPageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MediaPageViewController.swift; path = Signal/src/ViewControllers/MediaGallery/MediaPageViewController.swift; sourceTree = SOURCE_ROOT; };
-		46A35218397D9FD1709A675C /* Pods-SignalUITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SignalUITests.debug.xcconfig"; path = "Target Support Files/Pods-SignalUITests/Pods-SignalUITests.debug.xcconfig"; sourceTree = "<group>"; };
 		4C090A1A210FD9C7001FD7F9 /* HapticFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticFeedback.swift; sourceTree = "<group>"; };
 		4C0CF6F92386295400C9F818 /* tap_to_focus.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = tap_to_focus.json; sourceTree = "<group>"; };
 		4C1885D1218F8E1C00B67051 /* PhotoGridViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoGridViewCell.swift; sourceTree = "<group>"; };
@@ -5680,6 +5668,33 @@
 		B524D3912E430639004B1E4D /* WebAppWebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppWebViewController.swift; sourceTree = "<group>"; };
 		B57FD4AF2E5A554100DEA1C6 /* AccessRequestFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessRequestFormView.swift; sourceTree = "<group>"; };
 		B57FD4B02E5A554100DEA1C6 /* BlockedMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockedMessageView.swift; sourceTree = "<group>"; };
+		B58EC76D2ED56DAE00708A56 /* IdentityKeyChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentityKeyChecker.swift; sourceTree = "<group>"; };
+		B58EC76E2ED56DAE00708A56 /* IdentityKeyMismatchManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentityKeyMismatchManager.swift; sourceTree = "<group>"; };
+		B58EC76F2ED56DAE00708A56 /* LocalIdentifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalIdentifiers.swift; sourceTree = "<group>"; };
+		B58EC7702ED56DAE00708A56 /* MockPhoneNumberDiscoverabilityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MockPhoneNumberDiscoverabilityManager.swift; path = PhoneNumberDiscoverabilityManager/MockPhoneNumberDiscoverabilityManager.swift; sourceTree = "<group>"; };
+		B58EC7712ED56DAE00708A56 /* MockTSAccountManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MockTSAccountManager.swift; path = TSAccountManager/MockTSAccountManager.swift; sourceTree = "<group>"; };
+		B58EC7722ED56DAE00708A56 /* OWSIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OWSIdentity.swift; sourceTree = "<group>"; };
+		B58EC7732ED56DAE00708A56 /* PhoneNumberDiscoverabilityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PhoneNumberDiscoverabilityManager.swift; path = PhoneNumberDiscoverabilityManager/PhoneNumberDiscoverabilityManager.swift; sourceTree = "<group>"; };
+		B58EC7742ED56DAE00708A56 /* PhoneNumberDiscoverabilityManagerImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PhoneNumberDiscoverabilityManagerImpl.swift; path = PhoneNumberDiscoverabilityManager/PhoneNumberDiscoverabilityManagerImpl.swift; sourceTree = "<group>"; };
+		B58EC7752ED56DAE00708A56 /* PinnedURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedURL.swift; sourceTree = "<group>"; };
+		B58EC7762ED56DAE00708A56 /* PinnedURLsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedURLsService.swift; sourceTree = "<group>"; };
+		B58EC7772ED56DAE00708A56 /* PinnedURLsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedURLsStore.swift; sourceTree = "<group>"; };
+		B58EC7782ED56DAE00708A56 /* PinnedURLsStoreImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedURLsStoreImpl.swift; sourceTree = "<group>"; };
+		B58EC7792ED56DAE00708A56 /* PniDistributionParameterBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PniDistributionParameterBuilder.swift; sourceTree = "<group>"; };
+		B58EC77A2ED56DAE00708A56 /* PniDistributionSyncMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PniDistributionSyncMessage.swift; sourceTree = "<group>"; };
+		B58EC77B2ED56DAE00708A56 /* ProfileKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileKey.swift; sourceTree = "<group>"; };
+		B58EC77C2ED56DAE00708A56 /* RegistrationIdGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RegistrationIdGenerator.swift; path = TSAccountManager/RegistrationIdGenerator.swift; sourceTree = "<group>"; };
+		B58EC77D2ED56DAE00708A56 /* ServiceId.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceId.swift; sourceTree = "<group>"; };
+		B58EC77E2ED56DAE00708A56 /* TSAccountManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TSAccountManager.swift; path = TSAccountManager/TSAccountManager.swift; sourceTree = "<group>"; };
+		B58EC77F2ED56DAE00708A56 /* TSAccountManagerImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TSAccountManagerImpl.swift; path = TSAccountManager/TSAccountManagerImpl.swift; sourceTree = "<group>"; };
+		B58EC7802ED56DAE00708A56 /* TSAccountManagerObjcBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TSAccountManagerObjcBridge.swift; path = TSAccountManager/TSAccountManagerObjcBridge.swift; sourceTree = "<group>"; };
+		B58EC7812ED56DAE00708A56 /* TSRegistrationState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TSRegistrationState.swift; path = TSAccountManager/TSRegistrationState.swift; sourceTree = "<group>"; };
+		B58EC7822ED56DAE00708A56 /* WebApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebApp.swift; sourceTree = "<group>"; };
+		B58EC7832ED56DAE00708A56 /* WebAppsConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppsConfig.swift; sourceTree = "<group>"; };
+		B58EC7842ED56DAE00708A56 /* WebAppsConfig+Pinning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WebAppsConfig+Pinning.swift"; sourceTree = "<group>"; };
+		B58EC7852ED56DAE00708A56 /* WebAppsError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppsError.swift; sourceTree = "<group>"; };
+		B58EC7862ED56DAE00708A56 /* WebAppsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppsService.swift; sourceTree = "<group>"; };
+		B58EC7872ED56DAE00708A56 /* WebAppsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppsStore.swift; sourceTree = "<group>"; };
 		B5B8943C2E4FA7C900472CA9 /* SSOAccountMenuActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAccountMenuActions.swift; sourceTree = "<group>"; };
 		B5B8943E2E4FA7C900472CA9 /* SSOAvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAvatarView.swift; sourceTree = "<group>"; };
 		B5D17C712E42711B00799EBD /* SSOAuthenticationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAuthenticationViewController.swift; sourceTree = "<group>"; };
@@ -5692,7 +5707,6 @@
 		B5D17C8A2E4273C500799EBD /* MockPhoneNumberDiscoverabilityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockPhoneNumberDiscoverabilityManager.swift; sourceTree = "<group>"; };
 		B5D17C8B2E4273C500799EBD /* PhoneNumberDiscoverabilityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberDiscoverabilityManager.swift; sourceTree = "<group>"; };
 		B5D17C8C2E4273C500799EBD /* PhoneNumberDiscoverabilityManagerImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberDiscoverabilityManagerImpl.swift; sourceTree = "<group>"; };
-
 		B5D17C972E4273C500799EBD /* MockRegistrationStateChangeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockRegistrationStateChangeManager.swift; sourceTree = "<group>"; };
 		B5D17C982E4273C500799EBD /* RegistrationStateChangeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationStateChangeManager.swift; sourceTree = "<group>"; };
 		B5D17C992E4273C500799EBD /* RegistrationStateChangeManagerImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationStateChangeManagerImpl.swift; sourceTree = "<group>"; };
@@ -9734,11 +9748,8 @@
 			isa = PBXGroup;
 			children = (
 				6659A0272A7C11ED00066AB7 /* MockPreKeyManager.swift */,
-				F9C5C9C2289453B100548EEE /* PreKeyManager.swift */,
 				6659A0252A7C11A800066AB7 /* PrekeyManagerImpl.swift */,
 				C17345BA2A5E000300C6426D /* PreKeyTarget.swift */,
-				D94AEB3B2D28940500B03D7A /* PreKeyTaskAPIClient.swift */,
-				C1ED5CA02A72E3D5009AD3FC /* PreKeyTaskManager.swift */,
 				6659A0302A7C5B9700066AB7 /* PreKeyUploadBundle.swift */,
 			);
 			path = PreKeys;
@@ -11161,6 +11172,43 @@
 			path = StorageService;
 			sourceTree = "<group>";
 		};
+		B58EC76C2ED56BDC00708A56 /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				B5D17C9E2E4273C500799EBD /* TSAccountManagerImpl.swift */,
+				B5D17C9C2E4273C500799EBD /* RegistrationIdGenerator.swift */,
+				B5D17C8B2E4273C500799EBD /* PhoneNumberDiscoverabilityManager.swift */,
+				B5D17CA22E4273C500799EBD /* IdentityKeyChecker.swift */,
+				B5D17C8A2E4273C500799EBD /* MockPhoneNumberDiscoverabilityManager.swift */,
+				B5D17C8C2E4273C500799EBD /* PhoneNumberDiscoverabilityManagerImpl.swift */,
+				B5D17C972E4273C500799EBD /* MockRegistrationStateChangeManager.swift */,
+				B5D17CA72E4273C500799EBD /* PniDistributionSyncMessage.swift */,
+				B5D17CA42E4273C500799EBD /* LocalIdentifiers.swift */,
+				B5D17CA92E4273C500799EBD /* ServiceId.swift */,
+				B5D17CA62E4273C500799EBD /* PniDistributionParameterBuilder.swift */,
+				B5D17CA52E4273C500799EBD /* OWSIdentity.swift */,
+				B5D17C9F2E4273C500799EBD /* TSAccountManagerObjcBridge.swift */,
+				B5D17C992E4273C500799EBD /* RegistrationStateChangeManagerImpl.swift */,
+				B5D17C982E4273C500799EBD /* RegistrationStateChangeManager.swift */,
+				B5D17C9D2E4273C500799EBD /* TSAccountManager.swift */,
+				B5D17CA82E4273C500799EBD /* ProfileKey.swift */,
+				B5D17C9B2E4273C500799EBD /* MockTSAccountManager.swift */,
+				B5D17CA32E4273C500799EBD /* IdentityKeyMismatchManager.swift */,
+				B5D17CA02E4273C500799EBD /* TSRegistrationState.swift */,
+				B524D3842E4305F6004B1E4D /* WebAppsConfig.swift */,
+				B524D3852E4305F6004B1E4D /* WebAppsError.swift */,
+				B524D3832E4305F6004B1E4D /* WebApp.swift */,
+				B524D3872E4305F6004B1E4D /* WebAppsStore.swift */,
+				B524D3862E4305F6004B1E4D /* WebAppsService.swift */,
+				B5F0373E2E4EF50500F529AF /* PinnedURLsStoreImpl.swift */,
+				B5F0373C2E4EF50500F529AF /* PinnedURLsService.swift */,
+				B5F0373B2E4EF50500F529AF /* PinnedURL.swift */,
+				B5F0373D2E4EF50500F529AF /* PinnedURLsStore.swift */,
+				B5F0373F2E4EF50500F529AF /* WebAppsConfig+Pinning.swift */,
+			);
+			name = "Recovered References";
+			sourceTree = "<group>";
+		};
 		B5D17C842E4273B800799EBD /* Account */ = {
 			isa = PBXGroup;
 			children = (
@@ -11169,60 +11217,6 @@
 				B5D17C812E4273B800799EBD /* SSOService.swift */,
 				B5D17C822E4273B800799EBD /* SSOUserInfo.swift */,
 				B5D17C832E4273B800799EBD /* SSOUserInfoStore.swift */,
-			);
-			path = Account;
-			sourceTree = "<group>";
-		};
-		B5D17C8D2E4273C500799EBD /* PhoneNumberDiscoverabilityManager */ = {
-			isa = PBXGroup;
-			children = (
-				B5D17C8A2E4273C500799EBD /* MockPhoneNumberDiscoverabilityManager.swift */,
-				B5D17C8B2E4273C500799EBD /* PhoneNumberDiscoverabilityManager.swift */,
-				B5D17C8C2E4273C500799EBD /* PhoneNumberDiscoverabilityManagerImpl.swift */,
-			);
-			path = PhoneNumberDiscoverabilityManager;
-			sourceTree = "<group>";
-		};
-
-		B5D17C9A2E4273C500799EBD /* RegistrationStateChangeManager */ = {
-			isa = PBXGroup;
-			children = (
-				B5D17C972E4273C500799EBD /* MockRegistrationStateChangeManager.swift */,
-				B5D17C982E4273C500799EBD /* RegistrationStateChangeManager.swift */,
-				B5D17C992E4273C500799EBD /* RegistrationStateChangeManagerImpl.swift */,
-			);
-			path = RegistrationStateChangeManager;
-			sourceTree = "<group>";
-		};
-		B5D17CA12E4273C500799EBD /* TSAccountManager */ = {
-			isa = PBXGroup;
-			children = (
-				B5D17C9A2E4273C500799EBD /* RegistrationStateChangeManager */,
-				B5D17C9B2E4273C500799EBD /* MockTSAccountManager.swift */,
-				B5D17C9C2E4273C500799EBD /* RegistrationIdGenerator.swift */,
-				B5D17C9D2E4273C500799EBD /* TSAccountManager.swift */,
-				B5D17C9E2E4273C500799EBD /* TSAccountManagerImpl.swift */,
-				B5D17C9F2E4273C500799EBD /* TSAccountManagerObjcBridge.swift */,
-				B5F0373B2E4EF50500F529AF /* PinnedURL.swift */,
-				B5F0373C2E4EF50500F529AF /* PinnedURLsService.swift */,
-				B5F0373D2E4EF50500F529AF /* PinnedURLsStore.swift */,
-				B5F0373E2E4EF50500F529AF /* PinnedURLsStoreImpl.swift */,
-				B5F0373F2E4EF50500F529AF /* WebAppsConfig+Pinning.swift */,
-				B524D3832E4305F6004B1E4D /* WebApp.swift */,
-				B524D3842E4305F6004B1E4D /* WebAppsConfig.swift */,
-				B524D3852E4305F6004B1E4D /* WebAppsError.swift */,
-				B524D3862E4305F6004B1E4D /* WebAppsService.swift */,
-				B524D3872E4305F6004B1E4D /* WebAppsStore.swift */,
-				B5D17C8D2E4273C500799EBD /* PhoneNumberDiscoverabilityManager */,
-				B5D17CA12E4273C500799EBD /* TSAccountManager */,
-				B5D17CA22E4273C500799EBD /* IdentityKeyChecker.swift */,
-				B5D17CA32E4273C500799EBD /* IdentityKeyMismatchManager.swift */,
-				B5D17CA42E4273C500799EBD /* LocalIdentifiers.swift */,
-				B5D17CA52E4273C500799EBD /* OWSIdentity.swift */,
-				B5D17CA62E4273C500799EBD /* PniDistributionParameterBuilder.swift */,
-				B5D17CA72E4273C500799EBD /* PniDistributionSyncMessage.swift */,
-				B5D17CA82E4273C500799EBD /* ProfileKey.swift */,
-				B5D17CA92E4273C500799EBD /* ServiceId.swift */,
 			);
 			path = Account;
 			sourceTree = "<group>";
@@ -11526,6 +11520,7 @@
 				D221A08C169C9E5E00537ABF /* Frameworks */,
 				D221A08A169C9E5E00537ABF /* Products */,
 				07B6BFA4D17E1353B0696C14 /* Pods */,
+				B58EC76C2ED56BDC00708A56 /* Recovered References */,
 			);
 			indentWidth = 4;
 			sourceTree = "<group>";
@@ -14230,30 +14225,39 @@
 			path = Generated;
 			sourceTree = "<group>";
 		};
-		F9C5C9C6289453B100548EEE /* RemoteAttestation */ = {
-			isa = PBXGroup;
-			children = (
-				F9C5C9C7289453B100548EEE /* RemoteAttestation.swift */,
-			);
-			path = RemoteAttestation;
-			sourceTree = "<group>";
-		};
 		F9C5C9BA289453B100548EEE /* Account */ = {
 			isa = PBXGroup;
 			children = (
-				6646572F2AC369EB0099DE1C /* PhoneNumberDiscoverabilityManager */,
+				B58EC76D2ED56DAE00708A56 /* IdentityKeyChecker.swift */,
+				B58EC76E2ED56DAE00708A56 /* IdentityKeyMismatchManager.swift */,
+				B58EC76F2ED56DAE00708A56 /* LocalIdentifiers.swift */,
+				B58EC7702ED56DAE00708A56 /* MockPhoneNumberDiscoverabilityManager.swift */,
+				B58EC7712ED56DAE00708A56 /* MockTSAccountManager.swift */,
+				B58EC7722ED56DAE00708A56 /* OWSIdentity.swift */,
+				B58EC7732ED56DAE00708A56 /* PhoneNumberDiscoverabilityManager.swift */,
+				B58EC7742ED56DAE00708A56 /* PhoneNumberDiscoverabilityManagerImpl.swift */,
+				B58EC7752ED56DAE00708A56 /* PinnedURL.swift */,
+				B58EC7762ED56DAE00708A56 /* PinnedURLsService.swift */,
+				B58EC7772ED56DAE00708A56 /* PinnedURLsStore.swift */,
+				B58EC7782ED56DAE00708A56 /* PinnedURLsStoreImpl.swift */,
+				B58EC7792ED56DAE00708A56 /* PniDistributionParameterBuilder.swift */,
+				B58EC77A2ED56DAE00708A56 /* PniDistributionSyncMessage.swift */,
+				B58EC77B2ED56DAE00708A56 /* ProfileKey.swift */,
+				B58EC77C2ED56DAE00708A56 /* RegistrationIdGenerator.swift */,
+				B58EC77D2ED56DAE00708A56 /* ServiceId.swift */,
+				B58EC77E2ED56DAE00708A56 /* TSAccountManager.swift */,
+				B58EC77F2ED56DAE00708A56 /* TSAccountManagerImpl.swift */,
+				B58EC7802ED56DAE00708A56 /* TSAccountManagerObjcBridge.swift */,
+				B58EC7812ED56DAE00708A56 /* TSRegistrationState.swift */,
+				B58EC7822ED56DAE00708A56 /* WebApp.swift */,
+				B58EC7832ED56DAE00708A56 /* WebAppsConfig.swift */,
+				B58EC7842ED56DAE00708A56 /* WebAppsConfig+Pinning.swift */,
+				B58EC7852ED56DAE00708A56 /* WebAppsError.swift */,
+				B58EC7862ED56DAE00708A56 /* WebAppsService.swift */,
+				B58EC7872ED56DAE00708A56 /* WebAppsStore.swift */,
 				6659A0242A7C112700066AB7 /* PreKeys */,
-				661170BF2ABA458800A1B16D /* TSAccountManager */,
 				50F401CB2D483BF40094CA56 /* DeviceId.swift */,
-				D9F399AC2A95798A001599EC /* IdentityKeyChecker.swift */,
-				D9F399B12A96D65D001599EC /* IdentityKeyMismatchManager.swift */,
-				5033D46629D76BD0007FEADA /* LocalIdentifiers.swift */,
-				72552EF32C9EF9E7008614AF /* OWSIdentity.swift */,
-				D9CAF74F2A0ACFF20049193A /* PniDistributionParameterBuilder.swift */,
-				C18E3C712A9FF65D003D1CF1 /* PniDistributionSyncMessage.swift */,
-				50D146CC2D1F4E5800D628DE /* ProfileKey.swift */,
 				C1C2185C2E70BA27008567A1 /* RegistrationIdMismatchManager.swift */,
-				507CD5E429660D5100E47DAC /* ServiceId.swift */,
 			);
 			path = Account;
 			sourceTree = "<group>";
@@ -18073,32 +18077,7 @@
 				66F6D6A52C7D0E0000EFAF75 /* ColorOrGradient.swift in Sources */,
 				72345D1D2B9A1984000237B3 /* CommonStrings.swift in Sources */,
 				501E4DAB2D133F4400D883C7 /* CompletionSerializer.swift in Sources */,
-				B5D17CB02E4273C500799EBD /* TSAccountManagerImpl.swift in Sources */,
-				B5D17CB12E4273C500799EBD /* RegistrationIdGenerator.swift in Sources */,
-				B5D17CB22E4273C500799EBD /* PhoneNumberDiscoverabilityManager.swift in Sources */,
-				B5D17CB42E4273C500799EBD /* IdentityKeyChecker.swift in Sources */,
-				B5D17CB52E4273C500799EBD /* MockPhoneNumberDiscoverabilityManager.swift in Sources */,
-				B5D17CB62E4273C500799EBD /* PhoneNumberDiscoverabilityManagerImpl.swift in Sources */,
-				B5D17CB72E4273C500799EBD /* MockRegistrationStateChangeManager.swift in Sources */,
-				B5D17CB82E4273C500799EBD /* PniDistributionSyncMessage.swift in Sources */,
-				B5D17CBA2E4273C500799EBD /* LocalIdentifiers.swift in Sources */,
-				B5D17CBB2E4273C500799EBD /* ServiceId.swift in Sources */,
 
-				B5D17CBF2E4273C500799EBD /* PniDistributionParameterBuilder.swift in Sources */,
-
-				B5D17CC32E4273C500799EBD /* OWSIdentity.swift in Sources */,
-
-				B5D17CC52E4273C500799EBD /* TSAccountManagerObjcBridge.swift in Sources */,
-
-				B5D17CC72E4273C500799EBD /* RegistrationStateChangeManagerImpl.swift in Sources */,
-				B5D17CC82E4273C500799EBD /* RegistrationStateChangeManager.swift in Sources */,
-				B5D17CCA2E4273C500799EBD /* TSAccountManager.swift in Sources */,
-				B5D17CCB2E4273C500799EBD /* ProfileKey.swift in Sources */,
-
-				B5D17CCD2E4273C500799EBD /* MockTSAccountManager.swift in Sources */,
-				B5D17CCE2E4273C500799EBD /* IdentityKeyMismatchManager.swift in Sources */,
-
-				B5D17CD02E4273C500799EBD /* TSRegistrationState.swift in Sources */,
 				50C0203C2CA4A61E00BDC4EF /* ConcurrentTaskQueue.swift in Sources */,
 				509A8DC22E25817E0024BF14 /* ConnectionLock.swift in Sources */,
 				D958E2AF2B58696700EE9831 /* ConsumableMockGuarantee.swift in Sources */,
@@ -18507,7 +18486,6 @@
 				F9C5CC6B289453B300548EEE /* OWSGroupCallMessage.m in Sources */,
 				D91AC9402B63393300814975 /* OWSGroupCallMessage.swift in Sources */,
 				F9C5CDC2289453B400548EEE /* OWSHTTPError.swift in Sources */,
-				72552EF42C9EF9EC008614AF /* OWSIdentity.swift in Sources */,
 				F9C5CC2C289453B300548EEE /* OWSIdentityManager.swift in Sources */,
 				661BFE102C0808CA0065435B /* OWSImageSource+EncryptedFileHandle.swift in Sources */,
 				661BFE0E2C0806150065435B /* OWSImageSource+FileHandle.swift in Sources */,
@@ -18596,11 +18574,7 @@
 				F9C5CCFE289453B300548EEE /* OWSVerificationStateSyncMessage.m in Sources */,
 				F9C5CCFC289453B300548EEE /* OWSViewedReceiptsForLinkedDevicesMessage.m in Sources */,
 				F9C5CCFF289453B300548EEE /* OWSViewOnceMessageReadSyncMessage.m in Sources */,
-				B524D3882E4305F6004B1E4D /* WebAppsConfig.swift in Sources */,
-				B524D3892E4305F6004B1E4D /* WebAppsError.swift in Sources */,
-				B524D38A2E4305F6004B1E4D /* WebApp.swift in Sources */,
-				B524D38B2E4305F6004B1E4D /* WebAppsStore.swift in Sources */,
-				B524D38C2E4305F6004B1E4D /* WebAppsService.swift in Sources */,
+
 				509085BE2C49C29400409B85 /* PaddingBucket.swift in Sources */,
 				668B5BFC2C7E46D30018CF36 /* PaletteChatColor+Constants.swift in Sources */,
 				F9C5CDCD289453B400548EEE /* ParamParser.swift in Sources */,
@@ -18642,7 +18616,6 @@
 				50589CE02E8C4AD5003EF42A /* PreKey.swift in Sources */,
 				5010B6B42C6BD41E00314CD4 /* PreKeyBundle.swift in Sources */,
 				5050A8792B76E2E100E9BFA4 /* PreKeyId.swift in Sources */,
-				F9C5CCAC289453B300548EEE /* PreKeyManager.swift in Sources */,
 				6659A0262A7C11A800066AB7 /* PrekeyManagerImpl.swift in Sources */,
 				72B0C2402C9EEA8200B57DAD /* PreKeyRecord.swift in Sources */,
 				50589CDE2E8C44D5003EF42A /* PreKeyStore.swift in Sources */,
@@ -18702,7 +18675,6 @@
 				F9C5CE18289453B400548EEE /* Refinery.swift in Sources */,
 				720547F62B9C985300E2CF2F /* RefreshEvent.swift in Sources */,
 				C13EDC3F2D94636000670597 /* Registration.pb.swift in Sources */,
-				661170C12ABA459D00A1B16D /* RegistrationIdGenerator.swift in Sources */,
 				C1C2185D2E70BA27008567A1 /* RegistrationIdMismatchManager.swift in Sources */,
 				C180878C2D763D4800B16D1E /* RegistrationProvisioningMessage.swift in Sources */,
 				66A1DF73298C635E00C4E4A7 /* RegistrationRequestFactory.swift in Sources */,
@@ -18733,11 +18705,7 @@
 				D9F6553C29D6547F002A330A /* SDSCodableModelDatabaseInterface+Save.swift in Sources */,
 				D9F6553D29D6547F002A330A /* SDSCodableModelDatabaseInterface.swift in Sources */,
 				72A132A72CA25EF0000ACED6 /* SDSCrossProcess.swift in Sources */,
-				B5F037412E4EF50600F529AF /* PinnedURLsStoreImpl.swift in Sources */,
-				B5F037422E4EF50600F529AF /* PinnedURLsService.swift in Sources */,
-				B5F037432E4EF50600F529AF /* PinnedURL.swift in Sources */,
-				B5F037442E4EF50600F529AF /* PinnedURLsStore.swift in Sources */,
-				B5F037452E4EF50600F529AF /* WebAppsConfig+Pinning.swift in Sources */,
+
 				F9C5CD2B289453B300548EEE /* SDSDatabaseStorage+Objc.m in Sources */,
 				F9C5CD1A289453B300548EEE /* SDSDatabaseStorage.swift in Sources */,
 				F9C5CD1B289453B300548EEE /* SDSDeserialization.swift in Sources */,
@@ -18991,6 +18959,33 @@
 				F9C5CBE3289453B300548EEE /* TSUnreadIndicatorInteraction+SDS.swift in Sources */,
 				F9C5CBD9289453B300548EEE /* TSUnreadIndicatorInteraction.m in Sources */,
 				D91A39E32AD9D1A000F57A61 /* TSYapDatabaseObject+SQLiteRowId.swift in Sources */,
+				B58EC7882ED56DAE00708A56 /* ServiceId.swift in Sources */,
+				B58EC7892ED56DAE00708A56 /* WebAppsService.swift in Sources */,
+				B58EC78A2ED56DAE00708A56 /* ProfileKey.swift in Sources */,
+				B58EC78B2ED56DAE00708A56 /* IdentityKeyChecker.swift in Sources */,
+				B58EC78C2ED56DAE00708A56 /* WebApp.swift in Sources */,
+				B58EC78D2ED56DAE00708A56 /* TSAccountManager.swift in Sources */,
+				B58EC78E2ED56DAE00708A56 /* PinnedURLsService.swift in Sources */,
+				B58EC78F2ED56DAE00708A56 /* PhoneNumberDiscoverabilityManagerImpl.swift in Sources */,
+				B58EC7902ED56DAE00708A56 /* WebAppsConfig+Pinning.swift in Sources */,
+				B58EC7912ED56DAE00708A56 /* TSAccountManagerObjcBridge.swift in Sources */,
+				B58EC7922ED56DAE00708A56 /* WebAppsConfig.swift in Sources */,
+				B58EC7932ED56DAE00708A56 /* WebAppsError.swift in Sources */,
+				B58EC7942ED56DAE00708A56 /* MockTSAccountManager.swift in Sources */,
+				B58EC7952ED56DAE00708A56 /* MockPhoneNumberDiscoverabilityManager.swift in Sources */,
+				B58EC7962ED56DAE00708A56 /* PhoneNumberDiscoverabilityManager.swift in Sources */,
+				B58EC7972ED56DAE00708A56 /* PinnedURL.swift in Sources */,
+				B58EC7982ED56DAE00708A56 /* PniDistributionSyncMessage.swift in Sources */,
+				B58EC7992ED56DAE00708A56 /* WebAppsStore.swift in Sources */,
+				B58EC79A2ED56DAE00708A56 /* LocalIdentifiers.swift in Sources */,
+				B58EC79B2ED56DAE00708A56 /* RegistrationIdGenerator.swift in Sources */,
+				B58EC79C2ED56DAE00708A56 /* IdentityKeyMismatchManager.swift in Sources */,
+				B58EC79D2ED56DAE00708A56 /* OWSIdentity.swift in Sources */,
+				B58EC79E2ED56DAE00708A56 /* PinnedURLsStore.swift in Sources */,
+				B58EC79F2ED56DAE00708A56 /* PniDistributionParameterBuilder.swift in Sources */,
+				B58EC7A02ED56DAE00708A56 /* TSRegistrationState.swift in Sources */,
+				B58EC7A12ED56DAE00708A56 /* PinnedURLsStoreImpl.swift in Sources */,
+				B58EC7A22ED56DAE00708A56 /* TSAccountManagerImpl.swift in Sources */,
 				F9C5CD5A289453B300548EEE /* TSYapDatabaseObject.m in Sources */,
 				F9C5CC38289453B300548EEE /* TypingIndicatorMessage.swift in Sources */,
 				F9C5CDDA289453B400548EEE /* TypingIndicators.swift in Sources */,
