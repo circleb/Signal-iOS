@@ -81,15 +81,13 @@ class SSOWebViewController: UIViewController {
     }
     
     private func loadURL() {
-        guard let userInfo = userInfoStore.getUserInfo() else {
-            showError("No SSO authentication found. Please sign in again.")
-            return
+        var request = URLRequest(url: url)
+        
+        if let userInfo = userInfoStore.getUserInfo() {
+            let accessToken = userInfo.accessToken
+            request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         }
         
-        let accessToken = userInfo.accessToken
-        
-        var request = URLRequest(url: url)
-        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         

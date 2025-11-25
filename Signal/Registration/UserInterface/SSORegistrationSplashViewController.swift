@@ -44,6 +44,18 @@ public class SSORegistrationSplashViewController: OWSViewController {
         )
         return button
     }()
+    private lazy var registerButton: UIButton = {
+        var config = UIButton.Configuration.largePrimary(title: "Register with HCP")
+        config.baseBackgroundColor = UIColor.Signal.secondaryFill
+        config.baseForegroundColor = UIColor.Signal.label
+        let button = UIButton(
+            configuration: config,
+            primaryAction: UIAction { [weak self] _ in
+                self?.handleRegistration()
+            }
+        )
+        return button
+    }()
     private let howdyLabel = UILabel()
     private let welcomeLabel = UILabel()
     private let setupOptionsStackView = UIStackView()
@@ -162,6 +174,11 @@ public class SSORegistrationSplashViewController: OWSViewController {
         // SSO Login Button
         ssoLoginButton.accessibilityIdentifier = "registration.splash.ssoLoginButton"
         stackView.addArrangedSubview(ssoLoginButton.enclosedInVerticalStackView(isFullWidthButton: true))
+        stackView.setCustomSpacing(8, after: ssoLoginButton)
+        
+        // Register Button
+        registerButton.accessibilityIdentifier = "registration.splash.registerButton"
+        stackView.addArrangedSubview(registerButton.enclosedInVerticalStackView(isFullWidthButton: true))
 
         // Welcome Label
         welcomeLabel.font = UIFont.dynamicTypeTitle2
@@ -242,6 +259,7 @@ public class SSORegistrationSplashViewController: OWSViewController {
         switch state {
         case .initial:
             ssoLoginButton.isHidden = false
+            registerButton.isHidden = false
             howdyLabel.isHidden = true
             welcomeLabel.isHidden = true
             setupOptionsStackView.isHidden = true
@@ -252,6 +270,7 @@ public class SSORegistrationSplashViewController: OWSViewController {
 
         case .loading:
             ssoLoginButton.isHidden = true
+            registerButton.isHidden = true
             howdyLabel.isHidden = true
             welcomeLabel.isHidden = true
             setupOptionsStackView.isHidden = true
@@ -263,6 +282,7 @@ public class SSORegistrationSplashViewController: OWSViewController {
 
         case .authenticated(let userInfo):
             ssoLoginButton.isHidden = true
+            registerButton.isHidden = true
             howdyLabel.isHidden = false
             welcomeLabel.isHidden = true
             setupOptionsStackView.isHidden = false
@@ -280,6 +300,7 @@ public class SSORegistrationSplashViewController: OWSViewController {
 
         case .error(let error):
             ssoLoginButton.isHidden = true
+            registerButton.isHidden = false
             howdyLabel.isHidden = true
             welcomeLabel.isHidden = true
             setupOptionsStackView.isHidden = true
@@ -322,6 +343,15 @@ public class SSORegistrationSplashViewController: OWSViewController {
             .catch { [weak self] error in
                 self?.handleSSOError(error as? SSOError ?? .networkError(error))
             }
+    }
+
+    @objc
+    private func handleRegistration() {
+        let url = URL(string: "https://my.homesteadheritage.org/register")!
+        let webVC = SSOWebViewController(url: url, title: "Register with HCP")
+        let navController = UINavigationController(rootViewController: webVC)
+        navController.modalPresentationStyle = .pageSheet
+        present(navController, animated: true)
     }
 
     private func handleSSOSuccess(_ userInfo: SSOUserInfo) {
