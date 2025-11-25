@@ -1662,7 +1662,6 @@
 		A1A018521805C5E800A052A6 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A11CD70C17FA230600A2D1B1 /* QuartzCore.framework */; };
 		A1A018531805C60D00A052A6 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D221A091169C9E5E00537ABF /* CoreGraphics.framework */; };
 		A5E7C675248C5443007C949A /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = A5E7C673248C5442007C949A /* InfoPlist.strings */; };
-
 		B524D3922E430639004B1E4D /* WebAppCategoryHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D38E2E430639004B1E4D /* WebAppCategoryHeaderView.swift */; };
 		B524D3932E430639004B1E4D /* WebAppsListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3902E430639004B1E4D /* WebAppsListViewController.swift */; };
 		B524D3942E430639004B1E4D /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D38D2E430639004B1E4D /* EmptyStateView.swift */; };
@@ -1697,6 +1696,15 @@
 		B58EC7A02ED56DAE00708A56 /* TSRegistrationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC7812ED56DAE00708A56 /* TSRegistrationState.swift */; };
 		B58EC7A12ED56DAE00708A56 /* PinnedURLsStoreImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC7782ED56DAE00708A56 /* PinnedURLsStoreImpl.swift */; };
 		B58EC7A22ED56DAE00708A56 /* TSAccountManagerImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC77F2ED56DAE00708A56 /* TSAccountManagerImpl.swift */; };
+		B58EC7A62ED580C900708A56 /* RegistrationStateChangeManagerImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC7A52ED580C900708A56 /* RegistrationStateChangeManagerImpl.swift */; };
+		B58EC7A72ED580C900708A56 /* MockRegistrationStateChangeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC7A32ED580C900708A56 /* MockRegistrationStateChangeManager.swift */; };
+		B58EC7A82ED580C900708A56 /* RegistrationStateChangeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC7A42ED580C900708A56 /* RegistrationStateChangeManager.swift */; };
+		B58EC7AA2ED5855B00708A56 /* PreKeyTaskAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC7A92ED5855B00708A56 /* PreKeyTaskAPIClient.swift */; };
+		B58EC7AD2ED5869100708A56 /* PreKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC7AB2ED5869100708A56 /* PreKeyManager.swift */; };
+		B58EC7AE2ED5869100708A56 /* PreKeyTaskManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC7AC2ED5869100708A56 /* PreKeyTaskManager.swift */; };
+		B58EC7AF2ED58F4400708A56 /* PreKeyUploadBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6659A0302A7C5B9700066AB7 /* PreKeyUploadBundle.swift */; };
+		B58EC7B02ED58FED00708A56 /* PreKeyTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17345BA2A5E000300C6426D /* PreKeyTarget.swift */; };
+		B58EC7B12ED5901D00708A56 /* MockPreKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6659A0272A7C11ED00066AB7 /* MockPreKeyManager.swift */; };
 		B5B894402E4FA7C900472CA9 /* SSOAvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5B8943E2E4FA7C900472CA9 /* SSOAvatarView.swift */; };
 		B5B894412E4FA7C900472CA9 /* SSOAccountMenuActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5B8943C2E4FA7C900472CA9 /* SSOAccountMenuActions.swift */; };
 		B5D17C732E42711B00799EBD /* SSOAuthenticationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C712E42711B00799EBD /* SSOAuthenticationViewController.swift */; };
@@ -1706,7 +1714,6 @@
 		B5D17C872E4273B800799EBD /* SSORoleManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C802E4273B800799EBD /* SSORoleManager.swift */; };
 		B5D17C882E4273B800799EBD /* SSOService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C812E4273B800799EBD /* SSOService.swift */; };
 		B5D17C892E4273B800799EBD /* SSOUserInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C822E4273B800799EBD /* SSOUserInfo.swift */; };
-
 		B5F0374A2E4EF51B00F529AF /* PinnedURLSectionHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F037482E4EF51B00F529AF /* PinnedURLSectionHeaderView.swift */; };
 		B5F0374B2E4EF51B00F529AF /* PinnedURLCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F037472E4EF51B00F529AF /* PinnedURLCell.swift */; };
 		B5F0374C2E4EF51B00F529AF /* PinnedURLsListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F037492E4EF51B00F529AF /* PinnedURLsListViewController.swift */; };
@@ -5695,6 +5702,12 @@
 		B58EC7852ED56DAE00708A56 /* WebAppsError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppsError.swift; sourceTree = "<group>"; };
 		B58EC7862ED56DAE00708A56 /* WebAppsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppsService.swift; sourceTree = "<group>"; };
 		B58EC7872ED56DAE00708A56 /* WebAppsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppsStore.swift; sourceTree = "<group>"; };
+		B58EC7A32ED580C900708A56 /* MockRegistrationStateChangeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MockRegistrationStateChangeManager.swift; path = TSAccountManager/RegistrationStateChangeManager/MockRegistrationStateChangeManager.swift; sourceTree = "<group>"; };
+		B58EC7A42ED580C900708A56 /* RegistrationStateChangeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RegistrationStateChangeManager.swift; path = TSAccountManager/RegistrationStateChangeManager/RegistrationStateChangeManager.swift; sourceTree = "<group>"; };
+		B58EC7A52ED580C900708A56 /* RegistrationStateChangeManagerImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RegistrationStateChangeManagerImpl.swift; path = TSAccountManager/RegistrationStateChangeManager/RegistrationStateChangeManagerImpl.swift; sourceTree = "<group>"; };
+		B58EC7A92ED5855B00708A56 /* PreKeyTaskAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreKeyTaskAPIClient.swift; sourceTree = "<group>"; };
+		B58EC7AB2ED5869100708A56 /* PreKeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreKeyManager.swift; sourceTree = "<group>"; };
+		B58EC7AC2ED5869100708A56 /* PreKeyTaskManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreKeyTaskManager.swift; sourceTree = "<group>"; };
 		B5B8943C2E4FA7C900472CA9 /* SSOAccountMenuActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAccountMenuActions.swift; sourceTree = "<group>"; };
 		B5B8943E2E4FA7C900472CA9 /* SSOAvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAvatarView.swift; sourceTree = "<group>"; };
 		B5D17C712E42711B00799EBD /* SSOAuthenticationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAuthenticationViewController.swift; sourceTree = "<group>"; };
@@ -9747,6 +9760,9 @@
 		6659A0242A7C112700066AB7 /* PreKeys */ = {
 			isa = PBXGroup;
 			children = (
+				B58EC7AB2ED5869100708A56 /* PreKeyManager.swift */,
+				B58EC7AC2ED5869100708A56 /* PreKeyTaskManager.swift */,
+				B58EC7A92ED5855B00708A56 /* PreKeyTaskAPIClient.swift */,
 				6659A0272A7C11ED00066AB7 /* MockPreKeyManager.swift */,
 				6659A0252A7C11A800066AB7 /* PrekeyManagerImpl.swift */,
 				C17345BA2A5E000300C6426D /* PreKeyTarget.swift */,
@@ -14228,6 +14244,9 @@
 		F9C5C9BA289453B100548EEE /* Account */ = {
 			isa = PBXGroup;
 			children = (
+				B58EC7A32ED580C900708A56 /* MockRegistrationStateChangeManager.swift */,
+				B58EC7A42ED580C900708A56 /* RegistrationStateChangeManager.swift */,
+				B58EC7A52ED580C900708A56 /* RegistrationStateChangeManagerImpl.swift */,
 				B58EC76D2ED56DAE00708A56 /* IdentityKeyChecker.swift */,
 				B58EC76E2ED56DAE00708A56 /* IdentityKeyMismatchManager.swift */,
 				B58EC76F2ED56DAE00708A56 /* LocalIdentifiers.swift */,
@@ -17812,6 +17831,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B58EC7AF2ED58F4400708A56 /* PreKeyUploadBundle.swift in Sources */,
 				6645F30829BF8D2000B58EBD /* AccountAttributes.swift in Sources */,
 				6645F30C29BFA28A00B58EBD /* AccountAttributesGenerator.swift in Sources */,
 				6645F30A29BF8DBC00B58EBD /* AccountAttributesRequestFactory.swift in Sources */,
@@ -18077,7 +18097,6 @@
 				66F6D6A52C7D0E0000EFAF75 /* ColorOrGradient.swift in Sources */,
 				72345D1D2B9A1984000237B3 /* CommonStrings.swift in Sources */,
 				501E4DAB2D133F4400D883C7 /* CompletionSerializer.swift in Sources */,
-
 				50C0203C2CA4A61E00BDC4EF /* ConcurrentTaskQueue.swift in Sources */,
 				509A8DC22E25817E0024BF14 /* ConnectionLock.swift in Sources */,
 				D958E2AF2B58696700EE9831 /* ConsumableMockGuarantee.swift in Sources */,
@@ -18380,6 +18399,7 @@
 				D990CACA2B4CCB9D000A99A2 /* MockUsernameLinkManager.swift in Sources */,
 				D990CAC82B4CCB8F000A99A2 /* MockUsernameLookupManager.swift in Sources */,
 				66144B382BF8155F00E2C9CD /* MockWallpaperImageStore.swift in Sources */,
+				B58EC7B02ED58FED00708A56 /* PreKeyTarget.swift in Sources */,
 				F9C5CE29289453B400548EEE /* ModelReadCache.swift in Sources */,
 				50B0BCA32DFA17BE0076B680 /* Monitor.swift in Sources */,
 				50311B8B2BC0C2A100AE5A5F /* MonotonicDate.swift in Sources */,
@@ -18533,6 +18553,7 @@
 				F9C5CC3A289453B300548EEE /* OWSReaction.swift in Sources */,
 				F9C5CD10289453B300548EEE /* OWSReadReceiptsForLinkedDevicesMessage.m in Sources */,
 				F9C5CC80289453B300548EEE /* OWSReceiptManager.swift in Sources */,
+				B58EC7AA2ED5855B00708A56 /* PreKeyTaskAPIClient.swift in Sources */,
 				F9C5CD0E289453B300548EEE /* OWSReceiptsForSenderMessage.m in Sources */,
 				F9C5CE6E289453B400548EEE /* OWSRecipientIdentity.swift in Sources */,
 				F9C5CC6E289453B300548EEE /* OWSRecoverableDecryptionPlaceholder+SDS.swift in Sources */,
@@ -18574,7 +18595,6 @@
 				F9C5CCFE289453B300548EEE /* OWSVerificationStateSyncMessage.m in Sources */,
 				F9C5CCFC289453B300548EEE /* OWSViewedReceiptsForLinkedDevicesMessage.m in Sources */,
 				F9C5CCFF289453B300548EEE /* OWSViewOnceMessageReadSyncMessage.m in Sources */,
-
 				509085BE2C49C29400409B85 /* PaddingBucket.swift in Sources */,
 				668B5BFC2C7E46D30018CF36 /* PaletteChatColor+Constants.swift in Sources */,
 				F9C5CDCD289453B400548EEE /* ParamParser.swift in Sources */,
@@ -18676,6 +18696,8 @@
 				720547F62B9C985300E2CF2F /* RefreshEvent.swift in Sources */,
 				C13EDC3F2D94636000670597 /* Registration.pb.swift in Sources */,
 				C1C2185D2E70BA27008567A1 /* RegistrationIdMismatchManager.swift in Sources */,
+				B58EC7AD2ED5869100708A56 /* PreKeyManager.swift in Sources */,
+				B58EC7AE2ED5869100708A56 /* PreKeyTaskManager.swift in Sources */,
 				C180878C2D763D4800B16D1E /* RegistrationProvisioningMessage.swift in Sources */,
 				66A1DF73298C635E00C4E4A7 /* RegistrationRequestFactory.swift in Sources */,
 				66A1DF75298C73D900C4E4A7 /* RegistrationServiceResponses.swift in Sources */,
@@ -18705,7 +18727,6 @@
 				D9F6553C29D6547F002A330A /* SDSCodableModelDatabaseInterface+Save.swift in Sources */,
 				D9F6553D29D6547F002A330A /* SDSCodableModelDatabaseInterface.swift in Sources */,
 				72A132A72CA25EF0000ACED6 /* SDSCrossProcess.swift in Sources */,
-
 				F9C5CD2B289453B300548EEE /* SDSDatabaseStorage+Objc.m in Sources */,
 				F9C5CD1A289453B300548EEE /* SDSDatabaseStorage.swift in Sources */,
 				F9C5CD1B289453B300548EEE /* SDSDeserialization.swift in Sources */,
@@ -18772,6 +18793,7 @@
 				F9C5CD8F289453B300548EEE /* SpamChallenge.swift in Sources */,
 				F9C5CD8E289453B300548EEE /* SpamChallengeResolver.swift in Sources */,
 				F9427EAB297F1E88008EF0AC /* SpamReportingToken.swift in Sources */,
+				B58EC7B12ED5901D00708A56 /* MockPreKeyManager.swift in Sources */,
 				F9427EB0297F24AB008EF0AC /* SpamReportingTokenRecord.swift in Sources */,
 				665FAE8C2A02C0D400FA298D /* SpoilerRevealState.swift in Sources */,
 				F9613CDC2981F11400894B55 /* SqliteUtil.swift in Sources */,
@@ -18927,6 +18949,9 @@
 				F9C5CC29289453B300548EEE /* TSInvalidIdentityKeyErrorMessage.m in Sources */,
 				F9C5CC22289453B300548EEE /* TSInvalidIdentityKeyReceivingErrorMessage+SDS.swift in Sources */,
 				F9C5CC28289453B300548EEE /* TSInvalidIdentityKeyReceivingErrorMessage.m in Sources */,
+				B58EC7A62ED580C900708A56 /* RegistrationStateChangeManagerImpl.swift in Sources */,
+				B58EC7A72ED580C900708A56 /* MockRegistrationStateChangeManager.swift in Sources */,
+				B58EC7A82ED580C900708A56 /* RegistrationStateChangeManager.swift in Sources */,
 				F9C5CC27289453B300548EEE /* TSInvalidIdentityKeySendingErrorMessage+SDS.swift in Sources */,
 				F9C5CC2A289453B300548EEE /* TSInvalidIdentityKeySendingErrorMessage.m in Sources */,
 				F9C5CC00289453B300548EEE /* TSMention.swift in Sources */,
