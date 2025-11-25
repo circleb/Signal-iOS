@@ -321,13 +321,7 @@ class AppSettingsViewController: OWSTableViewController2 {
                 self?.navigationController?.pushViewController(vc, animated: true)
             }
         ))
-        section3.add(.item(
-            icon: .settingsInvite,
-            name: OWSLocalizedString("SETTINGS_INVITE_TITLE", comment: "Settings table view cell label"),
-            actionBlock: { [weak self] in
-                self?.showInviteFlow()
-            }
-        ))
+
         contents.add(section3)
 
         if DebugFlags.internalSettings {
@@ -346,10 +340,7 @@ class AppSettingsViewController: OWSTableViewController2 {
         self.contents = contents
     }
 
-    private func showInviteFlow() {
-        let inviteFlow = InviteFlow(presentingViewController: self)
-        inviteFlow.present(isAnimated: true, completion: nil)
-    }
+
 
     private func profileCell() -> UITableViewCell {
         let cell = OWSTableItem.newCell()
