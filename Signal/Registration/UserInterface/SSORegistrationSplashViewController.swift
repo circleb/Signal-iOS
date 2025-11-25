@@ -246,7 +246,7 @@ public class SSORegistrationSplashViewController: OWSViewController {
             for: .normal
         )
         explanationButton.setTitleColor(Theme.secondaryTextAndIconColor, for: .normal)
-        explanationButton.titleLabel?.font = UIFont.dynamicTypeBody2
+        explanationButton.titleLabel?.font = UIFont.dynamicTypeFootnote
         explanationButton.titleLabel?.numberOfLines = 0
         explanationButton.titleLabel?.textAlignment = .center
         explanationButton.titleLabel?.lineBreakMode = .byWordWrapping
@@ -433,32 +433,36 @@ private class RestoreOrTransferPickerController: StackSheetViewController {
         super.viewDidLoad()
         stackView.spacing = 16
 
-        let hasDeviceButton = RegistrationChoiceButton(
+        let hasDeviceButton = UIButton.registrationChoiceButton(
             title: OWSLocalizedString(
                 "ONBOARDING_SPLASH_HAVE_OLD_DEVICE_TITLE",
                 comment: "Title for the 'have my old device' choice of the 'Restore or Transfer' prompt"
             ),
-            body: OWSLocalizedString(
+            subtitle: OWSLocalizedString(
                 "ONBOARDING_SPLASH_HAVE_OLD_DEVICE_BODY",
                 comment: "Explanation of 'have old device' flow for the 'Restore or Transfer' prompt"
             ),
-            iconName: Theme.iconName(.qrCodeLight)
+            iconName: Theme.iconName(.qrCodeLight),
+            primaryAction: UIAction { [weak self] _ in
+                self?.hasDevice()
+            }
         )
-        hasDeviceButton.addTarget(target: self, selector: #selector(hasDevice))
         stackView.addArrangedSubview(hasDeviceButton)
 
-        let noDeviceButton = RegistrationChoiceButton(
+        let noDeviceButton = UIButton.registrationChoiceButton(
             title: OWSLocalizedString(
                 "ONBOARDING_SPLASH_DO_NOT_HAVE_OLD_DEVICE_TITLE",
                 comment: "Title for the 'do not have my old device' choice of the 'Restore or Transfer' prompt"
             ),
-            body: OWSLocalizedString(
+            subtitle: OWSLocalizedString(
                 "ONBOARDING_SPLASH_DO_NOT_HAVE_OLD_DEVICE_BODY",
                 comment: "Explanation of 'do not have old device' flow for the 'Restore or Transfer' prompt"
             ),
-            iconName: Theme.iconName(.noDevice)
+            iconName: Theme.iconName(.noDevice),
+            primaryAction: UIAction { [weak self] _ in
+                self?.noDevice()
+            }
         )
-        noDeviceButton.addTarget(target: self, selector: #selector(noDevice))
         stackView.addArrangedSubview(noDeviceButton)
     }
 
