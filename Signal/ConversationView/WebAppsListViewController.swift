@@ -121,22 +121,22 @@ class WebAppsListViewController: UIViewController {
             presentingViewController: self
         )
         
-        // Create context menu button and position it over the avatar
+        // Create context menu button with avatar as subview (matching HomeTabViewController pattern)
         contextMenuButton = ContextMenuButton(empty: ())
-        contextMenuButton.backgroundColor = .clear
-        contextMenuButton.isUserInteractionEnabled = true
+        contextMenuButton.accessibilityLabel = "Account Menu"
         
-        // Create container view to hold both avatar and context menu button
-        let containerView = UIView()
-        containerView.addSubview(ssoAvatarView)
-        containerView.addSubview(contextMenuButton)
-        
-        // Position the context menu button over the avatar
+        // Add avatar as subview of the button (not as sibling)
+        contextMenuButton.addSubview(ssoAvatarView)
         ssoAvatarView.autoPinEdgesToSuperviewEdges()
-        contextMenuButton.autoPinEdgesToSuperviewEdges()
         
         // Set as left bar button item
-        let barButtonItem = UIBarButtonItem(customView: containerView)
+        let barButtonItem = UIBarButtonItem(customView: contextMenuButton)
+#if compiler(>=6.2)
+        if #available(iOS 26.0, *) {
+            // Hide the shared background to prevent liquid glass artifacts
+            barButtonItem.hidesSharedBackground = true
+        }
+#endif
         navigationItem.leftBarButtonItem = barButtonItem
         
         // Update menu actions

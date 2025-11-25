@@ -70,9 +70,15 @@ class SSOAvatarView: UIView {
         avatarImageView.autoSetDimensions(to: CGSize(width: size.dimension, height: size.dimension))
         avatarImageView.autoPinEdgesToSuperviewEdges()
         initialsLabel.autoPinEdgesToSuperviewEdges()
-        
-        // Set intrinsic content size
-        autoSetDimensions(to: CGSize(width: size.dimension, height: size.dimension))
+    }
+    
+    // Override intrinsic content size to ensure the view maintains its square dimensions
+    override var intrinsicContentSize: CGSize {
+        return CGSize(width: size.dimension, height: size.dimension)
+    }
+    
+    override func sizeThatFits(_ size: CGSize) -> CGSize {
+        return intrinsicContentSize
     }
     
     func updateAvatar() {
