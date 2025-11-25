@@ -10,9 +10,10 @@ import XCTest
 @testable import SignalServiceKit
 
 class ChangePhoneNumberPniManagerTest: XCTestCase {
-    private var identityManagerMock: IdentityManagerMock!
+    private var identityManagerMock: MockIdentityManager!
     private var pniDistributionParameterBuilderMock: PniDistributionParameterBuilderMock!
-    private var preKeyManagerMock: PreKeyManagerMock!
+    private var preKeyStoreMock: SignalServiceKit.PreKeyStore!
+    private var preKeyManagerMock: MockPreKeyManager!
     private var signedPreKeyStoreMock: SignedPreKeyStoreImpl!
     private var kyberPreKeyStoreMock: KyberPreKeyStoreImpl!
     private var registrationIdGeneratorMock: MockRegistrationIdGenerator!
@@ -23,11 +24,21 @@ class ChangePhoneNumberPniManagerTest: XCTestCase {
     private var changeNumberPniManager: ChangePhoneNumberPniManager!
 
     public override func setUp() {
-        identityManagerMock = .init()
+        let recipientDbTable = RecipientDatabaseTable()
+        let recipientFetcher = RecipientFetcherImpl(
+            recipientDatabaseTable: recipientDbTable,
+            searchableNameIndexer: MockSearchableNameIndexer(),
+        )
+        let recipientIdFinder = RecipientIdFinder(
+            recipientDatabaseTable: recipientDbTable,
+            recipientFetcher: recipientFetcher
+        )
+        identityManagerMock = .init(recipientIdFinder: recipientIdFinder)
         pniDistributionParameterBuilderMock = .init()
         preKeyManagerMock = .init()
-        kyberPreKeyStoreMock = .init(for: .pni, dateProvider: Date.provider)
-        signedPreKeyStoreMock = .init(for: .pni)
+        preKeyStoreMock = .init()
+        kyberPreKeyStoreMock = .init(for: .pni, dateProvider: Date.provider, preKeyStore: preKeyStoreMock)
+        signedPreKeyStoreMock = .init(for: .pni, preKeyStore: preKeyStoreMock)
         registrationIdGeneratorMock = .init()
         tsAccountManagerMock = .init()
 
@@ -52,10 +63,7 @@ class ChangePhoneNumberPniManagerTest: XCTestCase {
 
         pniDistributionParameterBuilderMock.buildOutcomes = [.success]
 
-        let (parameters, pendingState) = await generateIdentity(
-            e164: e164,
-            linkedDeviceIds: [DeviceId(validating: 2)!, DeviceId(validating: 3)!]
-        ).awaitable().unwrapSuccess
+        let (parameters, pendingState) = await generateIdentity(e164: e164).unwrapSuccess
 
         XCTAssertEqual(e164, pendingState.newE164)
 
@@ -66,8 +74,6 @@ class ChangePhoneNumberPniManagerTest: XCTestCase {
         XCTAssertEqual(registrationIdGeneratorMock.generatedRegistrationIds.count, 1)
         XCTAssertEqual(registrationIdGeneratorMock.generatedRegistrationIds.first, pendingState.localDevicePniRegistrationId)
 
-        let expectedDeviceIds = [DeviceId(validating: 1)!, DeviceId(validating: 2)!, DeviceId(validating: 3)!]
-        XCTAssertEqual(pniDistributionParameterBuilderMock.buildRequestedForDeviceIds, [expectedDeviceIds])
         XCTAssertTrue(pniDistributionParameterBuilderMock.buildOutcomes.isEmpty)
     }
 
@@ -76,18 +82,13 @@ class ChangePhoneNumberPniManagerTest: XCTestCase {
 
         pniDistributionParameterBuilderMock.buildOutcomes = [.failure]
 
-        let isFailureResult = await generateIdentity(
-            e164: e164,
-            linkedDeviceIds: [DeviceId(validating: 2)!, DeviceId(validating: 3)!]
-        ).awaitable().isError
+        let isFailureResult = await generateIdentity(e164: e164).isError
 
         XCTAssertTrue(isFailureResult)
 
         XCTAssertEqual(identityManagerMock.generatedKeyPairs.count, 1)
         XCTAssertEqual(registrationIdGeneratorMock.generatedRegistrationIds.count, 1)
 
-        let expectedDeviceIds = [DeviceId(validating: 1)!, DeviceId(validating: 2)!, DeviceId(validating: 3)!]
-        XCTAssertEqual(pniDistributionParameterBuilderMock.buildRequestedForDeviceIds, [expectedDeviceIds])
         XCTAssertTrue(pniDistributionParameterBuilderMock.buildOutcomes.isEmpty)
     }
 
@@ -98,25 +99,25 @@ class ChangePhoneNumberPniManagerTest: XCTestCase {
 
         pniDistributionParameterBuilderMock.buildOutcomes = [.success]
 
-        let (_, pendingState) = await generateIdentity(
-            e164: e164,
-            linkedDeviceIds: [DeviceId(validating: 2)!, DeviceId(validating: 3)!]
-        ).awaitable().unwrapSuccess
+        let (_, pendingState) = await generateIdentity(e164: e164).unwrapSuccess
 
         db.write { transaction in
             try! changeNumberPniManager.finalizePniIdentity(
-                withPendingState: pendingState,
-                transaction: transaction
+                identityKey: pendingState.pniIdentityKeyPair,
+                signedPreKey: .success(pendingState.localDevicePniSignedPreKeyRecord),
+                lastResortPreKey: .success(pendingState.localDevicePniPqLastResortPreKeyRecord),
+                registrationId: pendingState.localDevicePniRegistrationId,
+                tx: transaction,
             )
         }
 
         XCTAssertEqual(
-            identityManagerMock.storedKeyPairs,
+            identityManagerMock.identityKeyPairs,
             [.pni: pendingState.pniIdentityKeyPair]
         )
 
         db.read { tx in
-            XCTAssertNotNil(signedPreKeyStoreMock.loadSignedPreKey(pendingState.localDevicePniSignedPreKeyRecord.id, transaction: tx))
+            XCTAssertNotNil(preKeyStoreMock.pniStore.fetchPreKey(in: .signed, for: pendingState.localDevicePniSignedPreKeyRecord.id, tx: tx))
         }
 
         XCTAssertEqual(
@@ -131,21 +132,14 @@ class ChangePhoneNumberPniManagerTest: XCTestCase {
 
     // MARK: - Helpers
 
-    private func generateIdentity(
-        e164: E164,
-        linkedDeviceIds: [DeviceId]
-    ) -> Guarantee<ChangePhoneNumberPni.GeneratePniIdentityResult> {
+    private func generateIdentity(e164: E164) async -> ChangePhoneNumberPni.GeneratePniIdentityResult {
         let aci = Aci.randomForTesting()
-        let recipientUniqueId: String = UUID().uuidString
-
         let localDeviceId: DeviceId = .primary
 
-        return changeNumberPniManager.generatePniIdentity(
+        return await changeNumberPniManager.generatePniIdentity(
             forNewE164: e164,
             localAci: aci,
-            localRecipientUniqueId: recipientUniqueId,
-            localDeviceId: localDeviceId,
-            localUserAllDeviceIds: [localDeviceId] + linkedDeviceIds
+            localDeviceId: localDeviceId
         )
     }
 }
@@ -175,37 +169,7 @@ private extension ChangePhoneNumberPni.GeneratePniIdentityResult {
 
 // MARK: IdentityManager
 
-private class IdentityManagerMock: ChangePhoneNumberPniManagerImpl.Shims.IdentityManager {
-    var generatedKeyPairs: [ECKeyPair] = []
-    var storedKeyPairs: [OWSIdentity: ECKeyPair] = [:]
-
-    func generateNewIdentityKeyPair() -> ECKeyPair {
-        let keyPair = ECKeyPair.generateKeyPair()
-        generatedKeyPairs.append(keyPair)
-        return keyPair
-    }
-
-    func setIdentityKeyPair(
-        _ keyPair: ECKeyPair?,
-        for identity: OWSIdentity,
-        tx _: DBWriteTransaction
-    ) {
-        storedKeyPairs[identity] = keyPair
-    }
-}
-
 // MARK: PreKeyManager
-
-private class PreKeyManagerMock: ChangePhoneNumberPniManagerImpl.Shims.PreKeyManager {
-    var attemptedRefreshes: [(OWSIdentity, Bool)] = []
-
-    func refreshOneTimePreKeys(
-        forIdentity identity: OWSIdentity,
-        alsoRefreshSignedPreKey shouldRefreshSignedPreKey: Bool
-    ) {
-        attemptedRefreshes.append((identity, shouldRefreshSignedPreKey))
-    }
-}
 
 // MARK: PniDistributionParameterBuilder
 
@@ -216,23 +180,18 @@ private class PniDistributionParameterBuilderMock: PniDistributionParamaterBuild
     }
 
     var buildOutcomes: [BuildOutcome] = []
-    var buildRequestedForDeviceIds: [[DeviceId]] = []
 
     func buildPniDistributionParameters(
         localAci: Aci,
-        localRecipientUniqueId: String,
         localDeviceId: LocalDeviceId,
-        localUserAllDeviceIds: [DeviceId],
         localPniIdentityKeyPair: ECKeyPair,
         localE164: E164,
-        localDevicePniSignedPreKey: SignalServiceKit.SignedPreKeyRecord,
-        localDevicePniPqLastResortPreKey: SignalServiceKit.KyberPreKeyRecord,
+        localDevicePniSignedPreKey: LibSignalClient.SignedPreKeyRecord,
+        localDevicePniPqLastResortPreKey: LibSignalClient.KyberPreKeyRecord,
         localDevicePniRegistrationId: UInt32
     ) async throws -> PniDistribution.Parameters {
         let buildOutcome = buildOutcomes.first!
         buildOutcomes = Array(buildOutcomes.dropFirst())
-
-        buildRequestedForDeviceIds.append(localUserAllDeviceIds)
 
         switch buildOutcome {
         case .success:

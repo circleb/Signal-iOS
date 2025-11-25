@@ -45,7 +45,7 @@ public class QuotedReplyManagerImpl: QuotedReplyManager {
             owsFailDebug("Invalid timestamp")
             return nil
         }
-        guard let quoteAuthor = Aci.parseFrom(aciString: quote.authorAci) else {
+        guard let quoteAuthor = Aci.parseFrom(serviceIdBinary: quote.authorAciBinary, serviceIdString: quote.authorAci) else {
             owsFailDebug("quoted message missing author")
             return nil
         }
@@ -54,7 +54,7 @@ public class QuotedReplyManagerImpl: QuotedReplyManager {
             withTimestamp: timestamp,
             threadId: thread.uniqueId,
             author: .init(quoteAuthor),
-            transaction: SDSDB.shimOnlyBridge(tx)
+            transaction: tx
         )
         switch originalMessage {
         case .some(let originalMessage):
@@ -108,7 +108,8 @@ public class QuotedReplyManagerImpl: QuotedReplyManager {
                 bodySource: .remote,
                 receivedQuotedAttachmentInfo: nil,
                 isGiftBadge: true,
-                isTargetMessageViewOnce: false
+                isTargetMessageViewOnce: false,
+                isPoll: false
             ))
         }
 
@@ -168,7 +169,8 @@ public class QuotedReplyManagerImpl: QuotedReplyManager {
                 bodySource: .remote,
                 receivedQuotedAttachmentInfo: attachmentInfo?.info,
                 isGiftBadge: false,
-                isTargetMessageViewOnce: false
+                isTargetMessageViewOnce: false,
+                isPoll: false
             )
         }
 
@@ -214,13 +216,15 @@ public class QuotedReplyManagerImpl: QuotedReplyManager {
                 bodySource: .local,
                 receivedQuotedAttachmentInfo: nil,
                 isGiftBadge: false,
-                isTargetMessageViewOnce: true
+                isTargetMessageViewOnce: true,
+                isPoll: false
             ))
         }
 
         let body: String?
         let bodyRanges: MessageBodyRanges?
         var isGiftBadge: Bool
+        var isPoll: Bool
 
         if originalMessage is OWSPaymentMessage {
             // This really should recalculate the string from payment metadata.
@@ -228,16 +232,19 @@ public class QuotedReplyManagerImpl: QuotedReplyManager {
             body = quoteProto.text
             bodyRanges = nil
             isGiftBadge = false
+            isPoll = false
         } else if let messageBody = originalMessage.body?.nilIfEmpty {
             body = messageBody
             bodyRanges = originalMessage.bodyRanges
             isGiftBadge = false
+            isPoll = originalMessage.isPoll
         } else if let contactName = originalMessage.contactShare?.name.displayName.nilIfEmpty {
             // Contact share bodies are special-cased in OWSQuotedReplyModel
             // We need to account for that here.
             body = "👤 " + contactName
             bodyRanges = nil
             isGiftBadge = false
+            isPoll = false
         } else if let storyReactionEmoji = originalMessage.storyReactionEmoji?.nilIfEmpty  {
             let formatString: String = {
                 if (authorAddress.isLocalAddress) {
@@ -255,10 +262,12 @@ public class QuotedReplyManagerImpl: QuotedReplyManager {
             body = String(format: formatString, storyReactionEmoji)
             bodyRanges = nil
             isGiftBadge = false
+            isPoll = false
         } else {
             isGiftBadge = originalMessage.giftBadge != nil
             body = nil
             bodyRanges = nil
+            isPoll = false
         }
 
         let attachmentBuilder = self.attachmentBuilder(
@@ -285,7 +294,8 @@ public class QuotedReplyManagerImpl: QuotedReplyManager {
                 bodySource: .local,
                 receivedQuotedAttachmentInfo: attachmentInfo?.info,
                 isGiftBadge: isGiftBadge,
-                isTargetMessageViewOnce: false
+                isTargetMessageViewOnce: false,
+                isPoll: isPoll
             )
         }
 
@@ -413,8 +423,8 @@ public class QuotedReplyManagerImpl: QuotedReplyManager {
 
             // Sticker type metadata isn't reliable, so determine the sticker type by examining the actual sticker data.
             let stickerType: StickerType
-            let imageMetadata = stickerData.imageMetadata(withPath: nil, mimeType: nil)
-            switch imageMetadata.imageFormat {
+            let imageMetadata = DataImageSource(stickerData).imageMetadata()
+            switch imageMetadata?.imageFormat {
             case .png:
                 stickerType = .apng
 
@@ -424,12 +434,12 @@ public class QuotedReplyManagerImpl: QuotedReplyManager {
             case .webp:
                 stickerType = .webp
 
-            case .unknown:
+            case nil:
                 owsFailDebug("Unknown sticker data format")
                 return nil
 
-            default:
-                owsFailDebug("Invalid sticker data format: \(imageMetadata.imageFormat)")
+            case .some(let imageFormat):
+                owsFailDebug("Invalid sticker data format: \(imageFormat)")
                 return nil
             }
 
@@ -437,7 +447,7 @@ public class QuotedReplyManagerImpl: QuotedReplyManager {
             let thumbnailImage: UIImage? = { () -> UIImage? in
                 switch stickerType {
                 case .webp:
-                    let image: UIImage? = stickerData.stillForWebpData()
+                    let image: UIImage? = DataImageSource(stickerData).stillForWebpData()
                     return image
                 case .apng:
                     return UIImage(data: stickerData)
@@ -500,11 +510,11 @@ public class QuotedReplyManagerImpl: QuotedReplyManager {
                     let oversizeTextData = try? attachment?.asStream()?.decryptedRawData(),
                     let oversizeText = String(data: oversizeTextData, encoding: .utf8)
                 {
-                    // We don't need to include the entire text body of the message, just
-                    // enough to render a snippet.  kOversizeTextMessageSizeThreshold is our
-                    // limit on how long text should be in protos since they'll be stored in
+                    // We don't need to include the entire text body of the message, just enough
+                    // to render a snippet.  OWSMediaUtils.kOversizeTextMessageSizeThresholdBytes
+                    // is our limit on how long text should be in protos since they'll be stored in
                     // the database. We apply this constant here for the same reasons.
-                    let truncatedText = oversizeText.trimToUtf8ByteCount(Int(kOversizeTextMessageSizeThreshold))
+                    let truncatedText = oversizeText.trimToUtf8ByteCount(OWSMediaUtils.kOversizeTextMessageSizeThresholdBytes)
                     return createDraftReply(content: .text(
                         MessageBody(text: truncatedText, ranges: originalMessage.bodyRanges ?? .empty)
                     ))
@@ -534,6 +544,14 @@ public class QuotedReplyManagerImpl: QuotedReplyManager {
 
         if let storyReactionEmoji = originalMessage.storyReactionEmoji?.nilIfEmpty {
             return createDraftReply(content: .storyReactionEmoji(storyReactionEmoji))
+        }
+
+        if originalMessage.isPoll {
+            guard let body = originalMessage.body else {
+                owsFailDebug("Poll message has no question body.")
+                return nil
+            }
+            return createDraftReply(content: .poll(body))
         }
 
         return createTextDraftReplyOrNil()
@@ -619,7 +637,7 @@ public class QuotedReplyManagerImpl: QuotedReplyManager {
 
     public func prepareDraftForSending(
         _ draft: DraftQuotedReplyModel
-    ) throws -> DraftQuotedReplyModel.ForSending {
+    ) async throws -> DraftQuotedReplyModel.ForSending {
         switch draft.content {
         case .edit(_, let tsQuotedMessage, _):
             return .init(
@@ -627,6 +645,7 @@ public class QuotedReplyManagerImpl: QuotedReplyManager {
                 originalMessageAuthorAddress: draft.originalMessageAuthorAddress,
                 originalMessageIsGiftBadge: draft.content.isGiftBadge,
                 originalMessageIsViewOnce: draft.content.isViewOnce,
+                originalMessageIsPoll: draft.content.isPoll,
                 threadUniqueId: draft.threadUniqueId,
                 quoteBody: draft.bodyForSending,
                 attachment: nil,
@@ -647,7 +666,7 @@ public class QuotedReplyManagerImpl: QuotedReplyManager {
                     withTimestamp: originalMessageTimestamp,
                     threadId: draft.threadUniqueId,
                     author: draft.originalMessageAuthorAddress,
-                    transaction: SDSDB.shimOnlyBridge(tx)
+                    transaction: tx
                 )
             else {
                 return (nil, nil)
@@ -660,7 +679,7 @@ public class QuotedReplyManagerImpl: QuotedReplyManager {
             return (attachmentReference, attachment)
         }
 
-        let quoteAttachment = { () -> DraftQuotedReplyModel.ForSending.Attachment? in
+        let quoteAttachment = await { () -> DraftQuotedReplyModel.ForSending.Attachment? in
             guard let originalAttachmentReference, let originalAttachment else {
                 return nil
             }
@@ -676,7 +695,7 @@ public class QuotedReplyManagerImpl: QuotedReplyManager {
                 return .stub(.init(mimeType: originalAttachment.mimeType, sourceFilename: originalAttachmentReference.sourceFilename))
             }
             do {
-                let dataSource = try attachmentValidator.prepareQuotedReplyThumbnail(
+                let dataSource = try await attachmentValidator.prepareQuotedReplyThumbnail(
                     fromOriginalAttachment: originalAttachmentStream,
                     originalReference: originalAttachmentReference
                 )
@@ -692,6 +711,7 @@ public class QuotedReplyManagerImpl: QuotedReplyManager {
             originalMessageAuthorAddress: draft.originalMessageAuthorAddress,
             originalMessageIsGiftBadge: draft.content.isGiftBadge,
             originalMessageIsViewOnce: draft.content.isViewOnce,
+            originalMessageIsPoll: draft.content.isPoll,
             threadUniqueId: draft.threadUniqueId,
             quoteBody: draft.bodyForSending,
             attachment: quoteAttachment,
@@ -714,7 +734,7 @@ public class QuotedReplyManagerImpl: QuotedReplyManager {
                 withTimestamp: originalMessageTimestamp,
                 threadId: draft.threadUniqueId,
                 author: draft.originalMessageAuthorAddress,
-                transaction: SDSDB.shimOnlyBridge(tx)
+                transaction: tx
             )
         else {
             return .withoutFinalizer(TSQuotedMessage(
@@ -728,7 +748,8 @@ public class QuotedReplyManagerImpl: QuotedReplyManager {
                 bodySource: .remote,
                 receivedQuotedAttachmentInfo: nil,
                 isGiftBadge: false,
-                isTargetMessageViewOnce: false
+                isTargetMessageViewOnce: false,
+                isPoll: false
             ))
         }
 
@@ -742,7 +763,8 @@ public class QuotedReplyManagerImpl: QuotedReplyManager {
                 bodyRanges: body?.ranges,
                 quotedAttachmentForSending: attachmentInfo?.info,
                 isGiftBadge: draft.originalMessageIsGiftBadge,
-                isTargetMessageViewOnce: draft.originalMessageIsViewOnce
+                isTargetMessageViewOnce: draft.originalMessageIsViewOnce,
+                isPoll: draft.originalMessageIsPoll
             )
         }
 
@@ -793,7 +815,12 @@ public class QuotedReplyManagerImpl: QuotedReplyManager {
         guard let authorAci = quote.authorAddress.aci else {
             throw OWSAssertionError("It should be impossible to quote a message without a UUID")
         }
-        quoteBuilder.setAuthorAci(authorAci.serviceIdString)
+        if BuildFlags.serviceIdStrings {
+            quoteBuilder.setAuthorAci(authorAci.serviceIdString)
+        }
+        if BuildFlags.serviceIdBinaryConstantOverhead {
+            quoteBuilder.setAuthorAciBinary(authorAci.serviceIdBinary)
+        }
 
         var hasQuotedText = false
         var hasQuotedAttachment = false

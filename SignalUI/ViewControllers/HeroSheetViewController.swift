@@ -7,7 +7,7 @@ import Foundation
 import SignalServiceKit
 import Lottie
 
-public class HeroSheetViewController: StackSheetViewController {
+open class HeroSheetViewController: StackSheetViewController {
     public enum Hero {
         /// Scaled image to display at the top of the sheet
         case image(UIImage)
@@ -35,6 +35,7 @@ public class HeroSheetViewController: StackSheetViewController {
         public enum Style {
             case primary
             case secondary
+            case secondaryDestructive
         }
 
         fileprivate let title: String
@@ -58,28 +59,15 @@ public class HeroSheetViewController: StackSheetViewController {
         public var configuration: UIButton.Configuration {
             switch style {
             case .primary:
-                var buttonConfiguration = UIButton.Configuration.filled()
-                var buttonTitleAttributes = AttributeContainer()
-                buttonTitleAttributes.font = .dynamicTypeHeadline
-                buttonTitleAttributes.foregroundColor = .white
-                buttonConfiguration.attributedTitle = AttributedString(
-                    title,
-                    attributes: buttonTitleAttributes
-                )
-                buttonConfiguration.contentInsets = .init(hMargin: 16, vMargin: 14)
-                buttonConfiguration.background.cornerRadius = 10
-                buttonConfiguration.background.backgroundColor = UIColor.Signal.ultramarine
-                return buttonConfiguration
+                return .largePrimary(title: title)
+
             case .secondary:
-                var buttonConfiguration = UIButton.Configuration.plain()
-                var buttonTitleAttributes = AttributeContainer()
-                buttonTitleAttributes.font = .dynamicTypeHeadline
-                buttonTitleAttributes.foregroundColor = UIColor.Signal.ultramarine
-                buttonConfiguration.attributedTitle = AttributedString(
-                    title,
-                    attributes: buttonTitleAttributes
-                )
-                return buttonConfiguration
+                return .largeSecondary(title: title)
+
+            case .secondaryDestructive:
+                var config: UIButton.Configuration = .largeSecondary(title: title)
+                config.baseForegroundColor = .Signal.red
+                return config
             }
         }
     }
@@ -98,25 +86,19 @@ public class HeroSheetViewController: StackSheetViewController {
     ///   - primaryButton: The title and action for the CTA button
     ///   - secondaryButton: The title and action for an optional secondary button
     ///   If `nil`, the button will dismiss the sheet.
-    public convenience init(
+    public init(
         hero: Hero,
         title: String,
         body: String,
         primaryButton: Button,
         secondaryButton: Button? = nil
     ) {
-        let secondaryCTA: Element? = {
-            guard let secondaryButton else { return nil }
-            return .button(secondaryButton)
-        }()
-
-        self.init(
-            hero: hero,
-            title: title,
-            body: body,
-            primary: .button(primaryButton),
-            secondary: secondaryCTA
-        )
+        self.hero = hero
+        self.titleText = title
+        self.bodyText = body
+        self.primary = .button(primaryButton)
+        self.secondary = secondaryButton.map { .button($0) }
+        super.init()
     }
 
     public init(
@@ -132,6 +114,15 @@ public class HeroSheetViewController: StackSheetViewController {
         self.primary = primary
         self.secondary = secondary
         super.init()
+    }
+
+    // .formSheet makes a blank sheet appear behind it
+    public override var modalPresentationStyle: UIModalPresentationStyle {
+        willSet {
+            if newValue == .formSheet {
+                owsFailDebug("Can't use formSheet for interactive sheets")
+            }
+        }
     }
 
     public override var stackViewInsets: UIEdgeInsets {
@@ -262,8 +253,8 @@ public class HeroSheetViewController: StackSheetViewController {
             tintColor: UIColor.Signal.label,
             backgroundColor: UIColor.Signal.background
         ),
-        title: LocalizationNotNeeded("No Backup Key?"),
-        body: LocalizationNotNeeded("Backups can’t be recovered without their 64-digit recovery code. If you’ve lost your backup key Signal can’t help restore your backup.\n\nIf you have your old device you can view your backup key in Settings > Chats > Signal Backups. Then tap View backup key."),
+        title: LocalizationNotNeeded("No Recovery Key?"),
+        body: LocalizationNotNeeded("Backups can’t be recovered without their 64-digit recovery code. If you’ve lost your recovery key Signal can’t help restore your backup.\n\nIf you have your old device you can view your recovery key in Settings > Chats > Signal Backups. Then tap View recovery key."),
         primaryButton: .dismissing(title: LocalizationNotNeeded("Skip & Don’t Restore")),
         secondaryButton: .dismissing(title: CommonStrings.learnMore)
     ))

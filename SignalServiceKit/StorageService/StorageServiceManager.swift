@@ -103,8 +103,8 @@ public enum StorageServiceManagerManifestRotationMode {
 
     /// Recreate the manifest and all records, using local data as the source of
     /// truth for creating records. This deletes all existing records, replacing
-    /// them with new ones with newly-generated identifiers; if we are capable,
-    /// the records will be encrypted using a newly-generated `recordIkm`.
+    /// them with new ones with newly-generated identifiers; these new records
+    /// will be encrypted using a newly-generated `recordIkm`.
     case alsoRotatingRecords
 
     /// Orders cases by precedence, with higher numbers more significant.
@@ -150,6 +150,13 @@ public class StorageServiceManagerImpl: NSObject, StorageServiceManager {
                     name: .OWSApplicationWillResignActive,
                     object: nil
                 )
+
+                NotificationCenter.default.addObserver(
+                    self,
+                    selector: #selector(self.backupPlanDidChange),
+                    name: .backupPlanChanged,
+                    object: nil
+                )
             }
 
             appReadiness.runNowOrWhenMainAppDidBecomeReadyAsync {
@@ -178,6 +185,12 @@ public class StorageServiceManagerImpl: NSObject, StorageServiceManager {
         backupPendingChanges(authedDevice: .implicit)
     }
 
+    @objc
+    private func backupPlanDidChange() {
+        // If the BackupPlan changed, we should update our AccountRecord.
+        recordPendingLocalAccountUpdates()
+    }
+
     public func setLocalIdentifiers(_ localIdentifiers: LocalIdentifiers) {
         updateManagerState { managerState in
             managerState.localIdentifiers = localIdentifiers
@@ -188,13 +201,13 @@ public class StorageServiceManagerImpl: NSObject, StorageServiceManager {
 
     public func currentManifestVersion(tx: DBReadTransaction) -> UInt64 {
         return StorageServiceOperation.State.current(
-            transaction: SDSDB.shimOnlyBridge(tx)
+            transaction: tx
         ).manifestVersion
     }
 
     public func currentManifestHasRecordIkm(tx: DBReadTransaction) -> Bool {
         return StorageServiceOperation.State.current(
-            transaction: SDSDB.shimOnlyBridge(tx)
+            transaction: tx
         ).manifestRecordIkm != nil
     }
 
@@ -564,7 +577,7 @@ public class StorageServiceManagerImpl: NSObject, StorageServiceManager {
         updateManagerState { managerState in
             managerState.pendingRestoreCompletionFutures.append(future)
         }
-        try await promise.awaitable()
+        try await promise.awaitableWithUncooperativeCancellationHandling()
     }
 
     public func resetLocalData(transaction: DBWriteTransaction) {
@@ -734,7 +747,7 @@ class StorageServiceOperation {
                 }
             } else {
                 // We're either not registered, or a primary.  Either way,
-                // we don't have backup keys, or a means to get them, so do nothing.
+                // we don't have keys, or a means to get them, so do nothing.
                 // We'll try a fresh restore once the keys are set.
                 Logger.info("Skipping storage service operation due to missing master key.")
             }
@@ -1188,16 +1201,10 @@ class StorageServiceOperation {
         state.manifestVersion = version
 
         SSKEnvironment.shared.databaseStorageRef.read { transaction in
-            if
-                DependenciesBridge.shared.storageServiceRecordIkmCapabilityStore
-                    .isRecordIkmCapable(tx: transaction)
-            {
-                /// If we are `recordIkm`-capable, we should generate a new one
-                /// each time we create a new manifest. The records recreated
-                /// alongside this manifest will be encrypted using this newly-
-                /// generated value.
-                state.manifestRecordIkm = StorageService.ManifestRecordIkm.generateForNewManifest()
-            }
+            /// Generate a new `recordIkm` each time we create a new manifest.
+            /// The records recreated alongside this manifest will be encrypted
+            /// using this newly- generated value.
+            state.manifestRecordIkm = StorageService.ManifestRecordIkm.generateForNewManifest()
 
             let shouldInterceptForMigration =
                 StorageServiceUnknownFieldMigrator.shouldInterceptLocalManifestBeforeUploading(tx: transaction)
@@ -2066,6 +2073,7 @@ class StorageServiceOperation {
                 isPrimaryDevice: isPrimaryDevice,
                 authedAccount: authedAccount,
                 avatarDefaultColorManager: DependenciesBridge.shared.avatarDefaultColorManager,
+                backupPlanManager: DependenciesBridge.shared.backupPlanManager,
                 backupSubscriptionManager: DependenciesBridge.shared.backupSubscriptionManager,
                 dmConfigurationStore: DependenciesBridge.shared.disappearingMessagesConfigurationStore,
                 linkPreviewSettingStore: DependenciesBridge.shared.linkPreviewSettingStore,

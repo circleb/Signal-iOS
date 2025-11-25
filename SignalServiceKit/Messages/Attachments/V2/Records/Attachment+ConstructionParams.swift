@@ -19,7 +19,8 @@ extension Attachment {
         public let mimeType: String
         public let encryptionKey: Data
         public var streamInfo: StreamInfo?
-        public let transitTierInfo: TransitTierInfo?
+        public let latestTransitTierInfo: TransitTierInfo?
+        public let originalTransitTierInfo: TransitTierInfo?
         public let sha256ContentHash: Data?
         public let mediaName: String?
         public let mediaTierInfo: MediaTierInfo?
@@ -33,7 +34,8 @@ extension Attachment {
             mimeType: String,
             encryptionKey: Data,
             streamInfo: StreamInfo?,
-            transitTierInfo: TransitTierInfo?,
+            latestTransitTierInfo: TransitTierInfo?,
+            originalTransitTierInfo: TransitTierInfo?,
             sha256ContentHash: Data?,
             mediaName: String?,
             mediaTierInfo: MediaTierInfo?,
@@ -46,7 +48,8 @@ extension Attachment {
             self.mimeType = mimeType
             self.encryptionKey = encryptionKey
             self.streamInfo = streamInfo
-            self.transitTierInfo = transitTierInfo
+            self.latestTransitTierInfo = latestTransitTierInfo
+            self.originalTransitTierInfo = originalTransitTierInfo
             self.sha256ContentHash = sha256ContentHash
             self.mediaName = mediaName
             self.mediaTierInfo = mediaTierInfo
@@ -60,14 +63,21 @@ extension Attachment {
             blurHash: String?,
             mimeType: String,
             encryptionKey: Data,
-            transitTierInfo: TransitTierInfo
+            latestTransitTierInfo: TransitTierInfo
         ) -> ConstructionParams {
             return .init(
                 blurHash: blurHash,
                 mimeType: mimeType,
                 encryptionKey: encryptionKey,
                 streamInfo: nil,
-                transitTierInfo: transitTierInfo,
+                latestTransitTierInfo: latestTransitTierInfo,
+                originalTransitTierInfo: {
+                    if latestTransitTierInfo.encryptionKey == encryptionKey {
+                        return latestTransitTierInfo
+                    } else {
+                        return nil
+                    }
+                }(),
                 sha256ContentHash: nil,
                 mediaName: nil,
                 mediaTierInfo: nil,
@@ -91,7 +101,8 @@ extension Attachment {
                 mimeType: mimeType,
                 encryptionKey: encryptionKey,
                 streamInfo: streamInfo,
-                transitTierInfo: nil,
+                latestTransitTierInfo: nil,
+                originalTransitTierInfo: nil,
                 sha256ContentHash: sha256ContentHash,
                 mediaName: mediaName,
                 mediaTierInfo: nil,
@@ -106,7 +117,7 @@ extension Attachment {
             blurHash: String?,
             mimeType: String,
             encryptionKey: Data,
-            transitTierInfo: TransitTierInfo?,
+            latestTransitTierInfo: TransitTierInfo?,
             sha256ContentHash: Data?,
             mediaName: String?,
             mediaTierInfo: MediaTierInfo?,
@@ -121,7 +132,14 @@ extension Attachment {
                 mimeType: mimeType,
                 encryptionKey: encryptionKey,
                 streamInfo: nil,
-                transitTierInfo: transitTierInfo,
+                latestTransitTierInfo: latestTransitTierInfo,
+                originalTransitTierInfo: {
+                    if latestTransitTierInfo?.encryptionKey == encryptionKey {
+                        return latestTransitTierInfo
+                    } else {
+                        return nil
+                    }
+                }(),
                 sha256ContentHash: sha256ContentHash,
                 mediaName: mediaName,
                 mediaTierInfo: mediaTierInfo,
@@ -141,9 +159,10 @@ extension Attachment {
                 mimeType: mimeType,
                 // We don't have any cdn info from which to download, so what
                 // encryption key we use is irrelevant. Just generate a new one.
-                encryptionKey: Cryptography.randomAttachmentEncryptionKey(),
+                encryptionKey: AttachmentKey.generate().combinedKey,
                 streamInfo: nil,
-                transitTierInfo: nil,
+                latestTransitTierInfo: nil,
+                originalTransitTierInfo: nil,
                 sha256ContentHash: nil,
                 mediaName: nil,
                 mediaTierInfo: nil,
@@ -166,7 +185,14 @@ extension Attachment {
                 mimeType: thumbnailMimeType,
                 encryptionKey: thumbnailEncryptionKey,
                 streamInfo: nil,
-                transitTierInfo: thumbnailTransitTierInfo,
+                latestTransitTierInfo: thumbnailTransitTierInfo,
+                originalTransitTierInfo: {
+                    if thumbnailTransitTierInfo?.encryptionKey == thumbnailEncryptionKey {
+                        return thumbnailTransitTierInfo
+                    } else {
+                        return nil
+                    }
+                }(),
                 sha256ContentHash: nil,
                 mediaName: nil,
                 mediaTierInfo: nil,
@@ -186,12 +212,12 @@ extension Attachment {
             mediaName: String,
             lastFullscreenViewTimestamp: UInt64?,
         ) -> ConstructionParams {
-            let transitTierInfo: Attachment.TransitTierInfo?
+            let latestTransitTierInfo: Attachment.TransitTierInfo?
             if
-                let existingTransitTierInfo = attachment.transitTierInfo,
+                let existingTransitTierInfo = attachment.latestTransitTierInfo,
                 existingTransitTierInfo.encryptionKey == attachment.encryptionKey
             {
-                transitTierInfo = Attachment.TransitTierInfo(
+                latestTransitTierInfo = Attachment.TransitTierInfo(
                     cdnNumber: existingTransitTierInfo.cdnNumber,
                     cdnKey: existingTransitTierInfo.cdnKey,
                     uploadTimestamp: existingTransitTierInfo.uploadTimestamp,
@@ -209,19 +235,21 @@ extension Attachment {
                     lastDownloadAttemptTimestamp: nil
                 )
             } else if
-                let existingTransitTierInfo = attachment.transitTierInfo,
+                let existingTransitTierInfo = attachment.latestTransitTierInfo,
                 case .digestSHA256Ciphertext(_) = existingTransitTierInfo.integrityCheck
             {
-                transitTierInfo = existingTransitTierInfo
+                latestTransitTierInfo = existingTransitTierInfo
             } else {
-                transitTierInfo = nil
+                latestTransitTierInfo = nil
             }
             return .init(
                 blurHash: attachment.blurHash,
                 mimeType: validatedMimeType,
                 encryptionKey: attachment.encryptionKey,
                 streamInfo: streamInfo,
-                transitTierInfo: transitTierInfo,
+                latestTransitTierInfo: latestTransitTierInfo,
+                // Original info is unaffected by a download
+                originalTransitTierInfo: attachment.originalTransitTierInfo,
                 sha256ContentHash: sha256ContentHash,
                 mediaName: mediaName,
                 mediaTierInfo: attachment.mediaTierInfo,
@@ -236,7 +264,7 @@ extension Attachment {
             attachment: Attachment,
             timestamp: UInt64
         ) -> ConstructionParams {
-            let transitTierInfo = attachment.transitTierInfo.map {
+            let latestTransitTierInfo = attachment.latestTransitTierInfo.map {
                 return Attachment.TransitTierInfo(
                     cdnNumber: $0.cdnNumber,
                     cdnKey: $0.cdnKey,
@@ -253,7 +281,9 @@ extension Attachment {
                 mimeType: attachment.mimeType,
                 encryptionKey: attachment.encryptionKey,
                 streamInfo: attachment.streamInfo,
-                transitTierInfo: transitTierInfo,
+                latestTransitTierInfo: latestTransitTierInfo,
+                // We don't bother updating last download attempt on the original info
+                originalTransitTierInfo: attachment.originalTransitTierInfo,
                 sha256ContentHash: attachment.sha256ContentHash,
                 mediaName: attachment.mediaName,
                 mediaTierInfo: attachment.mediaTierInfo,
@@ -266,7 +296,8 @@ extension Attachment {
 
         public static func forUpdatingAsUploadedToTransitTier(
             attachment stream: AttachmentStream,
-            transitTierInfo: TransitTierInfo
+            latestTransitTierInfo: TransitTierInfo,
+            originalTransitTierInfo: TransitTierInfo?,
         ) -> ConstructionParams {
             let attachment = stream.attachment
             return .init(
@@ -274,7 +305,8 @@ extension Attachment {
                 mimeType: attachment.mimeType,
                 encryptionKey: attachment.encryptionKey,
                 streamInfo: attachment.streamInfo,
-                transitTierInfo: transitTierInfo,
+                latestTransitTierInfo: latestTransitTierInfo,
+                originalTransitTierInfo: originalTransitTierInfo,
                 sha256ContentHash: attachment.sha256ContentHash,
                 mediaName: attachment.mediaName,
                 mediaTierInfo: attachment.mediaTierInfo,
@@ -286,14 +318,17 @@ extension Attachment {
         }
 
         public static func forRemovingTransitTierInfo(
-            attachment: Attachment
+            from attachment: Attachment,
+            removeLatestTransitTierInfo: Bool,
+            removeOriginalTransitTierInfo: Bool,
         ) -> ConstructionParams {
             return .init(
                 blurHash: attachment.blurHash,
                 mimeType: attachment.mimeType,
                 encryptionKey: attachment.encryptionKey,
                 streamInfo: attachment.streamInfo,
-                transitTierInfo: nil,
+                latestTransitTierInfo: removeLatestTransitTierInfo ? nil : attachment.latestTransitTierInfo,
+                originalTransitTierInfo: removeOriginalTransitTierInfo ? nil : attachment.originalTransitTierInfo,
                 sha256ContentHash: attachment.sha256ContentHash,
                 mediaName: attachment.mediaName,
                 mediaTierInfo: attachment.mediaTierInfo,
@@ -314,7 +349,8 @@ extension Attachment {
                 mimeType: attachment.mimeType,
                 encryptionKey: attachment.encryptionKey,
                 streamInfo: attachment.streamInfo,
-                transitTierInfo: attachment.transitTierInfo,
+                latestTransitTierInfo: attachment.latestTransitTierInfo,
+                originalTransitTierInfo: attachment.originalTransitTierInfo,
                 sha256ContentHash: attachment.sha256ContentHash,
                 mediaName: mediaName,
                 mediaTierInfo: mediaTierInfo,
@@ -333,7 +369,8 @@ extension Attachment {
                 mimeType: attachment.mimeType,
                 encryptionKey: attachment.encryptionKey,
                 streamInfo: attachment.streamInfo,
-                transitTierInfo: attachment.transitTierInfo,
+                latestTransitTierInfo: attachment.latestTransitTierInfo,
+                originalTransitTierInfo: attachment.originalTransitTierInfo,
                 sha256ContentHash: attachment.sha256ContentHash,
                 mediaName: attachment.mediaName,
                 mediaTierInfo: nil,
@@ -354,7 +391,8 @@ extension Attachment {
                 mimeType: attachment.mimeType,
                 encryptionKey: attachment.encryptionKey,
                 streamInfo: attachment.streamInfo,
-                transitTierInfo: attachment.transitTierInfo,
+                latestTransitTierInfo: attachment.latestTransitTierInfo,
+                originalTransitTierInfo: attachment.originalTransitTierInfo,
                 sha256ContentHash: attachment.sha256ContentHash,
                 mediaName: mediaName,
                 mediaTierInfo: attachment.mediaTierInfo,
@@ -373,7 +411,8 @@ extension Attachment {
                 mimeType: attachment.mimeType,
                 encryptionKey: attachment.encryptionKey,
                 streamInfo: attachment.streamInfo,
-                transitTierInfo: attachment.transitTierInfo,
+                latestTransitTierInfo: attachment.latestTransitTierInfo,
+                originalTransitTierInfo: attachment.originalTransitTierInfo,
                 sha256ContentHash: attachment.sha256ContentHash,
                 mediaName: attachment.mediaName,
                 mediaTierInfo: attachment.mediaTierInfo,
@@ -403,12 +442,12 @@ extension Attachment {
                     lastDownloadAttemptTimestamp: nil
                 )
             }
-            let transitTierInfo: Attachment.TransitTierInfo?
+            let latestTransitTierInfo: Attachment.TransitTierInfo?
             if
-                let existingTransitTierInfo = attachment.transitTierInfo,
+                let existingTransitTierInfo = attachment.latestTransitTierInfo,
                 existingTransitTierInfo.encryptionKey == attachment.encryptionKey
             {
-                transitTierInfo = Attachment.TransitTierInfo(
+                latestTransitTierInfo = Attachment.TransitTierInfo(
                     cdnNumber: existingTransitTierInfo.cdnNumber,
                     cdnKey: existingTransitTierInfo.cdnKey,
                     uploadTimestamp: existingTransitTierInfo.uploadTimestamp,
@@ -426,19 +465,20 @@ extension Attachment {
                     lastDownloadAttemptTimestamp: nil
                 )
             } else if
-                let existingTransitTierInfo = attachment.transitTierInfo,
+                let existingTransitTierInfo = attachment.latestTransitTierInfo,
                 case .digestSHA256Ciphertext(_) = existingTransitTierInfo.integrityCheck
             {
-                transitTierInfo = existingTransitTierInfo
+                latestTransitTierInfo = existingTransitTierInfo
             } else {
-                transitTierInfo = nil
+                latestTransitTierInfo = nil
             }
             return .init(
                 blurHash: attachment.blurHash,
                 mimeType: validatedMimeType,
                 encryptionKey: attachment.encryptionKey,
                 streamInfo: streamInfo,
-                transitTierInfo: transitTierInfo,
+                latestTransitTierInfo: latestTransitTierInfo,
+                originalTransitTierInfo: attachment.originalTransitTierInfo,
                 sha256ContentHash: sha256ContentHash,
                 mediaName: mediaName,
                 mediaTierInfo: mediaTierInfo,
@@ -468,7 +508,8 @@ extension Attachment {
                 mimeType: attachment.mimeType,
                 encryptionKey: attachment.encryptionKey,
                 streamInfo: attachment.streamInfo,
-                transitTierInfo: attachment.transitTierInfo,
+                latestTransitTierInfo: attachment.latestTransitTierInfo,
+                originalTransitTierInfo: attachment.originalTransitTierInfo,
                 sha256ContentHash: attachment.sha256ContentHash,
                 mediaName: attachment.mediaName,
                 mediaTierInfo: mediaTierInfo,
@@ -497,7 +538,8 @@ extension Attachment {
                 mimeType: attachment.mimeType,
                 encryptionKey: attachment.encryptionKey,
                 streamInfo: attachment.streamInfo,
-                transitTierInfo: attachment.transitTierInfo,
+                latestTransitTierInfo: attachment.latestTransitTierInfo,
+                originalTransitTierInfo: attachment.originalTransitTierInfo,
                 sha256ContentHash: attachment.sha256ContentHash,
                 mediaName: attachment.mediaName,
                 mediaTierInfo: attachment.mediaTierInfo,
@@ -524,7 +566,8 @@ extension Attachment {
                 mimeType: attachment.mimeType,
                 encryptionKey: attachment.encryptionKey,
                 streamInfo: attachment.streamInfo,
-                transitTierInfo: attachment.transitTierInfo,
+                latestTransitTierInfo: attachment.latestTransitTierInfo,
+                originalTransitTierInfo: attachment.originalTransitTierInfo,
                 sha256ContentHash: attachment.sha256ContentHash,
                 mediaName: attachment.mediaName,
                 mediaTierInfo: attachment.mediaTierInfo,
@@ -557,7 +600,8 @@ extension Attachment {
                 mimeType: mimeType,
                 encryptionKey: attachment.encryptionKey,
                 streamInfo: streamInfo,
-                transitTierInfo: attachment.transitTierInfo,
+                latestTransitTierInfo: attachment.latestTransitTierInfo,
+                originalTransitTierInfo: attachment.originalTransitTierInfo,
                 sha256ContentHash: attachment.sha256ContentHash,
                 mediaName: attachment.mediaName,
                 mediaTierInfo: attachment.mediaTierInfo,
@@ -573,7 +617,8 @@ extension Attachment {
             into attachment: Attachment,
             encryptionKey: Data,
             mimeType: String,
-            transitTierInfo: TransitTierInfo?,
+            latestTransitTierInfo: TransitTierInfo?,
+            originalTransitTierInfo: TransitTierInfo?,
             mediaTierInfo: MediaTierInfo?,
             thumbnailMediaTierInfo: ThumbnailMediaTierInfo?
         ) -> ConstructionParams {
@@ -582,7 +627,8 @@ extension Attachment {
                 mimeType: mimeType,
                 encryptionKey: encryptionKey,
                 streamInfo: streamInfo,
-                transitTierInfo: transitTierInfo,
+                latestTransitTierInfo: latestTransitTierInfo,
+                originalTransitTierInfo: originalTransitTierInfo,
                 sha256ContentHash: streamInfo.sha256ContentHash,
                 mediaName: streamInfo.mediaName,
                 mediaTierInfo: mediaTierInfo,
@@ -602,7 +648,8 @@ extension Attachment {
                 mimeType: attachment.mimeType,
                 encryptionKey: attachment.encryptionKey,
                 streamInfo: attachment.streamInfo,
-                transitTierInfo: attachment.transitTierInfo,
+                latestTransitTierInfo: attachment.latestTransitTierInfo,
+                originalTransitTierInfo: attachment.originalTransitTierInfo,
                 sha256ContentHash: attachment.sha256ContentHash,
                 mediaName: attachment.mediaName,
                 mediaTierInfo: attachment.mediaTierInfo,
@@ -623,7 +670,8 @@ extension Attachment {
                 encryptionKey: attachment.encryptionKey,
                 // Remove stream info
                 streamInfo: nil,
-                transitTierInfo: attachment.transitTierInfo,
+                latestTransitTierInfo: attachment.latestTransitTierInfo,
+                originalTransitTierInfo: attachment.originalTransitTierInfo,
                 // Keep sha256ContentHash and medianame so we can download again
                 sha256ContentHash: attachment.sha256ContentHash,
                 mediaName: attachment.mediaName,

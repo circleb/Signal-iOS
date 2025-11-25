@@ -39,6 +39,7 @@ public class AppEnvironment: NSObject {
     private(set) var provisioningManager: ProvisioningManager!
     private(set) var quickRestoreManager: QuickRestoreManager!
     private var usernameValidationObserver: UsernameValidationObserver!
+    private var registrationIdMismatchManager: RegistrationIdMismatchManager!
 
     init(appReadiness: AppReadiness, deviceTransferService: DeviceTransferService) {
         self.deviceTransferServiceRef = deviceTransferService
@@ -50,8 +51,10 @@ public class AppEnvironment: NSObject {
     }
 
     func setUp(appReadiness: AppReadiness, callService: CallService) {
-        let backupSettingsStore = BackupSettingsStore()
         let backupAttachmentUploadEraStore = BackupAttachmentUploadEraStore()
+        let backupNonceStore = BackupNonceMetadataStore()
+        let backupSettingsStore = BackupSettingsStore()
+        let backupSubscriptionIssueStore = BackupSubscriptionIssueStore()
 
         let badgeManager = BadgeManager(
             badgeCountFetcher: DependenciesBridge.shared.badgeCountFetcher,
@@ -70,12 +73,15 @@ public class AppEnvironment: NSObject {
         self.backupEnablingManager = BackupEnablingManager(
             backupAttachmentUploadEraStore: backupAttachmentUploadEraStore,
             backupDisablingManager: DependenciesBridge.shared.backupDisablingManager,
-            backupIdManager: DependenciesBridge.shared.backupIdManager,
+            backupKeyService: DependenciesBridge.shared.backupKeyService,
             backupPlanManager: DependenciesBridge.shared.backupPlanManager,
+            backupSettingsStore: backupSettingsStore,
+            backupSubscriptionIssueStore: backupSubscriptionIssueStore,
             backupSubscriptionManager: DependenciesBridge.shared.backupSubscriptionManager,
             backupTestFlightEntitlementManager: DependenciesBridge.shared.backupTestFlightEntitlementManager,
             db: DependenciesBridge.shared.db,
             tsAccountManager: DependenciesBridge.shared.tsAccountManager,
+            notificationPresenter: SSKEnvironment.shared.notificationPresenterRef
         )
         self.callService = callService
         self.callLinkProfileKeySharingManager = CallLinkProfileKeySharingManager(
@@ -89,12 +95,13 @@ public class AppEnvironment: NSObject {
             deviceProvisioningService: deviceProvisioningService,
             identityManager: DependenciesBridge.shared.identityManager,
             linkAndSyncManager: DependenciesBridge.shared.linkAndSyncManager,
-            profileManager: ProvisioningManager.Wrappers.ProfileManager(SSKEnvironment.shared.profileManagerRef),
+            profileManager: SSKEnvironment.shared.profileManagerRef,
             receiptManager: ProvisioningManager.Wrappers.ReceiptManager(SSKEnvironment.shared.receiptManagerRef),
             tsAccountManager: DependenciesBridge.shared.tsAccountManager
         )
         self.quickRestoreManager = QuickRestoreManager(
             accountKeyStore: DependenciesBridge.shared.accountKeyStore,
+            backupNonceStore: backupNonceStore,
             backupSettingsStore: backupSettingsStore,
             db: DependenciesBridge.shared.db,
             deviceProvisioningService: deviceProvisioningService,
@@ -113,13 +120,22 @@ public class AppEnvironment: NSObject {
             quickRestoreManager: quickRestoreManager
         )
 
+        self.registrationIdMismatchManager = RegistrationIdMismatchManagerImpl(
+            db: DependenciesBridge.shared.db,
+            tsAccountManager: DependenciesBridge.shared.tsAccountManager,
+            udManager: SSKEnvironment.shared.udManagerRef
+        )
+
         appReadiness.runNowOrWhenAppWillBecomeReady {
             self.badgeManager.startObservingChanges(in: DependenciesBridge.shared.databaseChangeObserver)
             self.appIconBadgeUpdater.startObserving()
         }
 
         appReadiness.runNowOrWhenAppDidBecomeReadyAsync {
+            let accountEntropyPoolManager = DependenciesBridge.shared.accountEntropyPoolManager
             let backupDisablingManager = DependenciesBridge.shared.backupDisablingManager
+            let backupIdService = DependenciesBridge.shared.backupIdService
+            let backupRefreshManager = DependenciesBridge.shared.backupRefreshManager
             let backupSubscriptionManager = DependenciesBridge.shared.backupSubscriptionManager
             let backupTestFlightEntitlementManager = DependenciesBridge.shared.backupTestFlightEntitlementManager
             let callRecordStore = DependenciesBridge.shared.callRecordStore
@@ -136,6 +152,8 @@ public class AppEnvironment: NSObject {
             let storageServiceManager = SSKEnvironment.shared.storageServiceManagerRef
             let threadStore = DependenciesBridge.shared.threadStore
             let tsAccountManager = DependenciesBridge.shared.tsAccountManager
+            let storageServiceRecordIkmMigrator = DependenciesBridge.shared.storageServiceRecordIkmMigrator
+            let subscriptionConfigManager = DependenciesBridge.shared.subscriptionConfigManager
 
             let avatarDefaultColorStorageServiceMigrator = AvatarDefaultColorStorageServiceMigrator(
                 db: db,
@@ -153,12 +171,20 @@ public class AppEnvironment: NSObject {
                 threadStore: threadStore
             )
 
-            let isPrimaryDevice = db.read { tx -> Bool in
-                return tsAccountManager.registrationState(tx: tx).isRegisteredPrimaryDevice
+            let (
+                isRegisteredPrimaryDevice,
+                isRegistered,
+                localIdentifiers
+            ) = db.read { tx in
+                (
+                    tsAccountManager.registrationState(tx: tx).isRegisteredPrimaryDevice,
+                    tsAccountManager.registrationState(tx: tx).isRegistered,
+                    tsAccountManager.localIdentifiers(tx: tx),
+                )
             }
 
             // Things that should run on only the primary *or* linked devices.
-            if isPrimaryDevice {
+            if isRegisteredPrimaryDevice, let localIdentifiers {
                 Task {
                     do {
                         try await avatarDefaultColorStorageServiceMigrator.performMigrationIfNecessary()
@@ -166,9 +192,55 @@ public class AppEnvironment: NSObject {
                         Logger.warn("Couldn't perform avatar default color migration: \(error)")
                     }
                 }
+
+                Task {
+                    await storageServiceRecordIkmMigrator.migrateToManifestRecordIkmIfNecessary()
+                }
+
+                Task {
+                    do {
+                        try await backupIdService.registerBackupIDIfNecessary(
+                            localAci: localIdentifiers.aci,
+                            auth: .implicit()
+                        )
+                    } catch {
+                        // Do nothing, we'll try again on the next app launch.
+                        owsFailDebug("Error registering backup ID \(error)")
+                    }
+                }
+
+                Task {
+                    await accountEntropyPoolManager.generateIfMissing()
+                }
+
+                Task {
+                    // Valide the local registration ID of the primary.
+                    // There was a bug in re-registration flow that could lead to a discrepancy
+                    // between client and server around the registrationID
+                    await self.registrationIdMismatchManager.validateRegistrationIds()
+                }
             } else {
                 Task {
                     await identityKeyMismatchManager.validateLocalPniIdentityKeyIfNecessary()
+                }
+            }
+
+            // Things that should run on only registered devices, both linked & primary.
+            if isRegistered {
+                Task {
+                    guard let localIdentifiers else {
+                        owsFailDebug("Registered but no local identifiers")
+                        return
+                    }
+
+                    do {
+                        try await backupRefreshManager.refreshBackupIfNeeded(
+                            localIdentifiers: localIdentifiers,
+                            auth: .implicit()
+                        )
+                    } catch {
+                        owsFailDebug("Failed to refresh backup \(error)")
+                    }
                 }
             }
 
@@ -198,6 +270,14 @@ public class AppEnvironment: NSObject {
 
             Task {
                 await inactiveLinkedDeviceFinder.refreshLinkedDeviceStateIfNecessary()
+            }
+
+            Task {
+                do {
+                    try await subscriptionConfigManager.refreshIfNeeded()
+                } catch {
+                    owsFailDebug("Failed to fetch subscription configuration in launch job! \(error)")
+                }
             }
 
             Task {

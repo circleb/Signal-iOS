@@ -69,12 +69,34 @@ public class MessageProcessor {
         }
     }
 
-    public func processReceivedEnvelopeData(
+    public func enqueueReceivedEnvelopeData(
         _ envelopeData: Data,
         serverDeliveryTimestamp: UInt64,
         envelopeSource: EnvelopeSource,
         completion: @escaping () -> Void
     ) {
+        self.queueForEnqueueing.async {
+            self._enqueueReceivedEnvelopeData(
+                envelopeData,
+                serverDeliveryTimestamp: serverDeliveryTimestamp,
+                envelopeSource: envelopeSource,
+                completion: completion,
+            )
+        }
+    }
+
+    public func flushEnqueuingQueue(completion: @escaping () -> Void) {
+        self.queueForEnqueueing.async(completion)
+    }
+
+    private func _enqueueReceivedEnvelopeData(
+        _ envelopeData: Data,
+        serverDeliveryTimestamp: UInt64,
+        envelopeSource: EnvelopeSource,
+        completion: @escaping () -> Void
+    ) {
+        assertOnQueue(self.queueForEnqueueing)
+
         guard !envelopeData.isEmpty else {
             owsFailDebug("Empty envelope, envelopeSource: \(envelopeSource).")
             completion()
@@ -97,7 +119,7 @@ public class MessageProcessor {
             return
         }
 
-        processReceivedEnvelope(
+        enqueueReceivedEnvelope(
             ReceivedEnvelope(
                 envelope: protoEnvelope,
                 serverDeliveryTimestamp: serverDeliveryTimestamp,
@@ -107,40 +129,32 @@ public class MessageProcessor {
         )
     }
 
-    public func processReceivedEnvelope(
-        _ envelopeProto: SSKProtoEnvelope,
-        serverDeliveryTimestamp: UInt64,
-        envelopeSource: EnvelopeSource,
-        completion: @escaping () -> Void
-    ) {
-        processReceivedEnvelope(
-            ReceivedEnvelope(
-                envelope: envelopeProto,
-                serverDeliveryTimestamp: serverDeliveryTimestamp,
-                completion: completion
-            ),
-            envelopeSource: envelopeSource
-        )
-    }
-
-    private func processReceivedEnvelope(_ receivedEnvelope: ReceivedEnvelope, envelopeSource: EnvelopeSource) {
+    private func enqueueReceivedEnvelope(_ receivedEnvelope: ReceivedEnvelope, envelopeSource: EnvelopeSource) {
         pendingEnvelopes.enqueue(receivedEnvelope)
         drainPendingEnvelopes()
     }
 
     private static let maxEnvelopeByteCount = 256 * 1024
-    private let serialQueue = DispatchQueue(
-        label: "org.signal.message-processor",
-        autoreleaseFrequency: .workItem
-    )
+
+    private let queueForEnqueueing = DispatchQueue(label: "org.signal.message-processor-enqueue")
+    private let queueForProcessing = DispatchQueue(label: "org.signal.message-processor-process", autoreleaseFrequency: .workItem)
 
     #if TESTABLE_BUILD
-    var serialQueueForTests: DispatchQueue { serialQueue }
+    var serialQueueForTests: DispatchQueue { queueForProcessing }
     #endif
 
     private var pendingEnvelopes = PendingEnvelopes()
 
     private let isDrainingPendingEnvelopes = AtomicBool(false, lock: .init())
+
+    public func dropEnqueuedEnvelopes(completion: @escaping () -> Void) {
+        // Run this on queueForProcessing to ensure we're not going to drop
+        // envelopes that are currently being processed.
+        self.queueForProcessing.async {
+            self.pendingEnvelopes.removeAll()
+            completion()
+        }
+    }
 
     private func drainPendingEnvelopes() {
         guard CurrentAppContext().shouldProcessIncomingMessages else { return }
@@ -148,7 +162,7 @@ public class MessageProcessor {
 
         guard SSKEnvironment.shared.messagePipelineSupervisorRef.isMessageProcessingPermitted else { return }
 
-        serialQueue.async {
+        queueForProcessing.async {
             self.isDrainingPendingEnvelopes.set(true)
             while autoreleasepool(invoking: { self.drainNextBatch() }) {}
             self.isDrainingPendingEnvelopes.set(false)
@@ -158,13 +172,13 @@ public class MessageProcessor {
         }
     }
 
-    private var recentlyProcessedGuids = SetDeque<String>()
+    private var recentlyProcessedGuids = SetDeque<UUID>()
     /// Should ideally match `MESSAGE_SENDER_MAX_CONCURRENCY`.
     private var recentlyProcessedGuidLimit = 256
 
     /// Returns whether or not to continue draining the queue.
     private func drainNextBatch() -> Bool {
-        assertOnQueue(serialQueue)
+        assertOnQueue(queueForProcessing)
 
         guard SSKEnvironment.shared.messagePipelineSupervisorRef.isMessageProcessingPermitted else {
             return false
@@ -228,7 +242,7 @@ public class MessageProcessor {
             processedEnvelopesCount += batchEnvelopes.count - remainingEnvelopes.count
         }
         for processedEnvelope in batchEnvelopes.prefix(processedEnvelopesCount) {
-            guard let serverGuid = processedEnvelope.envelope.serverGuid else {
+            guard let serverGuid = ValidatedIncomingEnvelope.parseServerGuid(fromEnvelope: processedEnvelope.envelope) else {
                 continue
             }
             recentlyProcessedGuids.pushBack(serverGuid)
@@ -540,8 +554,8 @@ private extension MessageProcessor {
         localDeviceId: LocalDeviceId,
         tx: DBWriteTransaction
     ) -> ProcessingRequest {
-        assertOnQueue(serialQueue)
-        if let serverGuid = envelope.envelope.serverGuid, recentlyProcessedGuids.contains(serverGuid) {
+        assertOnQueue(queueForProcessing)
+        if let serverGuid = ValidatedIncomingEnvelope.parseServerGuid(fromEnvelope: envelope.envelope), recentlyProcessedGuids.contains(serverGuid) {
             return ProcessingRequest(envelope, state: .completed(error: OWSGenericError("Skipping because it was recently processed.")))
         }
         let builder = ProcessingRequestBuilder(
@@ -610,7 +624,6 @@ public enum EnvelopeSource {
     case unknown
     case websocketIdentified
     case websocketUnidentified
-    case rest
     case debugUI
     case tests
 }
@@ -646,6 +659,12 @@ private class PendingEnvelopes {
     func removeProcessedEnvelopes(_ processedEnvelopesCount: Int) {
         unfairLock.withLock {
             pendingEnvelopes.removeFirst(processedEnvelopesCount)
+        }
+    }
+
+    func removeAll() {
+        unfairLock.withLock {
+            pendingEnvelopes.removeAll()
         }
     }
 

@@ -115,7 +115,7 @@ public class AttachmentMultisend {
 
         let sentPromise = Promise<[TSThread]>.wrapAsync {
             // Prepare the text attachment
-            let textAttachment = try textAttachment.validateAndPrepareForSending()
+            let textAttachment = try await textAttachment.validateAndPrepareForSending()
 
             let threads: [TSThread]
             let preparedMessages: [PreparedOutgoingMessage]
@@ -233,12 +233,12 @@ public class AttachmentMultisend {
             // No need to segment!
             var results = [SegmentAttachmentResult]()
             for attachment in approvedAttachments {
-                let dataSource: AttachmentDataSource = try deps.attachmentValidator.validateContents(
+                let dataSource: AttachmentDataSource = try await deps.attachmentValidator.validateContents(
                     dataSource: attachment.dataSource,
                     shouldConsume: true,
                     mimeType: attachment.mimeType,
                     renderingFlag: attachment.renderingFlag,
-                    sourceFilename: attachment.sourceFilename
+                    sourceFilename: attachment.dataSource.sourceFilename?.filterFilename(),
                 )
                 try results.append(.init(
                     original: dataSource,
@@ -264,29 +264,29 @@ public class AttachmentMultisend {
                     if hasNonStoryDestination || segmentingResult.segmented == nil {
                         // We need to prepare the original, either because there are no segments
                         // or because we are sending to a non-story which doesn't segment.
-                        originalDataSource = try deps.attachmentValidator.validateContents(
+                        originalDataSource = try await deps.attachmentValidator.validateContents(
                             dataSource: segmentingResult.original.dataSource,
                             shouldConsume: true,
                             mimeType: segmentingResult.original.mimeType,
                             renderingFlag: segmentingResult.original.renderingFlag,
-                            sourceFilename: segmentingResult.original.sourceFilename
+                            sourceFilename: segmentingResult.original.dataSource.sourceFilename?.filterFilename(),
                         )
                     } else {
                         originalDataSource = nil
                     }
 
-                    let segmentedDataSources: [AttachmentDataSource]? = try { () -> [AttachmentDataSource]? in
+                    let segmentedDataSources: [AttachmentDataSource]? = try await { () -> [AttachmentDataSource]? in
                         guard let segments = segmentingResult.segmented, hasStoryDestination else {
                             return nil
                         }
                         var segmentedDataSources = [AttachmentDataSource]()
                         for segment in segments {
-                            let dataSource: AttachmentDataSource = try deps.attachmentValidator.validateContents(
+                            let dataSource: AttachmentDataSource = try await deps.attachmentValidator.validateContents(
                                 dataSource: segment.dataSource,
                                 shouldConsume: true,
                                 mimeType: segment.mimeType,
                                 renderingFlag: segment.renderingFlag,
-                                sourceFilename: segment.sourceFilename
+                                sourceFilename: segment.dataSource.sourceFilename?.filterFilename(),
                             )
                             segmentedDataSources.append(dataSource)
                         }

@@ -85,18 +85,12 @@ public class OWSProfileManager: ProfileManagerProtocol {
             self.whitelistedPhoneNumbersStore.removeAll(transaction: transaction)
             self.whitelistedServiceIdsStore.removeAll(transaction: transaction)
             self.whitelistedGroupsStore.removeAll(transaction: transaction)
-
-            owsAssertDebug(self.whitelistedPhoneNumbersStore.numberOfKeys(transaction: transaction) == 0)
-            owsAssertDebug(self.whitelistedServiceIdsStore.numberOfKeys(transaction: transaction) == 0)
-            owsAssertDebug(self.whitelistedGroupsStore.numberOfKeys(transaction: transaction) == 0)
         }
     }
 
     #endif
 
     public func setLocalProfileKey(_ key: Aes256Key, userProfileWriter: UserProfileWriter, transaction: DBWriteTransaction) {
-        owsAssertDebug(GRDBSchemaMigrator.areMigrationsComplete)
-
         let localUserProfile = OWSUserProfile.getOrBuildUserProfileForLocalUser(userProfileWriter: .localUser, tx: transaction)
 
         localUserProfile.update(profileKey: .setTo(key), userProfileWriter: userProfileWriter, transaction: transaction)
@@ -396,7 +390,7 @@ public class OWSProfileManager: ProfileManagerProtocol {
     // MARK: - Profile Key Rotation
 
     public func forceRotateLocalProfileKeyForGroupDeparture(with transaction: DBWriteTransaction) {
-        forceRotateLocalProfileKeyForGroupDepartureObjc(tx: transaction)
+        _forceRotateLocalProfileKeyForGroupDeparture(tx: transaction)
     }
 
     public func groupKey(groupId: Data) -> String {
@@ -546,7 +540,7 @@ extension OWSProfileManager: ProfileManager {
     ) -> Promise<Void> {
         Logger.info("")
 
-        let profileChanges = currentPendingProfileChanges(tx: SDSDB.shimOnlyBridge(tx))
+        let profileChanges = currentPendingProfileChanges(tx: tx)
         return updateLocalProfile(
             profileGivenName: .noChange,
             profileFamilyName: .noChange,
@@ -557,7 +551,7 @@ extension OWSProfileManager: ProfileManager {
             unsavedRotatedProfileKey: unsavedRotatedProfileKey,
             userProfileWriter: profileChanges?.userProfileWriter ?? .reupload,
             authedAccount: authedAccount,
-            tx: SDSDB.shimOnlyBridge(tx)
+            tx: tx
         )
     }
 
@@ -619,8 +613,7 @@ extension OWSProfileManager: ProfileManager {
         let lastGroupProfileKeyCheckTimestamp = self.lastGroupProfileKeyCheckTimestamp(tx: tx)
         let triggers = [
             self.blocklistRotationTriggerIfNeeded(tx: tx),
-            self.recipientHidingTriggerIfNeeded(tx: tx),
-            self.leaveGroupTriggerIfNeeded(tx: tx)
+            self.tokenTriggerIfNeeded(tx: tx),
         ].compacted()
 
         guard !triggers.isEmpty else {
@@ -659,18 +652,9 @@ extension OWSProfileManager: ProfileManager {
             let groupIds: [Data]
         }
 
-        /// When we hide a recipient, we immediately update the whitelist and asynchronously
-        /// do a rotation. The date is when we set this trigger; if we _started_ a rotation
-        /// after this date, the condition is satisfied when the rotation completes. Otherwise
-        /// a rotation is needed.
-        case recipientHiding(Date)
-
-        /// When we leave a group, that group had a hidden/blocked recipient, and we have no
-        /// other groups in common with that recipient, we rotate (so they lose access to our latest
-        /// profile key).
-        /// The date is when we set this trigger; if we _started_ a rotation after this date, the
-        /// condition is satisfied when the rotation completes. Otherwise a rotation is needed.
-        case leftGroupWithHiddenOrBlockedRecipient(Date)
+        /// We save a token when scheduling a profile key rotation. We schedule
+        /// *another* rotation if the token changes before we finish.
+        case tokenData(Data)
     }
 
     private func blocklistRotationTriggerIfNeeded(tx: DBReadTransaction) -> RotateProfileKeyTrigger? {
@@ -689,24 +673,13 @@ extension OWSProfileManager: ProfileManager {
         ))
     }
 
-    private func recipientHidingTriggerIfNeeded(tx: DBReadTransaction) -> RotateProfileKeyTrigger? {
-        // If it's not nil, we should rotate. After rotating, we always write nil (if it succeeded),
-        // so presence is the only trigger.
-        // The actual date value is only used to disambiguate if a _new_ trigger got added while rotating.
-        guard let triggerDate = self.recipientHidingTriggerTimestamp(tx: tx) else {
+    private func tokenTriggerIfNeeded(tx: DBReadTransaction) -> RotateProfileKeyTrigger? {
+        // If it's not nil, we should rotate. After rotating, if it hasn't changed,
+        // we write nil, so presence is the only trigger.
+        guard let triggerToken = self.triggerToken(tx: tx) else {
             return nil
         }
-        return .recipientHiding(triggerDate)
-    }
-
-    private func leaveGroupTriggerIfNeeded(tx: DBReadTransaction) -> RotateProfileKeyTrigger? {
-        // If it's not nil, we should rotate. After rotating, we always write nil (if it succeeded),
-        // so presence is the only trigger.
-        // The actual date value is only used to disambiguate if a _new_ trigger got added while rotating.
-        guard let triggerDate = self.leaveGroupTriggerTimestamp(tx: tx) else {
-            return nil
-        }
-        return .leftGroupWithHiddenOrBlockedRecipient(triggerDate)
+        return .tokenData(triggerToken)
     }
 
     @MainActor
@@ -737,8 +710,6 @@ extension OWSProfileManager: ProfileManager {
         guard DependenciesBridge.shared.tsAccountManager.registrationStateWithMaybeSneakyTransaction.isRegisteredPrimaryDevice else {
             throw OWSAssertionError("tsAccountManager.isRegistered was unexpectedly false")
         }
-
-        let rotationStartDate = Date()
 
         Logger.info("Beginning profile key rotation.")
 
@@ -795,18 +766,8 @@ extension OWSProfileManager: ProfileManager {
                 switch trigger {
                 case .blocklistChange(let values):
                     self.didRotateProfileKeyFromBlocklistTrigger(values, tx: tx)
-                case .recipientHiding(let triggerDate):
-                    needsAnotherRotation = needsAnotherRotation || self.didRotateProfileKeyFromHidingTrigger(
-                        rotationStartDate: rotationStartDate,
-                        triggerDate: triggerDate,
-                        tx: tx
-                    )
-                case .leftGroupWithHiddenOrBlockedRecipient(let triggerDate):
-                    needsAnotherRotation = needsAnotherRotation || self.didRotateProfileKeyFromLeaveGroupTrigger(
-                        rotationStartDate: rotationStartDate,
-                        triggerDate: triggerDate,
-                        tx: tx
-                    )
+                case .tokenData(let tokenData):
+                    needsAnotherRotation = !self.clearTriggerToken(tokenData, tx: tx) || needsAnotherRotation
                 }
             }
 
@@ -843,45 +804,14 @@ extension OWSProfileManager: ProfileManager {
         )
     }
 
-    // Returns true if another rotation is needed.
-    private func didRotateProfileKeyFromHidingTrigger(
-        rotationStartDate: Date,
-        triggerDate: Date,
-        tx: DBWriteTransaction
-    ) -> Bool {
+    // Returns true if the trigger was cleared.
+    private func clearTriggerToken(_ tokenData: Data, tx: DBWriteTransaction) -> Bool {
         // Fetch the latest trigger date, it might have changed if we triggered
         // a rotation again.
-        guard let latestTriggerDate = self.recipientHidingTriggerTimestamp(tx: tx) else {
-            // If it's been wiped, we are good to go.
+        guard tokenData == self.triggerToken(tx: tx) else {
             return false
         }
-        if rotationStartDate > latestTriggerDate {
-            // We can wipe; we started rotating after the trigger came in.
-            self.setRecipientHidingTriggerTimestamp(nil, tx: tx)
-            return false
-        }
-        // We need another rotation.
-        return true
-    }
-
-    // Returns true if another rotation is needed.
-    private func didRotateProfileKeyFromLeaveGroupTrigger(
-        rotationStartDate: Date,
-        triggerDate: Date,
-        tx: DBWriteTransaction
-    ) -> Bool {
-        // Fetch the latest trigger date, it might have changed if we triggered
-        // a rotation again.
-        guard let latestTriggerDate = self.leaveGroupTriggerTimestamp(tx: tx) else {
-            // If it's been wiped, we are good to go.
-            return false
-        }
-        if rotationStartDate > latestTriggerDate {
-            // We can wipe; we started rotating after the trigger came in.
-            self.setLeaveGroupTriggerTimestamp(nil, tx: tx)
-            return false
-        }
-        // We need another rotation.
+        self.setTriggerToken(nil, tx: tx)
         return true
     }
 
@@ -1039,7 +969,7 @@ extension OWSProfileManager: ProfileManager {
         let userProfile = OWSUserProfile.getOrBuildUserProfile(
             for: address,
             userProfileWriter: userProfileWriter,
-            tx: SDSDB.shimOnlyBridge(tx)
+            tx: tx
         )
 
         if onlyFillInIfMissing, userProfile.profileKey != nil {
@@ -1053,13 +983,15 @@ extension OWSProfileManager: ProfileManager {
         if let aci = serviceId as? Aci {
             // Whenever a user's profile key changes, we need to fetch a new
             // profile key credential for them.
-            SSKEnvironment.shared.versionedProfilesRef.clearProfileKeyCredential(for: aci, transaction: SDSDB.shimOnlyBridge(tx))
+            SSKEnvironment.shared.versionedProfilesRef.clearProfileKeyCredential(for: aci, transaction: tx)
         }
 
         // If this is the profile for the local user, we always want to defer to local state
         // so skip the update profile for address call.
         if case .otherUser(let serviceId) = address {
-            SSKEnvironment.shared.udManagerRef.setUnidentifiedAccessMode(.unknown, for: serviceId, tx: SDSDB.shimOnlyBridge(tx))
+            if let aci = serviceId as? Aci {
+                SSKEnvironment.shared.udManagerRef.setUnidentifiedAccessMode(.unknown, for: aci, tx: tx)
+            }
             if shouldFetchProfile {
                 tx.addSyncCompletion {
                     let profileFetcher = SSKEnvironment.shared.profileFetcherRef
@@ -1071,7 +1003,7 @@ extension OWSProfileManager: ProfileManager {
         userProfile.update(
             profileKey: .setTo(profileKey),
             userProfileWriter: userProfileWriter,
-            transaction: SDSDB.shimOnlyBridge(tx)
+            transaction: tx
         )
     }
 
@@ -1133,12 +1065,6 @@ extension OWSProfileManager: ProfileManager {
         }, otherwise: { otherAddresses in
             return OWSUserProfile.getUserProfiles(for: otherAddresses.map { .otherUser($0) }, tx: tx)
         }).values
-    }
-
-    // MARK: -
-
-    private class var avatarUrlSession: OWSURLSessionProtocol {
-        return SSKEnvironment.shared.signalServiceRef.urlSessionForCdn(cdnNumber: 0, maxResponseSize: nil)
     }
 
     // MARK: -
@@ -1572,11 +1498,11 @@ extension OWSProfileManager: ProfileManager {
         }
         // We schedule in the NSE by writing state; the actual rotation
         // will bail early, though.
-        self.setRecipientHidingTriggerTimestamp(Date(), tx: tx)
+        self.setTriggerToken(Randomness.generateRandomBytes(16), tx: tx)
         self.rotateProfileKeyIfNecessary(tx: tx)
     }
 
-    func forceRotateLocalProfileKeyForGroupDepartureObjc(tx: DBWriteTransaction) {
+    fileprivate func _forceRotateLocalProfileKeyForGroupDeparture(tx: DBWriteTransaction) {
         let tsRegistrationState = DependenciesBridge.shared.tsAccountManager.registrationState(tx: tx)
         guard tsRegistrationState.isRegistered else {
             return
@@ -1586,7 +1512,7 @@ extension OWSProfileManager: ProfileManager {
         }
         // We schedule in the NSE by writing state; the actual rotation
         // will bail early, though.
-        self.setLeaveGroupTriggerTimestamp(Date(), tx: tx)
+        self.setTriggerToken(Randomness.generateRandomBytes(16), tx: tx)
         self.rotateProfileKeyIfNecessary(tx: tx)
     }
 
@@ -1602,32 +1528,23 @@ extension OWSProfileManager: ProfileManager {
         return self.metadataStore.setDate(Date(), key: Self.kLastGroupProfileKeyCheckTimestampKey, transaction: tx)
     }
 
-    private static let recipientHidingTriggerTimestampKey = "recipientHidingTriggerTimestampKey"
+    private static let leaveGroupTriggerTokenKey = "leaveGroupTriggerTimestampKey"
+    private static let deprecated_recipientHidingTriggerTokenKey = "recipientHidingTriggerTimestampKey"
 
-    private func recipientHidingTriggerTimestamp(tx: DBReadTransaction) -> Date? {
-        return self.metadataStore.getDate(Self.recipientHidingTriggerTimestampKey, transaction: tx)
+    private func triggerToken(tx: DBReadTransaction) -> Data? {
+        return (
+            self.metadataStore.getData(Self.leaveGroupTriggerTokenKey, transaction: tx)
+            ?? self.metadataStore.getData(Self.deprecated_recipientHidingTriggerTokenKey, transaction: tx)
+        )
     }
 
-    private func setRecipientHidingTriggerTimestamp(_ date: Date?, tx: DBWriteTransaction) {
-        guard let date else {
-            self.metadataStore.removeValue(forKey: Self.recipientHidingTriggerTimestampKey, transaction: tx)
-            return
+    private func setTriggerToken(_ tokenData: Data?, tx: DBWriteTransaction) {
+        if let tokenData {
+            self.metadataStore.setData(tokenData, key: Self.leaveGroupTriggerTokenKey, transaction: tx)
+        } else {
+            self.metadataStore.removeValue(forKey: Self.leaveGroupTriggerTokenKey, transaction: tx)
         }
-        return self.metadataStore.setDate(date, key: Self.recipientHidingTriggerTimestampKey, transaction: tx)
-    }
-
-    private static let leaveGroupTriggerTimestampKey = "leaveGroupTriggerTimestampKey"
-
-    private func leaveGroupTriggerTimestamp(tx: DBReadTransaction) -> Date? {
-        return self.metadataStore.getDate(Self.leaveGroupTriggerTimestampKey, transaction: tx)
-    }
-
-    private func setLeaveGroupTriggerTimestamp(_ date: Date?, tx: DBWriteTransaction) {
-        guard let date else {
-            self.metadataStore.removeValue(forKey: Self.leaveGroupTriggerTimestampKey, transaction: tx)
-            return
-        }
-        return self.metadataStore.setDate(date, key: Self.leaveGroupTriggerTimestampKey, transaction: tx)
+        self.metadataStore.removeValue(forKey: Self.deprecated_recipientHidingTriggerTokenKey, transaction: tx)
     }
 
     // MARK: - Last Messaging Date
@@ -1651,7 +1568,7 @@ extension OWSProfileManager: ProfileManager {
         let userProfile = OWSUserProfile.getOrBuildUserProfile(
             for: address,
             userProfileWriter: userProfileWriter,
-            tx: SDSDB.shimOnlyBridge(tx)
+            tx: tx
         )
 
         // lastMessagingDate is coarse; we don't need to track every single message
@@ -1664,7 +1581,7 @@ extension OWSProfileManager: ProfileManager {
         userProfile.update(
             lastMessagingDate: .setTo(Date()),
             userProfileWriter: userProfileWriter,
-            transaction: SDSDB.shimOnlyBridge(tx)
+            transaction: tx
         )
     }
 }
@@ -1916,11 +1833,11 @@ extension OWSProfileManager {
         assert(!avatarUrlPath.isEmpty)
         return try await Retry.performWithBackoff(maxAttempts: 4, isRetryable: { $0.isNetworkFailureOrTimeout }) {
             Logger.info("")
-            let urlSession = Self.avatarUrlSession
+            let urlSession = await SSKEnvironment.shared.signalServiceRef.sharedUrlSessionForCdn(cdnNumber: 0, maxResponseSize: nil)
             let response = try await urlSession.performDownload(avatarUrlPath, method: .get)
             let decryptedFileUrl = OWSFileSystem.temporaryFileUrl(isAvailableWhileDeviceLocked: true)
             try Self.decryptAvatar(at: response.downloadUrl, to: decryptedFileUrl, profileKey: profileKey)
-            guard Data.ows_isValidImage(at: decryptedFileUrl, mimeType: nil) else {
+            guard (try? DataImageSource.forPath(decryptedFileUrl.path))?.ows_isValidImage ?? false else {
                 throw OWSGenericError("Couldn't validate avatar")
             }
             guard UIImage(contentsOfFile: decryptedFileUrl.path) != nil else {

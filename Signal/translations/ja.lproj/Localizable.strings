@@ -2,7 +2,7 @@
 "AB_PERMISSION_MISSING_ACTION_NOT_NOW" = "今はしない";
 
 /* Title for the 'about' help section */
-"ABOUT_SECTION_TITLE" = "Signalについて";
+"ABOUT_SECTION_TITLE" = "HCPについて";
 
 /* Accessibility label for attachment. */
 "ACCESSIBILITY_LABEL_ATTACHMENT" = "添付ファイル";
@@ -32,7 +32,7 @@
 "ACCOUNT_DATA_REPORT_CONFIRM_EXPORT_CONFIRM_BUTTON" = "レポートをエクスポートする";
 
 /* Users can request a report of their account data. Before they get their account export, they are warned to only share account data with trustworthy sources. This is the message on that warning. */
-"ACCOUNT_DATA_REPORT_CONFIRM_EXPORT_MESSAGE" = "Signal アカウントデータは、信頼できる人またはアプリとのみ共有してください。";
+"ACCOUNT_DATA_REPORT_CONFIRM_EXPORT_MESSAGE" = "HCP アカウントデータは、信頼できる人またはアプリとのみ共有してください。";
 
 /* Users can request a report of their account data. If this request fails (probably because of a network connection problem), they will see an error sheet. This is the message on that error. */
 "ACCOUNT_DATA_REPORT_ERROR_MESSAGE" = "インターネット接続を確認して再度試してください。";
@@ -56,19 +56,25 @@
 "ACCOUNT_DATA_REPORT_EXPORT_REPORT_BUTTON" = "レポートをエクスポートする";
 
 /* Users can request a report of their account data. This text appears at the bottom of this screen, offering more information. */
-"ACCOUNT_DATA_REPORT_FOOTER" = "レポートはエクスポート時にのみ作成され、Signal がお客様の端末に保存することはありません。";
+"ACCOUNT_DATA_REPORT_FOOTER" = "レポートはエクスポート時にのみ作成され、HCP がお客様の端末に保存することはありません。";
 
 /* Users can request a report of their account data. This is the subtitle on the screen where they do this, giving them more information. */
-"ACCOUNT_DATA_REPORT_SUBTITLE" = "Signal アカウントデータのレポートをダウンロードし、エクスポートします。このレポートには、メッセージやメディアは一切含まれません。";
+"ACCOUNT_DATA_REPORT_SUBTITLE" = "HCP アカウントデータのレポートをダウンロードし、エクスポートします。このレポートには、メッセージやメディアは一切含まれません。";
 
 /* Users can request a report of their account data. This is the title on the screen where they do this. */
 "ACCOUNT_DATA_REPORT_TITLE" = "あなたのアカウントデータ";
 
 /* Label for 'invite' button in contact view. */
-"ACTION_INVITE" = "Signalへ招待";
+"ACTION_INVITE" = "HCPへ招待";
 
 /* Label for button that lets you send a message to a contact. */
 "ACTION_SEND_MESSAGE" = "メッセージ送信";
+
+/* Message shown in an action sheet when a generic error occurs. */
+"ACTION_SHEET_DISPLAYABLE_ERROR_GENERIC_ERROR" = "エラーが発生しました！サポートにお問い合わせください。";
+
+/* Message shown in an action sheet when a network error occurs. */
+"ACTION_SHEET_DISPLAYABLE_ERROR_NETWORK_ERROR" = "エラーが発生しました！インターネット接続を確認して再度試してください。";
 
 /* A label for 'tap to download' buttons. */
 "ACTION_TAP_TO_DOWNLOAD" = "タップしてダウンロード";
@@ -77,7 +83,7 @@
 "ACTION_VIDEO_CALL" = "ビデオ通話";
 
 /* Label for 'voice call' button in contact view. */
-"ACTION_VOICE_CALL" = "Signal通話";
+"ACTION_VOICE_CALL" = "HCP通話";
 
 /* The title for the 'add group members' view. */
 "ADD_GROUP_MEMBERS_VIEW_TITLE" = "メンバーを追加";
@@ -197,7 +203,7 @@
 "APN_Message" = "新着メッセージがあるかもしれません";
 
 /* Default message for the 'app launch failed' alert. */
-"APP_LAUNCH_FAILURE_ALERT_MESSAGE" = "Signalを起動できません。解決のため、デバッグログを support@signal.org にお送りください。";
+"APP_LAUNCH_FAILURE_ALERT_MESSAGE" = "HCPを起動できません。解決のため、デバッグログを support@signal.org にお送りください。";
 
 /* Button to try launching the app even though the last launch failed */
 "APP_LAUNCH_FAILURE_CONTINUE" = "Open HCP Instead";
@@ -206,34 +212,43 @@
 "APP_LAUNCH_FAILURE_CORRUPT_REGISTRATION_MESSAGE" = "解決のため、デバッグログを support@signal.org にお送りください。";
 
 /* Title for an error indicating that the app couldn't launch because some unexpected error happened with the user's registration status. */
-"APP_LAUNCH_FAILURE_CORRUPT_REGISTRATION_TITLE" = "Signal を開けませんでした";
+"APP_LAUNCH_FAILURE_CORRUPT_REGISTRATION_TITLE" = "HCP を開けませんでした";
 
 /* Error indicating that the app could not launch because the database could not be loaded. */
 "APP_LAUNCH_FAILURE_COULD_NOT_LOAD_DATABASE" = "データベースを読み込めませんでした";
 
 /* Error indicating that the app could not launch without reverting unknown database migrations. */
-"APP_LAUNCH_FAILURE_INVALID_DATABASE_VERSION_MESSAGE" = "最新バージョンのSignalにアップグレードしてください。";
+"APP_LAUNCH_FAILURE_INVALID_DATABASE_VERSION_MESSAGE" = "最新バージョンのHCPにアップグレードしてください。";
 
 /* Error indicating that the app could not launch without reverting unknown database migrations. */
 "APP_LAUNCH_FAILURE_INVALID_DATABASE_VERSION_TITLE" = "データベースのバージョンが不明です。";
 
 /* Error indicating that the app crashed during the previous launch. */
-"APP_LAUNCH_FAILURE_LAST_LAUNCH_CRASHED_MESSAGE" = "Signalの起動時に問題が発生しました。解決のためにデバッグログをsupport@signal.orgにお送りください。";
+"APP_LAUNCH_FAILURE_LAST_LAUNCH_CRASHED_MESSAGE" = "HCPの起動時に問題が発生しました。解決のためにデバッグログをsupport@signal.orgにお送りください。";
 
 /* Error indicating that the app crashed during the previous launch. */
-"APP_LAUNCH_FAILURE_LAST_LAUNCH_CRASHED_TITLE" = "前回起動時にSignalがクラッシュしました";
+"APP_LAUNCH_FAILURE_LAST_LAUNCH_CRASHED_TITLE" = "前回起動時にHCPがクラッシュしました";
 
 /* Error description indicating that the app crashed because there was low storage space available on the device. */
-"APP_LAUNCH_FAILURE_LOW_STORAGE_SPACE_AVAILABLE_MESSAGE" = "お使いのデバイスのストレージ容量が不足しているため、Signalを開くことが出来ませんでした。Signalを使用するには、「設定」でストレージを管理して空き容量を確保してください。";
+"APP_LAUNCH_FAILURE_LOW_STORAGE_SPACE_AVAILABLE_MESSAGE" = "お使いのデバイスのストレージ容量が不足しているため、Signalを開くことが出来ませんでした。HCPを使用するには、「設定」でストレージを管理して空き容量を確保してください。";
 
 /* Error title indicating that the app crashed because there was low storage space available on the device. */
 "APP_LAUNCH_FAILURE_LOW_STORAGE_SPACE_AVAILABLE_TITLE" = "ストレージ容量が不足しています。";
 
 /* Error indicating that the app could not restore transferred data. */
-"APP_LAUNCH_FAILURE_RESTORE_FAILED_MESSAGE" = "旧端末から移行したデータを復元できませんでした。原因を調査するため、デバッグログを support@signal.org に送ってください。Signalを再インストールすると、メッセージ履歴が消える可能性があります。";
+"APP_LAUNCH_FAILURE_RESTORE_FAILED_MESSAGE" = "旧端末から移行したデータを復元できませんでした。原因を調査するため、デバッグログを support@signal.org に送ってください。HCPを再インストールすると、メッセージ履歴が消える可能性があります。";
 
 /* Error indicating that the app could not restore transferred data. */
 "APP_LAUNCH_FAILURE_RESTORE_FAILED_TITLE" = "移行を完了できませんでした";
+
+/* Action in an action sheet offering to wipe all app data. */
+"APP_LAUNCH_FAILURE_WIPE_APP_DATA_ACTION_TITLE" = "アプリデータをリセットする";
+
+/* Message for an action sheet confirming the user wants to wipe all app data. */
+"APP_LAUNCH_FAILURE_WIPE_APP_DATA_CONFIRMATION_MESSAGE" = "すべてのアプリデータは完全に消去されます。これは、アプリを起動できない場合にのみ必要な処置です。";
+
+/* Title for an action sheet confirming the user wants to wipe all app data. */
+"APP_LAUNCH_FAILURE_WIPE_APP_DATA_CONFIRMATION_TITLE" = "すべてのアプリデータをリセットしますか？";
 
 /* Text prompting user to edit their profile name. */
 "APP_SETTINGS_EDIT_PROFILE_NAME_PROMPT" = "プロフィール名を入力してください";
@@ -245,7 +260,7 @@
 "APP_UPDATE_NAG_ALERT_MESSAGE_FORMAT" = "App Storeでバージョン%1$@を入手できます。";
 
 /* Title for the 'new app version available' alert. */
-"APP_UPDATE_NAG_ALERT_TITLE" = "新バージョンのSignalが利用可能です";
+"APP_UPDATE_NAG_ALERT_TITLE" = "新バージョンのHCPが利用可能です";
 
 /* Label for the 'update' button in the 'new app version available' alert. */
 "APP_UPDATE_NAG_ALERT_UPDATE_BUTTON" = "アップデートする";
@@ -395,7 +410,7 @@
 "ATTACHMENT_KEYBOARD_GIF" = "GIF";
 
 /* Text in chat attachment panel when Signal only has access to some photos/videos. This string is in a compact horizontal space, so it should be short if possible. */
-"ATTACHMENT_KEYBOARD_LIMITED_ACCESS" = "Signalの、写真へのアクセスが制限されています";
+"ATTACHMENT_KEYBOARD_LIMITED_ACCESS" = "HCPの、写真へのアクセスが制限されています";
 
 /* A button to select a location from the Attachment Keyboard */
 "ATTACHMENT_KEYBOARD_LOCATION" = "場所";
@@ -407,7 +422,7 @@
 "ATTACHMENT_KEYBOARD_NO_MEDIA_TITLE" = "写真や動画はありません";
 
 /* Text in chat attachment panel explaining that user needs to give Signal permission to access photos. */
-"ATTACHMENT_KEYBOARD_NO_PHOTO_ACCESS" = "Signalはユーザーの写真と動画にアクセスすることはできません。 アクセスを許可するには「設定」を開いて「写真」をタップします";
+"ATTACHMENT_KEYBOARD_NO_PHOTO_ACCESS" = "HCPはユーザーの写真と動画にアクセスすることはできません。 アクセスを許可するには「設定」を開いて「写真」をタップします";
 
 /* Button in chat attachment panel to let user open Settings app and give Signal persmission to access photos. */
 "ATTACHMENT_KEYBOARD_OPEN_SETTINGS" = "設定を開く";
@@ -417,6 +432,9 @@
 
 /* A button to open the photo picker from the Attachment Keyboard */
 "ATTACHMENT_KEYBOARD_PHOTOS" = "写真";
+
+/* A button to select a poll from the Attachment Keyboard */
+"ATTACHMENT_KEYBOARD_POLL" = "投票";
 
 /* Accessibility label for attaching photos */
 "ATTACHMENT_LABEL" = "添付ファイル";
@@ -478,14 +496,8 @@
 /* Message when trying to show a voice message that has expired and is unavailable for download */
 "AUDIO_UNAVAILABLE_MESSAGE_LABEL" = "ボイスメッセージはご利用になれません";
 
-/* Message for sheet shown when tapping a voice message that has expired and is unavailable for download */
-"AUDIO_UNAVAILABLE_SHEET_MESSAGE" = "この端末をリンクしたときに、このボイスメッセージはスマートフォンから移行されませんでした。端末をリンクした時点で45日以上経過したファイルとメディアは同期できません。";
-
 /* Title for sheet shown when tapping a voice message that has expired and is unavailable for download */
 "AUDIO_UNAVAILABLE_SHEET_TITLE" = "ボイスメッセージを移行できません";
-
-/* Username for backup key autofill */
-"AUTOFILL_BACKUP_KEY_USERNAME" = "Signalバックアップ";
 
 /* Text prompting the user to choose a color when editing their avatar */
 "AVATAR_EDIT_VIEW_CHOOSE_A_COLOR" = "色を選択してください";
@@ -511,11 +523,11 @@
 /* return to the previous screen */
 "BACK_BUTTON" = "戻る";
 
-/* Action text for Backup Key reminder megaphone */
+/* Action text for Recovery Key reminder megaphone */
 "BACKUP_ENABLEMENT_REMINDER_MEGAPHONE_ACTION" = "有効にする";
 
 /* Body for Backup enablement reminder megaphone */
-"BACKUP_ENABLEMENT_REMINDER_MEGAPHONE_BODY" = "スマートフォンを買い替えたりSignalを再インストールしたりしても、メッセージを失うことがないようにしましょう。";
+"BACKUP_ENABLEMENT_REMINDER_MEGAPHONE_BODY" = "スマートフォンを買い替えたりHCPを再インストールしたりしても、メッセージを失うことがないようにしましょう。";
 
 /* Title for Backup enablement reminder megaphone */
 "BACKUP_ENABLEMENT_REMINDER_MEGAPHONE_TITLE" = "暗号化されたバックアップを有効にする";
@@ -523,41 +535,53 @@
 /* Snooze text for Backup enablement reminder megaphone */
 "BACKUP_ENABLEMENT_REMINDER_NOT_NOW_ACTION" = "今はしない";
 
-/* Text used as placeholder in backup key text view. */
-"BACKUP_KEY_PLACEHOLDER" = "バックアップキー";
+/* Toast indicating that the user has copied their recovery key. */
+"BACKUP_KEY_COPIED_MESSAGE_TOAST" = "回復キーをコピーしました";
 
-/* Title of button to tap if you forgot your backup key. */
+/* Text used as placeholder in recovery key text view. */
+"BACKUP_KEY_PLACEHOLDER" = "回復キー";
+
+/* Title of button to tap if you forgot your recovery key. */
 "BACKUP_KEY_REMINDER_FORGOT_KEY" = "キーを忘れた場合";
 
-/* Action text for Backup Key reminder megaphone */
+/* Action text for Recovery Key reminder megaphone */
 "BACKUP_KEY_REMINDER_MEGAPHONE_ACTION" = "検証する";
 
-/* Body for Backup Key reminder megaphone */
+/* Body for Recovery Key reminder megaphone */
 "BACKUP_KEY_REMINDER_MEGAPHONE_BODY" = "バックアップキーの保管状況を確認させていただく場合があります";
 
-/* Title for Backup Key reminder megaphone */
-"BACKUP_KEY_REMINDER_MEGAPHONE_TITLE" = "バックアップキーをご確認ください";
+/* Title for Recovery Key reminder megaphone */
+"BACKUP_KEY_REMINDER_MEGAPHONE_TITLE" = "回復キーを確認してください";
 
-/* Snooze text for Backup Key reminder megaphone */
+/* Snooze text for Recovery Key reminder megaphone */
 "BACKUP_KEY_REMINDER_NOT_NOW_ACTION" = "今はしない";
 
-/* Toast indicating that the Backup Key was correct. */
-"BACKUP_KEY_REMINDER_SUCCESSFUL_TOAST" = "バックアップキーが検証されました。キーの取り扱いは厳重にしてください。";
+/* Toast indicating that the Recovery Key was correct. */
+"BACKUP_KEY_REMINDER_SUCCESSFUL_TOAST" = "回復キーが確認されました。キーの取り扱いは厳重にしてください。";
 
-/* Body for a sheet warning users to their 'Backup Key' safe. */
-"BACKUP_ONBOARDING_CONFIRM_KEY_KEEP_KEY_SAFE_SHEET_BODY" = "キーを紛失した場合、Signalはバックアップの復元をサポートできません。保管は安全な場所でおこない、第三者と共有しないでください。";
+/* Button label for action sheet to cancel backup onboarding */
+"BACKUP_ONBOARDING_CANCEL_SHEET_ACTION" = "バックアップの設定を終了する";
 
-/* Title for a sheet warning users to their 'Backup Key' safe. */
+/* Message for action sheet when attempting to cancel backup onboarding */
+"BACKUP_ONBOARDING_CANCEL_SHEET_MESSAGE" = "バックアップの設定が完了していないため、バックアップが作成されていません。設定からバックアップを有効にすることができます。";
+
+/* Title for action sheet when attempting to cancel backup onboarding */
+"BACKUP_ONBOARDING_CANCEL_SHEET_TITLE" = "バックアップの設定を終了しますか？";
+
+/* Body for a sheet warning users to their 'Recovery Key' safe. */
+"BACKUP_ONBOARDING_CONFIRM_KEY_KEEP_KEY_SAFE_SHEET_BODY" = "キーを紛失した場合、HCPはバックアップの復元をサポートできません。保管は安全な場所でおこない、第三者と共有しないでください。";
+
+/* Title for a sheet warning users to their 'Recovery Key' safe. */
 "BACKUP_ONBOARDING_CONFIRM_KEY_KEEP_KEY_SAFE_SHEET_TITLE" = "キーの取り扱いは厳重にしてください";
 
-/* Title for a button offering to let users see their 'Backup Key'. */
+/* Title for a button offering to let users see their 'Recovery Key'. */
 "BACKUP_ONBOARDING_CONFIRM_KEY_SEE_KEY_AGAIN_BUTTON_TITLE" = "キーをもう一度見る";
 
-/* Subtitle for a view asking users to confirm their 'Backup Key'. */
-"BACKUP_ONBOARDING_CONFIRM_KEY_SUBTITLE" = "記録したバックアップキーを入力してください";
+/* Subtitle for a view asking users to confirm their 'Recovery Key'. */
+"BACKUP_ONBOARDING_CONFIRM_KEY_SUBTITLE" = "記録した回復キーを入力してください";
 
-/* Title for a view asking users to confirm their 'Backup Key'. */
-"BACKUP_ONBOARDING_CONFIRM_KEY_TITLE" = "バックアップキーを確認してください";
+/* Title for a view asking users to confirm their 'Recovery Key'. */
+"BACKUP_ONBOARDING_CONFIRM_KEY_TITLE" = "回復キーを確認してください";
 
 /* Bullet point on a view introducing Backups during an onboarding flow. */
 "BACKUP_ONBOARDING_INTRO_BULLET_1" = "エンドツーエンド暗号化されます";
@@ -568,62 +592,113 @@
 /* Bullet point on a view introducing Backups during an onboarding flow. */
 "BACKUP_ONBOARDING_INTRO_BULLET_3" = "バックアップはいつでも消去可能です";
 
+/* A toast shown when 'Not Now' is tapped from the Backups onboarding intro. */
+"BACKUP_ONBOARDING_INTRO_NOT_NOW_TOAST" = "設定からバックアップを有効にすることができます。";
+
 /* Subtitle for a view introducing Backups during an onboarding flow. */
-"BACKUP_ONBOARDING_INTRO_SUBTITLE" = "Signalの安全なエンドツーエンドの暗号化ストレージサービスを使用して、メッセージやメディアをバックアップします。スマートフォンを買い替えたり、Signalを再インストールしてもメッセージを失うことはありません。";
+"BACKUP_ONBOARDING_INTRO_SUBTITLE" = "Signalの安全なエンドツーエンドの暗号化ストレージサービスを使用して、メッセージやメディアをバックアップします。スマートフォンを買い替えたり、HCPを再インストールしてもメッセージを失うことはありません。";
 
 /* Title for a view introducing Backups during an onboarding flow. */
-"BACKUP_ONBOARDING_INTRO_TITLE" = "Signalバックアップ";
+"BACKUP_ONBOARDING_INTRO_TITLE" = "HCPセキュアバックアップ";
 
-/* Subtitle for a view introducing the 'Backup Key' during an onboarding flow. */
-"BACKUP_ONBOARDING_KEY_INTRO_SUBTITLE" = "バックアップキーは64文字のコードで、Signalを再インストールした際には、このコードを使ってバックアップを復元することができます。\n\nキーを忘れた場合、バックアップの復元はできません。Signalはバックアップの復元をサポートできません。";
+/* Text for a bullet point in a view introducing the 'Recovery Key' during an onboarding flow. */
+"BACKUP_ONBOARDING_KEY_INTRO_BULLET_1" = "回復キーは、バックアップを復元するために必要な64文字のコードです。";
 
-/* Title for a view introducing the 'Backup Key' during an onboarding flow. */
-"BACKUP_ONBOARDING_KEY_INTRO_TITLE" = "あなたのバックアップキー";
+/* Text for a bullet point in a view introducing the 'Recovery Key' during an onboarding flow. */
+"BACKUP_ONBOARDING_KEY_INTRO_BULLET_2" = "回復キーはパスワードマネージャーなどの安全な場所に保存し、誰とも共有しないでください。";
 
-/* Title for a button allowing users to copy their 'Backup Key' to the clipboard. */
+/* Text for a bullet point in a view introducing the 'Recovery Key' during an onboarding flow. */
+"BACKUP_ONBOARDING_KEY_INTRO_BULLET_3" = "紛失した場合、メッセージを復元できなくなります。";
+
+/* Title for a continue button for a view introducing the 'Recovery Key' during an onboarding flow. */
+"BACKUP_ONBOARDING_KEY_INTRO_CONTINUE_BUTTON_TITLE" = "回復キーを表示する";
+
+/* Title for a view introducing the 'Recovery Key' during an onboarding flow. */
+"BACKUP_ONBOARDING_KEY_INTRO_TITLE" = "回復キー";
+
+/* Body for a sheet shown when your Backup plan is downgraded. */
+"BACKUP_PLAN_DOWNGRADED_SHEET_BODY" = "ご利用のお支払い方法で更新できなかったため、バックアップサブスクリプションの有効期限が切れました。\n\nメディアのバックアップを継続するには、再度サブスクリプションの購入が必要です。無料のHCPバックアッププランには引き続きアクセスできます。";
+
+/* Body for a sheet shown when your Backup plan is downgraded because you stopped using TestFlight. */
+"BACKUP_PLAN_DOWNGRADED_SHEET_BODY_TESTFLIGHT" = "TestFlightを使用しなくなったため、バックアップサブスクリプションの有効期限が切れました。\n\nメディアのバックアップを継続するには、再度サブスクリプションの購入が必要です。無料のHCPバックアッププランには引き続きアクセスできます。";
+
+/* Primary button for a sheet shown when your Backup plan is downgraded. */
+"BACKUP_PLAN_DOWNGRADED_SHEET_PRIMARY_BUTTON" = "バックアップを管理する";
+
+/* Title for a sheet shown when your Backup plan is downgraded. */
+"BACKUP_PLAN_DOWNGRADED_SHEET_TITLE" = "バックアップサブスクリプションの有効期限が切れています";
+
+/* Title for a button allowing users to copy their 'Recovery Key' to the clipboard. */
 "BACKUP_RECORD_KEY_COPY_TO_CLIPBOARD_BUTTON_TITLE" = "クリップボードにコピー";
 
-/* Subtitle for a view allowing users to record their 'Backup Key'. */
+/* Title for a button allowing users to create a new 'Recovery Key'. */
+"BACKUP_RECORD_KEY_CREATE_NEW_KEY_BUTTON_TITLE" = "新しいキーを作成する";
+
+/* Subtitle for a view allowing users to record their 'Recovery Key'. */
 "BACKUP_RECORD_KEY_SUBTITLE" = "このキーは、アカウントとデータを復元する際に必要です。このキーを安全な場所に保管してください。紛失した場合、アカウントを復元できなくなります。";
 
-/* Title for a view allowing users to record their 'Backup Key'. */
-"BACKUP_RECORD_KEY_TITLE" = "バックアップキーを保管する";
+/* Title for a view allowing users to record their 'Recovery Key'. */
+"BACKUP_RECORD_KEY_TITLE" = "回復キーを記録する";
+
+/* Subtitle for a progress spinner on a modal tracking active downloading. Embeds 1:{{ the amount downloaded as a file size, e.g. 100 MB }}; 2:{{ the total amount to download as a file size, e.g. 1 GB }}; 3:{{ the amount downloaded as a percentage, e.g. 10% }}. */
+"BACKUP_RESTORE_MODAL_DOWNLOAD_PROGRESS_SUBTITLE" = "%2$@ のうち%1$@（%3$@）";
+
+/* Subtitle for a progress spinner on a modal when waiting for a backup restore to start */
+"BACKUP_RESTORE_MODAL_PREPARING_SUBTITLE" = "復元の準備中です";
+
+/* Title for a progress spinner on a modal when restoring messages */
+"BACKUP_RESTORE_MODAL_TITLE" = "メッセージを復元しています…";
+
+/* Message describing that the Background App Refresh permission is disabled for Signal. \"Background App Refresh\" should be localized the same way it is in iOS Settings app permissions. */
+"BACKUP_SETTINGS_BACKGROUND_APP_REFRESH_DISABLED_MESSAGE" = "自動バックアップが無効になっています。HCPの権限設定をアップデートして自動バックアップを有効にしてください。";
+
+/* Add-on to a message describing that the Background App Refresh permission is disabled for Signal. \"Background App Refresh\" should be localized the same way it is in iOS Settings app permissions. */
+"BACKUP_SETTINGS_BACKGROUND_APP_REFRESH_DISABLED_MESSAGE_UPDATE_NOW" = "アップデートする";
+
+/* Title for a button that takes the users to Signal's iOS Settings page. */
+"BACKUP_SETTINGS_BACKGROUND_APP_REFRESH_DISABLED_SHEET_GO_TO_SETTINGS_BUTTON" = "設定へ";
+
+/* Message for a sheet warning the user about the Background App Refresh permission. \"Background App Refresh\" should be localized the same way it is in iOS Settings app permissions. */
+"BACKUP_SETTINGS_BACKGROUND_APP_REFRESH_DISABLED_SHEET_MESSAGE" = "HCPがメッセージを自動的にバックアップできるようにするには、下の「設定に移動」をタップし、「アプリのバックグラウンド更新」を有効にしてください。";
+
+/* Title for a sheet warning the user about the Background App Refresh permission. \"Background App Refresh\" should be localized the same way it is in iOS Settings app permissions. */
+"BACKUP_SETTINGS_BACKGROUND_APP_REFRESH_DISABLED_SHEET_TITLE" = "自動バックアップが無効になっています";
 
 /* Message for an action sheet explaining that performing a backup failed with a generic error. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_GENERIC_ERROR" = "Something went wrong creating your backup. Please try again, or contact support.";
+"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_GENERIC_ERROR" = "バックアップの作成中に問題が発生しました。もう一度試すか、サポートにお問い合わせください。";
 
 /* Title for a button in an action sheet allowing users to perform a backup, ignoring that WiFi is required. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NEED_WIFI_ACTION" = "Allow Backups Using Cellular";
+"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NEED_WIFI_ACTION" = "モバイルデータ通信を使ったバックアップを許可する";
 
 /* Message for an action sheet explaining that performing a backup failed because WiFi is required. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NEED_WIFI_MESSAGE" = "Backing up using cellular may result in data charges. You can connect to a WiFi network or allow backups using cellular.";
+"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NEED_WIFI_MESSAGE" = "モバイルデータ通信を使ってバックアップを行うと、データ通信量が発生する場合があります。WiFiネットワークに接続するか、モバイルデータ通信を使ってのバックアップを許可できます。";
 
 /* Title for an action sheet explaining that performing a backup failed because WiFi is required. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NEED_WIFI_TITLE" = "Allow Backups Using Cellular Data?";
+"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NEED_WIFI_TITLE" = "モバイルデータ通信を使ってバックアップしますか？";
 
 /* Message for an action sheet explaining that performing a backup failed with a network error. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NETWORK_ERROR" = "Something went wrong creating your backup. Check your internet connection and try again.";
+"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NETWORK_ERROR" = "バックアップの作成中に問題が発生しました。インターネット接続を確認してもう一度お試しください。";
 
-/* Description for a progress bar tracking a multi-step backup operation. Embeds {{ the percentage complete of the overall operation, e.g. 20% }}. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION" = "Creating backup: %1$@";
+/* Description for a progress bar tracking the optimizing of Backup media. */
+"BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION_OPTIMIZING_MEDIA" = "メディアを最適化しています...";
 
-/* Description for a progress bar tracking a multi-step backup operation, where we are currently creating the backup. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION_CREATING_BACKUP" = "Exporting backup...";
+/* Description for a progress bar tracking the preparation of a Backup. Embeds 1:{{ the percentage completed preformatted as a percent, e.g. 10% }}. */
+"BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION_PREPARING_BACKUP" = "バックアップを準備中です（%1$@）";
 
-/* Description for a progress bar tracking a multi-step backup operation, where we are currently uploading the backup. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION_UPLOADING_BACKUP" = "Uploading backup...";
+/* Description for a progress bar tracking the processing of Backup media. */
+"BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION_PROCESSING_MEDIA" = "メディアを処理中です...";
 
-/* Description for a progress bar tracking a multi-step backup operation, where we are currently uploading backup media. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION_UPLOADING_MEDIA" = "Uploading backup media...";
+/* Message describing to the user that the last backup failed. */
+"BACKUP_SETTINGS_BACKUP_FAILED_MESSAGE" = "前回のバックアップは完了していません。ご利用中のスマートフォンがWi-Fiに接続されている事をご確認の上、「今すぐバックアップを実行する」をタップしてもう一度お試しください。";
 
 /* Title for a button allowing users to upgrade from a free to paid backup plan. */
 "BACKUP_SETTINGS_BACKUP_PLAN_FREE_ACTION_BUTTON_TITLE" = "アップグレードする";
 
+/* Text describing the user's free backup plan when they have Backups disabled. */
+"BACKUP_SETTINGS_BACKUP_PLAN_FREE_AND_DISABLED_DESCRIPTION" = "バックアップをオフにしました";
+
 /* Text describing the user's free backup plan. */
 "BACKUP_SETTINGS_BACKUP_PLAN_FREE_DESCRIPTION" = "現在のバックアッププランは無料プランです";
-
-/* Header describing what the free backup plan includes. */
-"BACKUP_SETTINGS_BACKUP_PLAN_FREE_HEADER" = "テキストと45日間のメディアのバックアップ";
 
 /* Message for a view indicating we failed to fetch someone's Backup plan due to an unexpected error. */
 "BACKUP_SETTINGS_BACKUP_PLAN_GENERIC_ERROR_MESSAGE" = "エラーが発生しました。サポートにお問い合わせください。";
@@ -652,11 +727,26 @@
 /* Text explaining that a user's paid plan, which has been canceled, expired on a past date. Embeds {{ the formatted expiration date }}. */
 "BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_CANCELED_PAST_EXPIRATION_FORMAT" = "%1$@に失効しています";
 
+/* Title for a button allowing users to manage a paid backup plan that failed to renew. */
+"BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_FAILED_TO_RENEW_ACTION_BUTTON_TITLE" = "サブスクリプションを管理する";
+
+/* Text describing that the user's paid backup plan has failed to renew. */
+"BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_FAILED_TO_RENEW_DESCRIPTION_1" = "支払い方法が承認されませんでした";
+
+/* Text describing that the user's paid backup plan has failed to renew. */
+"BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_FAILED_TO_RENEW_DESCRIPTION_2" = "お支払い方法が現在も有効なものであるかをご確認ください";
+
 /* Title for a button allowing users to manage their backup plan as a tester. */
 "BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_FREE_FOR_TESTERS_ACTION_BUTTON_TITLE" = "プランを管理する";
 
 /* Text describing that the user's backup plan is paid, but free for them as a tester. */
-"BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_FREE_FOR_TESTERS_DESCRIPTION" = "有料ですが、テスターとして登録している限り無料です";
+"BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_FREE_FOR_TESTERS_DESCRIPTION" = "有料（TestFlightユーザーの方は無料）";
+
+/* Title for a button allowing users to renew their backup subscription on this device. */
+"BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_IAP_NOT_FOUND_LOCALLY_ACTION_BUTTON_TITLE" = "更新する";
+
+/* Text describing that the user's paid backup plan did not correspond to a App Store subscription on this device. */
+"BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_IAP_NOT_FOUND_LOCALLY_DESCRIPTION" = "この端末上でご利用中のサブスクリプションは確認できませんでした。HCPバックアップを引き続き使用するには、更新手続きをしてください。";
 
 /* Header describing what the paid backup plan includes. */
 "BACKUP_SETTINGS_BACKUP_PLAN_PAID_HEADER" = "テキストとすべてのメディアのバックアップ";
@@ -668,16 +758,16 @@
 "BACKUP_SETTINGS_BACKUP_PLAN_PAID_RENEWAL_FORMAT" = "更新 %1$@";
 
 /* Footer for a menu section related to settings for when Backups are disabled. */
-"BACKUP_SETTINGS_BACKUPS_DISABLED_SECTION_FOOTER" = "バックアップがオフになり、データはSignalの安全なストレージサービスから消去されました。";
+"BACKUP_SETTINGS_BACKUPS_DISABLED_SECTION_FOOTER" = "バックアップがオフになり、データはHCPの安全なストレージサービスから消去されました。";
 
 /* Description for a progress view tracking media being downloaded in service of disabling Backups. */
-"BACKUP_SETTINGS_BACKUPS_DISABLING_DOWNLOADING_MEDIA_PROGRESS_VIEW_DESCRIPTION" = "バックアップはオフになっています。現在、端末上にないメディアをダウンロード中です。ダウンロードが完了すると、データはSignalの安全なストレージサービスから消去されます。";
+"BACKUP_SETTINGS_BACKUPS_DISABLING_DOWNLOADING_MEDIA_PROGRESS_VIEW_DESCRIPTION" = "バックアップはオフになっています。現在、端末上にないメディアをダウンロード中です。ダウンロードが完了すると、データはHCPの安全なストレージサービスから消去されます。";
 
 /* Message for a view indicating we failed to delete the user's Backup due to an unexpected error. */
 "BACKUP_SETTINGS_BACKUPS_DISABLING_GENERIC_ERROR_MESSAGE" = "エラーが発生しました。サポートにお問い合わせください。";
 
 /* Header for a menu section related to settings for when disabling Backups encountered an unexpected error. */
-"BACKUP_SETTINGS_BACKUPS_DISABLING_GENERIC_ERROR_SECTION_HEADER" = "Signalの安全なストレージサービスからデータを消去する際にエラーが発生しました。";
+"BACKUP_SETTINGS_BACKUPS_DISABLING_GENERIC_ERROR_SECTION_HEADER" = "HCPの安全なストレージサービスからデータを消去する際にエラーが発生しました。";
 
 /* Title for a view indicating we failed to delete the user's Backup due to an unexpected error. */
 "BACKUP_SETTINGS_BACKUPS_DISABLING_GENERIC_ERROR_TITLE" = "バックアップを消去できませんでした";
@@ -686,10 +776,37 @@
 "BACKUP_SETTINGS_BACKUPS_DISABLING_PROGRESS_VIEW_DESCRIPTION" = "バックアップを消去しています…";
 
 /* Header for a menu section related to disabling Backups. */
-"BACKUP_SETTINGS_BACKUPS_DISABLING_SECTION_HEADER" = "バックアップがオフになり、データはSignalの安全なストレージサービスから消去されます。";
+"BACKUP_SETTINGS_BACKUPS_DISABLING_SECTION_HEADER" = "バックアップがオフになり、データはHCPの安全なストレージサービスから消去されます。";
 
 /* Header for a menu section related to settings for when Backups are enabled. */
 "BACKUP_SETTINGS_BACKUPS_ENABLED_SECTION_HEADER" = "バックアップの詳細";
+
+/* Notice that backups is a beta feature */
+"BACKUP_SETTINGS_BETA_NOTICE_HEADER" = "これはベータ版の機能であり、今後改善される予定です。";
+
+/* Message shown in an action sheet when the user tries to create a new Recovery Key, but is not registered. */
+"BACKUP_SETTINGS_CREATE_NEW_KEY_ERROR_NOT_REGISTERED" = "新しい回復キーを作成するには、登録する必要があります。";
+
+/* Explanation text for a sheet warning users they've reached a rate limit for creating Recovery Key. {{ Embeds 1: the preformatted time they must wait before enabling backups, such as \"1 week\" or \"6 hours\". }} */
+"BACKUP_SETTINGS_CREATE_NEW_KEY_LIMIT_REACHED_WARNING_SHEET_BODY" = "新しい回復キーを作成すると、 %1$@バックアップを有効にできなくなります。不正使用を防ぐために、作成できるキーの数は制限されています。";
+
+/* Action in an action sheet allowing to continue to rotate their key */
+"BACKUP_SETTINGS_CREATE_NEW_KEY_LIMIT_REACHED_WARNING_SHEET_CONTINUE_ACTION" = "新しいキーを作成する";
+
+/* Title for a sheet warning users they've reached a rate limit for creating Recovery Key. */
+"BACKUP_SETTINGS_CREATE_NEW_KEY_LIMIT_REACHED_WARNING_SHEET_TITLE" = "回復キー作成回数の上限に達しました";
+
+/* Toast shown when a new Recovery Key has been created successfully. */
+"BACKUP_SETTINGS_CREATE_NEW_KEY_SUCCESS_TOAST" = "新しいキーが作成されました！";
+
+/* TItle for a sheet warning users that Backups must be disabled to create a new Recovery Key. */
+"BACKUP_SETTINGS_CREATE_NEW_KEY_WARNING_SHEET_BACKUPS_MUST_BE_DISABLED_TITLE" = "無効にして新しいキーを作成する";
+
+/* Body for a sheet warning users about creating a new Recovery Key. */
+"BACKUP_SETTINGS_CREATE_NEW_KEY_WARNING_SHEET_BODY" = "新しいキーを作成する必要があるのは、第三者にあなたのキーを知られた場合だけです。新しいキーを作成するには、まずバックアップを無効にする必要があります。\n\nバックアップを無効にして新しいキーを作成した後、バックアップを再度有効にしてもう一度アップロードし直してください。";
+
+/* Title for a sheet warning users about creating a new Recovery Key. */
+"BACKUP_SETTINGS_CREATE_NEW_KEY_WARNING_SHEET_TITLE" = "新しい回復キーを作成する";
 
 /* Footer for a menu section allowing users to turn off Backups. */
 "BACKUP_SETTINGS_DISABLE_BACKUPS_BUTTON_FOOTER" = "バックアップデータはすべて消去されます。新しいバックアップは作成されません。";
@@ -707,19 +824,28 @@
 "BACKUP_SETTINGS_DISABLING_CONFIRMATION_ACTION_SHEET_TITLE" = "バックアップをオフにして消去しますか？";
 
 /* Message shown in an action sheet when the user disables Backups, explaining that their media is downloading first. */
-"BACKUP_SETTINGS_DISABLING_DOWNLOADS_STARTED_ACTION_SHEET_MESSAGE" = "バックアップ内に、この端末に保存されていないメディアがあります。ダウンロードには時間がかかる場合があります。ダウンロードが中断されないようにSignalを開いたままにしてください。";
+"BACKUP_SETTINGS_DISABLING_DOWNLOADS_STARTED_ACTION_SHEET_MESSAGE" = "バックアップ内に、この端末に保存されていないメディアがあります。ダウンロードには時間がかかる場合があります。ダウンロードが中断されないようにHCPを開いたままにしてください。";
 
 /* Title shown in an action sheet when the user disables Backups, explaining that their media is downloading first. */
 "BACKUP_SETTINGS_DISABLING_DOWNLOADS_STARTED_ACTION_SHEET_TITLE" = "バックアップをダウンロードしています";
 
 /* Message shown in an action sheet indicating we failed to delete the user's Backup due to an unexpected error. */
-"BACKUP_SETTINGS_DISABLING_ERROR_GENERIC_ERROR_ACTION_SHEET_MESSAGE" = "Signalの安全なストレージサービスからデータを消去する際にエラーが発生しました。";
+"BACKUP_SETTINGS_DISABLING_ERROR_GENERIC_ERROR_ACTION_SHEET_MESSAGE" = "HCPの安全なストレージサービスからデータを消去する際にエラーが発生しました。";
 
 /* Title shown in an action sheet indicating we failed to delete the user's Backup due to an unexpected error. */
 "BACKUP_SETTINGS_DISABLING_ERROR_GENERIC_ERROR_ACTION_SHEET_TITLE" = "バックアップを消去できませんでした";
 
 /* Message shown in an action sheet when the user tries to disable Backups, but is not registered. */
 "BACKUP_SETTINGS_DISABLING_ERROR_NOT_REGISTERED" = "バックアップを無効にするには登録が必要です。";
+
+/* Button for an action sheet shown when the user disables Backups, letting them manage their subscription. */
+"BACKUP_SETTINGS_DISABLING_SUBSCRIPTION_CANCEL_ACTION_SHEET_MANAGE_SUBSCRIPTION_BUTTON" = "サブスクリプションを管理する";
+
+/* Message for an action sheet shown when the user disables Backups, but is still subscribed to the paid plan. */
+"BACKUP_SETTINGS_DISABLING_SUBSCRIPTION_CANCEL_ACTION_SHEET_MESSAGE" = "サブスクリプションを解約したい場合は、「サブスクリプションを管理する」> HCP >「サブスクリプションを解約する」をタップしてください";
+
+/* Title for an action sheet shown when the user disables Backups, but is still subscribed to the paid plan. */
+"BACKUP_SETTINGS_DISABLING_SUBSCRIPTION_CANCEL_ACTION_SHEET_TITLE" = "有料バックアッププランにまだご加入中です";
 
 /* Title for a button shown in Backup Settings that lets a user cancel an in-progress download. */
 "BACKUP_SETTINGS_DOWNLOAD_PROGRESS_ACTION_BUTTON_CANCEL_DOWNLOAD" = "ダウンロードをキャンセルする";
@@ -733,6 +859,9 @@
 /* Subtitle for a progress bar tracking downloads that are paused because of low battery. */
 "BACKUP_SETTINGS_DOWNLOAD_PROGRESS_SUBTITLE_PAUSED_LOW_BATTERY" = "ダウンロードを一時停止しました：端末のバッテリー残量が少なくなっています";
 
+/* Subtitle for a progress bar tracking downloads that are paused because of low power mode. */
+"BACKUP_SETTINGS_DOWNLOAD_PROGRESS_SUBTITLE_PAUSED_LOW_POWER_MODE" = "ダウンロードを一時停止しました：低電力モードになっています";
+
 /* Subtitle for a progress bar tracking downloads that are paused because they need more disk space available. Embeds {{ the amount of space needed as a file size, e.g. 100 MB }}. */
 "BACKUP_SETTINGS_DOWNLOAD_PROGRESS_SUBTITLE_PAUSED_NEEDS_DISK_SPACE" = "メディアをダウンロードできる十分な空き容量がありません。続けるためには%1$@の空き容量を確保してください。";
 
@@ -743,7 +872,7 @@
 "BACKUP_SETTINGS_DOWNLOAD_PROGRESS_SUBTITLE_PAUSED_NEEDS_WIFI" = "ダウンロードを一時停止しました：Wi-Fi接続の待機中です";
 
 /* Subtitle for a progress bar tracking active downloading. Embeds 1:{{ the amount downloaded as a file size, e.g. 100 MB }}; 2:{{ the total amount to download as a file size, e.g. 1 GB }}; 3:{{ the amount downloaded as a percentage, e.g. 10% }}. */
-"BACKUP_SETTINGS_DOWNLOAD_PROGRESS_SUBTITLE_RUNNING" = "ダウンロード中：%2$@ のうち %1$@ （%3$@%%）";
+"BACKUP_SETTINGS_DOWNLOAD_PROGRESS_SUBTITLE_RUNNING" = "ダウンロード中：%2$@ のうち %1$@ （%3$@）";
 
 /* Subtitle for a view explaining that downloads are available but not running. Embeds {{ the amount available to download as a file size, e.g. 100 MB }}. */
 "BACKUP_SETTINGS_DOWNLOAD_PROGRESS_SUBTITLE_SUSPENDED" = "この端末に保存されていないメディアが%1$@あります。";
@@ -769,20 +898,29 @@
 /* Text explaining that the user's last backup was yesterday. Embeds {{ the time of the backup }}. */
 "BACKUP_SETTINGS_ENABLED_LAST_BACKUP_YESTERDAY_FORMAT" = "昨日 %1$@";
 
-/* Label for a menu item offering to show the user their backup key. */
-"BACKUP_SETTINGS_ENABLED_VIEW_BACKUP_KEY_LABEL" = "バックアップキーを表示する";
+/* Label for a menu item offering to show the user their recovery key. */
+"BACKUP_SETTINGS_ENABLED_VIEW_BACKUP_KEY_LABEL" = "回復キーを表示する";
+
+/* Body for a sheet explaining that the user's Backups subscription was not found on this device. */
+"BACKUP_SETTINGS_IAP_NOT_FOUND_LOCALLY_SHEET_BODY" = "この端末ではサブスクリプションを復元できませんでした。この問題は、別のAppleアカウントでApp Storeにサインインしている場合や、Androidスマートフォンから移行した場合に発生することがあります。\n\n以前お使いになっていたスマートフォンで有効なサブスクリプションがある場合は、更新前にそれを解約することをお勧めします。";
+
+/* Button for a sheet explaining that the user's Backups subscription was not found on this device. */
+"BACKUP_SETTINGS_IAP_NOT_FOUND_LOCALLY_SHEET_GOT_IT_BUTTON" = "わかりました";
+
+/* Title for a sheet explaining that the user's Backups subscription was not found on this device. */
+"BACKUP_SETTINGS_IAP_NOT_FOUND_LOCALLY_SHEET_TITLE" = "サブスクリプションが見つかりません";
 
 /* Title for a button allowing users to trigger a manual backup. */
 "BACKUP_SETTINGS_MANUAL_BACKUP_BUTTON_TITLE" = "いますぐバックアップする";
 
 /* Title for a button shown under a progress bar tracking a manual backup, which lets the user cancel the backup. */
-"BACKUP_SETTINGS_MANUAL_BACKUP_CANCEL_BUTTON" = "Cancel Backup";
+"BACKUP_SETTINGS_MANUAL_BACKUP_CANCEL_BUTTON" = "バックアップをキャンセルする";
 
 /* Action in an action sheet allowing users to download their offloaded media later. */
 "BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_DOWNLOAD_SHEET_LATER_ACTION" = "後でダウンロードする";
 
 /* Message for an action sheet allowing users to download their offloaded media. */
-"BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_DOWNLOAD_SHEET_MESSAGE" = "バックアップ内に、この端末に保存されていないメディアがあります。ダウンロードには時間がかかる場合があります。ダウンロードが中断されないようにSignalを開いたままにしてください。";
+"BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_DOWNLOAD_SHEET_MESSAGE" = "バックアップ内に、この端末に保存されていないメディアがあります。ダウンロードには時間がかかる場合があります。ダウンロードが中断されないようにHCPを開いたままにしてください。";
 
 /* Action in an action sheet allowing users to download their offloaded media now. */
 "BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_DOWNLOAD_SHEET_NOW_ACTION" = "今すぐダウンロードする";
@@ -791,7 +929,7 @@
 "BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_DOWNLOAD_SHEET_TITLE" = "オフロード済みのメディアをダウンロードしますか？";
 
 /* Message for an action sheet warning users who are testers about the Optimize Local Storage feature. */
-"BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_TESTER_WARNING_SHEET_MESSAGE" = "オフロードされたメディアは、テスターとして登録している間は引き続き使用できます。テストプログラムを終了する前に、必ずすべてのメディアをダウンロードしてください。";
+"BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_TESTER_WARNING_SHEET_MESSAGE" = "オフロードされたメディアは、TestFlightを使用している間はご利用になれます。テストプログラムを終了する前に、必ずすべてのメディアをダウンロードしてください。";
 
 /* Title for an action sheet warning users who are testers about the Optimize Local Storage feature. */
 "BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_TESTER_WARNING_SHEET_TITLE" = "オフロードメディアのテスト中";
@@ -800,13 +938,19 @@
 "BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_TOGGLE_FOOTER_AVAILABLE" = "未使用のメディアはオフロードされますが、バックアップからいつでもダウンロードできます。";
 
 /* Footer for a toggle allowing users to change the Optimize Local Storage setting, if the toggle is available and they are a tester. */
-"BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_TOGGLE_FOOTER_AVAILABLE_FOR_TESTERS" = "未使用のメディアはオフロードされますが、テスターである間は、バックアップからいつでもダウンロードできます。";
+"BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_TOGGLE_FOOTER_AVAILABLE_FOR_TESTERS" = "未使用のメディアはオフロードされますが、TestFlightを使用している間はいつでもバックアップからダウンロードできます。";
 
 /* Footer for a toggle allowing users to change the Optimize Local Storage setting, if the toggle is unavailable. */
-"BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_TOGGLE_FOOTER_UNAVAILABLE" = "ストレージの最適化は、Signalバックアップの有料版でのみご利用いただけます。この機能をご利用になるには、バックアッププランをアップグレードしてください。";
+"BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_TOGGLE_FOOTER_UNAVAILABLE" = "ストレージの最適化は、HCPバックアップの有料版でのみご利用いただけます。この機能をご利用になるには、バックアッププランをアップグレードしてください。";
 
 /* Title for a toggle allowing users to change the Optimize Local Storage setting. */
 "BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_TOGGLE_TITLE" = "端末上のストレージを最適化する";
+
+/* Subtitle for a notification telling the user they are out of remote storage space. */
+"BACKUP_SETTINGS_OUT_OF_STORAGE_SPACE_NOTIFICATION_SUBTITLE" = "バックアップストレージの上限に達しました。チャットやメディアのバックアップを続けるには、HCPの空き容量を増やしてください。";
+
+/* Title for a notification telling the user they are out of remote storage space. */
+"BACKUP_SETTINGS_OUT_OF_STORAGE_SPACE_NOTIFICATION_TITLE" = "バックアップストレージがいっぱいです";
 
 /* Title for a button allowing users to re-enable Backups, after it had been previously disabled. */
 "BACKUP_SETTINGS_REENABLE_BACKUPS_BUTTON_TITLE" = "バックアップをもう一度有効にする";
@@ -820,29 +964,71 @@
 /* Title for a sheet warning the user about skipping downloads. */
 "BACKUP_SETTINGS_SKIP_DOWNLOADS_WARNING_SHEET_TITLE" = "ダウンロードをスキップしますか？";
 
+/* Title for detail button in notice that the user's Backups subscription couldn't be redeemed. */
+"BACKUP_SETTINGS_SUBSCRIPTION_ALREADY_REDEEMED_NOTICE_DETAIL_BUTTON" = "詳細";
+
+/* Title for notice that the user's Backups subscription couldn't be redeemed. */
+"BACKUP_SETTINGS_SUBSCRIPTION_ALREADY_REDEEMED_NOTICE_TITLE" = "バックアップのサブスクリプションを有効化することができませんでした";
+
+/* Body for a sheet explaining that the user's Backups subscription was already redeemed. */
+"BACKUP_SETTINGS_SUBSCRIPTION_ALREADY_REDEEMED_SHEET_BODY" = "今月内で、サブスクリプションを有効化しようとした端末が多すぎます。\n\nHCPアカウントを何度も再登録したか、同じサブスクリプションを使用している端末が多すぎる可能性があります。";
+
+/* Button for a sheet explaining that the user's Backups subscription was already redeemed. */
+"BACKUP_SETTINGS_SUBSCRIPTION_ALREADY_REDEEMED_SHEET_GOT_IT_BUTTON" = "わかりました";
+
+/* Title for a sheet explaining that the user's Backups subscription was already redeemed. */
+"BACKUP_SETTINGS_SUBSCRIPTION_ALREADY_REDEEMED_SHEET_TITLE" = "バックアップのサブスクリプションを有効化することができませんでした";
+
 /* Subtitle for a progress bar tracking uploads that are paused because of low battery. */
-"BACKUP_SETTINGS_UPLOAD_PROGRESS_SUBTITLE_PAUSED_LOW_BATTERY" = "アップロードを一時停止しました：端末のバッテリー残量が少なくなっています";
+"BACKUP_SETTINGS_UPLOAD_PROGRESS_SUBTITLE_PAUSED_LOW_BATTERY" = "メディアのアップロードを一時停止しました：端末のバッテリー残量が少なくなっています";
+
+/* Subtitle for a progress bar tracking uploads that are paused because of low power mode. */
+"BACKUP_SETTINGS_UPLOAD_PROGRESS_SUBTITLE_PAUSED_LOW_POWER_MODE" = "メディアのアップロードを一時停止しました：低電力モードになっています";
+
+/* Subtitle for a progress bar tracking uploads that are paused because they need an internet connection */
+"BACKUP_SETTINGS_UPLOAD_PROGRESS_SUBTITLE_PAUSED_NEEDS_INTERNET" = "メディアのアップロードを一時停止しました：インターネット接続がありません…";
 
 /* Subtitle for a progress bar tracking uploads that are paused because they need WiFi. */
-"BACKUP_SETTINGS_UPLOAD_PROGRESS_SUBTITLE_PAUSED_NEEDS_WIFI" = "アップロードを一時停止しました：Wi-Fi接続の待機中です";
+"BACKUP_SETTINGS_UPLOAD_PROGRESS_SUBTITLE_PAUSED_NEEDS_WIFI" = "メディアのアップロードを一時停止しました：Wi-Fi接続の待機中です";
 
-/* Subtitle for a progress bar tracking active uploading. Embeds 1:{{ the amount uploaded as a file size, e.g. 100 MB }}; 2:{{ the total amount to upload as a file size, e.g. 1 GB }}; 3:{{ the amount uploaded as a percentage, e.g. 10% }}. */
+/* Subtitle for a progress bar tracking uploads that are paused because the user is out of remote storage space. Embeds 1:{{ total storage space provided, e.g. 100 GB }}; 2:{{ space the user needs to free up by deleting media, e.g. 1 GB }}. */
+"BACKUP_SETTINGS_UPLOAD_PROGRESS_SUBTITLE_PAUSED_OUT_OF_STORAGE_SPACE_FORMAT" = "ご利用中のバックアッププランに設定された、%1$@ストレージ容量の上限に達しました。新しいチャットやメディアをバックアップするには、HCPの%2$@の空き容量を増やしてから、「今すぐバックアップする」をタップしてください。";
+
+/* Subtitle for a progress bar tracking active uploading. Embeds 1:{{ the amount uploaded as a file size, e.g. 100 MB }}; 2:{{ the total amount to upload as a file size, e.g. 1 GB }}; 3:{{ the percentage uploaded as a percent, e.g. 40% }}. */
 "BACKUP_SETTINGS_UPLOAD_PROGRESS_SUBTITLE_RUNNING" = "アップロード中：%2$@のうち%1$@（%3$@）";
 
 /* Message for a sheet shown after the user enables backups. */
-"BACKUP_SETTINGS_WELCOME_TO_BACKUPS_SHEET_MESSAGE" = "バックアップのサイズによっては、時間がかかる場合があります。バックアップが実行されている間でも、通常どおり電話を使用できます。";
-
-/* Title for the primary button for a sheet shown after the user enables backups. */
-"BACKUP_SETTINGS_WELCOME_TO_BACKUPS_SHEET_PRIMARY_BUTTON" = "いますぐバックアップする";
-
-/* Title for the secondary button for a sheet shown after the user enables backups. */
-"BACKUP_SETTINGS_WELCOME_TO_BACKUPS_SHEET_SECONDARY_BUTTON" = "後でバックアップする";
+"BACKUP_SETTINGS_WELCOME_TO_BACKUPS_SHEET_MESSAGE" = "バックアップのサイズによっては、時間がかかる場合があります。バックアップが実行されている間でも、通常どおりHCPを使用できます。";
 
 /* Title for a sheet shown after the user enables backups. */
-"BACKUP_SETTINGS_WELCOME_TO_BACKUPS_SHEET_TITLE" = "Signalバックアップへようこそ。今すぐバックアップを開始しましょう。";
+"BACKUP_SETTINGS_WELCOME_TO_BACKUPS_SHEET_TITLE" = "HCPセキュアバックアップへようこそ。今すぐバックアップを開始しましょう。";
+
+/* Message for a sheet shown when your Backup subscription fails to renew. */
+"BACKUP_SUBSCRIPTION_FAILED_TO_RENEW_SHEET_MESSAGE" = "お支払い方法が現在も有効なものであるかをご確認ください。「サブスクリプションを管理する」>「HCP」>「支払い方法をアップデートする」をタップします。";
+
+/* Primary button for a sheet shown when your Backup subscription fails to renew. */
+"BACKUP_SUBSCRIPTION_FAILED_TO_RENEW_SHEET_PRIMARY_BUTTON" = "サブスクリプションを管理する";
+
+/* Title for a sheet shown when your Backup subscription fails to renew. */
+"BACKUP_SUBSCRIPTION_FAILED_TO_RENEW_SHEET_TITLE" = "バックアップサブスクリプションの更新ができませんでした";
+
+/* Body for system notification when we detect paid backup media uploads have encountered a problem */
+"BACKUPS_MEDIA_UPLOAD_FAILURE_NOTIFICATION_BODY" = "問題解決のためにデバッグログを送信してください！";
+
+/* Title for system notification when we detect paid backup media uploads have encountered a problem */
+"BACKUPS_MEDIA_UPLOAD_FAILURE_NOTIFICATION_TITLE" = "メディアのバックアップ中にエラーが発生しました";
 
 /* Title for the 'Backup' settings menu. */
-"BACKUPS_SETTINGS_TITLE" = "Signalバックアップ";
+"BACKUPS_SETTINGS_TITLE" = "セキュアバックアップ";
+
+/* Body for system notification or megaphone when backups is enabled. Embeds {{ time backups was enabled }} */
+"BACKUPS_TURNED_ON_NOTIFICATION_BODY_FORMAT" = "このアカウントで、HCPバックアップは%1$@に有効になりました。タップして確認できます。";
+
+/* Title for system notification or megaphone when backups is enabled */
+"BACKUPS_TURNED_ON_TITLE" = "バックアップを有効にしました";
+
+/* Action text for backups enabled megaphone taking user to backup settings */
+"BACKUPS_VIEW_SETTINGS_BUTTON" = "設定を表示する";
 
 /* Section header for badge view section in the badge configuration page */
 "BADGE_CONFIGURATION_BADGE_SECTION_TITLE" = "マイバッジ";
@@ -854,10 +1040,10 @@
 "BADGE_DETAILS_DONATE_TO_SIGNAL" = "今すぐ寄付する";
 
 /* When viewing someone else's donor badge, you'll see a sheet. This is the title on that sheet. Embeds {badge owner's short name} */
-"BADGE_DETAILS_TITLE_FOR_SUPPORTER" = "%1$@ さんはSignalをサポートしています";
+"BADGE_DETAILS_TITLE_FOR_SUPPORTER" = "%1$@ さんはHCPをサポートしています";
 
 /* String explaining to the user that their boost badge has expired on the badge expiry sheet. */
-"BADGE_EXPIRED_BOOST_BODY" = "ブーストバッジの有効期限が切れたため、プロフィールには表示されません。\n\nSignalは今後もご利用いただけますが、あなたのために作られた技術をサポートするため、毎月の寄付をご検討ください。";
+"BADGE_EXPIRED_BOOST_BODY" = "ブーストバッジの有効期限が切れたため、プロフィールには表示されません。\n\nHCPは今後もご利用いただけますが、あなたのために作られた技術をサポートするため、毎月の寄付をご検討ください。";
 
 /* String explaining to the user that their boost badge has expired while they are a current subscription sustainer on the badge expiry sheet. */
 "BADGE_EXPIRED_BOOST_CURRENT_SUSTAINER_BODY" = "ブーストバッジの有効期限が切れたため、プロフィールには表示されません。\n\n1回の寄付で、ブーストバッジをさらに30日間有効にすることができます。";
@@ -902,7 +1088,7 @@
 "BANK_DONATION_FOOTER_FIND_ACCOUNT_INFO" = "アカウント情報を確認する";
 
 /* On the bank transfer donation screen, a small amount of information text is shown. This is that text. It should (1) instruct users to enter their bank information (2) tell them that Signal does not collect or store their personal information. */
-"BANK_DONATION_SUBHEADER_TEXT" = "口座情報を入力してください。Signalがお客様の個人情報を収集したり保存したりすることはありません。";
+"BANK_DONATION_SUBHEADER_TEXT" = "口座情報を入力してください。HCPがお客様の個人情報を収集したり保存したりすることはありません。";
 
 /* Users can donate to Signal with a bank account. We are required to show them a mandate with information about bank transfers. This is a label for a button to agree to the mandate. */
 "BANK_MANDATE_AGREE" = "同意する";
@@ -911,13 +1097,16 @@
 "BANK_MANDATE_READ_MORE" = "さらに表示";
 
 /* Users can donate to Signal with a bank account. We are required to show them a mandate with information about bank transfers. This is a subtitle about the payment processor Stripe above that mandate. */
-"BANK_MANDATE_SUBTITLE" = "StripeがSignalへの寄付を処理します。Signalがお客様の個人情報を収集したり保存したりすることはありません。";
+"BANK_MANDATE_SUBTITLE" = "StripeがSignalへの寄付を処理します。HCPがお客様の個人情報を収集したり保存したりすることはありません。";
 
 /* Users can donate to Signal with a bank account. We are required to show them a mandate with information about bank transfers. This is the title above that mandate. */
 "BANK_MANDATE_TITLE" = "銀行振り込み";
 
 /* Accessibility label for banner close button */
 "BANNER_CLOSE_ACCESSIBILITY_LABEL" = "バナーを閉じる";
+
+/* Beta label */
+"BETA_LABEL" = "ベータ";
 
 /* An explanation of the consequences of blocking a group. */
 "BLOCK_GROUP_BEHAVIOR_EXPLANATION" = "今後このグループからは、メッセージや更新を受信しません。";
@@ -987,9 +1176,6 @@
 
 /* An explanation of the consequences of blocking another user. */
 "BLOCK_USER_BEHAVIOR_EXPLANATION" = "ブロックされたユーザーは、あなたにメッセージや通話を発信することができなくなります。";
-
-/* Tooltip highlighting the blur image editing tool. */
-"BLUR_TOOLTIP" = "新機能: 顔や任意の場所をぼかすことができます";
 
 /* Default text for the custom amount field of the boost view. */
 "BOOST_VIEW_CUSTOM_AMOUNT_PLACEHOLDER" = "金額を入力してください";
@@ -1067,7 +1253,7 @@
 "CALL_AUDIO_MISSED_WEEK_NOTIFICATION_BODY_FORMAT" = "📞 不在着信 %1$@";
 
 /* Alert message when calling and permissions for microphone are missing */
-"CALL_AUDIO_PERMISSION_MESSAGE" = "iOSの設定でマイクへのアクセスを有効にすると、Signalで通話や音声メッセージの録音ができます。";
+"CALL_AUDIO_PERMISSION_MESSAGE" = "iOSの設定でマイクへのアクセスを有効にすると、HCPで通話や音声メッセージの録音ができます。";
 
 /* Alert title when calling and permissions for microphone are missing */
 "CALL_AUDIO_PERMISSION_TITLE" = "マイクへのアクセス許可が必要です";
@@ -1133,7 +1319,7 @@
 "CALL_LINK_JOIN_REQUEST_PROMPT" = "待機中…";
 
 /* Shown in a message bubble when you send a call link in a Signal chat */
-"CALL_LINK_LINK_PREVIEW_DESCRIPTION" = "リンクを使用して Signal 通話に参加する";
+"CALL_LINK_LINK_PREVIEW_DESCRIPTION" = "リンクを使用して HCP 通話に参加する";
 
 /* Text that appears on a toast in a call lobby before joining a call link informing the user what information will be shared with other call members when they have phone number sharing turned off. */
 "CALL_LINK_LOBBY_SHARING_INFO_PHONE_NUMBER_SHARING_OFF" = "リンク経由でこの通話に参加する人には、あなたの名前と写真が表示されます。";
@@ -1157,7 +1343,7 @@
 "CALL_LINK_REQUIRE_APPROVAL" = "管理者の承認を必要とする";
 
 /* Button to open UI to share a Call Link with someone on Signal. */
-"CALL_LINK_SHARE_VIA_SIGNAL" = "Signal 経由でリンクを共有する";
+"CALL_LINK_SHARE_VIA_SIGNAL" = "HCP 経由でリンクを共有する";
 
 /* Button to open the system share sheet to share a Call Link. */
 "CALL_LINK_SHARE_VIA_SYSTEM" = "リンクを共有する";
@@ -1262,10 +1448,10 @@
 "CALLING_MEMBER_VIEW_YOUR_CAMERA_IS_OFF" = "カメラがオフになっています";
 
 /* The generic name used for calls if CallKit privacy is enabled */
-"CALLKIT_ANONYMOUS_CONTACT_NAME" = "Signalユーザ";
+"CALLKIT_ANONYMOUS_CONTACT_NAME" = "HCPユーザ";
 
 /* The generic name used for group calls if CallKit privacy is enabled */
-"CALLKIT_ANONYMOUS_GROUP_NAME" = "Signalグループ";
+"CALLKIT_ANONYMOUS_GROUP_NAME" = "HCPグループ";
 
 /* Title for the calls list view. */
 "CALLS_LIST_TITLE" = "通話";
@@ -1439,7 +1625,7 @@
 "CARD_DONATION_EXPIRATION_DATE_PLACEHOLDER" = "月／年";
 
 /* Users can choose to learn more about their credit/debit card donations, which will open a sheet with additional information. This is the body text of that sheet. */
-"CARD_DONATION_READ_MORE_SHEET_BODY" = "Signalは、寄付を受ける際に、お客様のいかなる個人情報も収集したり保存したりすることはありません。\n\nSignalでは寄付を受け取る決済処理にStripeを使用しています。Signalは、お客様から提供されたいかなる情報にもアクセスすることはありません。また保管・保存したりすることもありません。\n\nSignalは、寄付からお客様のSignalアカウントを特定することはありません。特定はできない仕組みになっています。ご支援ありがとうございます！";
+"CARD_DONATION_READ_MORE_SHEET_BODY" = "Signalは、寄付を受ける際に、お客様のいかなる個人情報も収集したり保存したりすることはありません。\n\nSignalでは寄付を受け取る決済処理にStripeを使用しています。Signalは、お客様から提供されたいかなる情報にもアクセスすることはありません。また保管・保存したりすることもありません。\n\nSignalは、寄付からお客様のHCPアカウントを特定することはありません。特定はできない仕組みになっています。ご支援ありがとうございます！";
 
 /* Users can choose to learn more about their credit/debit card donations, which will open a sheet with additional information. This is the title of that sheet. */
 "CARD_DONATION_READ_MORE_SHEET_TITLE" = "お客様の個人情報は保護されています";
@@ -1448,7 +1634,7 @@
 "CARD_DONATION_SUBHEADER_LEARN_MORE" = "さらに詳しく";
 
 /* On the credit/debit card donation screen, a small amount of information text is shown. This is that text. It should (1) instruct users to enter their credit/debit card information (2) tell them that Signal does not collect or store their personal information. */
-"CARD_DONATION_SUBHEADER_TEXT" = "以下にカード情報を入力してください。Signalがお客様の個人情報を収集したり保存したりすることはありません。";
+"CARD_DONATION_SUBHEADER_TEXT" = "以下にカード情報を入力してください。HCPがお客様の個人情報を収集したり保存したりすることはありません。";
 
 /* Title for the 'censorship circumvention country' view. */
 "CENSORSHIP_CIRCUMVENTION_COUNTRY_VIEW_TITLE" = "国の選択";
@@ -1525,17 +1711,8 @@
 /* Text for a bullet point in a list of Backup features, describing that all text messages are included. */
 "CHOOSE_BACKUP_PLAN_BULLET_FULL_TEXT_BACKUP" = "すべてのテキストメッセージのバックアップ";
 
-/* Text for a bullet point in a list of Backup features, describing that recent media is included. */
-"CHOOSE_BACKUP_PLAN_BULLET_RECENT_MEDIA_BACKUP" = "過去45日間のメディア";
-
-/* Text for a bullet point in a list of Backup features, describing the amount of included storage. */
-"CHOOSE_BACKUP_PLAN_BULLET_STORAGE_AMOUNT" = "1TBのストレージ（最大25万枚の写真）";
-
-/* Message shown in an action sheet when the user tries to confirm a plan selection, but encountered a generic error. */
-"CHOOSE_BACKUP_PLAN_CONFIRMATION_ERROR_GENERIC_ERROR" = "エラーが発生しました！サポートにお問い合わせください。";
-
-/* Message shown in an action sheet when the user tries to confirm a plan selection, but encountered a network error. */
-"CHOOSE_BACKUP_PLAN_CONFIRMATION_ERROR_NETWORK_ERROR" = "エラーが発生しました！インターネット接続を確認して再度試してください。";
+/* Text for a bullet point in a list of Backup features, describing the amount of included storage. Embeds {{ the amount of storage preformatted as a localized byte count, e.g. '100 GB' }}. */
+"CHOOSE_BACKUP_PLAN_BULLET_STORAGE_AMOUNT" = "%1$@のストレージ";
 
 /* Message shown in an action sheet when the user tries to confirm a plan selection, but is not registered. */
 "CHOOSE_BACKUP_PLAN_CONFIRMATION_ERROR_NOT_REGISTERED" = "バックアップを有効にするには登録が必要です。";
@@ -1544,13 +1721,25 @@
 "CHOOSE_BACKUP_PLAN_CONFIRMATION_ERROR_PURCHASE" = "エラーが発生しました！もう一度お試しください。";
 
 /* Message shown in an action sheet when the user tries to confirm selecting the paid plan, but encountered an error while redeeming their completed purchase. */
-"CHOOSE_BACKUP_PLAN_CONFIRMATION_ERROR_PURCHASE_REDEMPTION" = "エラーが発生しました！サポートにお問い合わせください。";
+"CHOOSE_BACKUP_PLAN_CONFIRMATION_ERROR_PURCHASE_REDEMPTION" = "プラン加入の手続き中に問題が発生しました。サポートにお問い合わせください。";
+
+/* Message shown in an action sheet when the user tries to confirm a plan selection, but encounters a rate limit. They should wait the requested amount of time and try again. */
+"CHOOSE_BACKUP_PLAN_CONFIRMATION_ERROR_RATE_LIMITED" = "新しい回復キーの作成回数の上限に達しました。不正使用を防ぐために、今後%1$@バックアップを有効にすることはできません。%1$@後に再度お試しください。";
+
+/* Message shown in an action sheet when the user tries to confirm a plan selection, but encounters a rate limit. They should wait the requested amount of time and try again. {{ Embeds 1 & 2: the preformatted time they must wait before enabling backups, such as \"1 week\" or \"6 hours\". }} */
+"CHOOSE_BACKUP_PLAN_CONFIRMATION_ERROR_RATE_LIMITED_TITLE" = "バックアップを有効にできませんでした";
 
 /* A label indicating that a given Backup plan option is what the user has already enabled. */
 "CHOOSE_BACKUP_PLAN_CURRENT_PLAN_LABEL" = "現在のプラン";
 
-/* Subtitle for the free plan option, when choosing a Backup plan. */
-"CHOOSE_BACKUP_PLAN_FREE_PLAN_SUBTITLE" = "テキスト+45日間のメディア";
+/* Text for a button that will downgrade the user from the paid Backup plan to the free one. */
+"CHOOSE_BACKUP_PLAN_DOWNGRADE_BUTTON_TEXT" = "プランを変更する";
+
+/* Button for an action sheet confirming the user wants to downgrade their Backup plan. */
+"CHOOSE_BACKUP_PLAN_DOWNGRADE_CONFIRMATION_ACTION_SHEET_PROCEED_BUTTON" = "プランを変更する";
+
+/* Title for an action sheet confirming the user wants to downgrade their Backup plan. */
+"CHOOSE_BACKUP_PLAN_DOWNGRADE_CONFIRMATION_ACTION_SHEET_TITLE" = "無料プランにダウングレードしますか？";
 
 /* Title for the free plan option, when choosing a Backup plan. */
 "CHOOSE_BACKUP_PLAN_FREE_PLAN_TITLE" = "無料プラン";
@@ -1568,7 +1757,10 @@
 "CHOOSE_BACKUP_PLAN_SUBSCRIBE_PAID_BUTTON_TEXT" = "%1$@ /月で申し込む";
 
 /* Subtitle for a view allowing users to choose a Backup plan. */
-"CHOOSE_BACKUP_PLAN_SUBTITLE" = "すべてのバックアッププランはエンドツーエンドで暗号化されます。Signalは非営利団体であり、バックアップを有料でご利用いただくことは私たちの活動をサポートしていただくことに繋がります。";
+"CHOOSE_BACKUP_PLAN_SUBTITLE" = "バックアップはエンドツーエンドで暗号化されます。HCPは非営利団体です。バックアップを有料でご利用いただくことは私たちをサポートしていただくことに繋がります。";
+
+/* Title for a label allowing users to view Signal's Terms & Conditions. */
+"CHOOSE_BACKUP_PLAN_TERM_AND_PRIVACY_POLICY_TEXT" = "利用規約とプライバシーポリシー";
 
 /* Title for a view allowing users to choose a Backup plan. */
 "CHOOSE_BACKUP_PLAN_TITLE" = "バックアッププランを選択する";
@@ -1580,7 +1772,7 @@
 "COMPARE_SAFETY_NUMBER_ACTION" = "クリップボードと比較する";
 
 /* Accessibility hint describing what you can do with the compose button */
-"COMPOSE_BUTTON_HINT" = "チャットを始めるSignalユーザを選択または検索します。";
+"COMPOSE_BUTTON_HINT" = "チャットを始めるHCPユーザを選択または検索します。";
 
 /* Accessibility label from compose button. */
 "COMPOSE_BUTTON_LABEL" = "作成";
@@ -1607,13 +1799,13 @@
 "COMPOSE_SCREEN_LIMITED_CONTACTS_CTA" = "管理する";
 
 /* Multi-line label explaining why compose-screen contact picker is empty. */
-"COMPOSE_SCREEN_LIMITED_CONTACTS_PERMISSION" = "Signalは、システムの連絡先へのアクセスが制限されています";
+"COMPOSE_SCREEN_LIMITED_CONTACTS_PERMISSION" = "HCPは、システムの連絡先へのアクセスが制限されています";
 
 /* Button to open settings from an empty compose-screen contact picker. */
 "COMPOSE_SCREEN_MISSING_CONTACTS_CTA" = "設定を開く";
 
 /* Multi-line label explaining why compose-screen contact picker is empty. */
-"COMPOSE_SCREEN_MISSING_CONTACTS_PERMISSION" = "連絡先からSignalユーザを見つけるには、iOSの設定で連絡先へのアクセスを有効にしてください。";
+"COMPOSE_SCREEN_MISSING_CONTACTS_PERMISSION" = "連絡先からHCPユーザを見つけるには、iOSの設定で連絡先へのアクセスを有効にしてください。";
 
 /* Configure reactions title text */
 "CONFIGURE_REACTIONS" = "リアクションの設定";
@@ -1658,7 +1850,7 @@
 "CONTACT_ABOUT_SHEET_SECONDARY_NAME_TOOLTIP_MESSAGE" = "「%1$@」は、相手が自分で設定したプロフィールネームです。";
 
 /* A label indicating a user is a signal connection. */
-"CONTACT_ABOUT_SHEET_SIGNAL_CONNECTION_LABEL" = "Signalコネクション";
+"CONTACT_ABOUT_SHEET_SIGNAL_CONNECTION_LABEL" = "HCPコネクション";
 
 /* The title for a contact 'about' sheet. */
 "CONTACT_ABOUT_SHEET_TITLE" = "自己紹介";
@@ -1700,7 +1892,7 @@
 "CONTACT_NOTE_TITLE" = "メモ";
 
 /* Body for contact permission action sheet */
-"CONTACT_PERMISSION_ACTION_SHEET_2_BODY" = "Signalで知り合いを探すには：";
+"CONTACT_PERMISSION_ACTION_SHEET_2_BODY" = "HCPで知り合いを探すには：";
 
 /* First step for contact permission action sheet */
 "CONTACT_PERMISSION_ACTION_SHEET_2_STEP_ONE" = "以下の「設定へ」をタップ";
@@ -1733,10 +1925,10 @@
 "CONTACT_PERMISSION_REMINDER_MEGAPHONE_ACTION" = "アクセスを許可する";
 
 /* Body for contact permission reminder megaphone */
-"CONTACT_PERMISSION_REMINDER_MEGAPHONE_BODY" = "連絡先へのアクセスを許可すると、Signalのユーザーをすぐに見つけることができます。";
+"CONTACT_PERMISSION_REMINDER_MEGAPHONE_BODY" = "連絡先へのアクセスを許可すると、HCPのユーザーをすぐに見つけることができます。";
 
 /* Title for contact permission reminder megaphone */
-"CONTACT_PERMISSION_REMINDER_MEGAPHONE_TITLE" = "Signal上で連絡先を検索する";
+"CONTACT_PERMISSION_REMINDER_MEGAPHONE_TITLE" = "HCP上で連絡先を検索する";
 
 /* Label for a contact's phone number. */
 "CONTACT_PHONE" = "電話番号";
@@ -1760,7 +1952,7 @@
 "CONTACT_SHARE_INVALID_CONTACT" = "連絡先が不正です。";
 
 /* Alert body when contacts disabled while trying to share a contact. */
-"CONTACT_SHARING_NO_ACCESS_BODY" = "Signalに連絡先へのアクセスが必要です。iOSの設定へ移動し、連絡先をオンにします。連絡先は暗号化され、私たちSignalからは見えません。";
+"CONTACT_SHARING_NO_ACCESS_BODY" = "Signalに連絡先へのアクセスが必要です。iOSの設定へ移動し、連絡先をオンにします。連絡先は暗号化され、私たちHCPからは見えません。";
 
 /* Alert title when contacts disabled while trying to share a contact. */
 "CONTACT_SHARING_NO_ACCESS_TITLE" = "連絡先へのアクセス許可";
@@ -1814,7 +2006,7 @@
 "CONTACT_SUPPORT_FILTER_SOMETHING_NOT_WORKING_SHORT" = "動作しないものがある";
 
 /* Alert body */
-"CONTACT_SUPPORT_PROMPT_ERROR_ALERT_BODY" = "Signalは、サポートリクエストを完了できませんでした。";
+"CONTACT_SUPPORT_PROMPT_ERROR_ALERT_BODY" = "HCPは、サポートリクエストを完了できませんでした。";
 
 /* button text */
 "CONTACT_SUPPORT_PROMPT_ERROR_TRY_AGAIN" = "再度試す";
@@ -1943,7 +2135,7 @@
 "CONVERSATION_SETTINGS_ATTRIBUTES_ACCESS_SECTION_FOOTER" = "グループ名、アイコン、説明、消えるメッセージのタイマーを編集できるユーザを選択してください。";
 
 /* Footer string for a contact's badges in conversation settings */
-"CONVERSATION_SETTINGS_BADGES_FOOTER" = "Signalをサポートすると、あなたのプロフィールにバッジが表示されます。バッジをタップすると詳細が表示されます。";
+"CONVERSATION_SETTINGS_BADGES_FOOTER" = "HCPをサポートすると、あなたのプロフィールにバッジが表示されます。バッジをタップすると詳細が表示されます。";
 
 /* Header title for a contact's badges in conversation settings */
 "CONVERSATION_SETTINGS_BADGES_HEADER" = "バッジ";
@@ -2201,7 +2393,7 @@
 "DATABASE_INTEGRITY_CHECK_ACTION_RUN" = "実行";
 
 /* Message for alert before running a database integrity check */
-"DATABASE_INTEGRITY_CHECK_MESSAGE" = "これは問題を解決するのに役立ち、完了するまでに数分かかる場合があります。 このチェックの実行中にSignalを閉じることはできますが、ログを送信するために戻ってください。";
+"DATABASE_INTEGRITY_CHECK_MESSAGE" = "これは問題を解決するのに役立ち、完了するまでに数分かかる場合があります。 このチェックの実行中にHCPを閉じることはできますが、ログを送信するために戻ってください。";
 
 /* Button to skip database integrity check step */
 "DATABASE_INTEGRITY_CHECK_SKIP" = "スキップ";
@@ -2225,10 +2417,10 @@
 "DATABASE_RECOVERY_MORE_STORAGE_SPACE_NEEDED_TITLE" = "より多くのストレージ容量が必要です";
 
 /* The user has tried to recover their data after it was lost due to corruption. (They have not been hacked.) This is the description on the screen where we show an error message. */
-"DATABASE_RECOVERY_RECOVERY_FAILED_DESCRIPTION" = "メッセージ履歴を復元できませんでした。再インストール後も引き続きSignalをご利用いただけます。原因究明のためにデバッグログを送信してください。";
+"DATABASE_RECOVERY_RECOVERY_FAILED_DESCRIPTION" = "メッセージ履歴を復元できませんでした。再インストール後も引き続きHCPをご利用いただけます。原因究明のためにデバッグログを送信してください。";
 
 /* The user has tried to recover their data after it was lost due to corruption. (They have not been hacked.) This button lets them delete all of their data. */
-"DATABASE_RECOVERY_RECOVERY_FAILED_RESET_APP_BUTTON" = "Signalをリセットする";
+"DATABASE_RECOVERY_RECOVERY_FAILED_RESET_APP_BUTTON" = "HCPをリセットする";
 
 /* The user has tried to recover their data after it was lost due to corruption. (They have not been hacked.) If they want to delete the app and restart, they will be presented with a confirmation dialog. This is the final button they will press before their data is reset. */
 "DATABASE_RECOVERY_RECOVERY_FAILED_RESET_APP_CONFIRMATION_CONFIRM" = "リセット";
@@ -2237,7 +2429,7 @@
 "DATABASE_RECOVERY_RECOVERY_FAILED_RESET_APP_CONFIRMATION_DESCRIPTION" = "アカウント情報、プロフィール、メッセージはすべて消去されます。この処理が完了するとアプリは終了します。";
 
 /* The user has tried to recover their data after it was lost due to corruption. (They have not been hacked.) If they want to delete the app and restart, they will be presented with a confirmation dialog. This is the title of that dialog. */
-"DATABASE_RECOVERY_RECOVERY_FAILED_RESET_APP_CONFIRMATION_TITLE" = "Signalをリセットする";
+"DATABASE_RECOVERY_RECOVERY_FAILED_RESET_APP_CONFIRMATION_TITLE" = "HCPをリセットする";
 
 /* The user has tried to recover their data after it was lost due to corruption. (They have not been hacked.) They were asked to submit a debug log. This is the button that submits this log. */
 "DATABASE_RECOVERY_RECOVERY_FAILED_SUBMIT_DEBUG_LOG_BUTTON" = "デバッグログを送信する";
@@ -2312,7 +2504,7 @@
 "DELETE_ACCOUNT_CONFIRMATION_ACTION_SHEEET_ACTION" = "アカウントを消去する";
 
 /* Title for the action sheet message of the 'delete account confirmation' view controller. */
-"DELETE_ACCOUNT_CONFIRMATION_ACTION_SHEEET_MESSAGE" = "あなたのSignalアカウントを消去して、アプリを初期化します。処理が完了するとアプリは閉じます。";
+"DELETE_ACCOUNT_CONFIRMATION_ACTION_SHEEET_MESSAGE" = "あなたのHCPアカウントを消去して、アプリを初期化します。処理が完了するとアプリは閉じます。";
 
 /* Title for the action sheet confirmation title of the 'delete account confirmation' view controller. */
 "DELETE_ACCOUNT_CONFIRMATION_ACTION_SHEEET_TITLE" = "本当にあなたのアカウントを消去しますか？";
@@ -2336,7 +2528,7 @@
 "DELETE_ACCOUNT_CONFIRMATION_PHONE_NUMBER_TITLE" = "電話番号";
 
 /* Section header */
-"DELETE_ACCOUNT_CONFIRMATION_SECTION_TITLE" = "Signal番号の確認";
+"DELETE_ACCOUNT_CONFIRMATION_SECTION_TITLE" = "HCP番号の確認";
 
 /* Title for the 'delete account' confirmation view. */
 "DELETE_ACCOUNT_CONFIRMATION_TITLE" = "アカウントを消去する";
@@ -2374,26 +2566,20 @@
 /* Subheader for an action sheet explaining that a Note to Self deleted on this device will be deleted on the user's other devices as well. */
 "DELETE_FOR_ME_NOTE_TO_SELF_LINKED_DEVICES_PRESENT_ACTION_SHEET_SUBHEADER" = "このメッセージは、ご利用のすべての端末から消去されます。";
 
-/* Label for a button in an info sheet confirming that deletes are now synced across devices. */
-"DELETE_FOR_ME_SYNC_MESSAGE_INFO_SHEET_BUTTON" = "わかりました";
-
-/* Subtitle for an info sheet explaining that deletes are now synced across devices. */
-"DELETE_FOR_ME_SYNC_MESSAGE_INFO_SHEET_SUBTITLE" = "メッセージやチャットを消去した場合、ご利用のスマートフォンと、すべてのリンク済み端末からも消去されます。";
-
-/* Title for an info sheet explaining that deletes are now synced across devices. */
-"DELETE_FOR_ME_SYNC_MESSAGE_INFO_SHEET_TITLE" = "消去機能がすべての端末で同期されるようになりました";
-
 /* Label indicating a user who deleted their account. */
 "DELETED_USER" = "消去されたアカウント";
 
 /* Notification warning the user that they have been de-registered. */
-"DEREGISTRATION_NOTIFICATION" = "この端末上のSignalからログアウトしました。";
+"DEREGISTRATION_NOTIFICATION" = "この端末上のHCPからログアウトしました。";
 
-/* Label for button that lets users re-register using the same phone number. */
-"DEREGISTRATION_REREGISTER_WITH_SAME_PHONE_NUMBER" = "この電話番号を再登録する";
+/* Button that lets users re-register using the same phone number. */
+"DEREGISTRATION_REREGISTER_BUTTON" = "再登録する";
+
+/* Title for prompt that lets users re-register using the same phone number. */
+"DEREGISTRATION_REREGISTER_PROMPT_TITLE" = "この電話番号を再登録しますか？";
 
 /* Label warning the user that they have been de-registered. */
-"DEREGISTRATION_WARNING" = "この端末は登録されていません。以前、おそらく別の端末で Signal に電話番号を登録したことが原因です。";
+"DEREGISTRATION_WARNING" = "この端末は登録されていません。以前、おそらく別の端末で HCP に電話番号を登録したことが原因です。";
 
 /* If the user has been deregistered, they'll see a warning. This is This is the call to action on that warning. */
 "DEREGISTRATION_WARNING_ACTION_TITLE" = "端末を再登録する";
@@ -2462,7 +2648,7 @@
 "DEVICE_TRANSFER_CONTRACT_QR_CODE_BUTTON" = "縮小表示する";
 
 /* An error indicating that the other device closed signal mid-transfer and it could not complete */
-"DEVICE_TRANSFER_ERROR_BACKGROUNDED" = "移行を完了できませんでした。両端末でSignalが開いていることを確認して、もう一度お試しください。";
+"DEVICE_TRANSFER_ERROR_BACKGROUNDED" = "移行を完了できませんでした。両端末でHCPが開いていることを確認して、もう一度お試しください。";
 
 /* An error indicating that we were unable to verify the identity of the new device to complete the transfer */
 "DEVICE_TRANSFER_ERROR_CERTIFICATE_MISMATCH" = "新しい端末を確認できませんでした、再度試してください。";
@@ -2480,13 +2666,13 @@
 "DEVICE_TRANSFER_ERROR_NOT_ENOUGH_SPACE" = "移行のための空き領域が不足しています";
 
 /* An error indicating the user must update their device before trying to transfer. */
-"DEVICE_TRANSFER_ERROR_UNSUPPORTED_VERSION" = "Signalを最新版にアップデートしてから再度試してください";
+"DEVICE_TRANSFER_ERROR_UNSUPPORTED_VERSION" = "HCPを最新版にアップデートしてから再度試してください";
 
 /* Button shown to expand a QR code and view it fullscreen. */
 "DEVICE_TRANSFER_EXPAND_QR_CODE_BUTTON" = "拡大表示する";
 
 /* The explanation on the action sheet prompting the user if they want to transfer their device. */
-"DEVICE_TRANSFER_PROMPT_EXPLANATION" = "新しいiOS端末にSignalアカウントを移動します。新しい端末を手元に置き、電源を入れてください。";
+"DEVICE_TRANSFER_PROMPT_EXPLANATION" = "新しいiOS端末にHCPアカウントを移動します。新しい端末を手元に置き、電源を入れてください。";
 
 /* The title on the acttion sheet prompting the user if they want to transfer their device. */
 "DEVICE_TRANSFER_PROMPT_TITLE" = "アカウントの移行";
@@ -2504,7 +2690,7 @@
 "DEVICE_TRANSFER_QRCODE_TITLE" = "QRコードをスキャン";
 
 /* The explanation on the view that shows receiving progress */
-"DEVICE_TRANSFER_RECEIVING_EXPLANATION" = "端末同士を近づけてください。どちらの端末も電源を切らず、Signalを開いたままにしてください。転送はエンドツーエンドで暗号化されます。";
+"DEVICE_TRANSFER_RECEIVING_EXPLANATION" = "端末同士を近づけてください。どちらの端末も電源を切らず、HCPを開いたままにしてください。転送はエンドツーエンドで暗号化されます。";
 
 /* The title on the view that shows receiving progress */
 "DEVICE_TRANSFER_RECEIVING_TITLE" = "データ受信中";
@@ -2518,8 +2704,44 @@
 /* The title for the action sheet asking the user to scan the QR code to transfer */
 "DEVICE_TRANSFER_SCANNING_TITLE" = "新しい端末をカメラにかざしてください";
 
+/* Status message on new device when cancelling transfer. */
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_CANCELLING" = "古いiPhoneへの接続をキャンセルしています…";
+
+/* Status message on new device when connecting to old device. */
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_CONNECTING" = "古いiPhoneに接続中です…";
+
+/* Description message on new device displayed during device transfer. */
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_CONNECTING_MESSAGE" = "古い端末を近くに持ってきて、Wi-FiとBluetoothが有効になっていることを確認します。";
+
+/* Status message on new device when transfer is starting. */
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_STARTING" = "古いiPhoneへの接続を待っています…";
+
+/* Description in the progress view displayed after failure of device transfer. */
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_TRANSFER_FAILED_BODY" = "新しい端末への移行が失敗しました。古い端末を近くに持ってきて、もう一度お試しください。";
+
+/* Title for a progress view displayed after failure of device transfer. */
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_TRANSFER_FAILED_TITLE" = "移行に失敗しました";
+
+/* Title for a progress view displayed during device transfer. */
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_TRANSFERRING" = "移行中です";
+
+/* Description in the progress view displayed during device transfer. */
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_TRANSFERRING_DESCRIPTION" = "端末同士を近づけてください。どちらの端末も電源を切らず、HCPを開いたままにしてください。転送はエンドツーエンドで暗号化されます。";
+
+/* Status message on old device when cancelling transfer. */
+"DEVICE_TRANSFER_STATUS_OLD_DEVICE_CANCELLING" = "新しいiPhoneへの接続をキャンセルしています…";
+
+/* Status message on new device when connecting to new device. */
+"DEVICE_TRANSFER_STATUS_OLD_DEVICE_CONNECTING" = "新しいiPhoneに接続中です…";
+
+/* Description message on old device displayed during device transfer. */
+"DEVICE_TRANSFER_STATUS_OLD_DEVICE_CONNECTING_MESSAGE" = "新しい端末を近くに持ってきて、Wi-FiとBluetoothが有効になっていることを確認します。";
+
+/* Status message on old device when transfer is starting. */
+"DEVICE_TRANSFER_STATUS_OLD_DEVICE_STARTING" = "新しいiPhoneへの接続を待っています…";
+
 /* The explanation on the action sheet that shows transfer progress */
-"DEVICE_TRANSFER_TRANSFERRING_EXPLANATION" = "端末同士を近くに置いてください。どちらも電源を切らず、Signalを開いたままにしてください。";
+"DEVICE_TRANSFER_TRANSFERRING_EXPLANATION" = "端末同士を近くに置いてください。どちらも電源を切らず、HCPを開いたままにしてください。";
 
 /* The title on the action sheet that shows transfer progress */
 "DEVICE_TRANSFER_TRANSFERRING_TITLE" = "データ移行中";
@@ -2609,13 +2831,13 @@
 "DONATE_CHOOSE_PAYMENT_METHOD_SHEET_SUBTITLE_FOR_ONE_TIME_DONATION" = "30日間 %1$@ バッジを獲得しましょう";
 
 /* When users make donations on a friend's behalf, they see a sheet that lets them pick a payment method. This is the title on that sheet. Embeds {{amount of money}}, such as \"$5\". */
-"DONATE_CHOOSE_PAYMENT_METHOD_SHEET_TITLE_FOR_DONATION_ON_BEHALF_OF_A_FRIEND" = "%1$@ をSignalに寄付";
+"DONATE_CHOOSE_PAYMENT_METHOD_SHEET_TITLE_FOR_DONATION_ON_BEHALF_OF_A_FRIEND" = "%1$@ をHCPに寄付";
 
 /* When users make monthly donations, they see a sheet that lets them pick a payment method. This is the title on that sheet. Embeds {{amount of money per month}}, such as \"$5/month\". */
-"DONATE_CHOOSE_PAYMENT_METHOD_SHEET_TITLE_FOR_MONTHLY_DONATION" = "Signalに %1$@を寄付する";
+"DONATE_CHOOSE_PAYMENT_METHOD_SHEET_TITLE_FOR_MONTHLY_DONATION" = "HCPに %1$@を寄付する";
 
 /* When users make one-time donations, they see a sheet that lets them pick a payment method. This is the title on that sheet. Embeds {{amount of money}}, such as \"$5\". */
-"DONATE_CHOOSE_PAYMENT_METHOD_SHEET_TITLE_FOR_ONE_TIME_DONATION" = "Signalに %1$@を寄付する";
+"DONATE_CHOOSE_PAYMENT_METHOD_SHEET_TITLE_FOR_ONE_TIME_DONATION" = "HCPに %1$@を寄付する";
 
 /* Users can donate on a friend's behalf and can optionally add a message. This is tells users about that optional message. */
 "DONATE_ON_BEHALF_OF_A_FRIEND_ADDITIONAL_MESSAGE_INFO" = "受取人には、1対1のメッセージで寄付が通知されます。以下にご自身のメッセージを追加してください。";
@@ -2625,6 +2847,12 @@
 
 /* If a donation badge has been sent, indicates that it's expired and can no longer be redeemed. This is shown in the chat. */
 "DONATE_ON_BEHALF_OF_A_FRIEND_CHAT_EXPIRED" = "期限切れ";
+
+/* Message for an action sheet shown when the user tries to cancel their donation subscription, but they have a pending donation. */
+"DONATE_SCREEN_CANCEL_SUBSCRIPTION_PENDING_DONATION_WARNING_MESSAGE" = "1件の寄付が手続き中です。サブスクリプションを解約した場合、寄付は更新されませんが、保留中の寄付は解約になりません。";
+
+/* Title for an action sheet shown when the user tries to cancel their donation subscription, but they have a pending donation. */
+"DONATE_SCREEN_CANCEL_SUBSCRIPTION_PENDING_DONATION_WARNING_TITLE" = "寄付の手続き中です";
 
 /* Message in an alert presented when the user tries to make a donation, but already has an iDEAL donation that is currently awaiting approval. */
 "DONATE_SCREEN_ERROR_MESSAGE_APPROVE_IDEAL_DONATION_BEFORE_MAKING_ANOTHER_DONATION" = "iDEALによる寄付はお手続き中です。他の寄付を行う前に、銀行アプリを確認して支払いを承認してください。";
@@ -2726,7 +2954,7 @@
 "DONATION_ON_BEHALF_OF_A_FRIEND_BADGE_REDEEMED" = "引換え済";
 
 /* Users can donate on behalf of a friend, and the friend will receive a badge. This is a short paragraph on the screen where users choose the badge their friend will receive. */
-"DONATION_ON_BEHALF_OF_A_FRIEND_CHOOSE_BADGE_DESCRIPTION" = "Signalを利用している友人や家族に代わって寄付をし、Signalをサポートすることができます。その友人や家族には、サポートしていることをプロフィールに表示するオプションが付与されます。";
+"DONATION_ON_BEHALF_OF_A_FRIEND_CHOOSE_BADGE_DESCRIPTION" = "Signalを利用している友人や家族に代わって寄付をし、HCPをサポートすることができます。その友人や家族には、サポートしていることをプロフィールに表示するオプションが付与されます。";
 
 /* Users can donate on behalf of a friend, and the friend will receive a badge. This is the title on the screen where users choose the badge their friend will receive. */
 "DONATION_ON_BEHALF_OF_A_FRIEND_CHOOSE_BADGE_TITLE" = "友達に代わって寄付する";
@@ -2750,7 +2978,7 @@
 "DONATION_ON_BEHALF_OF_A_FRIEND_PAYMENT_FAILED_ERROR_TITLE" = "決済に失敗しました";
 
 /* Users can donate on a friend's behalf. If the payment was processed but the donation failed to send, this error message will be shown. */
-"DONATION_ON_BEHALF_OF_A_FRIEND_PAYMENT_SUCCEEDED_BUT_MESSAGE_FAILED_ERROR_BODY" = "お支払いは処理されましたが、Signal は寄付メッセージを送信できませんでした。サポートにお問い合わせください。";
+"DONATION_ON_BEHALF_OF_A_FRIEND_PAYMENT_SUCCEEDED_BUT_MESSAGE_FAILED_ERROR_BODY" = "お支払いは処理されましたが、HCP は寄付メッセージを送信できませんでした。サポートにお問い合わせください。";
 
 /* Users can donate on a friend's behalf. If the payment was processed but the donation failed to send, an error dialog will be shown. This is the title of that dialog. */
 "DONATION_ON_BEHALF_OF_A_FRIEND_PAYMENT_SUCCEEDED_BUT_MESSAGE_FAILED_ERROR_TITLE" = "寄付できませんでした";
@@ -2762,7 +2990,7 @@
 "DONATION_ON_BEHALF_OF_A_FRIEND_PREVIEW_OUTGOING" = "✨ あなたは %1$@ に代わって寄付しました";
 
 /* You received a donation from a friend. This is the title of that message in the chat. Embeds {{short contact name}}. */
-"DONATION_ON_BEHALF_OF_A_FRIEND_RECEIVED_TITLE_FORMAT" = "%1$@ があなたに代わってSignalに寄付しました";
+"DONATION_ON_BEHALF_OF_A_FRIEND_RECEIVED_TITLE_FORMAT" = "%1$@ があなたに代わってHCPに寄付しました";
 
 /* Users can donate on a friend's behalf. This is the error message that appears if the try to do this, but the recipient is blocked. */
 "DONATION_ON_BEHALF_OF_A_FRIEND_RECIPIENT_IS_BLOCKED_ERROR_BODY" = "このユーザーをブロックしているため、代理で寄付できませんでした。";
@@ -2786,7 +3014,7 @@
 "DONATION_ON_BEHALF_OF_A_FRIEND_SENT_TITLE_FORMAT" = "%1$@に代わって寄付をする";
 
 /* When you donate on behalf of a friend, a thank-you sheet will appear. This is the text on that sheet. Embeds {{recipient name}}. */
-"DONATION_ON_BEHALF_OF_A_FRIEND_THANKS_BODY_FORMAT" = "%1$@ に代わってあなたがSignalに寄付しました。その人のプロフィールには、サポートしていることを表示するオプションが付与されます。";
+"DONATION_ON_BEHALF_OF_A_FRIEND_THANKS_BODY_FORMAT" = "%1$@ に代わってあなたがHCPに寄付しました。その人のプロフィールには、サポートしていることを表示するオプションが付与されます。";
 
 /* When you donate on behalf of a friend, a thank-you sheet will appear. This is the title on that sheet. */
 "DONATION_ON_BEHALF_OF_A_FRIEND_THANKS_TITLE" = "ご支援をありがとうございます！";
@@ -2795,19 +3023,19 @@
 "DONATION_ON_BEHALF_OF_A_FRIEND_VIEW" = "表示する";
 
 /* A friend has donated on your behalf and you received a badge. This text says that you received a badge, and from whom. Embeds {{contact's short name, such as a first name}}. */
-"DONATION_ON_BEHALF_OF_A_FRIEND_YOU_RECEIVED_A_BADGE_FORMAT" = "%1$@ があなたの代わりにSignalに寄付をしました！プロフィールにSignalをサポートしていることを表示しましょう。";
+"DONATION_ON_BEHALF_OF_A_FRIEND_YOU_RECEIVED_A_BADGE_FORMAT" = "%1$@ があなたの代わりにSignalに寄付をしました！プロフィールにHCPをサポートしていることを表示しましょう。";
 
 /* There is a screen where users can read more about their donation to Signal. This is the 1st paragraph of that screen. */
 "DONATION_READ_MORE_SCREEN_PARAGRAPH_1" = "プライベートメッセージ。広告なし、トラッキングなし、監視なし。";
 
 /* There is a screen where users can read more about their donation to Signal. This is the 2nd paragraph of that screen. */
-"DONATION_READ_MORE_SCREEN_PARAGRAPH_2" = "Signalは寄付によって支えられています。これは、お客様のプライバシーが私たちの活動の最重要事項であることを意味します。Signalは皆様のために作られたものです。皆様のデータや利益のためではありません。";
+"DONATION_READ_MORE_SCREEN_PARAGRAPH_2" = "Signalは寄付によって支えられています。これは、お客様のプライバシーが私たちの活動の最重要事項であることを意味します。HCPは皆様のために作られたものです。皆様のデータや利益のためではありません。";
 
 /* There is a screen where users can read more about their donation to Signal. This is the 3rd paragraph of that screen. */
-"DONATION_READ_MORE_SCREEN_PARAGRAPH_3" = "Signalが誰にとっても楽しめて、信頼性と有用性があり続けるために、皆様の寄付をお願いします。";
+"DONATION_READ_MORE_SCREEN_PARAGRAPH_3" = "HCPが誰にとっても楽しめて、信頼性と有用性があり続けるために、皆様の寄付をお願いします。";
 
 /* There is a screen where users can read more about their donation to Signal. This is the title of that screen. */
-"DONATION_READ_MORE_SCREEN_TITLE" = "Signalは他のアプリとは異なります。";
+"DONATION_READ_MORE_SCREEN_TITLE" = "HCPは他のアプリとは異なります。";
 
 /* Section title for donation amount on receipts */
 "DONATION_RECEIPT_AMOUNT" = "寄付額";
@@ -2822,7 +3050,7 @@
 "DONATION_RECEIPT_EXPORT_RECEIPT_BUTTON" = "領収書を共有";
 
 /* Footer text at the bottom of donation receipts */
-"DONATION_RECEIPT_FOOTER" = "Signalをサポートいただき、ありがとうございます。皆様のご寄付は、表現の自由を守り、世界中の何百万人もの人々に安全なグローバルコミュニケーションを可能にするオープンソースのプライバシー技術の開発というミッションの推進に役立っています。米国にお住まいの方は、この領収書を税務記録のために保管しておいてください。Signal Technology Foundationは、米国内国歳入法第501c3条に基づく非課税の非営利団体です。連邦税IDは82-4506840です。";
+"DONATION_RECEIPT_FOOTER" = "Signalをサポートいただき、ありがとうございます。皆様のご寄付は、表現の自由を守り、世界中の何百万人もの人々に安全なグローバルコミュニケーションを可能にするオープンソースのプライバシー技術の開発というミッションの推進に役立っています。米国にお住まいの方は、この領収書を税務記録のために保管しておいてください。HCP Technology Foundationは、米国内国歳入法第501c3条に基づく非課税の非営利団体です。連邦税IDは82-4506840です。";
 
 /* Title for receipts for donations given on a friend's behalf */
 "DONATION_RECEIPT_FOR_DONATION_ON_BEHALF_OF_A_FRIEND" = "友達に代わって寄付";
@@ -2843,7 +3071,7 @@
 "DONATION_RECEIPTS" = "寄付の領収書";
 
 /* Text at the bottom of the donation receipts list, telling users that receipts might not be available */
-"DONATION_RECEIPTS_MIGHT_BE_MISSING_IF_YOU_REINSTALLED" = "Signalをインストールし直すと、過去の寄付の領収書を表示できなくなります。";
+"DONATION_RECEIPTS_MIGHT_BE_MISSING_IF_YOU_REINSTALLED" = "HCPをインストールし直すと、過去の寄付の領収書を表示できなくなります。";
 
 /* Error message displayed if something goes wrong with 3DSecure/iDEAL payment authorization.  This will be encountered if the user cancels the webview before authrizing the payment. */
 "DONATION_REDIRECT_ERROR_CANCELLED_MESSAGE" = "決済がキャンセルされました。もう一度お試しください。";
@@ -2858,7 +3086,7 @@
 "DONATION_SCREEN_DONATE_BUTTON" = "寄付する";
 
 /* On donation screens, a small amount of information text is shown. This is the subtitle for that text. */
-"DONATION_SCREENS_HEADER_DESCRIPTION" = "あなたが資金提供するプライベートメッセージ。広告なし、トラッキングなし、不正アクセスなし。Signalをサポートするための寄付を今すぐお願いします。";
+"DONATION_SCREENS_HEADER_DESCRIPTION" = "あなたが資金提供するプライベートメッセージ。広告なし、トラッキングなし、不正アクセスなし。HCPをサポートするための寄付を今すぐお願いします。";
 
 /* On donation screens, a small amount of information text is shown. Users can click this link to learn more information. */
 "DONATION_SCREENS_HEADER_READ_MORE" = "続きを読む";
@@ -2936,7 +3164,7 @@
 "DONATION_VIEW_DONATE_ON_BEHALF_OF_A_FRIEND" = "友達に代わって寄付する";
 
 /* Text describing to the user that they're going to pay a donation to Signal */
-"DONATION_VIEW_DONATION_TO_SIGNAL" = "Signalへの寄付";
+"DONATION_VIEW_DONATION_TO_SIGNAL" = "HCPへの寄付";
 
 /* Title for the 'Donor FAQ' button on the donation screen */
 "DONATION_VIEW_DONOR_FAQ" = "寄付についてのよくある質問";
@@ -2948,7 +3176,7 @@
 "DONATION_VIEW_MANAGE_BADGES" = "バッジ";
 
 /* Text describing to the user that they're going to pay a monthly donation to Signal */
-"DONATION_VIEW_MONTHLY_DONATION_TO_SIGNAL" = "Signalへの月々の寄付";
+"DONATION_VIEW_MONTHLY_DONATION_TO_SIGNAL" = "HCPへの月々の寄付";
 
 /* Title for the 'more' section on the donation screen */
 "DONATION_VIEW_MORE_SECTION_TITLE" = "その他";
@@ -2960,7 +3188,7 @@
 "DONATION_VIEW_OTHER_WAYS_TO_DONATE_TITLE" = "その他の寄付の方法";
 
 /* Title on the 'Donate to Signal' screen */
-"DONATION_VIEW_TITLE" = "Signalへの寄付";
+"DONATION_VIEW_TITLE" = "HCPへの寄付";
 
 /* Label for the currency picker button in donation views */
 "DONATIONS_CURRENCY_PICKER_LABEL" = "通貨";
@@ -2975,13 +3203,13 @@
 "EDIT_CONTACT_WITHOUT_CONTACTS_PERMISSION_ALERT_BODY" = "iOSの設定でアクセス権限を制御できます。";
 
 /* Alert title for when the user has just tried to edit a contacts after declining to give Signal contacts permissions */
-"EDIT_CONTACT_WITHOUT_CONTACTS_PERMISSION_ALERT_TITLE" = "連絡先を編集するには、Signalに連絡先へのアクセス権限が必要です。";
+"EDIT_CONTACT_WITHOUT_CONTACTS_PERMISSION_ALERT_TITLE" = "連絡先を編集するには、HCPに連絡先へのアクセス権限が必要です。";
 
 /* The navbar title for the 'update group' view. */
 "EDIT_GROUP_DEFAULT_TITLE" = "グループを編集";
 
 /* Error message indicating the a user can't be added to a group. */
-"EDIT_GROUP_ERROR_CANNOT_ADD_MEMBER" = "このユーザはSignalをアップグレードしていないため、グループに追加できません。";
+"EDIT_GROUP_ERROR_CANNOT_ADD_MEMBER" = "このユーザはHCPをアップグレードしていないため、グループに追加できません。";
 
 /* Error message indicating that an avatar image is invalid and cannot be used. */
 "EDIT_GROUP_ERROR_INVALID_AVATAR" = "無効なアイコンです。";
@@ -3008,10 +3236,10 @@
 "EDIT_MESSAGE_SEND_MESSAGE_UNKNOWN_ERROR" = "EDIT_MESSAGE_SEND_MESSAGE_UNKNOWN_ERROR";
 
 /* body of email sent to contacts when inviting to install Signal. Embeds {{link to install Signal}} and {{link to the Signal home page}} */
-"EMAIL_INVITE_BODY" = "こんにちは\n\n最近、私はiPhoneでのチャットのプライベートを保つためにSignalを使っています。よかったら、あなたにもインストールしませんか？そうすれば、他の人が私たちのメッセージを読んだり聞いたりできないので安心です。\n\nSignalは、iPhone、Android、Desktopのどれでも使えます。ここからインストールできます： %1$@\n\nSignalの使い方は、今使っているメッセージアプリと同じです。写真や動画も送れるし、通話やグループチャットもできます。一番すごいところは、Signalの開発者であってもユーザーのやりとりを見られないところです！\n\nSignalの詳細についてはこちらをご覧ください：%2$@";
+"EMAIL_INVITE_BODY" = "こんにちは\n\n最近、私はiPhoneでのチャットのプライベートを保つためにSignalを使っています。よかったら、あなたにもインストールしませんか？そうすれば、他の人が私たちのメッセージを読んだり聞いたりできないので安心です。\n\nSignalは、iPhone、Android、Desktopのどれでも使えます。ここからインストールできます： %1$@\n\nSignalの使い方は、今使っているメッセージアプリと同じです。写真や動画も送れるし、通話やグループチャットもできます。一番すごいところは、Signalの開発者であってもユーザーのやりとりを見られないところです！\n\nHCPの詳細についてはこちらをご覧ください：%2$@";
 
 /* subject of email sent to contacts when inviting to install Signal */
-"EMAIL_INVITE_SUBJECT" = "メッセージアプリをSignalにしましょう";
+"EMAIL_INVITE_SUBJECT" = "メッセージアプリをHCPにしましょう";
 
 /* Description for the fallback support sheet if user cannot send email */
 "EMAIL_SIGNAL_MESSAGE" = "この端末はメールを送信できるようになっていません。サポートリクエストを送るには、この端末でメールを設定するか、support@signal.org にメールしてください。";
@@ -3050,7 +3278,7 @@
 "EMOJI_CATEGORY_TRAVEL_NAME" = "旅と場所";
 
 /* Full width label displayed when attempting to compose message */
-"EMPTY_CONTACTS_LABEL_LINE1" = "連絡先にSignalユーザはいないようです";
+"EMPTY_CONTACTS_LABEL_LINE1" = "連絡先にHCPユーザはいないようです";
 
 /* Full width label displayed when attempting to compose message */
 "EMPTY_CONTACTS_LABEL_LINE2" = "誰かを招待しませんか？";
@@ -3061,11 +3289,11 @@
 /* Call setup status label */
 "END_CALL_UNCATEGORIZED_FAILURE" = "繋がりませんでした";
 
-/* Label explaining that an entered 'Backup Key' is incorrect. */
-"ENTER_ACCOUNT_ENTROPY_POOL_VIEW_INCORRECT_AEP_LABEL" = "バックアップキーが正しくありません";
+/* Label explaining that an entered 'Recovery Key' is incorrect. */
+"ENTER_ACCOUNT_ENTROPY_POOL_VIEW_INCORRECT_AEP_LABEL" = "回復キーが正しくありません";
 
-/* Label explaining that an entered 'Backup Key' is malformed. */
-"ENTER_ACCOUNT_ENTROPY_POOL_VIEW_MALFORMED_AEP_LABEL" = "バックアップキーが無効です";
+/* Label explaining that an entered 'Recovery Key' is malformed. */
+"ENTER_ACCOUNT_ENTROPY_POOL_VIEW_MALFORMED_AEP_LABEL" = "無効な回復キーです";
 
 /* Error indicating that a message could not be forwarded. */
 "ERROR_COULD_NOT_FORWARD_MESSAGES_1" = "メッセージを転送できませんでした";
@@ -3116,7 +3344,7 @@
 "ERROR_DESCRIPTION_UNKNOWN_ERROR" = "不明なエラーが発生しました。";
 
 /* Error message when attempting to send message */
-"ERROR_DESCRIPTION_UNREGISTERED_RECIPIENT" = "この相手はSignalユーザーではなくなったので、メッセージを送信できませんでした。";
+"ERROR_DESCRIPTION_UNREGISTERED_RECIPIENT" = "この相手はHCPユーザーではなくなったので、メッセージを送信できませんでした。";
 
 /* Error message indicating that attachment upload(s) failed. */
 "ERROR_MESSAGE_ATTACHMENT_UPLOAD_FAILED" = "添付ファイルのアップロードに失敗しました。";
@@ -3161,10 +3389,10 @@
 "ERROR_NETWORK_FAILURE" = "ネットワークエラー";
 
 /* Format string for an error alert notification message. Embeds {{ error string }} */
-"ERROR_NOTIFICATION_MESSAGE_FORMAT" = "このエラーとあなたの端末のデバッグログを support@signal.org に報告して、Signalの改善にご協力ください; %1$@";
+"ERROR_NOTIFICATION_MESSAGE_FORMAT" = "このエラーとあなたの端末のデバッグログを support@signal.org に報告して、HCPの改善にご協力ください; %1$@";
 
 /* Format string for an error alert notification title. */
-"ERROR_NOTIFICATION_TITLE" = "Signal Beta: エラーが発生しました";
+"ERROR_NOTIFICATION_TITLE" = "HCP Beta: エラーが発生しました";
 
 /* Error indicating a send failure due to a delinked application. */
 "ERROR_SENDING_DELINKED" = "この端末はもうリンクされていません。メッセージを送信するには、リンクし直してください。";
@@ -3173,7 +3401,7 @@
 "ERROR_SENDING_DEREGISTERED" = "この端末はもう登録されていません。メッセージを送信するには、再登録してください。";
 
 /* Error indicating a send failure due to an expired application. */
-"ERROR_SENDING_EXPIRED" = "このバージョンのSignalは期限が切れています。メッセージを送信するには、アップデートしてください。";
+"ERROR_SENDING_EXPIRED" = "このバージョンのHCPは期限が切れています。メッセージを送信するには、アップデートしてください。";
 
 /* Format string for 'unregistered user' error. Embeds {{the unregistered user's name or signal id}}. */
 "ERROR_UNREGISTERED_USER_FORMAT" = "未登録ユーザ: %1$@";
@@ -3185,22 +3413,19 @@
 "EXIT_REREGISTRATION" = "登録を終了する";
 
 /* Label notifying the user that the app has expired. */
-"EXPIRATION_ERROR" = "このバージョンの Signal は期限が切れています。メッセージを送受信するには、アップデートしてください。";
+"EXPIRATION_ERROR" = "このバージョンの HCP は期限が切れています。メッセージを送受信するには、アップデートしてください。";
 
 /* If the user's app is too old, they'll be shown a warning asking them to upgrade. This is the text on the warning, and tapping it will open the App Store page for Signal. */
 "EXPIRATION_WARNING_ACTION_TITLE" = "アップデートする";
 
 /* Label warning the user that the app will expire soon. Embeds {{date}}. */
-"EXPIRATION_WARNING_SOON" = "このバージョンの Signal は、%1$@に期限が切れます。アップデートするとメッセージの送受信を継続できます。";
+"EXPIRATION_WARNING_SOON" = "このバージョンの HCP は、%1$@に期限が切れます。アップデートするとメッセージの送受信を継続できます。";
 
 /* Label warning the user that the app will expire today. */
-"EXPIRATION_WARNING_TODAY" = "このバージョンの Signal は、今日で期限が切れます。アップデートするとメッセージの送受信を継続できます。";
+"EXPIRATION_WARNING_TODAY" = "このバージョンの HCP は、今日で期限が切れます。アップデートするとメッセージの送受信を継続できます。";
 
 /* action sheet header when re-sending message which failed because of an invalid key signature */
-"FAILED_SENDING_BECAUSE_INVALID_KEY_SIGNATURE" = "%1$@ がSignalを更新して開く必要があるため、メッセージを送信できませんでした。";
-
-/* action sheet header when re-sending message which failed because of too many attempts */
-"FAILED_SENDING_BECAUSE_RATE_LIMIT" = "この連絡先で多数のエラーが起きました。あとで再度試してください。";
+"FAILED_SENDING_BECAUSE_INVALID_KEY_SIGNATURE" = "%1$@ がHCPを更新して開く必要があるため、メッセージを送信できませんでした。";
 
 /* action sheet header when re-sending message which failed because of untrusted identity keys */
 "FAILED_SENDING_BECAUSE_UNTRUSTED_IDENTITY_KEY" = "%1$@ に対する安全番号が変更されました。このメッセージを再送する前に、検証した方が良いかもしれません。";
@@ -3222,9 +3447,6 @@
 
 /* Footer for message cell for documents/files when they are expired and unavailable for download */
 "FILE_UNAVAILABLE_FOOTER" = "ファイルがダウンロードできません";
-
-/* Message for sheet shown when tapping a document/file that has expired and is unavailable for download */
-"FILE_UNAVAILABLE_SHEET_MESSAGE" = "この端末をリンクしたとき、このファイルはスマートフォンから移行されませんでした。端末をリンクした時点で45日以上経過したファイルとメディアは同期できません。";
 
 /* Title for sheet shown when tapping a document/file that has expired and is unavailable for download */
 "FILE_UNAVAILABLE_SHEET_TITLE" = "ファイルがダウンロードできません";
@@ -3258,12 +3480,6 @@
 
 /* Tooltip notifying users that the flip camera button moved to the picture-in-picture view of themselves in a call */
 "FLIP_CAMERA_BUTTON_MOVED_TO_PIP_TOOLTIP" = "カメラアイコンがここへ移動しました。画面をタップして試してみてください";
-
-/* Message for alert with information about forwarding messages. */
-"FORWARD_MESSAGE_FIRST_FORWARD_MESSAGE" = "転送メッセージがすぐに送信されるようになりました。";
-
-/* Title for alert with information about forwarding messages. */
-"FORWARD_MESSAGE_FIRST_FORWARD_TITLE" = "より速い転送";
 
 /* Indicates that a single message was forwarded. */
 "FORWARD_MESSAGE_MESSAGES_SENT_1" = "メッセージを送信しました";
@@ -3502,9 +3718,6 @@
 /* Toast view text informing user about swiping to speaker view */
 "GROUP_CALL_SPEAKER_VIEW_TOAST" = "上にスワイプして表示を変更";
 
-/* Tooltip highlighting group calls. */
-"GROUP_CALL_START_TOOLTIP" = "タップしてグループ通話を開始";
-
 /* Text explaining that you started a group call. */
 "GROUP_CALL_STARTED_BY_YOU" = "グループ通話を開始しました";
 
@@ -3527,10 +3740,10 @@
 "GROUP_CALL_WILL_NOTIFY_TWO_PEOPLE_FORMAT" = "%1$@ と %2$@ に通知されます";
 
 /* Text shown before the user starts a group call if the user has enabled ringing and there is one other person in the group. Embeds {member name} */
-"GROUP_CALL_WILL_RING_ONE_PERSON_FORMAT" = "Signalは %1$@ を呼び出します";
+"GROUP_CALL_WILL_RING_ONE_PERSON_FORMAT" = "HCPは %1$@ を呼び出します";
 
 /* Text shown before the user starts a group call if the user has enabled ringing and there are two other people in the group. Embeds {{ %1$@ participant1, %2$@ participant2 }} */
-"GROUP_CALL_WILL_RING_TWO_PEOPLE_FORMAT" = "Signalは %1$@ と %2$@ を呼び出します";
+"GROUP_CALL_WILL_RING_TWO_PEOPLE_FORMAT" = "HCPは %1$@ と %2$@ を呼び出します";
 
 /* Text explaining that you are in the group call. */
 "GROUP_CALL_YOU_ARE_HERE" = "グループ通話中です";
@@ -3740,7 +3953,7 @@
 "GROUP_LINK_VIEW_SHARE_LINK_VIA_QR_CODE" = "QRコード";
 
 /* Label for the 'share group link via Signal' button in the 'group link' view. */
-"GROUP_LINK_VIEW_SHARE_LINK_VIA_SIGNAL" = "Signal経由で共有する";
+"GROUP_LINK_VIEW_SHARE_LINK_VIA_SIGNAL" = "HCP経由で共有する";
 
 /* Message for the 'share group link' action sheet in the 'group link' view. */
 "GROUP_LINK_VIEW_SHARE_SHEET_MESSAGE" = "誰でもこのリンクから、グループの名前とメンバーを見たり、参加を申請できます。信頼できる人と共有してください。";
@@ -4148,13 +4361,13 @@
 "HOME_VIEW_DRAFT_PREFIX" = "下書き: ";
 
 /* Format string for a label offering to start a new conversation with your contacts, if you have 1 Signal contact.  Embeds {{The name of 1 of your Signal contacts}}. */
-"HOME_VIEW_FIRST_CONVERSATION_OFFER_1_CONTACT_FORMAT" = "連絡先には、すでにSignalを使用中の人がいます: %1$@";
+"HOME_VIEW_FIRST_CONVERSATION_OFFER_1_CONTACT_FORMAT" = "連絡先には、すでにHCPを使用中の人がいます: %1$@";
 
 /* Format string for a label offering to start a new conversation with your contacts, if you have 2 Signal contacts.  Embeds {{The names of 2 of your Signal contacts}}. */
-"HOME_VIEW_FIRST_CONVERSATION_OFFER_2_CONTACTS_FORMAT" = "連絡先には、すでにSignalを使用中の人がいます: %1$@, %2$@";
+"HOME_VIEW_FIRST_CONVERSATION_OFFER_2_CONTACTS_FORMAT" = "連絡先には、すでにHCPを使用中の人がいます: %1$@, %2$@";
 
 /* Format string for a label offering to start a new conversation with your contacts, if you have at least 3 Signal contacts.  Embeds {{The names of 3 of your Signal contacts}}. */
-"HOME_VIEW_FIRST_CONVERSATION_OFFER_3_CONTACTS_FORMAT" = "連絡先には、すでにSignalを使用中の人がいます: %1$@, %2$@, %3$@";
+"HOME_VIEW_FIRST_CONVERSATION_OFFER_3_CONTACTS_FORMAT" = "連絡先には、すでにHCPを使用中の人がいます: %1$@, %2$@, %3$@";
 
 /* A label offering to start a new conversation with your contacts, if you have no Signal contacts. */
 "HOME_VIEW_FIRST_CONVERSATION_OFFER_NO_CONTACTS" = "最初のチャットを始めましょう。";
@@ -4170,6 +4383,18 @@
 
 /* Title for the conversation list's 'archive' mode. */
 "HOME_VIEW_TITLE_ARCHIVE" = "アーカイブ";
+
+/* Title for the conversation list's backup storage full context menu action. */
+"HOME_VIEW_TITLE_BACKUP_OUT_OF_STORAGE_QUOTA" = "バックアップストレージがいっぱいです";
+
+/* Title for the conversation list's failed to redeem backup subscription context menu action. */
+"HOME_VIEW_TITLE_BACKUP_SUBSCRIPTION_FAILED_TO_REDEEM" = "バックアップサブスクリプションのエラー";
+
+/* Title for the conversation list's backup subscription not found locally context menu action. */
+"HOME_VIEW_TITLE_BACKUP_SUBSCRIPTION_NOT_FOUND_LOCALLY" = "バックアップサブスクリプションが見つかりません";
+
+/* Title for the conversation list's failed to backup context menu action. */
+"HOME_VIEW_TITLE_FAILED_TO_BACKUP" = "バックアップできませんでした";
 
 /* Title for the 'Select Chats' option in the ChatList. */
 "HOME_VIEW_TITLE_SELECT_CHATS" = "チャットを選択";
@@ -4238,7 +4463,7 @@
 "INACTIVE_LINKED_DEVICE_REMINDER_MEGAPHONE_TITLE" = "非アクティブなリンク済み端末があります";
 
 /* Body for an in-app megaphone about a user's inactive primary device. */
-"INACTIVE_PRIMARY_DEVICE_REMINDER_MEGAPHONE_BODY" = "To keep your account active, open HCP on your primary device.";
+"INACTIVE_PRIMARY_DEVICE_REMINDER_MEGAPHONE_BODY" = "アカウントをアクティブに保つには、メイン端末/スマートフォンでHCPを開きます。";
 
 /* Title for a button in an in-app megaphone about a user's inactive primary device, temporarily dismissing the megaphone. */
 "INACTIVE_PRIMARY_DEVICE_REMINDER_MEGAPHONE_GOT_IT_BUTTON" = "わかりました";
@@ -4247,7 +4472,7 @@
 "INACTIVE_PRIMARY_DEVICE_REMINDER_MEGAPHONE_LEARN_MORE_BUTTON" = "詳しく見る";
 
 /* Title for an in-app megaphone about a user's inactive primary device. */
-"INACTIVE_PRIMARY_DEVICE_REMINDER_MEGAPHONE_TITLE" = "Open HCP on your phone";
+"INACTIVE_PRIMARY_DEVICE_REMINDER_MEGAPHONE_TITLE" = "ご利用のスマートフォンでHCPを開いてください";
 
 /* Label reminding the user that they are in archive mode, and that muted chats remain archived when they receive a new message. */
 "INBOX_VIEW_ARCHIVE_MODE_MUTED_CHATS_REMINDER" = "アーカイブされており、さらにミュートもしているチャットは、新しいメッセージが届いてもアーカイブされたままになります。";
@@ -4283,10 +4508,10 @@
 "INFO_MESSAGE_BLOCKED_OTHER_USER" = "このユーザーをブロックしました。";
 
 /* Indicates that a previously-removed recipient has been added back to the current user's contacts. */
-"INFO_MESSAGE_CONTACT_REINSTATED" = "以前削除したユーザーがSignalの連絡先に再度追加されました。";
+"INFO_MESSAGE_CONTACT_REINSTATED" = "以前削除したユーザーがHCPの連絡先に再度追加されました。";
 
 /* Indicates that the recipient has been removed from the current user's contacts and that messaging them will re-add them. */
-"INFO_MESSAGE_CONTACT_REMOVED" = "Signalの連絡先リストから削除した相手にメッセージを送ると、その相手は自動的に連絡先に再追加されます。";
+"INFO_MESSAGE_CONTACT_REMOVED" = "HCPの連絡先リストから削除した相手にメッセージを送ると、その相手は自動的に連絡先に再追加されます。";
 
 /* When you start a chat with someone and then later learn their profile name, we insert an in-chat message with this string to record the identifier you originally used to contact them. Embeds {{ the identifier, either a phone number or a username }}. */
 "INFO_MESSAGE_LEARNED_PROFILE_KEY" = "これは%1$@と始めたチャットです。";
@@ -4307,7 +4532,7 @@
 "INFO_MESSAGE_REPORTED_SPAM" = "スパムとして報告する";
 
 /* Body message of the alert shown when a user taps on 'learn more' via the spam info message. */
-"INFO_MESSAGE_REPORTED_SPAM_LEARN_MORE_MESSAGE" = "この人物がスパムを送信している可能性がSignalに通知されました。Signalはチャットの内容を見ることはできません。";
+"INFO_MESSAGE_REPORTED_SPAM_LEARN_MORE_MESSAGE" = "この人物がスパムを送信している可能性がSignalに通知されました。HCPはチャットの内容を見ることはできません。";
 
 /* Title of the alert shown when a user taps on 'learn more' via the spam info message. */
 "INFO_MESSAGE_REPORTED_SPAM_LEARN_MORE_TITLE" = "スパムとして報告する";
@@ -4325,7 +4550,7 @@
 "INFO_MESSAGE_USER_CHANGED_PHONE_NUMBER_FORMAT" = "%1$@ が電話番号を変更しました。";
 
 /* Shown in inbox and conversation when a user joins Signal, embeds the new user's {{contact name}} */
-"INFO_MESSAGE_USER_JOINED_SIGNAL_BODY_FORMAT" = "%1$@ がSignalに参加！";
+"INFO_MESSAGE_USER_JOINED_SIGNAL_BODY_FORMAT" = "%1$@ がHCPに参加！";
 
 /* Label at the top of the input text when editing a message */
 "INPUT_TOOLBAR_EDIT_MESSAGE_LABEL" = "メッセージを編集する";
@@ -4352,13 +4577,13 @@
 "INVALID_PROXY_HOST_ERROR" = "入力したプロキシアドレスは無効です。アドレスを確認して再度試してください。";
 
 /* Alert body when contacts disabled while trying to invite contacts to signal */
-"INVITE_FLOW_REQUIRES_CONTACT_ACCESS_BODY" = "連絡先の友達をSignalに招待するには、iOSの設定で連絡先へのアクセスを有効にしてください。";
+"INVITE_FLOW_REQUIRES_CONTACT_ACCESS_BODY" = "連絡先の友達をHCPに招待するには、iOSの設定で連絡先へのアクセスを有効にしてください。";
 
 /* Alert title when contacts disabled while trying to invite contacts to signal */
 "INVITE_FLOW_REQUIRES_CONTACT_ACCESS_TITLE" = "連絡先へのアクセス許可";
 
 /* Label for the cell that presents the 'invite contacts' workflow. */
-"INVITE_FRIENDS_CONTACT_TABLE_BUTTON" = "友達をSignalへ招待する";
+"INVITE_FRIENDS_CONTACT_TABLE_BUTTON" = "友達をHCPへ招待する";
 
 /* Header label above a section for more options for adding contacts */
 "INVITE_FRIENDS_CONTACT_TABLE_HEADER" = "その他";
@@ -4453,8 +4678,8 @@
 /* confirm the users intent to link a new device */
 "LINK_DEVICE_CONFIRMATION_ALERT_TITLE" = "リンクを完了します";
 
-/* subtitle for choosing to send message history when linking a new device */
-"LINK_DEVICE_CONFIRMATION_ALERT_TRANSFER_SUBTITLE" = "テキストメッセージと過去45日間のメディアを移行する";
+/* Subtitle for choosing to send message history when linking a new device, if you have the paid tier enabled. */
+"LINK_DEVICE_CONFIRMATION_ALERT_TRANSFER_PAID_PLAN_SUBTITLE" = "テキストメッセージとすべてのメディアを移行します";
 
 /* title for choosing to send message history when linking a new device */
 "LINK_DEVICE_CONFIRMATION_ALERT_TRANSFER_TITLE" = "メッセージ履歴を移行する";
@@ -4481,7 +4706,7 @@
 "LINK_DEVICE_SCANNING_INSTRUCTIONS_SHEET_TITLE" = "QRコードをスキャン";
 
 /* Body text for a sheet when a user tries to link a device informing them that they will need to authenticate their device */
-"LINK_NEW_DEVICE_AUTHENTICATION_INFO_SHEET_BODY" = "［Continue］をタップし、スマートフォンの解錠コードを入力して確認します。Signal PINを入力しないようにしてください。";
+"LINK_NEW_DEVICE_AUTHENTICATION_INFO_SHEET_BODY" = "［Continue］をタップし、スマートフォンの解錠コードを入力して確認します。HCP PINを入力しないようにしてください。";
 
 /* Title for a sheet when a user tries to link a device informing them that they will need to authenticate their device */
 "LINK_NEW_DEVICE_AUTHENTICATION_INFO_SHEET_TITLE" = "リンクする前に、本人確認が必要です";
@@ -4490,7 +4715,7 @@
 "LINK_NEW_DEVICE_AUTHENTICATION_REASON" = "端末をリンクするための認証";
 
 /* Body text for a sheet when a user has started linking a device informing them to finish the process on that other device */
-"LINK_NEW_DEVICE_FINISH_ON_OTHER_DEVICE_SHEET_BODY" = "他の端末でのSignalのリンクを終了します。";
+"LINK_NEW_DEVICE_FINISH_ON_OTHER_DEVICE_SHEET_BODY" = "他の端末でのHCPのリンクを終了します。";
 
 /* Title for a sheet when a user has started linking a device informing them to finish the process on that other device */
 "LINK_NEW_DEVICE_FINISH_ON_OTHER_DEVICE_SHEET_TITLE" = "他の端末でのリンクを終了します";
@@ -4532,10 +4757,10 @@
 "LINK_PREVIEW_UNKNOWN_DOMAIN" = "リンクプレビュー";
 
 /* Shown in an alert when trying to edit a contact. */
-"LINKED_DEVICE_CONTACTS_NOT_ALLOWED" = "iPadでは電話の連絡先の管理はできなくなりました。電話の連絡先にSignalコネクションを追加するには、お使いの携帯電話でSignalを操作してください。";
+"LINKED_DEVICE_CONTACTS_NOT_ALLOWED" = "iPadでは電話の連絡先の管理はできなくなりました。電話の連絡先にSignalコネクションを追加するには、お使いの携帯電話でHCPを操作してください。";
 
 /* Shown in a banner when you tap the 'New Chat' icon at the top of the list of chats. */
-"LINKED_DEVICE_MANAGE_CONTACTS_BANNER" = "iPadでは、電話の連絡先の管理はサポートされなくなりました。お使いの携帯電話でSignalの連絡先リストに変更があった場合は、この端末は引き続き同期します。";
+"LINKED_DEVICE_MANAGE_CONTACTS_BANNER" = "iPadでは、電話の連絡先の管理はサポートされなくなりました。お使いの携帯電話でHCPの連絡先リストに変更があった場合は、この端末は引き続き同期します。";
 
 /* A button shown in a banner when you tap the 'New Chat' icon at the top of the list of chats. Tapping it opens a website with more details. */
 "LINKED_DEVICE_MANAGE_CONTACTS_LEARN_MORE" = "詳しく見る";
@@ -4550,28 +4775,28 @@
 "LINKED_DEVICE_NOTIFICATION_TITLE" = "新しい端末をリンクしました";
 
 /* Message for an action sheet telling users how to link a device, when trying to open an external device-linking URL. */
-"LINKED_DEVICE_URL_OPENED_ACTION_SHEET_EXTERNAL_URL_MESSAGE" = "デスクトップまたはiPadをこのSignalアカウントにリンクするには、［リンク済み端末］→［新しい端末をリンクする］をタップし、もう一度QRコードをスキャンしてください。Signalに直接表示されたQRコードのみをスキャンしてください。";
+"LINKED_DEVICE_URL_OPENED_ACTION_SHEET_EXTERNAL_URL_MESSAGE" = "デスクトップまたはiPadをこのSignalアカウントにリンクするには、［リンク済み端末］→［新しい端末をリンクする］をタップし、もう一度QRコードをスキャンしてください。HCPに直接表示されたQRコードのみをスキャンしてください。";
 
 /* Message for an action sheet telling users how to link a device, when trying to open a device-linking URL from the in-app camera. */
-"LINKED_DEVICE_URL_OPENED_ACTION_SHEET_IN_APP_CAMERA_MESSAGE" = "Signalの端末をリンクするには、［続ける］→［新しい端末をリンクする］をタップし、もう一度QRコードをスキャンしてください。";
+"LINKED_DEVICE_URL_OPENED_ACTION_SHEET_IN_APP_CAMERA_MESSAGE" = "HCPの端末をリンクするには、［続ける］→［新しい端末をリンクする］をタップし、もう一度QRコードをスキャンしてください。";
 
 /* Bullet point about downloads on the linked devices education sheet. Embeds {{ %1$@ iPad download link, %2$@ desktop download link }} */
 "LINKED_DEVICES_EDUCATION_POINT_DOWNLOADS" = "他の端末の場合は、%1$@ にアクセスしてiPadアプリをインストールする、または %2$@ にアクセスしてDesktopアプリをインストールします。";
 
 /* Bullet point about message sync on the linked devices education sheet */
-"LINKED_DEVICES_EDUCATION_POINT_MESSAGES" = "Signal メッセージは、リンク後にお使いのスマートフォンの Signal と同期されます。";
+"LINKED_DEVICES_EDUCATION_POINT_MESSAGES" = "Signal メッセージは、リンク後にお使いのスマートフォンの HCP と同期されます。";
 
 /* Bullet point about privacy on the linked devices education sheet */
 "LINKED_DEVICES_EDUCATION_POINT_PRIVACY" = "リンク済み端末上のすべてのメッセージはプライバシーが保護されています";
 
 /* Title for the linked device education sheet */
-"LINKED_DEVICES_EDUCATION_TITLE" = "DesktopまたはiPad上のSignal";
+"LINKED_DEVICES_EDUCATION_TITLE" = "DesktopまたはiPad上のHCP";
 
 /* Text that appears where the linked device list would be indicating that there are no linked devices. */
 "LINKED_DEVICES_EMPTY_STATE" = "リンク済み端末はありません";
 
 /* Description for header of the linked devices list */
-"LINKED_DEVICES_HEADER_DESCRIPTION" = "DesktopまたはiPadでSignalを使用してください。メッセージはリンク済み端末で同期されます。";
+"LINKED_DEVICES_HEADER_DESCRIPTION" = "Use HCP on desktop or iPad.";
 
 /* Footer text below the list of currently-linked devices */
 "LINKED_DEVICES_LIST_FOOTER" = "メッセージ情報とチャット情報は、すべての端末でエンドツーエンドの暗号化で保護されています";
@@ -4613,10 +4838,10 @@
 "LINKING_SYNCING_TIMING_INFO" = "これには数分かかる場合があります";
 
 /* Shown to users while the app is loading, asking them not to close the app. */
-"LOADING_VIEW_CONTROLLER_DONT_CLOSE_APP" = "Signalを閉じないでください。";
+"LOADING_VIEW_CONTROLLER_DONT_CLOSE_APP" = "HCPを閉じないでください。";
 
 /* Body for local network permission action sheet */
-"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_BODY" = "Signalのアカウントを移動するには、両方の端末をLANに接続する必要があります。";
+"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_BODY" = "HCPのアカウントを移動するには、両方の端末をLANに接続する必要があります。";
 
 /* A button asking the user if they need further help getting their transfer working. */
 "LOCAL_NETWORK_PERMISSION_ACTION_SHEET_NEED_HELP" = "お困りですか？";
@@ -4628,7 +4853,7 @@
 "LOCAL_NETWORK_PERMISSION_ACTION_SHEET_STEP_THREE" = "LANを有効にしてください";
 
 /* Second step for local network permission action sheet */
-"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_STEP_TWO" = "Signalに移ってください";
+"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_STEP_TWO" = "HCPに移ってください";
 
 /* Title for local network permission action sheet */
 "LOCAL_NETWORK_PERMISSION_ACTION_SHEET_TITLE" = "LAN接続を有効にしてください";
@@ -4643,7 +4868,7 @@
 "LOGGING_SECTION" = "デバッグログ";
 
 /* Footer for the 'logging' help section. */
-"LOGGING_SECTION_FOOTER" = "デバッグログは、Signalのバグとクラッシュの修正に役立ちます。";
+"LOGGING_SECTION_FOOTER" = "デバッグログは、HCPのバグとクラッシュの修正に役立ちます。";
 
 /* Title for the 'long text message' view. */
 "LONG_TEXT_VIEW_TITLE" = "メッセージ";
@@ -4745,7 +4970,7 @@
 "MESSAGE_ACTION_DELETE_FOR_EVERYONE" = "全員に対して消去";
 
 /* A one-time confirmation that you want to delete for everyone */
-"MESSAGE_ACTION_DELETE_FOR_EVERYONE_CONFIRMATION" = "このメッセージは、チャットの参加者全員が最新バージョンのSignalを使用している場合、全員に対して消去されます。参加者には、あなたがメッセージを消去したことがわかります。";
+"MESSAGE_ACTION_DELETE_FOR_EVERYONE_CONFIRMATION" = "このメッセージは、チャットの参加者全員が最新バージョンのHCPを使用している場合、全員に対して消去されます。参加者には、あなたがメッセージを消去したことがわかります。";
 
 /* The title for the action sheet asking who the user wants to delete the message for. */
 "MESSAGE_ACTION_DELETE_FOR_TITLE" = "このメッセージを誰に対して消去しますか？";
@@ -4790,7 +5015,7 @@
 "MESSAGE_ACTION_LINK_OPEN_LINK" = "リンクを開く";
 
 /* Label for button to open a signal proxy. */
-"MESSAGE_ACTION_LINK_OPEN_PROXY" = "Signalプロキシを開きます";
+"MESSAGE_ACTION_LINK_OPEN_PROXY" = "HCPプロキシを開きます";
 
 /* Label for button to open a sticker pack. */
 "MESSAGE_ACTION_LINK_OPEN_STICKER_PACK" = "ステッカーパックを表示";
@@ -4964,7 +5189,7 @@
 "MESSAGE_REQUEST_NAME_COLLISON_UPDATE_CONTACT_ACTION" = "連絡先を更新する";
 
 /* Action sheet message to confirm reporting a conversation as spam via a message request. */
-"MESSAGE_REQUEST_REPORT_CONVERSATION_MESSAGE" = "この人物がスパムを送信している可能性をSignalに通知します。Signalはチャットの内容を見ることはできません。";
+"MESSAGE_REQUEST_REPORT_CONVERSATION_MESSAGE" = "この人物がスパムを送信している可能性をSignalに通知します。HCPはチャットの内容を見ることはできません。";
 
 /* Action sheet title to confirm reporting a conversation as spam via a message request. */
 "MESSAGE_REQUEST_REPORT_CONVERSATION_TITLE" = "スパムとして報告しますか？";
@@ -5093,7 +5318,7 @@
 "MISSED_CALL_BLOCKED_SYSTEM_CONTACT" = "電話の設定で着信拒否設定した連絡先からの不在着信";
 
 /* Action to block contact in Signal for sheet shown when the user taps a missed call from a contact blocked in iOS settings. */
-"MISSED_CALL_BLOCKED_SYSTEM_SETTINGS_SHEET_BLOCK_ACTION" = "Signalでのコンタクトも拒否する";
+"MISSED_CALL_BLOCKED_SYSTEM_SETTINGS_SHEET_BLOCK_ACTION" = "HCPでのコンタクトも拒否する";
 
 /* Message for sheet shown when the user taps a missed call from a contact blocked in iOS settings. */
 "MISSED_CALL_BLOCKED_SYSTEM_SETTINGS_SHEET_MESSAGE" = "不在着信がありました。着信拒否設定している相手からなので呼び出し音は鳴りませんでした。設定 > 電話に移動して、着信拒否した連絡先をタップし、必要に応じて設定を変えます。";
@@ -5114,19 +5339,19 @@
 "MISSING_CAMERA_PERMISSION_MESSAGE" = "iOSの設定アプリでカメラアクセスを有効にできます。";
 
 /* Alert title */
-"MISSING_CAMERA_PERMISSION_TITLE" = "Signalにカメラへのアクセス権限が必要です。";
+"MISSING_CAMERA_PERMISSION_TITLE" = "HCPにカメラへのアクセス権限が必要です。";
 
 /* Alert body indicating the user has denied location permissions */
 "MISSING_LOCATION_PERMISSION_MESSAGE" = "iOSの設定でアクセス権限を設定できます。";
 
 /* Alert title indicating the user has denied location permissions */
-"MISSING_LOCATION_PERMISSION_TITLE" = "この機能を使うためには、Signalに位置情報のアクセスを許可する必要があります。";
+"MISSING_LOCATION_PERMISSION_TITLE" = "この機能を使うためには、HCPに位置情報のアクセスを許可する必要があります。";
 
 /* Alert body when user has previously denied media library access */
 "MISSING_MEDIA_LIBRARY_PERMISSION_MESSAGE" = "iOSの設定でアクセス権限を設定できます。";
 
 /* Alert title when user has previously denied media library access */
-"MISSING_MEDIA_LIBRARY_PERMISSION_TITLE" = "この機能を使用するには、Signalに写真へのアクセス権限が必要です。";
+"MISSING_MEDIA_LIBRARY_PERMISSION_TITLE" = "この機能を使用するには、HCPに写真へのアクセス権限が必要です。";
 
 /* An error shown as the title of an alert when try to link a new device & the user is already at the limit. */
 "MULTIDEVICE_PAIRING_MAX_DESC" = "これ以上の端末はリンクできません。";
@@ -5147,7 +5372,7 @@
 "MY_STORIES_SETTINGS_VISIBILITY_ALL_SIGNAL_CONNECTIONS_EXCEPT_TITLE" = "共有しない人を指定";
 
 /* Title for the visibility option */
-"MY_STORIES_SETTINGS_VISIBILITY_ALL_SIGNAL_CONNECTIONS_TITLE" = "すべてのSignalコネクション";
+"MY_STORIES_SETTINGS_VISIBILITY_ALL_SIGNAL_CONNECTIONS_TITLE" = "すべてのHCPコネクション";
 
 /* Title for the visibility option */
 "MY_STORIES_SETTINGS_VISIBILITY_ONLY_SHARE_WITH_TITLE" = "共有する人を指定";
@@ -5309,7 +5534,7 @@
 "NICKNAME_EDITOR_DELETE_CONFIRMATION_TITLE" = "ニックネームを消去しますか？";
 
 /* The description below the title on the profile nickname editor view. */
-"NICKNAME_EDITOR_DESCRIPTION" = "ニックネームとメモは、Signalのエンドツーエンドの暗号化ストレージサービスによって保存されます。これらはあなただけに表示されます。";
+"NICKNAME_EDITOR_DESCRIPTION" = "ニックネームとメモは、HCPのエンドツーエンドの暗号化ストレージサービスによって保存されます。これらはあなただけに表示されます。";
 
 /* Placeholder text it the text field for the family name in the profile nickname editor. */
 "NICKNAME_EDITOR_FAMILY_NAME_PLACEHOLDER" = "姓";
@@ -5372,7 +5597,7 @@
 "NOTIFICATION_PERMISSION_REMINDER_MEGAPHONE_TITLE" = "通知を有効にしますか？";
 
 /* Shown as the body of an alert when notifications can't be shown due to an error. */
-"NOTIFICATIONS_ERROR_MESSAGE" = "Signalからの通知が届かない場合は、%1$@を再起動してください。";
+"NOTIFICATIONS_ERROR_MESSAGE" = "HCPからの通知が届かない場合は、%1$@を再起動してください。";
 
 /* Shown as the title of an alert when notifications can't be shown due to an error. */
 "NOTIFICATIONS_ERROR_TITLE" = "通知を表示できませんでした";
@@ -5422,20 +5647,35 @@
 /* Label for the 'skip and create new pin' button when reglock is disabled during onboarding. */
 "ONBOARDING_2FA_SKIP_AND_CREATE_NEW_PIN" = "スキップして新しいPINを作成";
 
+/* Label for action to use Recovery Key instead of PIN for registration. */
+"ONBOARDING_2FA_SKIP_AND_USE_RECOVERY_KEY" = "回復キーを使用する";
+
 /* Explanation for the skip pin entry action sheet during onboarding. */
 "ONBOARDING_2FA_SKIP_PIN_ENTRY_MESSAGE" = "もしPINを忘れてしまっても、新しく作成できます。アカウントを登録して使用することもできますが、プロフィールなどの保存されている設定情報は失われます。";
 
 /* Title for the skip pin entry action sheet during onboarding. */
 "ONBOARDING_2FA_SKIP_PIN_ENTRY_TITLE" = "PINの入力を省略しますか？";
 
-/* The body for the device transfer 'choice' view 'transfer' option */
-"ONBOARDING_CHOOSE_RESTORE_METHOD_BACKUPS_BODY" = "有料のSignalバックアッププランからテキストメッセージとメディアを復元します";
+/* The body for the device transfer 'choice' view 'restore backup' option */
+"ONBOARDING_CHOOSE_RESTORE_METHOD_BACKUPS_BODY" = "HCPバックアップからアカウントとメッセージを復元します";
 
-/* The title for the device transfer 'choice' view 'transfer' option */
-"ONBOARDING_CHOOSE_RESTORE_METHOD_BACKUPS_TITLE" = "Signalバックアップの復元";
+/* The title for the device transfer 'choice' view 'restore backup' option */
+"ONBOARDING_CHOOSE_RESTORE_METHOD_BACKUPS_TITLE" = "HCPセキュアバックアップを復元する";
+
+/* Body for a sheet warning users about skipping restore. */
+"ONBOARDING_CHOOSE_RESTORE_METHOD_CONFIRM_SKIP_RESTORE_BODY" = "復元を今スキップすると、後で復元することはできません。この端末でバックアップを再度有効にすると、現在のバックアップが新しいメッセージ履歴に置き換えられます。";
+
+/* Title for a sheet warning users about skipping restore. */
+"ONBOARDING_CHOOSE_RESTORE_METHOD_CONFIRM_SKIP_RESTORE_TITLE" = "復元をスキップしますか？";
 
 /* If a user is installing Signal on a new phone, they may be asked whether they want to restore their device from a backup. This is a description of that question. */
 "ONBOARDING_CHOOSE_RESTORE_METHOD_DESCRIPTION" = "メッセージ履歴とアカウントデータを復元する方法を選択してください。";
+
+/* Message body displayed to a user during registration if there are no restore options available. */
+"ONBOARDING_CHOOSE_RESTORE_METHOD_NONE_AVAILABLE_BODY" = "AndroidからiOSにメッセージとメディアを移行する場合は、以前ご利用していた端末でHCPバックアップを有効にしておかなければなりません。";
+
+/* Title displayed to a user during registration if there are no restore options available. */
+"ONBOARDING_CHOOSE_RESTORE_METHOD_NONE_AVAILABLE_TITLE" = "復元するバックアップがありません";
 
 /* The body for the skip restore 'choice' option */
 "ONBOARDING_CHOOSE_RESTORE_METHOD_SKIP_RESTORE_BODY" = "メッセージやメディアを転送せずに続ける";
@@ -5474,10 +5714,10 @@
 "ONBOARDING_CONFIRM_BACKUP_RESTORE_DESCRIPTION" = "最終バックアップは%1$@の%2$@におこなわれました。バックアップサイズは%3$@です。";
 
 /* Description for form confirming restore from backup without size detail. */
-"ONBOARDING_CONFIRM_BACKUP_RESTORE_DESCRIPTION_NO_SIZE" = "Your last backup was made on %1$@ at %2$@.";
+"ONBOARDING_CONFIRM_BACKUP_RESTORE_DESCRIPTION_NO_SIZE" = "最終バックアップは%1$@の%2$@です。";
 
 /* Details confirming manual restore from backup. */
-"ONBOARDING_CONFIRM_BACKUP_RESTORE_DESCRIPTION_NO_SIZE_DETAIL" = "If you choose not to restore now, you won’t be able to restore later. Your media will restore in the background.";
+"ONBOARDING_CONFIRM_BACKUP_RESTORE_DESCRIPTION_NO_SIZE_DETAIL" = "今復元しないと、後で復元することはできません。メディアはバックグラウンドで復元されます。";
 
 /* Text for action button to skip the restore. */
 "ONBOARDING_CONFIRM_BACKUP_RESTORE_SKIP_ACTION" = "復元をスキップする";
@@ -5492,7 +5732,7 @@
 "ONBOARDING_MODE_SWITCH_BUTTON_REGISTERING" = "iPhoneをリンク";
 
 /* explanation to the user they're switching from linking to registering flow */
-"ONBOARDING_MODE_SWITCH_EXPLANATION_PROVISIONING" = "「このiPadを登録する」をタップすると、Signalの新しいアカウントを作るか、このiPadに既存のアカウントを移行できます。これにより、現在同じ電話番号で登録されている、他の端末のSignalが無効化されます。";
+"ONBOARDING_MODE_SWITCH_EXPLANATION_PROVISIONING" = "「このiPadを登録する」をタップすると、Signalの新しいアカウントを作るか、このiPadに既存のアカウントを移行できます。これにより、現在同じ電話番号で登録されている、他の端末のHCPが無効化されます。";
 
 /* explanation to the user they're switching from registering to linking flow */
 "ONBOARDING_MODE_SWITCH_EXPLANATION_REGISTERING" = "「このiPhoneをリンクする」をタップすると、あなたの電話を既存のアカウントに接続します。通話などの機能が制限されるため、通常は電話をリンクすることは推奨されません。";
@@ -5504,13 +5744,13 @@
 "ONBOARDING_MODE_SWITCH_TITLE_REGISTERING" = "このiPhoneをリンクする";
 
 /* warning to the user that registering an ipad is not recommended */
-"ONBOARDING_MODE_SWITCH_WARNING_PROVISIONING" = "このiPadを登録すると、現在同じ電話番号で登録されている、他の端末のSignalが無効化されます。";
+"ONBOARDING_MODE_SWITCH_WARNING_PROVISIONING" = "このiPadを登録すると、現在同じ電話番号で登録されている、他の端末のHCPが無効化されます。";
 
 /* warning to the user that linking a phone is not recommended */
 "ONBOARDING_MODE_SWITCH_WARNING_REGISTERING" = "このiPhoneをリンクすることは、機能が制限されるため、推奨されません。";
 
 /* Description of the 'Contacts' permission in the 'onboarding permissions' view. */
-"ONBOARDING_PERMISSIONS_CONTACTS_DESCRIPTION" = "知り合いを探しましょう。連絡先は暗号化され、私たちSignalからは見えません。";
+"ONBOARDING_PERMISSIONS_CONTACTS_DESCRIPTION" = "知り合いを探しましょう。連絡先は暗号化され、私たちHCPからは見えません。";
 
 /* Title introducing the 'Contacts' permission in the 'onboarding permissions' view. */
 "ONBOARDING_PERMISSIONS_CONTACTS_TITLE" = "連絡先";
@@ -5522,13 +5762,13 @@
 "ONBOARDING_PERMISSIONS_NOTIFICATIONS_TITLE" = "通知";
 
 /* Preamble of the 'onboarding permissions' view. */
-"ONBOARDING_PERMISSIONS_PREAMBLE" = "Signalは以下の権限をリクエストします。";
+"ONBOARDING_PERMISSIONS_PREAMBLE" = "HCPは以下の権限をリクエストします。";
 
 /* Title of the 'onboarding permissions' view. */
 "ONBOARDING_PERMISSIONS_TITLE" = "アクセス許可";
 
 /* Explanation of the 'onboarding phone number discoverability' view. Embeds {user phone number} */
-"ONBOARDING_PHONE_NUMBER_DISCOVERABILITY_EXPLANATION_FORMAT" = "Signalであなたを電話番号 %1$@ から検索できる人を選択してください";
+"ONBOARDING_PHONE_NUMBER_DISCOVERABILITY_EXPLANATION_FORMAT" = "HCPであなたを電話番号 %1$@ から検索できる人を選択してください";
 
 /* Title of the 'onboarding phone number discoverability' view. */
 "ONBOARDING_PHONE_NUMBER_DISCOVERABILITY_TITLE" = "あなたを電話番号から検索できる人は？";
@@ -5543,7 +5783,7 @@
 "ONBOARDING_PHONE_NUMBER_VALIDATION_WARNING" = "無効な電話番号です。正しい電話番号を入力してください。";
 
 /* Explanation of the 'onboarding pin attempts exhausted' view when reglock is disabled. */
-"ONBOARDING_PIN_ATTEMPTS_EXHAUSTED_EXPLANATION" = "PINの試行回数はなくなりましたが、新しいPINを作成することでSignalアカウントにアクセスできます。プライバシーとセキュリティー保護のため、アカウントに保存されているプロフィールや設定情報は復元されません。";
+"ONBOARDING_PIN_ATTEMPTS_EXHAUSTED_EXPLANATION" = "PINの試行回数はなくなりましたが、新しいPINを作成することでHCPアカウントにアクセスできます。プライバシーとセキュリティー保護のため、アカウントに保存されているプロフィールや設定情報は復元されません。";
 
 /* Label for the 'learn more' link when reglock is disabled in the 'onboarding pin attempts exhausted' view. */
 "ONBOARDING_PIN_ATTEMPTS_EXHAUSTED_LEARN_MORE" = "PINに関する詳細情報";
@@ -5552,16 +5792,16 @@
 "ONBOARDING_PIN_ATTEMPTS_EXHAUSTED_TITLE" = "PINが違います";
 
 /* Explanation of the 'onboarding pin attempts exhausted' view when it is unknown if reglock is enabled. */
-"ONBOARDING_PIN_ATTEMPTS_EXHAUSTED_WITH_UNKNOWN_REGLOCK_EXPLANATION" = "PIN の試行回数はなくなりましたが、電話番号を認証させることで Signal アカウントにアクセスできます。プライバシーとセキュリティー保護のため、アカウントに保存されているプロフィールや設定情報は復元されません。";
+"ONBOARDING_PIN_ATTEMPTS_EXHAUSTED_WITH_UNKNOWN_REGLOCK_EXPLANATION" = "PIN の試行回数はなくなりましたが、電話番号を認証させることで HCP アカウントにアクセスできます。プライバシーとセキュリティー保護のため、アカウントに保存されているプロフィールや設定情報は復元されません。";
 
 /* Explanation of 'do not have old device' flow for the 'Restore or Transfer' prompt */
-"ONBOARDING_SPLASH_DO_NOT_HAVE_OLD_DEVICE_BODY" = "または、Signalを同じ端末に再インストールする場合";
+"ONBOARDING_SPLASH_DO_NOT_HAVE_OLD_DEVICE_BODY" = "または、HCPを同じ端末に再インストールする場合";
 
 /* Title for the 'do not have my old device' choice of the 'Restore or Transfer' prompt */
 "ONBOARDING_SPLASH_DO_NOT_HAVE_OLD_DEVICE_TITLE" = "以前利用していた端末がない場合";
 
 /* Explanation of 'have old device' flow for the 'Restore or Transfer' prompt */
-"ONBOARDING_SPLASH_HAVE_OLD_DEVICE_BODY" = "新しいSignalアカウントからQRコードをスキャンすれば、すぐに再開できます";
+"ONBOARDING_SPLASH_HAVE_OLD_DEVICE_BODY" = "新しいHCPアカウントからQRコードをスキャンすれば、すぐに再開できます";
 
 /* Title for the 'have my old device' choice of the 'Restore or Transfer' prompt */
 "ONBOARDING_SPLASH_HAVE_OLD_DEVICE_TITLE" = "以前利用していた端末がある場合";
@@ -5618,19 +5858,19 @@
 "OPEN_SETTINGS_BUTTON" = "設定";
 
 /* Signal doesn't support old versions of iOS and shows a warning if you're on unsupported version. Some users can upgrade their device to a newer version of iOS to continue using Signal. If that's the case, they'll be shown this text. */
-"OS_EXPIRED_AND_CAN_UPGRADE_OS" = "この端末では Signal は動作しなくなりました。再び Signal をご利用になるには、お使いの端末で iOS のバージョンをアップデートしてください。";
+"OS_EXPIRED_AND_CAN_UPGRADE_OS" = "この端末では Signal は動作しなくなりました。再び HCP をご利用になるには、お使いの端末で iOS のバージョンをアップデートしてください。";
 
 /* Signal doesn't support old devices. If that's the case, they'll be shown this action, and tapping it will open information about Signal's minimum supported operating systems. */
-"OS_EXPIRED_AND_DEVICE_IS_STUCK" = "この端末では Signal は動作しなくなりました。再び Signal をご利用になるには、新しい端末に機種変更をしてください。";
+"OS_EXPIRED_AND_DEVICE_IS_STUCK" = "この端末では Signal は動作しなくなりました。再び HCP をご利用になるには、新しい端末に機種変更をしてください。";
 
 /* Signal doesn't support old versions of iOS and shows a warning if you're on an old version. Some users can upgrade their device to a newer version of iOS to continue using Signal. If that's the case, they'll be shown this action, and tapping it will open device update instructions. */
 "OS_SOON_TO_EXPIRE_ACTION_TITLE" = "アップデートする";
 
 /* Signal doesn't support old versions of iOS and shows a warning if you're an old version that will soon lose support. Some users can upgrade their device to a newer version of iOS to continue using Signal. If that's the case, they'll be shown this text. Embeds {{expiration date}}. */
-"OS_SOON_TO_EXPIRE_AND_CAN_UPGRADE_OS_FORMAT" = "Signal は、お使いの端末の iOS のバージョンサポートをまもなく終了する予定です。Signal を引き続きご利用になるには、 %1$@までにお使いの端末で iOS のバージョンをアップデートしてください。";
+"OS_SOON_TO_EXPIRE_AND_CAN_UPGRADE_OS_FORMAT" = "Signal は、お使いの端末の iOS のバージョンサポートをまもなく終了する予定です。HCP を引き続きご利用になるには、 %1$@までにお使いの端末で iOS のバージョンをアップデートしてください。";
 
 /* Signal doesn't support old versions of iOS and shows a warning if you're on an old version that will soon lose support. This is the text on that warning when users can't upgrade iOS without getting a new device. Embeds {{expiration date}}. */
-"OS_SOON_TO_EXPIRE_AND_DEVICE_WILL_BE_STUCK_FORMAT" = "Signal は、お使いの端末の iOS のバージョンサポートをまもなく終了する予定です。Signal を引き続きご利用になるには、 %1$@までに新しい端末に機種変更をしてください。";
+"OS_SOON_TO_EXPIRE_AND_DEVICE_WILL_BE_STUCK_FORMAT" = "Signal は、お使いの端末の iOS のバージョンサポートをまもなく終了する予定です。HCP を引き続きご利用になるには、 %1$@までに新しい端末に機種変更をしてください。";
 
 /* Info Message when another user disabled disappearing messages. Embeds {{name of other user}}. */
 "OTHER_DISABLED_DISAPPEARING_MESSAGES_CONFIGURATION" = "%1$@ が消えるメッセージを無効にしました。";
@@ -5639,22 +5879,40 @@
 "OTHER_UPDATED_DISAPPEARING_MESSAGES_CONFIGURATION" = "%1$@ が消えるメッセージのタイマーを%2$@に設定しました。";
 
 /* Label warning the user that the Signal service may be down. */
-"OUTAGE_WARNING" = "Signalは技術的な問題を抱えています。私たちは、これをできるだけ早く解決するよう対応しています。";
+"OUTAGE_WARNING" = "HCPは技術的な問題を抱えています。私たちは、これをできるだけ早く解決するよう対応しています。";
 
 /* Label for action link when the user has an outdated payment client */
 "OUTDATED_PAYMENT_CLIENT_ACTION_TITLE" = "アップデートする";
 
 /* Label warning the user that they should update Signal to continue using payments. */
-"OUTDATED_PAYMENT_CLIENT_REMINDER_TEXT" = "決済機能を引き続きご利用いただくために、Signalをアップデートしてください。残高が最新の状態ではない可能性があります。";
+"OUTDATED_PAYMENT_CLIENT_REMINDER_TEXT" = "決済機能を引き続きご利用いただくために、HCPをアップデートしてください。残高が最新の状態ではない可能性があります。";
+
+/* Body of prompt notifying restore was cancelled. */
+"OUTGOING_DEVICE_REGISTRATION_CANCELLED_RESTORE_BODY" = "復元はキャンセルされました。もう一度お試しください。";
+
+/* Title of prompt notifying restore was cancelled. */
+"OUTGOING_DEVICE_REGISTRATION_CANCELLED_RESTORE_TITLE" = "復元をキャンセルしました";
 
 /* Body of prompt notifying registration without restore completed on the new device. */
-"OUTGOING_DEVICE_REGISTRATION_COMPLETE_BODY" = "Signalアカウントが他の端末で有効化されました。この端末上でSignalはご利用できなくなりました。";
+"OUTGOING_DEVICE_REGISTRATION_COMPLETE_BODY" = "Signalアカウントが他の端末で有効化されました。この端末上でHCPはご利用できなくなりました。";
 
 /* Title of prompt notifying registration without restore completed on the new device. */
 "OUTGOING_DEVICE_REGISTRATION_COMPLETE_TITLE" = "登録が完了しました";
 
+/* Body of prompt notifying restore failed. */
+"OUTGOING_DEVICE_REGISTRATION_FAILED_RESTORE_BODY" = "他の端末から復元したメッセージに、無効または期限切れのデータが含まれていました。もう一度お試しください。";
+
+/* Title of prompt notifying restore failed. */
+"OUTGOING_DEVICE_REGISTRATION_FAILED_RESTORE_TITLE" = "復元に失敗しました";
+
+/* Body of prompt notifying restore failed for unknown reasons. */
+"OUTGOING_DEVICE_REGISTRATION_UNKNOWN_ERROR_BODY" = "不明なエラーです。もう一度お試しください。";
+
+/* Title of prompt notifying restore failed for unknown reasons. */
+"OUTGOING_DEVICE_REGISTRATION_UNKNOWN_ERROR_TITLE" = "不明なエラー";
+
 /* Body of prompt notifying device restore started on the new device. */
-"OUTGOING_DEVICE_RESTORE_COMPLETE_BODY" = "Signalアカウントとメッセージは他の端末への移行を開始しました。この端末上でSignalはご利用できなくなりました。";
+"OUTGOING_DEVICE_RESTORE_COMPLETE_BODY" = "Signalアカウントとメッセージは他の端末への移行を開始しました。この端末上でHCPはご利用できなくなりました。";
 
 /* Title of prompt notifying device restore started on the new device. */
 "OUTGOING_DEVICE_RESTORE_COMPLETE_TITLE" = "復元が完了しました";
@@ -5678,7 +5936,7 @@
 "OUTGOING_DEVICE_RESTORE_INITIAL_VIEW_TITLE" = "アカウントの移行";
 
 /* Body of prompt notifying device transfer completed. */
-"OUTGOING_DEVICE_TRANSFER_COMPLETE_BODY" = "Signalアカウントとメッセージは他の端末に移行されました。この端末上でSignalはご利用できなくなりました。";
+"OUTGOING_DEVICE_TRANSFER_COMPLETE_BODY" = "Signalアカウントとメッセージは他の端末に移行されました。この端末上でHCPはご利用できなくなりました。";
 
 /* Title of prompt notifying device transfer completed. */
 "OUTGOING_DEVICE_TRANSFER_COMPLETE_TITLE" = "移行が完了しました";
@@ -5690,10 +5948,10 @@
 "OUTGOING_MISSED_VOICE_CALL" = "音声通話応答なし";
 
 /* Button for action sheet shown when device transfer completes; quits the Signal app immediately (does not automatically relaunch, but the user may choose to relaunch). */
-"OUTGOING_TRANSFER_COMPLETE_EXIT_ACTION" = "Signalを停止する";
+"OUTGOING_TRANSFER_COMPLETE_EXIT_ACTION" = "HCPを停止する";
 
 /* Message for action sheet shown when device transfer completes */
-"OUTGOING_TRANSFER_COMPLETE_MESSAGE" = "このデバイスでSignalは停止します";
+"OUTGOING_TRANSFER_COMPLETE_MESSAGE" = "このデバイスでHCPは停止します";
 
 /* Title for action sheet shown when device transfer completes */
 "OUTGOING_TRANSFER_COMPLETE_TITLE" = "転送が完了しました！";
@@ -5706,9 +5964,6 @@
 
 /* Footer for message cell for long text when it is expired and unavailable for download */
 "OVERSIZE_TEXT_UNAVAILABLE_FOOTER" = "このメッセージは不完全です";
-
-/* Message for sheet shown when tapping oversized text that has expired and is unavailable for download */
-"OVERSIZE_TEXT_UNAVAILABLE_SHEET_MESSAGE" = "この端末をリンクしたとき、このメッセージの完全なテキストはスマートフォンから移行されませんでした。端末をリンクした時点で45日以上経過した長いテキストメッセージは同期できません。";
 
 /* Title for sheet shown when tapping oversized text that has expired and is unavailable for download */
 "OVERSIZE_TEXT_UNAVAILABLE_SHEET_TITLE" = "完全なメッセージがダウンロードできません";
@@ -5846,7 +6101,7 @@
 "PAYMENTS_NEW_PAYMENT_ERROR_INVALID_TRANSACTION" = "無効な取引です";
 
 /* Indicates that a payment failed due to an outdated client. */
-"PAYMENTS_NEW_PAYMENT_ERROR_OUTDATED_CLIENT" = "決済機能を利用するには、Signalをアップデートしてください。";
+"PAYMENTS_NEW_PAYMENT_ERROR_OUTDATED_CLIENT" = "決済機能を利用するには、HCPをアップデートしてください。";
 
 /* Indicates that an outgoing payment could not be verified in a timely way. */
 "PAYMENTS_NEW_PAYMENT_ERROR_OUTGOING_VERIFICATION_TAKING_TOO_LONG" = "決済はまだ確認されていません";
@@ -6034,9 +6289,6 @@
 /* Message indicating that a request to join the group was successfully approved. Embeds {{ the name of the approved user }}. */
 "PENDING_GROUP_MEMBERS_REQUEST_APPROVED_FORMAT" = "「%1$@」を追加しました。";
 
-/* Label for the 'view requests' button in the pending member requests banner. */
-"PENDING_GROUP_MEMBERS_REQUEST_BANNER_VIEW_REQUESTS" = "申請を見る";
-
 /* Message indicating that a request to join the group was successfully denied. Embeds {{ the name of the denied user }}. */
 "PENDING_GROUP_MEMBERS_REQUEST_DENIED_FORMAT" = "「%1$@」を拒否しました。";
 
@@ -6092,13 +6344,13 @@
 "PHONE_NUMBER_DISCOVERABILITY_EVERYBODY" = "全員";
 
 /* A user friendly description of the 'everybody' phone number discoverability mode. */
-"PHONE_NUMBER_DISCOVERABILITY_EVERYBODY_DESCRIPTION" = "あなたの電話番号を知っている人は誰でも、あなたがSignal利用者であることがわかり、チャットを始めることができます。";
+"PHONE_NUMBER_DISCOVERABILITY_EVERYBODY_DESCRIPTION" = "あなたの電話番号を知っている人は誰でも、あなたがHCP利用者であることがわかり、チャットを始めることができます。";
 
 /* A user friendly name for the 'nobody' phone number discoverability mode. */
 "PHONE_NUMBER_DISCOVERABILITY_NOBODY" = "なし";
 
 /* A user friendly description of the 'nobody' phone number discoverability mode. */
-"PHONE_NUMBER_DISCOVERABILITY_NOBODY_DESCRIPTION" = "あなたからメッセージを送るか、以前からチャットをやりとりしていない限り、あなたがSignalを利用していることは誰にもわかりません。";
+"PHONE_NUMBER_DISCOVERABILITY_NOBODY_DESCRIPTION" = "あなたからメッセージを送るか、以前からチャットをやりとりしていない限り、あなたがHCPを利用していることは誰にもわかりません。";
 
 /* A format for a label showing an example phone number. Embeds {{the example phone number}}. */
 "PHONE_NUMBER_EXAMPLE_FORMAT" = "例: %1$@";
@@ -6200,22 +6452,22 @@
 "PIN_CREATION_DISABLE_CONFIRMATION_ACTION" = "PINを無効化";
 
 /* Message of the 'pin disable' action sheet. */
-"PIN_CREATION_DISABLE_CONFIRMATION_MESSAGE" = "PINを無効にすると、他のiOS端末から移行しない限り、Signalに再登録する際すべてのデータが失われます。PINを無効にしている間は登録ロックは使用できません。";
+"PIN_CREATION_DISABLE_CONFIRMATION_MESSAGE" = "PINを無効にすると、他のiOS端末から移行しない限り、HCPに再登録する際すべてのデータが失われます。PINを無効にしている間は登録ロックは使用できません。";
 
 /* Title of the 'pin disable' action sheet. */
 "PIN_CREATION_DISABLE_CONFIRMATION_TITLE" = "ご注意ください";
 
 /* The explanation in the 'pin creation' view. */
-"PIN_CREATION_EXPLANATION" = "Signal内に保存された情報は、PINにより暗号化を保持されるため、あなたのみアクセスできます。PINを使うことで、Signalの再インストール時にあなたのプロフィール、設定および連絡先が復元されます。アプリを開く際にはPINは必要はありません。";
+"PIN_CREATION_EXPLANATION" = "Signal内に保存された情報は、PINにより暗号化を保持されるため、あなたのみアクセスできます。PINを使うことで、HCPの再インストール時にあなたのプロフィール、設定および連絡先が復元されます。アプリを開く際にはPINは必要はありません。";
 
 /* Learn more action on the pin creation view */
 "PIN_CREATION_LEARN_MORE" = "PIN とは？";
 
 /* Users can create PINs to restore their account data later. They can learn more about this on a sheet. This is the text on that sheet. */
-"PIN_CREATION_LEARN_MORE_TEXT" = "Signal 内に保存された情報は、PIN により暗号化を保持されるため、あなたのみがアクセスできます。PIN を使うことで、再インストール時にあなたのプロフィール、設定および連絡先が復元されます。";
+"PIN_CREATION_LEARN_MORE_TEXT" = "HCP 内に保存された情報は、PIN により暗号化を保持されるため、あなたのみがアクセスできます。PIN を使うことで、再インストール時にあなたのプロフィール、設定および連絡先が復元されます。";
 
 /* Users can create PINs to restore their account data later. They can learn more about this on a sheet. This is the title on that sheet. */
-"PIN_CREATION_LEARN_MORE_TITLE" = "Signal PIN について";
+"PIN_CREATION_LEARN_MORE_TITLE" = "HCP PIN について";
 
 /* Label indicating that the attempted PIN does not match the first PIN */
 "PIN_CREATION_MISMATCH_ERROR" = "PINが一致しません。再度試してください。";
@@ -6238,21 +6490,6 @@
 /* The re-creation explanation in the 'pin creation' view. */
 "PIN_CREATION_RECREATION_EXPLANATION" = "この端末が登録されていればPINの変更が可能です。";
 
-/* Action of the 'pin disable' reglock action sheet. */
-"PIN_CREATION_REGLOCK_CONFIRMATION_ACTION" = "無効にする";
-
-/* Message of the 'pin disable' reglock action sheet. */
-"PIN_CREATION_REGLOCK_CONFIRMATION_MESSAGE" = "PINを無効にする前に、登録ロックを解除してください。";
-
-/* Title of the 'pin disable' reglock action sheet. */
-"PIN_CREATION_REGLOCK_CONFIRMATION_TITLE" = "登録ロックを無効にしますか？";
-
-/* Error body indicating that the attempt to create a PIN succeeded but enabling reglock failed. */
-"PIN_CREATION_REGLOCK_ERROR_MESSAGE" = "PINを作成しましたが、登録ロックを有効化できませんでした。インターネット接続を確認して再度試してください。";
-
-/* Error title indicating that the attempt to create a PIN succeeded but enabling reglock failed. */
-"PIN_CREATION_REGLOCK_ERROR_TITLE" = "登録ロックを有効化できませんでした";
-
 /* Skip action on the pin creation view */
 "PIN_CREATION_SKIP" = "PINを無効にする";
 
@@ -6263,16 +6500,13 @@
 "PIN_CREATION_WEAK_ERROR" = "もっと強力なPINを選択してください";
 
 /* If your attempted PIN is too weak, you'll see an error message. This is the text on the error dialog. */
-"PIN_CREATION_WEAK_ERROR_MESSAGE" = "Signal内に保存された情報は、PINにより暗号化を保持されるため、あなたのみアクセスできます。アカウント保護のために、より強力なPINを選択しましょう。";
-
-/* Error body indicating that the attempt to disable a PIN failed. */
-"PIN_DISABLE_ERROR_MESSAGE" = "PINを無効にできませんでした。";
-
-/* Error title indicating that the attempt to disable a PIN failed. */
-"PIN_DISABLE_ERROR_TITLE" = "PINの無効化に失敗";
+"PIN_CREATION_WEAK_ERROR_MESSAGE" = "HCP内に保存された情報は、PINにより暗号化を保持されるため、あなたのみアクセスできます。アカウント保護のために、より強力なPINを選択しましょう。";
 
 /* If the user is re-registering, they need to enter their PIN to restore all their data. In some cases, they can skip this entry and lose some data. This text is shown on a button that lets them begin to do this. */
 "PIN_ENTER_EXISTING_SKIP" = "PIN を使用しない";
+
+/* If the user is re-registering, they need to enter their PIN to restore all their data. If they don't remember their PIN, they may remember their Recovery Key which can be used instead of a PIN. */
+"PIN_ENTER_EXISTING_USE_RECOVERY_KEY" = "回復キーを使用する";
 
 /* Error title indicating that the attempt to recreate a PIN failed. */
 "PIN_RECREATION_ERROR_TITLE" = "PINの作成に失敗しました";
@@ -6299,7 +6533,7 @@
 "PIN_REMINDER_MEGAPHONE_FEW_DAYS_TOAST" = "数日後に再度お知らせします。";
 
 /* Title for PIN reminder megaphone */
-"PIN_REMINDER_MEGAPHONE_TITLE" = "Signal PINを確認";
+"PIN_REMINDER_MEGAPHONE_TITLE" = "HCP PINを確認";
 
 /* Toast indicating that we'll ask you for your PIN again tomorrow, after successfully entering it. */
 "PIN_REMINDER_MEGAPHONE_TOMORROW_SUCCESSFUL_TOAST" = "正しいPINが入力されました。明日、再度確認があります。";
@@ -6323,7 +6557,7 @@
 "PIN_REMINDER_MISMATCH_ERROR" = "PINが違います。再度試してください。";
 
 /* The title for the 'pin reminder' dialog. */
-"PIN_REMINDER_TITLE" = "Signal PINを入力してください";
+"PIN_REMINDER_TITLE" = "HCP PINを入力してください";
 
 /* Label indicating that the attempted PIN is too short */
 "PIN_REMINDER_TOO_SHORT_ERROR" = "PINは4桁以上の数字にしてください。";
@@ -6338,7 +6572,7 @@
 "PINS_MEGAPHONE_ACTION" = "PINを作成";
 
 /* Body for PIN megaphone when user doesn't have a PIN */
-"PINS_MEGAPHONE_BODY" = "Signal PINを作成しましょう。";
+"PINS_MEGAPHONE_BODY" = "HCP PINを作成しましょう。";
 
 /* Title for PIN megaphone when user doesn't have a PIN */
 "PINS_MEGAPHONE_TITLE" = "PINを作成しましょう";
@@ -6348,6 +6582,87 @@
 
 /* Accessibility label for button to start media playback */
 "PLAY_BUTTON_ACCESSABILITY_LABEL" = "メディアを再生";
+
+/* Title for a toggle allowing multiple votes for a poll. */
+"POLL_ALLOW_MULTIPLE_LABEL" = "複数投票を許可";
+
+/* Button to view a poll after its ended */
+"POLL_BUTTON_VIEW_POLL" = "投票結果を見る";
+
+/* Button to view poll results */
+"POLL_BUTTON_VIEW_RESULTS" = "結果を表示する";
+
+/* Button to view poll votes */
+"POLL_BUTTON_VIEW_VOTES" = "投票結果を表示する";
+
+/* Toast telling user to add a question to poll. */
+"POLL_CREATE_ERROR_TOAST_NO_QUESTION" = "質問を追加する";
+
+/* Toast telling user to add options and question to poll. */
+"POLL_CREATE_ERROR_TOAST_NO_QUESTION_OR_ENOUGH_OPTIONS" = "質問と、少なくとも2つの選択肢を追加してください";
+
+/* Toast telling user to add more options to poll. */
+"POLL_CREATE_ERROR_TOAST_NOT_ENOUGH_OPTIONS" = "少なくとも2つの選択肢を追加してください";
+
+/* Title of create poll pane */
+"POLL_CREATE_TITLE" = "新しい投票";
+
+/* Label for button to end a poll */
+"POLL_DETAILS_END_POLL" = "投票を終了する";
+
+/* Title of poll details pane */
+"POLL_DETAILS_TITLE" = "投票の詳細";
+
+/* Title for an action sheet confirming the user wants end a poll. */
+"POLL_END_CONFIRMATION" = "投票を終了しますか？";
+
+/* Message for an action sheet confirming the user wants to end a poll. */
+"POLL_END_CONFIRMATION_MESSAGE" = "グループメンバーは投票ができなくなります。";
+
+/* Shown when another user ends a poll. Embeds {{ another user }} and {{ poll question }}. */
+"POLL_ENDED_BY_OTHER_CHAT_LIST_UPDATE" = "%1$@が「%2$@」の投票を締め切りました";
+
+/* Shown when the local user ends a poll. Embeds {{ poll question }}. */
+"POLL_ENDED_BY_YOU_CHAT_LIST_UPDATE" = "あなたが「%1$@」の投票を締め切りました";
+
+/* Notification that {{contact}} ended a poll with question {{poll question}} */
+"POLL_ENDED_NOTIFICATION" = "%1$@は「%2$@」へ投票済です";
+
+/* Label specifying the poll is finished and these are the final results */
+"POLL_FINAL_RESULTS_LABEL" = "最終結果";
+
+/* Label specifying the message type as a poll */
+"POLL_LABEL" = "投票";
+
+/* String to display when a poll has no votes */
+"POLL_NO_VOTES" = "投票なし";
+
+/* Placeholder text for an option row when creating a poll. This will have a number appended to it (Option 1, Option 2) */
+"POLL_OPTION_PLACEHOLDER_PREFIX" = "オプション";
+
+/* Header for the poll options text boxes when making a new poll */
+"POLL_OPTIONS_LABEL" = "オプション";
+
+/* Prefix for a poll preview */
+"POLL_PREFIX" = "投票：";
+
+/* Header for the poll question text box when making a new poll */
+"POLL_QUESTION_LABEL" = "質問";
+
+/* Placeholder text for poll question */
+"POLL_QUESTION_PLACEHOLDER_TEXT" = "質問する";
+
+/* Title of poll details pane when poll is ended */
+"POLL_RESULTS_TITLE" = "投票結果";
+
+/* Label specifying the user can select more than one option */
+"POLL_SELECT_LABEL_MULTIPLE" = "1 つ以上選択してください";
+
+/* Label specifying the user can select one option */
+"POLL_SELECT_LABEL_SINGULAR" = "1つ選択";
+
+/* Notification that {{contact}} voted in a poll with question {{poll question}} */
+"POLL_VOTED_NOTIFICATION" = "%1$@が「%2$@」に投票しました";
 
 /* Badge indicating that the user is verified. */
 "PRIVACY_IDENTITY_IS_VERIFIED_BADGE" = "検証済み";
@@ -6368,16 +6683,16 @@
 "PRIVACY_VERIFICATION_FAILED_NO_SAFETY_NUMBERS_IN_CLIPBOARD" = "クリップボードのなかに安全番号はみつかりませんでした。正しくコピーしたか確認してください。";
 
 /* Alert body when verifying with {{contact name}} */
-"PRIVACY_VERIFICATION_FAILED_THEY_HAVE_WRONG_KEY_FOR_ME" = "安全番号はSignalユーザの組合せごとに異なります。%1$@ があなた固有の安全番号を表示しているか、ダブルチェックしてください。";
+"PRIVACY_VERIFICATION_FAILED_THEY_HAVE_WRONG_KEY_FOR_ME" = "安全番号はHCPユーザの組合せごとに異なります。%1$@ があなた固有の安全番号を表示しているか、ダブルチェックしてください。";
 
 /* alert body */
-"PRIVACY_VERIFICATION_FAILED_WITH_OLD_LOCAL_VERSION" = "古いバージョンのSignalを使っています。検証するにはアップデートしてください。";
+"PRIVACY_VERIFICATION_FAILED_WITH_OLD_LOCAL_VERSION" = "古いバージョンのHCPを使っています。検証するにはアップデートしてください。";
 
 /* alert body */
-"PRIVACY_VERIFICATION_FAILED_WITH_OLD_REMOTE_VERSION" = "相手が古いバージョンのSignalを使っています。検証するにはアップデートをお願いしてください。";
+"PRIVACY_VERIFICATION_FAILED_WITH_OLD_REMOTE_VERSION" = "相手が古いバージョンのHCPを使っています。検証するにはアップデートをお願いしてください。";
 
 /* alert body */
-"PRIVACY_VERIFICATION_FAILURE_INVALID_QRCODE" = "スキャンしたQRコードは安全番号ではないようです。二人とも最新版のSignalをお使いですか？";
+"PRIVACY_VERIFICATION_FAILURE_INVALID_QRCODE" = "スキャンしたQRコードは安全番号ではないようです。二人とも最新版のHCPをお使いですか？";
 
 /* Navbar title */
 "PRIVACY_VERIFICATION_TITLE" = "安全番号の検証";
@@ -6452,7 +6767,7 @@
 "PROFILE_NAME_EDUCATION_SHEET_BULLET_3" = "知らない人とは個人情報を共有しないでください";
 
 /* Header for the explainer sheet for profile names */
-"PROFILE_NAME_EDUCATION_SHEET_HEADER_FORMAT" = "Signal上の<bold>プロフィールネーム</bold>は、アカウント所有者によって選択されます。";
+"PROFILE_NAME_EDUCATION_SHEET_HEADER_FORMAT" = "HCP上の<bold>プロフィールネーム</bold>は、アカウント所有者によって選択されます。";
 
 /* Title for the profile name view. */
 "PROFILE_NAME_VIEW_TITLE" = "あなたの名前";
@@ -6650,7 +6965,7 @@
 "RECIPIENT_PICKER_ERROR_USER_CANNOT_BE_SELECTED" = "ユーザを選択できません。";
 
 /* Alert text. Shown after selecting a phone number that isn't valid. */
-"RECIPIENT_PICKER_INVALID_NUMBER_MESSAGE" = "%1$@さんはSignalユーザーではありません。有効な電話番号でもう一度かけ直してください。";
+"RECIPIENT_PICKER_INVALID_NUMBER_MESSAGE" = "%1$@さんはHCPユーザーではありません。有効な電話番号でもう一度かけ直してください。";
 
 /* Alert title. Shown after selecting a phone number that isn't valid. */
 "RECIPIENT_PICKER_INVALID_NUMBER_TITLE" = "無効な電話番号";
@@ -6659,22 +6974,22 @@
 "RECIPIENT_PICKER_INVITE_ACTION" = "招待";
 
 /* Alert text. Shown after selecting a phone number that isn't a Signal user. */
-"RECIPIENT_PICKER_INVITE_MESSAGE" = "%1$@さんはSignalユーザーではありません。この番号をSignalに招待しますか？";
+"RECIPIENT_PICKER_INVITE_MESSAGE" = "%1$@さんはSignalユーザーではありません。この番号をHCPに招待しますか？";
 
 /* Alert title. Shown after selecting a phone number that isn't a Signal user. */
-"RECIPIENT_PICKER_INVITE_TITLE" = "Signalへ招待する";
+"RECIPIENT_PICKER_INVITE_TITLE" = "HCPへ招待する";
 
 /* Alert title explaining what happens if you forget your 'two-factor auth pin'. */
 "REGISTER_2FA_FORGOT_PIN_ALERT_TITLE" = "お困りですか？";
 
 /* Alert body for a forgotten SVR (V2) PIN */
-"REGISTER_2FA_FORGOT_SVR_PIN_ALERT_MESSAGE" = "あなたのPINは4桁以上のコードで、数字または英数字のいずれかです。PINを思い出せない場合、7日間はアカウントを再登録できません。";
+"REGISTER_2FA_FORGOT_SVR_PIN_ALERT_MESSAGE" = "PINは4桁以上のコードで、数字または英数字のいずれかです。もしPINを覚えていない場合、アカウントを再登録するまで7日間の待機期間が発生します。HCPセキュアバックアップが有効になっている場合は、回復キーを使用して続行できます。";
 
 /* Alert body for a forgotten SVR (V2) PIN when the user doesn't have reglock and they cannot necessarily create a new PIN */
-"REGISTER_2FA_FORGOT_SVR_PIN_WITHOUT_REGLOCK_ALERT_MESSAGE" = "あなたの PIN は 4 桁以上のコードで、数字または英数字のいずれかです。もし PIN を忘れてしまっても、アカウントを登録して使用することもできますが、プロフィールなどの保存されている設定情報は失われます。";
+"REGISTER_2FA_FORGOT_SVR_PIN_WITHOUT_REGLOCK_ALERT_MESSAGE" = "PINは4桁以上のコードで、数字または英数字のいずれかです。もしPINを覚えていない場合、アカウントを登録して使用することもできますが、プロフィールなどの保存されている設定情報は失われます。HCPセキュアバックアップが有効になっている場合は、回復キーを使用して続行できます。";
 
 /* Alert body for a forgotten SVR (V2) PIN when the user doesn't have reglock and they can create a new PIN */
-"REGISTER_2FA_FORGOT_SVR_PIN_WITHOUT_REGLOCK_AND_CAN_CREATE_NEW_PIN_ALERT_MESSAGE" = "あなたの PIN は 4 桁以上のコードで、数字または英数字のいずれかです。もし PIN を忘れてしまっても、新しく作成できます。アカウントを登録して使用することもできますが、プロフィールなどの保存されている設定情報は失われます。";
+"REGISTER_2FA_FORGOT_SVR_PIN_WITHOUT_REGLOCK_AND_CAN_CREATE_NEW_PIN_ALERT_MESSAGE" = "PINは4桁以上のコードで、数字または英数字のいずれかです。PINを忘れた場合は、新しいPINを作成できます。アカウントの登録と使用は可能ですが、プロフィール情報など保存された設定の一部が失われる可能性があります。HCPセキュアバックアップが有効になっている場合は、回復キーを使用して続行できます。";
 
 /* Alert title explaining what happens if you forget your 'two-factor auth pin'. */
 "REGISTER_2FA_INVALID_PIN_ALERT_TITLE" = "PINが違います";
@@ -6686,13 +7001,10 @@
 "REGISTER_RATE_LIMITING_ALERT" = "急ぎすぎです。数分待ってから再度試してください。";
 
 /* No comment provided by engineer. */
-"REGISTER_RATE_LIMITING_BODY" = "急ぎすぎです。少し待ってから再試行してください。";
-
-/* No comment provided by engineer. */
 "REGISTER_RATE_LIMITING_ERROR" = "急ぎすぎです。少し待ってから再試行してください。";
 
 /* Body for a sheet warning users about a missing backup. */
-"REGISTRATION_BACKUP_RESTORE_ERROR_BACKUP_NOT_FOUND_BODY" = "入力されたバックアップキーは正しいですが、これに関連付けられたバックアップがありません。以前のスマートフォンを保管されている場合は、バックアップが有効になっており、バックアップが完了していることを確認してから、もう一度お試しください。";
+"REGISTRATION_BACKUP_RESTORE_ERROR_BACKUP_NOT_FOUND_BODY" = "この回復キーに紐づけられたバックアップはありません。キーが正しいことを確認して、もう一度お試しください。";
 
 /* Title for a sheet warning users about a missing backup. */
 "REGISTRATION_BACKUP_RESTORE_ERROR_BACKUP_NOT_FOUND_TITLE" = "バックアップが見つかりません";
@@ -6724,11 +7036,14 @@
 /* Title for a sheet warning users about a generic backup manual restore failure. */
 "REGISTRATION_BACKUP_RESTORE_ERROR_GENERIC_TITLE" = "移行を完了できませんでした";
 
-/* Body for a sheet warning users about an incorrect backup key. */
-"REGISTRATION_BACKUP_RESTORE_ERROR_INCORRECT_KEY_BODY" = "Make sure you’ve entered the same 64-digit backup key you saved when enabling Signal backups. Backups can not be recovered without this key.";
+/* Body for a sheet warning users about an incorrect recovery key. */
+"REGISTRATION_BACKUP_RESTORE_ERROR_INCORRECT_KEY_BODY" = "回復キーを間違って入力したか、古い端末で少なくとも1つのバックアップを完了していない可能性があります。 \n\nHCPセキュアバックアップを有効にしたときに保存したのと同じ電話番号と回復キーで登録していること、および以前の端末でバックアップが完了していることを確認してください。";
 
-/* Title for a sheet warning users about an incorrect backup key. */
-"REGISTRATION_BACKUP_RESTORE_ERROR_INCORRECT_KEY_TITLE" = "バックアップキーが正しくありません";
+/* Body for a sheet warning users about an incorrect recovery key and having hit a rate limit on retries. */
+"REGISTRATION_BACKUP_RESTORE_ERROR_INCORRECT_KEY_RATE_LIMIT_BODY" = "回復キーの試行回数が上限に達しました。セキュリティ対策として、試行回数には上限が設定されています。一時間待ってから再度お試しください。";
+
+/* Title for a sheet warning users about an incorrect recovery key. */
+"REGISTRATION_BACKUP_RESTORE_ERROR_INCORRECT_KEY_TITLE" = "バックアップが見つかりません";
 
 /* Body for a sheet warning users about a network error during backup restore. */
 "REGISTRATION_BACKUP_RESTORE_ERROR_NETWORK_BODY" = "現在、バックアップを復元できません。インターネット接続を確認して再度試してください。";
@@ -6736,14 +7051,26 @@
 /* Title for a sheet warning users about a network error during backup restore. */
 "REGISTRATION_BACKUP_RESTORE_ERROR_NETWORK_TITLE" = "バックアップを復元できません";
 
+/* Body for a sheet telling users to try restoring a backup again after a server error. */
+"REGISTRATION_BACKUP_RESTORE_ERROR_RETRYABLE_SERVER_ERROR_BODY" = "現在、バックアップを復元できません。インターネット接続を確認してもう一度お試しください。";
+
+/* Title for a sheet telling users to try restoring a backup again after a server error. */
+"REGISTRATION_BACKUP_RESTORE_ERROR_RETRYABLE_SERVER_ERROR_TITLE" = "バックアップを復元できません";
+
 /* Skip restore action label for backup restore error recovery. */
 "REGISTRATION_BACKUP_RESTORE_ERROR_SKIP_RESTORE_ACTION" = "復元をスキップする";
 
 /* Try again action label for backup restore error recovery. */
 "REGISTRATION_BACKUP_RESTORE_ERROR_TRY_AGAIN_ACTION" = "再度試す";
 
+/* Body for a sheet telling users restoring a backup unrecoverably failed. */
+"REGISTRATION_BACKUP_RESTORE_ERROR_UNRETRYABLE_SERVER_ERROR_BODY" = "バックアップを復元する際にエラーが発生しました。バックアップの復元ができません。サポートにお問い合わせください。";
+
+/* Title for a sheet telling users restoring a backup unrecoverably failed. */
+"REGISTRATION_BACKUP_RESTORE_ERROR_UNRETRYABLE_SERVER_ERROR_TITLE" = "バックアップを復元できません";
+
 /* Body for a sheet warning users about an incompatible backup version. */
-"REGISTRATION_BACKUP_RESTORE_ERROR_UNSUPPORTED_BACKUP_VERSION_BODY" = "バックアップを復元するには、Signalが最新バージョンであることを確認してから、もう一度お試しください。この問題が解決しない場合は、サポートにお問い合わせください。";
+"REGISTRATION_BACKUP_RESTORE_ERROR_UNSUPPORTED_BACKUP_VERSION_BODY" = "バックアップを復元するには、HCPが最新バージョンであることを確認してから、もう一度お試しください。この問題が解決しない場合は、サポートにお問い合わせください。";
 
 /* Title for a sheet warning users about an incompatible backup version. */
 "REGISTRATION_BACKUP_RESTORE_ERROR_UNSUPPORTED_BACKUP_VERSION_TITLE" = "アップデートが必要です";
@@ -6755,7 +7082,7 @@
 "REGISTRATION_CANNOT_CONTINUE_WITHOUT_UPDATING_APP_ACTION" = "アップデートする";
 
 /* During (re)registration, users may need to update their app to continue. They'll be presented with an alert if this is the case, prompting them to update. This is the description text on that alert. */
-"REGISTRATION_CANNOT_CONTINUE_WITHOUT_UPDATING_APP_DESCRIPTION" = "登録を続行するには、Signal の最新バージョンにアップデートしてください。";
+"REGISTRATION_CANNOT_CONTINUE_WITHOUT_UPDATING_APP_DESCRIPTION" = "登録を続行するには、HCP の最新バージョンにアップデートしてください。";
 
 /* During (re)registration, users may need to update their app to continue. They'll be presented with an alert if this is the case, prompting them to update. This is the title on that alert. */
 "REGISTRATION_CANNOT_CONTINUE_WITHOUT_UPDATING_APP_TITLE" = "アップデートが必要です";
@@ -6767,16 +7094,16 @@
 "REGISTRATION_DEFAULT_COUNTRY_NAME" = "国番号";
 
 /* If a user is installing Signal on a new phone, they may be asked whether they want to transfer their account from their old device. This is a description on the screen that asks them this question. */
-"REGISTRATION_DEVICE_TRANSFER_CHOICE_EXPLANATION" = "続行すると、同じ電話番号で登録されている他の端末のSignalが無効化されます。";
+"REGISTRATION_DEVICE_TRANSFER_CHOICE_EXPLANATION" = "続行すると、同じ電話番号で登録されている他の端末のHCPが無効化されます。";
 
 /* If a user is installing Signal on a new phone, they may be asked whether they want to transfer their account from their old device. This is the title on the screen that asks them this question. */
 "REGISTRATION_DEVICE_TRANSFER_CHOICE_TITLE" = "アカウントとメッセージの移行";
 
-/* Description for the screen that allows users to enter their backup key. */
-"REGISTRATION_ENTER_BACKUP_KEY_DESCRIPTION" = "バックアップキーは、アカウントとデータを復元するために必要な64桁のコードです。";
+/* Description for the screen that allows users to enter their recovery key. */
+"REGISTRATION_ENTER_BACKUP_KEY_DESCRIPTION" = "回復キーは、アカウントとデータを復元するために必要な64文字のコードです。";
 
-/* Title for the screen that allows users to enter their backup key. */
-"REGISTRATION_ENTER_BACKUP_KEY_TITLE" = "バックアップキーを入力してください";
+/* Title for the screen that allows users to enter their recovery key. */
+"REGISTRATION_ENTER_BACKUP_KEY_TITLE" = "回復キーを入力してください";
 
 /* Placeholder text for the phone number textfield */
 "REGISTRATION_ENTERNUMBER_DEFAULT_TEXT" = "電話番号を入力してください";
@@ -6799,20 +7126,23 @@
 /* A network error occurred during registration, and an error is shown to the user. This is the title on that error sheet. */
 "REGISTRATION_NETWORK_ERROR_TITLE" = "接続を確認してください";
 
-/* Title of button to tap if you do not have a backup key during registration. */
-"REGISTRATION_NO_BACKUP_KEY_BUTTON_TITLE" = "バックアップキーをお持ちでない場合";
+/* Title of button to tap if you do not have a recovery key during registration. */
+"REGISTRATION_NO_BACKUP_KEY_BUTTON_TITLE" = "回復キーをお持ちでない場合";
 
-/* Body text on a sheet with info for what to do if you don't have a backup key */
-"REGISTRATION_NO_BACKUP_KEY_SHEET_BODY" = "バックアップは、64桁のバックアップキーがないと復元できません。また、バックアップキーを紛失した場合、Signalはバックアップの復元対応はできません。\n\n以前利用していた端末をお持ちの場合は、「設定」>「チャット」> 「Signalバックアップ」でバックアップキーを確認できます。「バックアップキーを表示する」が表示されたらタップします。";
+/* Body text on a sheet with info for what to do if you don't have a recovery key */
+"REGISTRATION_NO_BACKUP_KEY_SHEET_BODY" = "バックアップは、64桁の回復キーがないと復元できません。回復キーを忘れた場合、HCPはバックアップの復元対応はできません。\n\n以前利用していた端末をお持ちの場合は、「設定」>「チャット」> 「バックアップ」で回復キーを確認できます。「回復キーを表示する」をタップします。";
 
-/* Title for sheet with info for what to do if you don't have a backup key */
-"REGISTRATION_NO_BACKUP_KEY_SHEET_TITLE" = "バックアップキーをお持ちでない場合";
+/* Title for sheet with info for what to do if you don't have a recovery key */
+"REGISTRATION_NO_BACKUP_KEY_SHEET_TITLE" = "回復キーをお持ちでない場合";
 
-/* Title for button on sheet for when you don't have a backup key */
+/* Title for button on sheet for when you don't have a recovery key */
 "REGISTRATION_NO_BACKUP_KEY_SKIP_RESTORE_BUTTON_TITLE" = "スキップして復元しない";
 
 /* During registration, users are asked to enter their phone number. This is the subtitle on that screen, which gives users some instructions. */
 "REGISTRATION_PHONE_NUMBER_SUBTITLE" = "あなたの電話番号を入力して開始します。";
+
+/* During re-registration, users are asked to confirm their phone number. This is the subtitle on that screen, which gives users some instructions. */
+"REGISTRATION_PHONE_NUMBER_SUBTITLE_2" = "以下の電話番号に認証コードが送信されます。";
 
 /* During registration, users are asked to enter their phone number. This is the title on that screen. */
 "REGISTRATION_PHONE_NUMBER_TITLE" = "あなたの電話番号";
@@ -6830,13 +7160,13 @@
 "REGISTRATION_PIN_CONFIRM_TITLE" = "PINの確認";
 
 /* During registration, users are asked to create a PIN code. This is the subtitle on the screen where this happens. A \"learn more\" link will be added to the end of this string. */
-"REGISTRATION_PIN_CREATE_SUBTITLE" = "PINは、アカウントの復元に使用され、お客様の情報をSignalで暗号化してお預かりすることを可能にします。";
+"REGISTRATION_PIN_CREATE_SUBTITLE" = "PINは、アカウントの復元に使用され、お客様の情報をHCPで暗号化してお預かりすることを可能にします。";
 
 /* During registration, users are asked to create a PIN code. This is the title on the screen where this happens. */
 "REGISTRATION_PIN_CREATE_TITLE" = "PINの作成";
 
 /* During re-registration, users may be asked to re-enter their PIN code. This is the subtitle on the screen where this happens. A \"learn more\" link will be added to the end of this string. */
-"REGISTRATION_PIN_ENTER_EXISTING_SUBTITLE" = "PINは、アカウントの復元に使用され、お客様の情報をSignalで暗号化してお預かりすることを可能にします。";
+"REGISTRATION_PIN_ENTER_EXISTING_SUBTITLE" = "PINは、アカウントの復元に使用され、お客様の情報をHCPで暗号化してお預かりすることを可能にします。";
 
 /* During re-registration, users may be asked to re-enter their PIN code. This is the title on the screen where this happens. */
 "REGISTRATION_PIN_ENTER_EXISTING_TITLE" = "PINを入力してください";
@@ -6863,19 +7193,34 @@
 "REGISTRATION_PROFILE_SETUP_TITLE" = "プロフィールの設定";
 
 /* Error shown if an SMS/call service provider is permanently unable to send a verification code to the provided number. */
-"REGISTRATION_PROVIDER_FAILURE_MESSAGE_PERMANENT" = "SMSプロバイダーの問題により、SignalはSMSコードを送信できませんでした。";
+"REGISTRATION_PROVIDER_FAILURE_MESSAGE_PERMANENT" = "SMSプロバイダーの問題により、HCPはSMSコードを送信できませんでした。";
 
 /* Error shown if an SMS/call service provider is temporarily unable to send a verification code to the provided number. */
-"REGISTRATION_PROVIDER_FAILURE_MESSAGE_TRANSIENT" = "SMSプロバイダーの問題により、SignalはSMSコードを送信できませんでした。時間をおいてからもう一度お試しください。";
+"REGISTRATION_PROVIDER_FAILURE_MESSAGE_TRANSIENT" = "SMSプロバイダーの問題により、HCPはSMSコードを送信できませんでした。時間をおいてからもう一度お試しください。";
+
+/* Third step in directions for how to make a backup */
+"REGISTRATION_RESTORE_METHOD_MAKE_BACKUP_TUTORIAL_ENABLE_BACKUPS" = "バックアップを有効にして、バックアップが完了するまでお待ちください";
+
+/* First step in directions for how to make a backup */
+"REGISTRATION_RESTORE_METHOD_MAKE_BACKUP_TUTORIAL_OPEN_SIGNAL" = "以前利用していた端末でHCPを開きます";
+
+/* Second step in directions for how to make a backup */
+"REGISTRATION_RESTORE_METHOD_MAKE_BACKUP_TUTORIAL_TAP_SETTINGS" = "設定 > バックアップ　の順にタップします";
 
 /* No comment provided by engineer. */
 "REGISTRATION_RESTRICTED_MESSAGE" = "メッセージを送信する前に登録が必要です。";
+
+/* Body of error notifying restore failed. */
+"REGISTRATION_SCAN_QR_CODE_FAILED_BODY" = "Failed to restore from old device. Try again.";
+
+/* Title of error notifying restore failed. */
+"REGISTRATION_SCAN_QR_CODE_FAILED_TITLE" = "復元に失敗しました";
 
 /* Title for screen containing QR code that users scan with their old phone when they want to transfer/restore their message history to a new device. */
 "REGISTRATION_SCAN_QR_CODE_TITLE" = "以前利用していた端末でこのコードをスキャンしてください";
 
 /* Tutorial text describing the first step to scanning the restore/transfer QR code with your old phone: opening Signal */
-"REGISTRATION_SCAN_QR_CODE_TUTORIAL_OPEN_SIGNAL" = "以前利用していた端末でSignalを開きます";
+"REGISTRATION_SCAN_QR_CODE_TUTORIAL_OPEN_SIGNAL" = "以前利用していた端末でHCPを開きます";
 
 /* Tutorial text describing the third step to scanning the restore/transfer QR code with your old phone: scan the code */
 "REGISTRATION_SCAN_QR_CODE_TUTORIAL_SCAN" = "そのカメラでこのコードをスキャンします";
@@ -6952,6 +7297,30 @@
 /* Configure reactions reset button text */
 "RESET" = "リセット";
 
+/* Body for a sheet allowing users to cancel an in-progress media restore. */
+"RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_1_BODY" = "メディアの復元は完了していません。キャンセルした場合は、この端末を再リンクすることで再度復元できます。";
+
+/* Button for a sheet allowing users to cancel an in-progress media restore. */
+"RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_1_PRIMARY_BUTTON" = "復元を続ける";
+
+/* Button for a sheet allowing users to cancel an in-progress media restore. */
+"RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_1_SECONDARY_BUTTON" = "復元をキャンセルする";
+
+/* Title for a sheet allowing users to cancel an in-progress media restore. */
+"RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_1_TITLE" = "メディアを復元しています";
+
+/* Message for a sheet allowing users to cancel an in-progress media restore. */
+"RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_2_MESSAGE" = "メディアの復元は完了していません。キャンセルした場合は、この端末を再リンクすることで再度復元できます。";
+
+/* Button for a sheet allowing users to cancel an in-progress media restore. */
+"RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_2_PRIMARY_BUTTON" = "復元を続ける";
+
+/* Button for a sheet allowing users to cancel an in-progress media restore. */
+"RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_2_SECONDARY_BUTTON" = "復元をキャンセルする";
+
+/* Title for a sheet allowing users to cancel an in-progress media restore. */
+"RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_2_TITLE" = "メディアの復元をキャンセルしますか？";
+
 /* Button title shown on chat list banner for restoring media from a backup when paused because the device has insufficient disk space, to see a bottom sheet with more details about next steps. */
 "RESTORING_MEDIA_BANNER_DISK_SPACE_BUTTON" = "詳細";
 
@@ -6963,6 +7332,9 @@
 
 /* Subtitle shown on chat list banner for restoring media from a backup when paused because the device has low battery */
 "RESTORING_MEDIA_BANNER_PAUSED_BATTERY_SUBTITLE" = "端末のバッテリー残量が少なくなっています";
+
+/* Subtitle shown on chat list banner for restoring media from a backup when paused because the device is in low power mode */
+"RESTORING_MEDIA_BANNER_PAUSED_LOW_POWER_MODE_SUBTITLE" = "低電力モード";
 
 /* Subtitle shown on chat list banner for restoring media from a backup when paused because the device has no internet connection */
 "RESTORING_MEDIA_BANNER_PAUSED_NOT_REACHABLE_SUBTITLE" = "インターネット接続がありません…";
@@ -7040,7 +7412,7 @@
 "SAFETY_NUMBER_CONFIRMATION_VIEW_ACTION" = "表示する";
 
 /* Snippet to share {{safety number}} with a friend. sent e.g. via SMS */
-"SAFETY_NUMBER_SHARE_FORMAT" = "私たちのSignal安全番号:\n%1$@";
+"SAFETY_NUMBER_SHARE_FORMAT" = "私たちのHCP安全番号:\n%1$@";
 
 /* Title for Safety Tips button in thread details. */
 "SAFETY_TIPS_BUTTON_ACTION_TITLE" = "安全な使い方のヒント";
@@ -7058,7 +7430,7 @@
 "SAFETY_TIPS_FAKE_BUSINESS_TITLE" = "偽の企業や団体";
 
 /* Message contents for the fake names safety tip. */
-"SAFETY_TIPS_FAKE_NAMES_BODY" = "Signalが登録コードやPINについてお客様に連絡することは一切ありません。なりすましによる不正アクセスにはご注意ください。プロフィールネームはアカウント所有者によって選択され、検証はされません。";
+"SAFETY_TIPS_FAKE_NAMES_BODY" = "HCPが登録コードやPINについてお客様に連絡することは一切ありません。なりすましによる不正アクセスにはご注意ください。プロフィールネームはアカウント所有者によって選択され、検証はされません。";
 
 /* Message title describing the fake names safety tip. */
 "SAFETY_TIPS_FAKE_NAMES_TITLE" = "偽名と偽アカウント";
@@ -7118,13 +7490,13 @@
 "SCREEN_LOCK_ERROR_LOCAL_AUTHENTICATION_PASSCODE_NOT_SET" = "画面ロックを使用するには、iOSの設定でパスコードを有効にしてください。";
 
 /* Description of how and why Signal iOS uses Touch ID/Face ID/Phone Passcode to unlock 'screen lock'. */
-"SCREEN_LOCK_REASON_UNLOCK_SCREEN_LOCK" = "Signalを開く際に認証します。";
+"SCREEN_LOCK_REASON_UNLOCK_SCREEN_LOCK" = "HCPを開く際に認証します。";
 
 /* Title for alert indicating that screen lock could not be unlocked. */
 "SCREEN_LOCK_UNLOCK_FAILED" = "認証失敗";
 
 /* Label for button on lock screen that lets users unlock Signal. */
-"SCREEN_LOCK_UNLOCK_SIGNAL" = "Signalのロックを解除する";
+"SCREEN_LOCK_UNLOCK_SIGNAL" = "HCPのロックを解除する";
 
 /* Placeholder text indicating the user can search for contacts by name, username, or phone number. */
 "SEARCH_BY_NAME_OR_USERNAME_OR_NUMBER_PLACEHOLDER_TEXT" = "名前、ユーザーネーム、電話番号";
@@ -7157,13 +7529,13 @@
 "SECONDARY_LINKING_ERROR_DIFFERENT_ACCOUNT_TITLE" = "アカウントが一致しません";
 
 /* Message for error alert indicating that a linked device must be upgraded before it can be linked. */
-"SECONDARY_LINKING_ERROR_OBSOLETE_LINKED_DEVICE_MESSAGE" = "携帯電話とリンクするため、この端末のSignalをアップデートしてください。";
+"SECONDARY_LINKING_ERROR_OBSOLETE_LINKED_DEVICE_MESSAGE" = "携帯電話とリンクするため、この端末のHCPをアップデートしてください。";
 
 /* Title for error alert indicating that a linked device must be upgraded before it can be linked. */
 "SECONDARY_LINKING_ERROR_OBSOLETE_LINKED_DEVICE_TITLE" = "非対応バージョン";
 
 /* alert message for outdated linking device */
-"SECONDARY_LINKING_ERROR_OLD_VERSION_MESSAGE" = "あなたの他の端末が、古いバージョンのSignalを使用しているため、iPadのQRコードをスキャンできません。最新のSignalをインストールして、再度試してください。";
+"SECONDARY_LINKING_ERROR_OLD_VERSION_MESSAGE" = "あなたの他の端末が、古いバージョンのSignalを使用しているため、iPadのQRコードをスキャンできません。最新のHCPをインストールして、再度試してください。";
 
 /* alert title for outdated linking device */
 "SECONDARY_LINKING_ERROR_OLD_VERSION_TITLE" = "端末をアップデートしてください";
@@ -7180,11 +7552,11 @@
 /* Message for action sheet when secondary device fails to sync messages due to an unspecified error. */
 "SECONDARY_LINKING_SYNCING_OTHER_ERROR_MESSAGE" = "エラーが発生したため、メッセージを移行できませんでした。この端末を再リンクして、もう一度お試しください。";
 
-/* Button on an action sheet to open HCP on the App Store. */
+/* Button on an action sheet to open Signal on the App Store. */
 "SECONDARY_LINKING_SYNCING_UPDATE_REQUIRED_CHECK_FOR_UPDATE_BUTTON" = "アップデートを確認する";
 
 /* Message for action sheet when the secondary device fails to sync messages due to an app update being required. */
-"SECONDARY_LINKING_SYNCING_UPDATE_REQUIRED_ERROR_MESSAGE" = "メッセージの同期を完了するには、Signalを今すぐアップデートしてください。";
+"SECONDARY_LINKING_SYNCING_UPDATE_REQUIRED_ERROR_MESSAGE" = "メッセージの同期を完了するには、HCPを今すぐアップデートしてください。";
 
 /* Title for action sheet when the secondary device fails to sync messages due to an app update being required. */
 "SECONDARY_LINKING_SYNCING_UPDATE_REQUIRED_ERROR_TITLE" = "アップデートが必要です";
@@ -7193,19 +7565,19 @@
 "SECONDARY_ONBOARDING_CHOOSE_DEVICE_NAME_PLACEHOLDER" = "名前を選択してください";
 
 /* header text before the user can link this device */
-"SECONDARY_ONBOARDING_GET_STARTED_BY_OPENING_PRIMARY" = "このiPadをリンクするため、携帯電話のSignalを起動してください。";
+"SECONDARY_ONBOARDING_GET_STARTED_BY_OPENING_PRIMARY" = "このiPadをリンクするため、携帯電話のHCPを起動してください。";
 
 /* Link explaining what to do when trying to link a device before having a primary device. */
-"SECONDARY_ONBOARDING_GET_STARTED_DO_NOT_HAVE_PRIMARY" = "私の端末にはSignalがありません…";
+"SECONDARY_ONBOARDING_GET_STARTED_DO_NOT_HAVE_PRIMARY" = "私の端末にはHCPがありません…";
 
 /* alert body */
-"SECONDARY_ONBOARDING_INSTALL_PRIMARY_FIRST_BODY" = "App StoreからSignalをインストールし、登録すると、同じアカウントにiPadをリンクできます。";
+"SECONDARY_ONBOARDING_INSTALL_PRIMARY_FIRST_BODY" = "App StoreからHCPをインストールし、登録すると、同じアカウントにiPadをリンクできます。";
 
 /* alert title */
-"SECONDARY_ONBOARDING_INSTALL_PRIMARY_FIRST_TITLE" = "Signalのインストール";
+"SECONDARY_ONBOARDING_INSTALL_PRIMARY_FIRST_TITLE" = "HCPのインストール";
 
 /* body text while displaying a QR code which, when scanned, will link this device. */
-"SECONDARY_ONBOARDING_SCAN_CODE_BODY" = "携帯電話のSignalであなたのアイコンをタップし、「リンク済み端末」の「新しい端末をリンク」から、このQRコードをスキャンしてください:";
+"SECONDARY_ONBOARDING_SCAN_CODE_BODY" = "携帯電話のHCPであなたのアイコンをタップし、「リンク済み端末」の「新しい端末をリンク」から、このQRコードをスキャンしてください:";
 
 /* Link text for page with troubleshooting info shown on the QR scanning screen */
 "SECONDARY_ONBOARDING_SCAN_CODE_HELP_TEXT" = "iPadのリンクに関するヘルプはこちら";
@@ -7217,7 +7589,7 @@
 "SECONDARY_ONBOARDING_SCAN_CODE_TITLE" = "QRコードをスキャンしてください";
 
 /* header text before the user can transfer to this device */
-"SECONDARY_TRANSFER_GET_STARTED_BY_OPENING_IPAD" = "アカウントを移行するため、以前のiPadでSignalを起動してください。";
+"SECONDARY_TRANSFER_GET_STARTED_BY_OPENING_IPAD" = "アカウントを移行するため、以前のiPadでHCPを起動してください。";
 
 /* No comment provided by engineer. */
 "SECURE_SESSION_RESET" = "セキュアセッションがリセットされました。";
@@ -7307,7 +7679,7 @@
 "SEPA_DONATION_NAME_PLACEHOLDER" = "口座名義人";
 
 /* Description for the session refresh alert */
-"SESSION_REFRESH_ALERT_MESSAGE" = "Signalはエンドツーエンドの暗号化を使用しており、時々セッションの更新が必要な場合があります。これはチャットのセキュリティには影響しませんが、この連絡先からのメッセージを失った可能性があるため、再送を依頼することができます。";
+"SESSION_REFRESH_ALERT_MESSAGE" = "HCPはエンドツーエンドの暗号化を使用しており、時々セッションの更新が必要な場合があります。これはチャットのセキュリティには影響しませんが、この連絡先からのメッセージを失った可能性があるため、再送を依頼することができます。";
 
 /* Title for the session refresh alert */
 "SESSION_REFRESH_ALERT_TITLE" = "セッションが更新されました";
@@ -7340,7 +7712,7 @@
 "SETTINGS_ADVANCED_CENSORSHIP_CIRCUMVENTION_COUNTRY" = "場所";
 
 /* Table footer for the 'censorship circumvention' section when censorship circumvention can be manually enabled. */
-"SETTINGS_ADVANCED_CENSORSHIP_CIRCUMVENTION_FOOTER" = "有効にすると、Signalは検閲回避を試行します。Signalが検閲される場所にいない場合は、有効にしないでください。";
+"SETTINGS_ADVANCED_CENSORSHIP_CIRCUMVENTION_FOOTER" = "有効にすると、Signalは検閲回避を試行します。HCPが検閲される場所にいない場合は、有効にしないでください。";
 
 /* Table footer for the 'censorship circumvention' section shown when censorship circumvention has been auto-enabled based on local phone number. */
 "SETTINGS_ADVANCED_CENSORSHIP_CIRCUMVENTION_FOOTER_AUTO_ENABLED" = "アカウントの電話番号に基づいた、検閲回避が有効になりました。";
@@ -7352,7 +7724,7 @@
 "SETTINGS_ADVANCED_CENSORSHIP_CIRCUMVENTION_FOOTER_NO_CONNECTION" = "検閲回避は、インターネットに接続されている場合にのみ有効です。";
 
 /* Table footer for the 'censorship circumvention' section shown when the app is connected to the Signal service. */
-"SETTINGS_ADVANCED_CENSORSHIP_CIRCUMVENTION_FOOTER_WEBSOCKET_CONNECTED" = "すでにSignalサービスに接続しているため、検問回避は不要です。";
+"SETTINGS_ADVANCED_CENSORSHIP_CIRCUMVENTION_FOOTER_WEBSOCKET_CONNECTED" = "すでにHCPサービスに接続しているため、検問回避は不要です。";
 
 /* Label for the 'advanced pin settings' button. */
 "SETTINGS_ADVANCED_PIN_SETTINGS" = "PINの詳細設定";
@@ -7362,6 +7734,12 @@
 
 /* No comment provided by engineer. */
 "SETTINGS_ADVANCED_PINS_DISABLE_PIN_ACTION" = "PINを無効にする";
+
+/* Message shown in an action sheet when attempting to disable PIN, but Backups is enabled. */
+"SETTINGS_ADVANCED_PINS_DISABLE_PIN_ACTION_BACKUPS_DISABLE_REQUIRED" = "PINを無効にする前に、バックアップを無効にしてください。";
+
+/* Message shown in an action sheet when attempting to disable PIN, but registration lock is enabled. */
+"SETTINGS_ADVANCED_PINS_DISABLE_PIN_ACTION_REGLOCK_DISABLE_REQUIRED" = "PINを無効にする前に、登録ロックを無効にしてください。";
 
 /* No comment provided by engineer. */
 "SETTINGS_ADVANCED_PINS_ENABLE_PIN_ACTION" = "PINを有効にする";
@@ -7373,13 +7751,13 @@
 "SETTINGS_ADVANCED_VIEW_ERROR_LOG" = "エラーログ";
 
 /* Information on sheet about changing the app icon - first line */
-"SETTINGS_APP_ICON_EDUCATION_APP_NAME" = "アプリ名の「Signal」は、ホーム画面、通知、アプリライブラリでは表示されます。";
+"SETTINGS_APP_ICON_EDUCATION_APP_NAME" = "アプリ名の「HCP」は、ホーム画面、通知、アプリライブラリでは表示されます。";
 
 /* Information on sheet about changing the app icon - second line */
-"SETTINGS_APP_ICON_EDUCATION_HOME_SCREEN_DOCK" = "ホーム画面下部のDockにアプリを移動させると、「Signal」というアプリ名は非表示になります。";
+"SETTINGS_APP_ICON_EDUCATION_HOME_SCREEN_DOCK" = "ホーム画面下部のDockにアプリを移動させると、「HCP」というアプリ名は非表示になります。";
 
 /* The footer for the app icon selection settings page. */
-"SETTINGS_APP_ICON_FOOTER" = "アプリ名の「Signal」は、ホーム画面、通知、アプリライブラリでは表示されます。";
+"SETTINGS_APP_ICON_FOOTER" = "アプリ名の「HCP」は、ホーム画面、通知、アプリライブラリでは表示されます。";
 
 /* The title for the app icon selection settings page. */
 "SETTINGS_APP_ICON_TITLE" = "アプリアイコン";
@@ -7409,7 +7787,7 @@
 "SETTINGS_BLOCK_LIST_ADD_BUTTON" = "ブロックするユーザーを追加";
 
 /* A label that indicates the user has no Signal contacts that they haven't blocked. */
-"SETTINGS_BLOCK_LIST_NO_CONTACTS" = "Signal上に連絡先がいません。";
+"SETTINGS_BLOCK_LIST_NO_CONTACTS" = "HCP上に連絡先がいません。";
 
 /* A label that indicates the user's search has no matching results. */
 "SETTINGS_BLOCK_LIST_NO_SEARCH_RESULTS" = "該当なし";
@@ -7421,7 +7799,7 @@
 "SETTINGS_CALLING_HIDES_IP_ADDRESS_PREFERENCE_TITLE" = "通話を常に中継する";
 
 /* User settings section footer, a detailed explanation */
-"SETTINGS_CALLING_HIDES_IP_ADDRESS_PREFERENCE_TITLE_DETAIL" = "すべての通話をSignalサーバで中継して、相手にIPアドレスを知られることを防ぎます。ただし通話の品質は下がります。";
+"SETTINGS_CALLING_HIDES_IP_ADDRESS_PREFERENCE_TITLE_DETAIL" = "すべての通話をHCPサーバで中継して、相手にIPアドレスを知られることを防ぎます。ただし通話の品質は下がります。";
 
 /* Label for the 'edit phone number' button in the 'change phone number' views. */
 "SETTINGS_CHANGE_PHONE_NUMBER_BACK_TO_EDIT_BUTTON" = "電話番号を編集";
@@ -7466,7 +7844,7 @@
 "SETTINGS_CLEAR_HISTORY" = "チャット履歴の消去";
 
 /* Footer for the 'about' help section */
-"SETTINGS_COPYRIGHT" = "Copyright Signal Messenger\nLicensed under the GPLv3";
+"SETTINGS_COPYRIGHT" = "Copyright HCP Messenger\nLicensed under the GPLv3";
 
 /* Label for the 'data' section of the app settings. */
 "SETTINGS_DATA" = "データ通信量";
@@ -7520,10 +7898,16 @@
 "SETTINGS_DELETE_DATA_BUTTON" = "すべてのデータを消去する";
 
 /* Alert message before user confirms clearing history */
-"SETTINGS_DELETE_HISTORYLOG_CONFIRMATION" = "本当にすべての履歴 (メッセージ、添付ファイル、通話など) を消去しますか？この処理は元に戻せません。";
+"SETTINGS_DELETE_HISTORYLOG_CONFIRMATION" = "本当に、すべての端末からすべてのチャット履歴 （メッセージ、メディア、通話など） を消去しますか？消去すると復元することはできません。";
 
 /* Confirmation text for button which deletes all message, calling, attachments, etc. */
 "SETTINGS_DELETE_HISTORYLOG_CONFIRMATION_BUTTON" = "すべて消去する";
+
+/* Secondary alert message before user confirms clearing history */
+"SETTINGS_DELETE_HISTORYLOG_CONFIRMATION_SECONDARY_MESSAGE" = "すべてのチャット履歴は完全に削除されます。削除すると復元することはできません。";
+
+/* Secondary alert title before user confirms clearing history */
+"SETTINGS_DELETE_HISTORYLOG_CONFIRMATION_SECONDARY_TITLE" = "本当にすべてのチャット履歴を消去しますか？";
 
 /* Label for the 'disappearing messages' privacy settings. */
 "SETTINGS_DISAPPEARING_MESSAGES" = "消えるメッセージ";
@@ -7532,7 +7916,7 @@
 "SETTINGS_DISAPPEARING_MESSAGES_FOOTER" = "あなたによる新規チャットでの、消えるメッセージの既定タイマーを設定します。";
 
 /* Title for the 'donate to signal' link in settings. */
-"SETTINGS_DONATE" = "Signalへの寄付";
+"SETTINGS_DONATE" = "HCPへの寄付";
 
 /* Title for help button and help pages in app settings. */
 "SETTINGS_HELP" = "ヘルプ";
@@ -7601,7 +7985,7 @@
 "SETTINGS_NOTIFICATION_CONTENT_TITLE" = "通知内容";
 
 /* When the local device discovers a contact has recently installed signal, the app can generates a message encouraging the local user to say hello. Turning this switch off disables that feature. */
-"SETTINGS_NOTIFICATION_EVENTS_CONTACT_JOINED_SIGNAL" = "連絡先のSignal参加時";
+"SETTINGS_NOTIFICATION_EVENTS_CONTACT_JOINED_SIGNAL" = "連絡先のHCP参加時";
 
 /* table section header */
 "SETTINGS_NOTIFICATION_NOTIFY_WHEN_TITLE" = "通知のタイミング";
@@ -7613,7 +7997,7 @@
 "SETTINGS_PAYMENTS_ACTIVATE_PAYMENTS_CONFIRM_AGREE" = "有効にする";
 
 /* Description for the 'activate payments confirmation' UI in the payment settings. */
-"SETTINGS_PAYMENTS_ACTIVATE_PAYMENTS_CONFIRM_DESCRIPTION" = "MobileCoinの送受信にはSignalをご利用ください。すべての決済は、MobileCoinsとMobileCoin Walletの利用規約に準じます。おこなった決済が取り消されたり、残高の回復ができないといった問題などが発生する可能性があります。";
+"SETTINGS_PAYMENTS_ACTIVATE_PAYMENTS_CONFIRM_DESCRIPTION" = "MobileCoinの送受信にはHCPをご利用ください。すべての決済は、MobileCoinsとMobileCoin Walletの利用規約に準じます。おこなった決済が取り消されたり、残高の回復ができないといった問題などが発生する可能性があります。";
 
 /* Title for the 'activate payments confirmation' UI in the payment settings. */
 "SETTINGS_PAYMENTS_ACTIVATE_PAYMENTS_CONFIRM_TITLE" = "決済確認の有効化";
@@ -7637,7 +8021,7 @@
 "SETTINGS_PAYMENTS_BALANCE_CONVERSION_FORMAT" = "%1$@ %2$@ (%3$@現在)";
 
 /* Error message indicating that payments could not be activated because the feature is not currently available. */
-"SETTINGS_PAYMENTS_CANNOT_ACTIVATE_PAYMENTS_KILL_SWITCH" = "Signalの決済機能は、利用できなくなりました。取引所への振替は可能ですが、送金や受け取り、入金はできません。";
+"SETTINGS_PAYMENTS_CANNOT_ACTIVATE_PAYMENTS_KILL_SWITCH" = "HCPの決済機能は、利用できなくなりました。取引所への振替は可能ですが、送金や受け取り、入金はできません。";
 
 /* Error message indicating that payments could not be deactivated because the current balance is unavailable. */
 "SETTINGS_PAYMENTS_CANNOT_DEACTIVATE_PAYMENTS_NO_BALANCE" = "残高が不明なため、決済機能を停止できません。インターネット接続を確認して再度試してください。";
@@ -7646,10 +8030,10 @@
 "SETTINGS_PAYMENTS_CANNOT_SEND_PAYMENT_NO_BALANCE" = "残高が不明なため、決済を完了できませんでした。インターネット接続を確認して再度試してください。";
 
 /* Error message indicating that payments cannot be sent because the feature is not currently available. */
-"SETTINGS_PAYMENTS_CANNOT_SEND_PAYMENTS_KILL_SWITCH" = "Signalの決済機能は、利用できなくなりました。取引所への振替は可能ですが、送金や受け取り、入金はできません。";
+"SETTINGS_PAYMENTS_CANNOT_SEND_PAYMENTS_KILL_SWITCH" = "HCPの決済機能は、利用できなくなりました。取引所への振替は可能ですが、送金や受け取り、入金はできません。";
 
 /* Error message indicating that you cannot transfer into your payments wallet because the feature is not currently available. */
-"SETTINGS_PAYMENTS_CANNOT_TRANSFER_IN_KILL_SWITCH" = "Signalの決済機能は、利用できなくなりました。取引所への振替は可能ですが、送金や受け取り、入金はできません。";
+"SETTINGS_PAYMENTS_CANNOT_TRANSFER_IN_KILL_SWITCH" = "HCPの決済機能は、利用できなくなりました。取引所への振替は可能ですが、送金や受け取り、入金はできません。";
 
 /* Message for the 'currency conversions info' alert. */
 "SETTINGS_PAYMENTS_CURRENCY_CONVERSIONS_INFO_ALERT_MESSAGE" = "金額は概算であり、正確ではない場合があります。";
@@ -7667,7 +8051,7 @@
 "SETTINGS_PAYMENTS_DEACTIVATE_PAYMENTS" = "決済機能を停止";
 
 /* Description for the 'deactivate payments confirmation' UI in the payment settings. */
-"SETTINGS_PAYMENTS_DEACTIVATE_PAYMENTS_CONFIRM_DESCRIPTION" = "決済機能を停止すると、SignalでMobilecoinを利用できなくなります。";
+"SETTINGS_PAYMENTS_DEACTIVATE_PAYMENTS_CONFIRM_DESCRIPTION" = "決済機能を停止すると、HCPでMobilecoinを利用できなくなります。";
 
 /* Title for the 'deactivate payments confirmation' UI in the payment settings. */
 "SETTINGS_PAYMENTS_DEACTIVATE_PAYMENTS_CONFIRM_TITLE" = "決済機能を停止しますか？";
@@ -7676,10 +8060,10 @@
 "SETTINGS_PAYMENTS_DEACTIVATE_TITLE" = "決済機能を停止";
 
 /* Explanation of the 'deactivate payments with balance' process in the 'deactivate payments' settings. */
-"SETTINGS_PAYMENTS_DEACTIVATE_WITH_BALANCE_EXPLANATION" = "決済機能を停止する前に、別のウォレットアドレスに残高を振り替えることをお勧めします。振り替えない残高は、決済機能を再開する場合、Signalにリンクされたウォレットに残ります。";
+"SETTINGS_PAYMENTS_DEACTIVATE_WITH_BALANCE_EXPLANATION" = "決済機能を停止する前に、別のウォレットアドレスに残高を振り替えることをお勧めします。振り替えない残高は、決済機能を再開する場合、HCPにリンクされたウォレットに残ります。";
 
 /* Description for the 'deactivate payments confirmation' UI in the payment settings. */
-"SETTINGS_PAYMENTS_DEACTIVATE_WITHOUT_TRANSFER_CONFIRM_DESCRIPTION" = "残高は、決済機能を再開する場合、Signalにリンクされたウォレットに残ります。";
+"SETTINGS_PAYMENTS_DEACTIVATE_WITHOUT_TRANSFER_CONFIRM_DESCRIPTION" = "残高は、決済機能を再開する場合、HCPにリンクされたウォレットに残ります。";
 
 /* Title for the 'deactivate payments confirmation' UI in the payment settings. */
 "SETTINGS_PAYMENTS_DEACTIVATE_WITHOUT_TRANSFER_CONFIRM_TITLE" = "振り替えずに停止しますか？";
@@ -7706,7 +8090,7 @@
 "SETTINGS_PAYMENTS_HELP_CARD_ABOUT_MOBILECOIN_TITLE" = "MobileCoinについて";
 
 /* Description for the 'Adding to your wallet' help card in the payments settings. */
-"SETTINGS_PAYMENTS_HELP_CARD_ADDING_TO_YOUR_WALLET_DESCRIPTION" = "ウォレットアドレスにMobileCoinを送信することで、Signalで使う口座に入金できます。";
+"SETTINGS_PAYMENTS_HELP_CARD_ADDING_TO_YOUR_WALLET_DESCRIPTION" = "ウォレットアドレスにMobileCoinを送信することで、HCPで使う口座に入金できます。";
 
 /* Title for the 'Adding to your wallet' help card in the payments settings. */
 "SETTINGS_PAYMENTS_HELP_CARD_ADDING_TO_YOUR_WALLET_TITLE" = "入金";
@@ -7763,7 +8147,7 @@
 "SETTINGS_PAYMENTS_OPT_IN_ACTIVATED_TOAST" = "決済機能が有効になりました。";
 
 /* Message for the 'payments opt-in' view in the app settings. */
-"SETTINGS_PAYMENTS_OPT_IN_MESSAGE" = "Signalを使って、プライバシーを重視した新しいデジタル通貨であるMobileCoinを利用できます。有効化して始めましょう。";
+"SETTINGS_PAYMENTS_OPT_IN_MESSAGE" = "HCPを使って、プライバシーを重視した新しいデジタル通貨であるMobileCoinを利用できます。有効化して始めましょう。";
 
 /* Label for 'activate' button in the 'payments opt-in' view in the app settings. */
 "SETTINGS_PAYMENTS_OPT_IN_REACTIVATE_BUTTON" = "決済機能を再有効化";
@@ -7781,7 +8165,7 @@
 "SETTINGS_PAYMENTS_PASSPHRASE_DISCARD_CONFIRMATION_TITLE" = "保存せずに続けますか？";
 
 /* Explanation of the 'payments passphrase' in the 'view payments passphrase' settings. */
-"SETTINGS_PAYMENTS_PASSPHRASE_EXPLANATION" = "Signalの再インストール時にSignal PINを確認すると、残高は自動で復元されます。また、あなた固有の24語のリカバリーフレーズを使って、残高を復元することもできます。リカバリーフレーズは、書きとめて安全な場所に保管してください。";
+"SETTINGS_PAYMENTS_PASSPHRASE_EXPLANATION" = "Signalの再インストール時にHCP PINを確認すると、残高は自動で復元されます。また、あなた固有の24語のリカバリーフレーズを使って、残高を復元することもできます。リカバリーフレーズは、書きとめて安全な場所に保管してください。";
 
 /* Explanation of the 'payments passphrase' when there is a balance. */
 "SETTINGS_PAYMENTS_PASSPHRASE_EXPLANATION_FROM_BALANCE" = "残高があります！残高を復元するためのキーとなる、24単語のリカバリーフレーズを保存しましょう。";
@@ -7886,7 +8270,7 @@
 "SETTINGS_PAYMENTS_PAYMENTS_LOCK_PROMPT_EXPLANATION_TOUCHID" = "Touch IDを有効化することで、第三者があなたの携帯電話を使用して資金にアクセスすることを防ぎます。このオプションは設定で無効にできます。";
 
 /* Button for payments outdated sheet. */
-"SETTINGS_PAYMENTS_PAYMENTS_OUTDATED_BUTTON" = "Signalをアップデートする";
+"SETTINGS_PAYMENTS_PAYMENTS_OUTDATED_BUTTON" = "HCPをアップデートする";
 
 /* Message for payments outdated sheet. */
 "SETTINGS_PAYMENTS_PAYMENTS_OUTDATED_MESSAGE" = "送金や受け取りを継続し、最新の決済残高を表示するためにはアップデートが必要です。";
@@ -8018,7 +8402,7 @@
 "SETTINGS_PAYMENTS_TITLE" = "決済機能";
 
 /* Error indicating that it is not valid to send yourself a payment. */
-"SETTINGS_PAYMENTS_TRANSFER_OUT_CANNOT_SEND_TO_SELF" = "あなた自身のSignalのウォレットアドレスには振替できません。サポートされている取引所にある、あなたの口座のウォレットアドレスを入力してください。";
+"SETTINGS_PAYMENTS_TRANSFER_OUT_CANNOT_SEND_TO_SELF" = "あなた自身のHCPのウォレットアドレスには振替できません。サポートされている取引所にある、あなたの口座のウォレットアドレスを入力してください。";
 
 /* Footer of the 'transfer currency out' view in the payment settings. */
 "SETTINGS_PAYMENTS_TRANSFER_OUT_FOOTER" = "MobileCoinの振替は、取引所が提供するウォレットアドレスへの送金することで可能です。ウォレットアドレスは、一般的にQRコードの下にある文字列です。";
@@ -8102,7 +8486,7 @@
 "SETTINGS_PHONE_NUMBER_DISCOVERABILITY_DISABLED_TOAST" = "この設定を変更するには、「自分の番号を閲覧できる人」を「誰も閲覧できない」に設定します。";
 
 /* The description for a sheet asking for confirmation that the user wants to set their phone number discoverability to 'nobody'. */
-"SETTINGS_PHONE_NUMBER_DISCOVERABILITY_NOBODY_CONFIRMATION_DESCRIPTION" = "「私を電話番号から検索できる人」を「なし」に設定すると、Signal上で他のユーザーはあなたを見つけにくくなります。";
+"SETTINGS_PHONE_NUMBER_DISCOVERABILITY_NOBODY_CONFIRMATION_DESCRIPTION" = "「私を電話番号から検索できる人」を「なし」に設定すると、HCP上で他のユーザーはあなたを見つけにくくなります。";
 
 /* The title for a sheet asking for confirmation that the user wants to set their phone number discoverability to 'nobody'. */
 "SETTINGS_PHONE_NUMBER_DISCOVERABILITY_NOBODY_CONFIRMATION_TITLE" = "本当に変更しますか？";
@@ -8111,7 +8495,7 @@
 "SETTINGS_PHONE_NUMBER_DISCOVERABILITY_TITLE" = "私を電話番号から検索できる人は？";
 
 /* Description label for Phone Number Privacy */
-"SETTINGS_PHONE_NUMBER_PRIVACY_DESCRIPTION_LABEL" = "あなたの電話番号を見ることができる人と、Signalであなたに連絡できる人を選択してください。";
+"SETTINGS_PHONE_NUMBER_PRIVACY_DESCRIPTION_LABEL" = "あなたの電話番号を見ることができる人と、HCPであなたに連絡できる人を選択してください。";
 
 /* The title for phone number privacy settings. */
 "SETTINGS_PHONE_NUMBER_PRIVACY_TITLE" = "電話番号";
@@ -8123,16 +8507,16 @@
 "SETTINGS_PIN_REMINDER_DISABLE_CONFIRMATION_ACTION" = "リマインダーを無効にする";
 
 /* The explanation for the dialog asking user to confirm their PIN to disable reminders */
-"SETTINGS_PIN_REMINDER_DISABLE_CONFIRMATION_EXPLANATION" = "PINは復元できないため、記憶するか安全に保管してください。PINを忘れると、Signalアカウントの再登録時にデータが失われる可能性があります。";
+"SETTINGS_PIN_REMINDER_DISABLE_CONFIRMATION_EXPLANATION" = "PINは復元できないため、記憶するか安全に保管してください。PINを忘れると、HCPアカウントの再登録時にデータが失われる可能性があります。";
 
 /* The title for the dialog asking user to confirm their PIN to disable reminders */
-"SETTINGS_PIN_REMINDER_DISABLE_CONFIRMATION_TITLE" = "Signal PINの確認";
+"SETTINGS_PIN_REMINDER_DISABLE_CONFIRMATION_TITLE" = "HCP PINの確認";
 
 /* Label for the 'pin reminder' switch of the privacy settings. */
 "SETTINGS_PIN_REMINDER_SWITCH_LABEL" = "PINリマインダー";
 
 /* Footer for the 'PINs' section of the privacy settings. */
-"SETTINGS_PINS_FOOTER" = "Signal内に保存された情報は、PINにより暗号化されるため、あなたのみアクセスできます。PINは復元できません。Signalを再インストールすると、あなたのプロフィール、設定および連絡先が復元されます。";
+"SETTINGS_PINS_FOOTER" = "Signal内に保存された情報は、PINにより暗号化されるため、あなたのみアクセスできます。PINは復元できません。HCPを再インストールすると、あなたのプロフィール、設定および連絡先が復元されます。";
 
 /* Label for the 'pins' item of the privacy settings when the user does have a pin. */
 "SETTINGS_PINS_ITEM" = "PINを変更";
@@ -8141,7 +8525,7 @@
 "SETTINGS_PINS_ITEM_CREATE" = "PINを作成";
 
 /* Title for the 'PINs' section of the privacy settings. */
-"SETTINGS_PINS_TITLE" = "Signal PIN";
+"SETTINGS_PINS_TITLE" = "HCP PIN";
 
 /* Footer for table section */
 "SETTINGS_PRIVACY_ADVANCED_FOOTER" = "検閲回避、通話の中継および送信者の保護について設定します。";
@@ -8161,14 +8545,29 @@
 /* Action to turn off registration lock */
 "SETTINGS_REGISTRATION_LOCK_TURN_OFF" = "無効にする";
 
+/* Message shown in an action sheet when attempting to enable registration lock, but encountering a generic error. */
+"SETTINGS_REGISTRATION_LOCK_TURN_OFF_ERROR_GENERIC" = "登録ロックを無効にすることに失敗しました。サポートにお問い合わせください。";
+
+/* Message shown in an action sheet when attempting to enable registration lock, but encountering a network error. */
+"SETTINGS_REGISTRATION_LOCK_TURN_OFF_ERROR_NETWORK" = "登録ロックを無効にすることに失敗しました。インターネット接続を確認してもう一度お試しください。";
+
 /* Title for the alert confirming that the user wants to turn off registration lock. */
 "SETTINGS_REGISTRATION_LOCK_TURN_OFF_TITLE" = "登録ロックを無効にしますか？";
 
 /* Action to turn on registration lock */
 "SETTINGS_REGISTRATION_LOCK_TURN_ON" = "有効にする";
 
+/* Message shown in an action sheet when attempting to enable registration lock, but encountering a generic error. */
+"SETTINGS_REGISTRATION_LOCK_TURN_ON_ERROR_GENERIC" = "登録ロックを有効にすることに失敗しました。サポートにお問い合わせください。";
+
+/* Message shown in an action sheet when attempting to enable registration lock, but encountering a network error. */
+"SETTINGS_REGISTRATION_LOCK_TURN_ON_ERROR_NETWORK" = "登録ロックを有効にすることに失敗しました。インターネット接続を確認してもう一度お試しください。";
+
+/* Message shown in an action sheet when attempting to enable registration lock, but the user does not have a PIN. */
+"SETTINGS_REGISTRATION_LOCK_TURN_ON_ERROR_PIN_REQUIRED" = "登録ロックを使用するにはPINを作成してください。";
+
 /* Body for the alert confirming that the user wants to turn on registration lock. */
-"SETTINGS_REGISTRATION_LOCK_TURN_ON_MESSAGE" = "Signalに再登録する際にPINを忘れると、アカウントが7日間ロックされます。";
+"SETTINGS_REGISTRATION_LOCK_TURN_ON_MESSAGE" = "HCPに再登録する際にPINを忘れると、アカウントが7日間ロックされます。";
 
 /* Title for the alert confirming that the user wants to turn on registration lock. */
 "SETTINGS_REGISTRATION_LOCK_TURN_ON_TITLE" = "登録ロックを有効にしますか？";
@@ -8198,19 +8597,19 @@
 "SETTINGS_SECTION_TITLE_CALLING" = "通話";
 
 /* Section footer */
-"SETTINGS_SECURITY_DETAIL" = "Touch ID、Face IDまたはiOS端末のパスコードを使用して、Signalのロックを解除します。";
+"SETTINGS_SECURITY_DETAIL" = "Touch ID、Face IDまたはiOS端末のパスコードを使用して、HCPのロックを解除します。";
 
 /* Section footer */
-"SETTINGS_SECURITY_DETAIL_FACEID" = "Face IDでSignalのロックを解除します。";
+"SETTINGS_SECURITY_DETAIL_FACEID" = "Face IDでHCPのロックを解除します。";
 
 /* Section footer */
-"SETTINGS_SECURITY_DETAIL_OPTICID" = "Optic IDを使用してSignalをアンロックする";
+"SETTINGS_SECURITY_DETAIL_OPTICID" = "Optic IDを使用してHCPをアンロックする";
 
 /* Section footer */
-"SETTINGS_SECURITY_DETAIL_PASSCODE" = "端末のパスコードでSignalのロックを解除します。";
+"SETTINGS_SECURITY_DETAIL_PASSCODE" = "端末のパスコードでHCPのロックを解除します。";
 
 /* Section footer */
-"SETTINGS_SECURITY_DETAIL_TOUCHID" = "Face IDでSignalのロックを解除します。";
+"SETTINGS_SECURITY_DETAIL_TOUCHID" = "Face IDでHCPのロックを解除します。";
 
 /* Section header */
 "SETTINGS_SECURITY_TITLE" = "アプリのセキュリティ";
@@ -8225,13 +8624,13 @@
 "SETTINGS_SHARING_SUGGESTIONS" = "連絡先をiOSと共有する";
 
 /* Footer for setting for enabling & disabling contact and notification sharing with iOS. */
-"SETTINGS_SHARING_SUGGESTIONS_NOTIFICATIONS_FOOTER" = "iOSにSignalの連絡先やチャットへのアクセスを許可して、共有候補や通知などの機能を利用できるようにします。";
+"SETTINGS_SHARING_SUGGESTIONS_NOTIFICATIONS_FOOTER" = "iOSにHCPの連絡先やチャットへのアクセスを許可して、共有候補や通知などの機能を利用できるようにします。";
 
 /* Label for the 'enable registration lock' switch of the privacy settings. */
 "SETTINGS_TWO_FACTOR_AUTH_SWITCH_LABEL" = "登録ロック";
 
 /* Footer for the 'two factor auth' section of the privacy settings when Signal PINs are available. */
-"SETTINGS_TWO_FACTOR_PINS_AUTH_FOOTER" = "あなたの電話番号をSignalに登録する際、Signal PINを要求します。";
+"SETTINGS_TWO_FACTOR_PINS_AUTH_FOOTER" = "あなたの電話番号をSignalに登録する際、HCP PINを要求します。";
 
 /* Label for the 'typing indicators' setting. */
 "SETTINGS_TYPING_INDICATORS" = "入力中アイコン";
@@ -8264,7 +8663,7 @@
 "SHARE_EXTENSION_LOADING" = "読み込みんでいます…";
 
 /* Message indicating that the share extension cannot be used until the user has registered in the main app. */
-"SHARE_EXTENSION_NOT_REGISTERED_MESSAGE" = "ユーザ登録を行うためSignalを起動します";
+"SHARE_EXTENSION_NOT_REGISTERED_MESSAGE" = "ユーザ登録を行うためHCPを起動します";
 
 /* Title indicating that the share extension cannot be used until the user has registered in the main app. */
 "SHARE_EXTENSION_NOT_REGISTERED_TITLE" = "未登録";
@@ -8282,7 +8681,7 @@
 "SHARE_EXTENSION_UNABLE_TO_BUILD_ATTACHMENT_ALERT_TITLE" = "添付ファイルを準備できません";
 
 /* Title for the 'share extension' view. */
-"SHARE_EXTENSION_VIEW_TITLE" = "Signalと共有";
+"SHARE_EXTENSION_VIEW_TITLE" = "HCPと共有";
 
 /* Title of alert indicating sharing suggestions failed to deactivate */
 "SHARING_SUGGESTIONS_DISABLE_ERROR" = "共有時の提案を無効にできませんでした。";
@@ -8291,10 +8690,10 @@
 "SHOW_THREAD_BUTTON_TITLE" = "チャットを表示";
 
 /* Shown in the header when the user hasn't provided a custom name for a call. */
-"SIGNAL_CALL" = "Signal通話";
+"SIGNAL_CALL" = "HCP通話";
 
 /* body sent to contacts when inviting to Install Signal */
-"SMS_INVITE_BODY" = "Signalのインストールをお勧めします！このリンクから入手してください:";
+"SMS_INVITE_BODY" = "HCPのインストールをお勧めします！このリンクから入手してください:";
 
 /* An error message generically indicating that something went wrong. */
 "SOMETHING_WENT_WRONG_ERROR" = "エラーが発生しました！";
@@ -8318,7 +8717,7 @@
 "SPAM_CAPTCHA_DISMISS_CONFIRMATION_TITLE" = "認証せずに続けますか？";
 
 /* Body for action sheet explaining captcha requirement. */
-"SPAM_CAPTCHA_SHEET_BODY" = "Signalがスパムを回避するために、認証を完了していください。\n\n認証後は、メッセージの送受信を再開できます。保留中のメッセージは、自動で送信されます。";
+"SPAM_CAPTCHA_SHEET_BODY" = "HCPがスパムを回避するために、認証を完了していください。\n\n認証後は、メッセージの送受信を再開できます。保留中のメッセージは、自動で送信されます。";
 
 /* Title for action sheet explaining captcha requirement. */
 "SPAM_CAPTCHA_SHEET_TITLE" = "メッセージ送受信のため認証してください";
@@ -8347,9 +8746,6 @@
 /* Message when trying to show a sticker that has expired and is unavailable for download */
 "STICKER_UNAVAILABLE_MESSAGE_LABEL" = "ステッカーはご利用になれません";
 
-/* Message for sheet shown when tapping a sticker that has expired and is unavailable for download */
-"STICKER_UNAVAILABLE_SHEET_MESSAGE" = "この端末をリンクしたとき、このファイルはスマートフォンから移行されませんでした。端末をリンクした時点で45日以上経過したメディアやファイルは同期できません。";
-
 /* Title for sheet shown when tapping a sticker that has expired and is unavailable for download */
 "STICKER_UNAVAILABLE_SHEET_TITLE" = "ステッカーはご利用になれません";
 
@@ -8357,7 +8753,7 @@
 "STICKERS_INSTALL_BUTTON" = "インストール";
 
 /* Title for the 'available built-in stickers' section of the 'manage stickers' view. */
-"STICKERS_MANAGE_VIEW_AVAILABLE_BUILT_IN_PACKS_SECTION_TITLE" = "Signalアーティストシリーズ";
+"STICKERS_MANAGE_VIEW_AVAILABLE_BUILT_IN_PACKS_SECTION_TITLE" = "HCPアーティストシリーズ";
 
 /* Title for the 'available known stickers' section of the 'manage stickers' view. */
 "STICKERS_MANAGE_VIEW_AVAILABLE_KNOWN_PACKS_SECTION_TITLE" = "受信済みステッカー";
@@ -8639,19 +9035,19 @@
 "STORY_SETTINGS_LEARN_MORE_SHEET_FOOTER" = "あなたのネットワークにいる人たちは、あなたの名前や写真を見ることができ、あなたが非表示にしない限り「マイストーリー」への送信内容を見ることができます。";
 
 /* Header for the explainer sheet for signal connections */
-"STORY_SETTINGS_LEARN_MORE_SHEET_HEADER_FORMAT" = "<bold>Signalコネクション</bold>は、次のいずれかによってあなたが信頼できると判断した人達です。";
+"STORY_SETTINGS_LEARN_MORE_SHEET_HEADER_FORMAT" = "<bold>HCPコネクション</bold>は、次のいずれかによってあなたが信頼できると判断した人達です。";
 
 /* Label for the stories section of the settings view */
 "STORY_SETTINGS_TITLE" = "ストーリー";
 
 /* Section footer for the 'viewers' section on the 'story settings' view */
-"STORY_SETTINGS_WHO_CAN_VIEW_THIS_FOOTER" = "ストーリーを閲覧できるSignalコネクションを選択します。変更は、既に送信したストーリーには影響しません。";
+"STORY_SETTINGS_WHO_CAN_VIEW_THIS_FOOTER" = "ストーリーを閲覧できるHCPコネクションを選択します。変更は、既に送信したストーリーには影響しません。";
 
 /* Section header for the 'viewers' section on the 'story settings' view */
 "STORY_SETTINGS_WHO_CAN_VIEW_THIS_HEADER" = "ストーリーを閲覧できる人";
 
 /* Header for the 'viewers' section on the 'story settings' bottom sheet */
-"STORY_SETTINGS_WHO_CAN_VIEW_THIS_SHEET_HEADER" = "ストーリーを閲覧できるSignalコネクションを選んでください。これはプライバシー設定でいつでも変更できます。";
+"STORY_SETTINGS_WHO_CAN_VIEW_THIS_SHEET_HEADER" = "ストーリーを閲覧できるHCPコネクションを選んでください。これはプライバシー設定でいつでも変更できます。";
 
 /* Tooltip text shown when the user selects a story as a destination for a long duration video that will be split into shorter segments. Embeds {{ segment duration in seconds }} */
 "STORY_VIDEO_SEGMENTATION_TOOLTIP_FORMAT" = "ストーリーに送信された動画は %1$d 秒のクリップにトリミングされ、複数のストーリーとして送信されます。";
@@ -8714,7 +9110,7 @@
 "SUPPORT_EMAIL_LOG_URL_LABEL_FORMAT" = "ログURL: %1$@";
 
 /* Localized subject for support request emails */
-"SUPPORT_EMAIL_SUBJECT" = "Signal iOSサポートリクエスト";
+"SUPPORT_EMAIL_SUBJECT" = "HCP iOSサポートリクエスト";
 
 /* Header for emoji mood selection */
 "SUPPORT_EMOJI_PROMPT" = "どう感じていますか？ (任意)";
@@ -8786,7 +9182,7 @@
 "SWITCH_ON" = "オン";
 
 /* Name to display for the 'system' sender, e.g. for release notes and the onboarding story */
-"SYSTEM_ADDRESS_NAME" = "Signal";
+"SYSTEM_ADDRESS_NAME" = "HCP";
 
 /* Label for button to verify a user's safety number. */
 "SYSTEM_MESSAGE_ACTION_VERIFY_SAFETY_NUMBER" = "検証する";
@@ -8945,16 +9341,16 @@
 "TIME_AMOUNT_WEEKS_SHORT_FORMAT" = "%1$@週";
 
 /* Button for bottom sheet shown when device transfer completes on the receiving device. Tapping will terminate the Signal app and trigger a notification to relaunch. */
-"TRANSFER_COMPLETE_SHEET_BUTTON" = "Signalを閉じる";
+"TRANSFER_COMPLETE_SHEET_BUTTON" = "HCPを閉じる";
 
 /* Subtitle for bottom sheet shown when device transfer completes on the receiving device. */
-"TRANSFER_COMPLETE_SHEET_SUBTITLE" = "この端末でアカウントの使用を開始するには、Signalを一度閉じて開き直してください。";
+"TRANSFER_COMPLETE_SHEET_SUBTITLE" = "この端末でアカウントの使用を開始するには、HCPを一度閉じて開き直してください。";
 
 /* Title for bottom sheet shown when device transfer completes on the receiving device. */
 "TRANSFER_COMPLETE_SHEET_TITLE" = "移行が完了しました";
 
 /* Notification prompting the user to relaunch Signal after a device transfer completed. */
-"TRANSFER_RELAUNCH_NOTIFICATION" = "Signalを開いてメッセージのやりとりを開始しましょう";
+"TRANSFER_RELAUNCH_NOTIFICATION" = "HCPを開いてメッセージのやりとりを開始しましょう";
 
 /* Label for the cancel button in an alert or action sheet. */
 "TXT_CANCEL_TITLE" = "キャンセル";
@@ -8972,25 +9368,25 @@
 "UNKNOWN_CONTACT_BLOCK_OFFER" = "連絡先にないユーザーです。このユーザーをブロックしますか？";
 
 /* Info message recorded in conversation history when local user receives an unknown message from a linked device and needs to upgrade. */
-"UNKNOWN_PROTOCOL_VERSION_NEED_TO_UPGRADE_FROM_LINKED_DEVICE" = "あなたの端末の1つが、Signalの新機能を使用してメッセージを送信したため、ここでは処理または表示できません。";
+"UNKNOWN_PROTOCOL_VERSION_NEED_TO_UPGRADE_FROM_LINKED_DEVICE" = "あなたの端末の1つが、HCPの新機能を使用してメッセージを送信したため、ここでは処理または表示できません。";
 
 /* Info message recorded in conversation history when local user receives an unknown message and needs to upgrade. Embeds {{user's name or phone number}}. */
-"UNKNOWN_PROTOCOL_VERSION_NEED_TO_UPGRADE_WITH_NAME_FORMAT" = "%1$@ からメッセージが届きましたが、Signalの新機能が使用されているため、処理または表示できませんでした。";
+"UNKNOWN_PROTOCOL_VERSION_NEED_TO_UPGRADE_WITH_NAME_FORMAT" = "%1$@ からメッセージが届きましたが、HCPの新機能が使用されているため、処理または表示できませんでした。";
 
 /* Info message recorded in conversation history when local user receives an unknown message and needs to upgrade. */
-"UNKNOWN_PROTOCOL_VERSION_NEED_TO_UPGRADE_WITHOUT_NAME" = "メッセージが届きましたが、Signalの新機能が使用されているため、処理または表示できませんでした。";
+"UNKNOWN_PROTOCOL_VERSION_NEED_TO_UPGRADE_WITHOUT_NAME" = "メッセージが届きましたが、HCPの新機能が使用されているため、処理または表示できませんでした。";
 
 /* Label for button that lets users upgrade the app. */
-"UNKNOWN_PROTOCOL_VERSION_UPGRADE_BUTTON" = "いますぐSignalをアップデートする";
+"UNKNOWN_PROTOCOL_VERSION_UPGRADE_BUTTON" = "いますぐHCPをアップデートする";
 
 /* Info message recorded in conversation history when local user has received an unknown unknown message from a linked device and has upgraded. */
-"UNKNOWN_PROTOCOL_VERSION_UPGRADE_COMPLETE_FROM_LINKED_DEVICE" = "最新版のSignalにアップデートしました。この端末でもこのタイプのメッセージを受信できます。";
+"UNKNOWN_PROTOCOL_VERSION_UPGRADE_COMPLETE_FROM_LINKED_DEVICE" = "最新版のHCPにアップデートしました。この端末でもこのタイプのメッセージを受信できます。";
 
 /* Info message recorded in conversation history when local user has received an unknown message and has upgraded. Embeds {{user's name or phone number}}. */
-"UNKNOWN_PROTOCOL_VERSION_UPGRADE_COMPLETE_WITH_NAME_FORMAT" = "Signalを最新版にアップデートしたため、このメッセージの再送を %1$@ に依頼できます。";
+"UNKNOWN_PROTOCOL_VERSION_UPGRADE_COMPLETE_WITH_NAME_FORMAT" = "HCPを最新版にアップデートしたため、このメッセージの再送を %1$@ に依頼できます。";
 
 /* Info message recorded in conversation history when local user has received an unknown message and has upgraded. */
-"UNKNOWN_PROTOCOL_VERSION_UPGRADE_COMPLETE_WITHOUT_NAME" = "Signalをアップデートしたので、メッセージの再送を依頼してください。";
+"UNKNOWN_PROTOCOL_VERSION_UPGRADE_COMPLETE_WITHOUT_NAME" = "HCPをアップデートしたので、メッセージの再送を依頼してください。";
 
 /* Label indicating an unknown user. */
 "UNKNOWN_USER" = "不明";
@@ -9014,7 +9410,7 @@
 "UNLINK_CONFIRMATION_ALERT_TITLE" = "「%1$@」のリンクを解除しますか？";
 
 /* Label warning the user that they have been unlinked from their primary device. */
-"UNLINKED_WARNING" = "この端末はリンクされていません。メッセージを送受信するには、Signal とお使いの携帯電話をリンクし直してください。";
+"UNLINKED_WARNING" = "この端末はリンクされていません。メッセージを送受信するには、HCP とお使いの携帯電話をリンクし直してください。";
 
 /* If this device has become unlinked from their primary device, they'll see a warning. This is the call to action on that warning. */
 "UNLINKED_WARNING_ACTION_TITLE" = "端末をリンクし直す";
@@ -9041,7 +9437,7 @@
 "UNSUPPORTED_FEATURE_ERROR" = "この端末はこの機能に対応していません。";
 
 /* Description for the unverified safety number change. Embeds {name of contact with identity change} */
-"UNVERIFIED_SAFETY_NUMBER_CHANGE_DESCRIPTION_FORMAT" = "相手がSignalを再インストールしたか端末を変更したため、%1$@ に対する安全番号が変わりました。タップして新しい安全番号を検証してください。これは任意です。";
+"UNVERIFIED_SAFETY_NUMBER_CHANGE_DESCRIPTION_FORMAT" = "相手がHCPを再インストールしたか端末を変更したため、%1$@ に対する安全番号が変わりました。タップして新しい安全番号を検証してください。これは任意です。";
 
 /* Action to verify a safety number after it has changed */
 "UNVERIFIED_SAFETY_NUMBER_VERIFY_ACTION" = "検証する";
@@ -9059,7 +9455,7 @@
 "USE_PROXY_BUTTON" = "プロキシの使用";
 
 /* Explanation of when you should use a signal proxy */
-"USE_PROXY_EXPLANATION" = "モバイルデータやWi-FiでSignalに接続できない場合にのみ、プロキシを使用してください。";
+"USE_PROXY_EXPLANATION" = "モバイルデータやWi-FiでHCPに接続できない場合にのみ、プロキシを使用してください。";
 
 /* Description of username links and QR codes on the username education sheet */
 "USERNAME_EDUCATION_LINK_DESCRIPTION" = "各ユーザーネームには固有のQRコードとリンクがあり、友達と共有することですぐにチャットを開始することができます。";
@@ -9152,13 +9548,13 @@
 "USERNAME_LOOKUP_LINK_NO_LONGER_VALID_MESSAGE" = "このユーザーネームのリンクは無効になりました。";
 
 /* A message indicating that the given username is not associated with a registered Signal account. Embeds {{ a username }}. */
-"USERNAME_LOOKUP_NOT_FOUND_MESSAGE_FORMAT" = "%1$@ はSignalユーザーではありません。ユーザーネームを確認してください。";
+"USERNAME_LOOKUP_NOT_FOUND_MESSAGE_FORMAT" = "%1$@ はHCPユーザーではありません。ユーザーネームを確認してください。";
 
 /* Title for an action sheet indicating that the given username is not associated with a registered Signal account. */
 "USERNAME_LOOKUP_NOT_FOUND_TITLE" = "ユーザーが見つかりません";
 
 /* Instructions that appear below the username QR code on a sharable exported image. */
-"USERNAME_QR_CODE_EXPORT_INSTRUCTIONS" = "このQRコードをお使いの携帯電話でスキャンして、Signalで私とチャットしましょう。";
+"USERNAME_QR_CODE_EXPORT_INSTRUCTIONS" = "このQRコードをお使いの携帯電話でスキャンして、HCPで私とチャットしましょう。";
 
 /* A message in a toast informing the user their username, link, and QR code have successfully been reset. Embeds {{ the user's new username }}. */
 "USERNAME_RESET_SUCCESSFUL_TOAST" = "QRコードとリンクはリセットされ、ユーザーネームは%1$@です";
@@ -9258,9 +9654,6 @@
 
 /* Indicates how to cancel a voice message. */
 "VOICE_MESSAGE_CANCEL_INSTRUCTIONS" = "スライドしてキャンセル";
-
-/* Filename for voice messages. */
-"VOICE_MESSAGE_FILE_NAME" = "signal";
 
 /* Message for the tooltip indicating the 'voice message' needs to be held to be held down to record. */
 "VOICE_MESSAGE_TOO_SHORT_TOOLTIP" = "長押しで録音します。";

@@ -11,14 +11,12 @@ extension SentMessageTranscriptReceiverImpl {
         public typealias DisappearingMessagesJob = _SentMessageTranscriptReceiver_DisappearingMessagesJobShim
         public typealias EarlyMessageManager = _SentMessageTranscriptReceiver_EarlyMessageManagerShim
         public typealias GroupManager = _SentMessageTranscriptReceiver_GroupManagerShim
-        public typealias PaymentsHelper = _SentMessageTranscriptReceiver_PaymentsHelperShim
         public typealias ViewOnceMessages = _SentMessageTranscriptReceiver_ViewOnceMessagesShim
     }
     public enum Wrappers {
         public typealias DisappearingMessagesJob = _SentMessageTranscriptReceiver_DisappearingMessagesJobWrapper
         public typealias EarlyMessageManager = _SentMessageTranscriptReceiver_EarlyMessageManagerWrapper
         public typealias GroupManager = _SentMessageTranscriptReceiver_GroupManagerWrapper
-        public typealias PaymentsHelper = _SentMessageTranscriptReceiver_PaymentsHelperWrapper
         public typealias ViewOnceMessages = _SentMessageTranscriptReceiver_ViewOnceMessagesWrapper
     }
 }
@@ -42,7 +40,7 @@ public class _SentMessageTranscriptReceiver_DisappearingMessagesJobWrapper: _Sen
         SSKEnvironment.shared.disappearingMessagesJobRef.startAnyExpiration(
             for: message,
             expirationStartedAt: expirationStartedAt,
-            transaction: SDSDB.shimOnlyBridge(tx)
+            transaction: tx
         )
     }
 }
@@ -67,7 +65,7 @@ public class _SentMessageTranscriptReceiver_EarlyMessageManagerWrapper: _SentMes
     }
 
     public func applyPendingMessages(for message: TSMessage, localIdentifiers: LocalIdentifiers, tx: DBWriteTransaction) {
-        earlyMessageManager.applyPendingMessages(for: message, localIdentifiers: localIdentifiers, transaction: SDSDB.shimOnlyBridge(tx))
+        earlyMessageManager.applyPendingMessages(for: message, localIdentifiers: localIdentifiers, transaction: tx)
     }
 }
 
@@ -100,42 +98,7 @@ public class _SentMessageTranscriptReceiver_GroupManagerWrapper: _SentMessageTra
             disappearingMessageToken: disappearingMessageToken,
             changeAuthor: changeAuthor,
             localIdentifiers: localIdentifiers,
-            transaction: SDSDB.shimOnlyBridge(tx)
-        )
-    }
-}
-
-// MARK: - Payments Helper
-
-public protocol _SentMessageTranscriptReceiver_PaymentsHelperShim {
-
-    func processReceivedTranscriptPaymentNotification(
-        thread: TSThread,
-        paymentNotification: TSPaymentNotification,
-        messageTimestamp: UInt64,
-        tx: DBWriteTransaction
-    )
-}
-
-public class _SentMessageTranscriptReceiver_PaymentsHelperWrapper: _SentMessageTranscriptReceiver_PaymentsHelperShim {
-
-    private let paymentsHelper: PaymentsHelper
-
-    public init(_ paymentsHelper: PaymentsHelper) {
-        self.paymentsHelper = paymentsHelper
-    }
-
-    public func processReceivedTranscriptPaymentNotification(
-        thread: TSThread,
-        paymentNotification: TSPaymentNotification,
-        messageTimestamp: UInt64,
-        tx: DBWriteTransaction
-    ) {
-        paymentsHelper.processReceivedTranscriptPaymentNotification(
-            thread: thread,
-            paymentNotification: paymentNotification,
-            messageTimestamp: messageTimestamp,
-            transaction: SDSDB.shimOnlyBridge(tx)
+            transaction: tx
         )
     }
 }
@@ -156,6 +119,6 @@ public class _SentMessageTranscriptReceiver_ViewOnceMessagesWrapper: _SentMessag
     public init() {}
 
     public func markAsComplete(message: TSMessage, sendSyncMessages: Bool, tx: DBWriteTransaction) {
-        ViewOnceMessages.markAsComplete(message: message, sendSyncMessages: sendSyncMessages, transaction: SDSDB.shimOnlyBridge(tx))
+        ViewOnceMessages.markAsComplete(message: message, sendSyncMessages: sendSyncMessages, transaction: tx)
     }
 }

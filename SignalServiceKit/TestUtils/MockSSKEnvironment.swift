@@ -36,13 +36,14 @@ public class MockSSKEnvironment {
 
         let finalContinuation = await AppSetup().start(
             appContext: testAppContext,
-            appReadiness: appReadiness,
-            backupArchiveErrorPresenterFactory: NoOpBackupArchiveErrorPresenterFactory(),
             databaseStorage: try! SDSDatabaseStorage(
                 appReadiness: appReadiness,
                 databaseFileUrl: SDSDatabaseStorage.grdbDatabaseFileUrl,
                 keychainStorage: MockKeychainStorage()
             ),
+        ).migrateDatabaseSchema().initGlobals(
+            appReadiness: appReadiness,
+            backupArchiveErrorPresenterFactory: NoOpBackupArchiveErrorPresenterFactory(),
             deviceBatteryLevelManager: nil,
             deviceSleepManager: nil,
             paymentsEvents: PaymentsEventsNoop(),
@@ -55,10 +56,7 @@ public class MockSSKEnvironment {
                 contactManager: FakeContactsManager(),
                 groupV2Updates: MockGroupV2Updates(),
                 groupsV2: MockGroupsV2(),
-                messageSender: FakeMessageSender(),
-                modelReadCaches: ModelReadCaches(
-                    factory: TestableModelReadCacheFactory(appReadiness: appReadiness)
-                ),
+                messageSender: { FakeMessageSender(accountChecker: $0) },
                 networkManager: OWSFakeNetworkManager(appReadiness: appReadiness, libsignalNet: nil),
                 paymentsCurrencies: MockPaymentsCurrencies(),
                 paymentsHelper: MockPaymentsHelper(),
@@ -73,7 +71,7 @@ public class MockSSKEnvironment {
                 versionedProfiles: MockVersionedProfiles(),
                 webSocketFactory: WebSocketFactoryMock()
             )
-        ).prepareDatabase()
+        ).migrateDatabaseData()
         finalContinuation.runLaunchTasksIfNeededAndReloadCaches()
     }
 

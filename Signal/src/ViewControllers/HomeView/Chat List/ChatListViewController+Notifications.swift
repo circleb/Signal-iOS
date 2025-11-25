@@ -82,7 +82,7 @@ extension ChatListViewController {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(backupAttachmentDownloadQueueStatusDidChange(_:)),
-            name: .backupAttachmentDownloadQueueStatusDidChange,
+            name: .backupAttachmentDownloadQueueStatusDidChange(mode: .fullsize),
             object: nil
         )
         NotificationCenter.default.addObserver(
@@ -97,9 +97,33 @@ extension ChatListViewController {
             name: .inactivePrimaryDeviceChanged,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(lastBackupDetailsDidChange),
+            name: .lastBackupDetailsDidChange,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(backupSubscriptionFailedToRedeemDidChange),
+            name: .backupSubscriptionAlreadyRedeemedDidChange,
+            object: nil,
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(backupIAPNotFoundLocallyDidChange),
+            name: .backupIAPNotFoundLocallyDidChange,
+            object: nil,
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(hasConsumedMediaTierCapacityStateDidChange),
+            name: .hasConsumedMediaTierCapacityStatusDidChange,
+            object: nil
+        )
 
         viewState.backupDownloadProgressViewState.downloadQueueStatus =
-            DependenciesBridge.shared.backupAttachmentDownloadQueueStatusReporter.currentStatus()
+            DependenciesBridge.shared.backupAttachmentDownloadQueueStatusReporter.currentStatus(for: .fullsize)
         Task { @MainActor in
             self.viewState.backupDownloadProgressViewState.downloadProgressObserver = await DependenciesBridge.shared
                 .backupAttachmentDownloadProgress
@@ -131,6 +155,30 @@ extension ChatListViewController {
     }
 
     // MARK: -
+
+    @objc
+    private func lastBackupDetailsDidChange(_ notification: NSNotification) {
+        AssertIsOnMainThread()
+        updateBackupFailureAlertsWithSneakyTransaction()
+    }
+
+    @objc
+    private func backupSubscriptionFailedToRedeemDidChange(_ notification: NSNotification) {
+        AssertIsOnMainThread()
+        updateBackupSubscriptionFailedToRedeemAlertsWithSneakyTx()
+    }
+
+    @objc
+    private func backupIAPNotFoundLocallyDidChange(_ notification: NSNotification) {
+        AssertIsOnMainThread()
+        updateBackupIAPNotFoundLocallyAlertsWithSneakyTx()
+    }
+
+    @objc
+    private func hasConsumedMediaTierCapacityStateDidChange(_ notification: NSNotification) {
+        AssertIsOnMainThread()
+        updateHasConsumedMediaTierCapacityWithSneakyTransaction()
+    }
 
     @objc
     private func preferContactAvatarsPreferenceDidChange(_ notification: NSNotification) {
@@ -281,7 +329,7 @@ extension ChatListViewController {
     @objc
     private func backupAttachmentDownloadQueueStatusDidChange(_ notification: Notification) {
         self.viewState.backupDownloadProgressViewState.downloadQueueStatus =
-            DependenciesBridge.shared.backupAttachmentDownloadQueueStatusReporter.currentStatus()
+            DependenciesBridge.shared.backupAttachmentDownloadQueueStatusReporter.currentStatus(for: .fullsize)
         self.viewState.backupDownloadProgressView.update(viewState: self.viewState.backupDownloadProgressViewState)
     }
 

@@ -97,8 +97,8 @@ class ChatsSettingsViewController: OWSTableViewController2 {
         contents.add(keepMutedChatsArchived)
 
         let clearHistorySection = OWSTableSection()
-        clearHistorySection.add(.actionItem(
-            withText: OWSLocalizedString("SETTINGS_CLEAR_HISTORY", comment: ""),
+        clearHistorySection.add(.item(
+            name: OWSLocalizedString("SETTINGS_CLEAR_HISTORY", comment: ""),
             textColor: .ows_accentRed,
             accessibilityIdentifier: UIView.accessibilityIdentifier(in: self, name: "clear_chat_history"),
             actionBlock: { [weak self] in
@@ -169,29 +169,44 @@ class ChatsSettingsViewController: OWSTableViewController2 {
     // MARK: -
 
     private func didTapClearHistory() {
-        DeleteForMeInfoSheetCoordinator.fromGlobals().coordinateDelete(
-            fromViewController: self
-        ) { _, threadSoftDeleteManager in
+        let primaryConfirmDeletionTitle = OWSLocalizedString(
+            "SETTINGS_DELETE_HISTORYLOG_CONFIRMATION",
+            comment: "Alert message before user confirms clearing history"
+        )
+        let secondaryConfirmDeletionTitle = OWSLocalizedString(
+            "SETTINGS_DELETE_HISTORYLOG_CONFIRMATION_SECONDARY_TITLE",
+            comment: "Secondary alert title before user confirms clearing history"
+        )
+        let secondaryConfirmDeletionMessage = OWSLocalizedString(
+            "SETTINGS_DELETE_HISTORYLOG_CONFIRMATION_SECONDARY_MESSAGE",
+            comment: "Secondary alert message before user confirms clearing history"
+        )
+        let confirmDeletionButtonTitle = OWSLocalizedString(
+            "SETTINGS_DELETE_HISTORYLOG_CONFIRMATION_BUTTON",
+            comment: "Confirmation text for button which deletes all message, calling, attachments, etc."
+        )
+
+        // Show two layers of confirmation here – this is a maximally
+        // destructive action.
+        OWSActionSheets.showConfirmationAlert(
+            title: primaryConfirmDeletionTitle,
+            proceedTitle: confirmDeletionButtonTitle,
+            proceedStyle: .destructive,
+        ) { [weak self] _ in
             OWSActionSheets.showConfirmationAlert(
-                title: OWSLocalizedString(
-                    "SETTINGS_DELETE_HISTORYLOG_CONFIRMATION",
-                    comment: "Alert message before user confirms clearing history"
-                ),
-                proceedTitle: OWSLocalizedString(
-                    "SETTINGS_DELETE_HISTORYLOG_CONFIRMATION_BUTTON",
-                    comment: "Confirmation text for button which deletes all message, calling, attachments, etc."
-                ),
-                proceedStyle: .destructive,
-                proceedAction: { [weak self] _ in
-                    self?.clearHistoryBehindSpinner(threadSoftDeleteManager: threadSoftDeleteManager)
-                }
-            )
+                title: secondaryConfirmDeletionTitle,
+                message: secondaryConfirmDeletionMessage,
+                proceedTitle: confirmDeletionButtonTitle,
+                proceedStyle: .destructive
+            ) { [weak self] _ in
+                self?.clearHistoryBehindSpinner()
+            }
         }
     }
 
-    private func clearHistoryBehindSpinner(
-        threadSoftDeleteManager: any ThreadSoftDeleteManager
-    ) {
+    private func clearHistoryBehindSpinner() {
+        let threadSoftDeleteManager = DependenciesBridge.shared.threadSoftDeleteManager
+
         ModalActivityIndicatorViewController.present(
             fromViewController: self,
             canCancel: false,
@@ -214,14 +229,18 @@ class ChatsSettingsViewController: OWSTableViewController2 {
     ) {
         Logger.info("")
 
-        SSKEnvironment.shared.databaseStorageRef.write { transaction in
+        DependenciesBridge.shared.db.write { tx in
             threadSoftDeleteManager.softDelete(
-                threads: TSThread.anyFetchAll(transaction: transaction),
+                threads: TSThread.anyFetchAll(transaction: tx),
                 sendDeleteForMeSyncMessage: true,
-                tx: transaction
+                tx: tx
             )
 
-            StoryMessage.anyRemoveAllWithInstantiation(transaction: transaction)
+            // Need to instantiate these to remove them, since `StoryMessage`
+            // has an `anyDidRemove` hook.
+            for storyMessage in StoryMessage.anyFetchAll(transaction: tx) {
+                storyMessage.anyRemove(transaction: tx)
+            }
         }
 
         AttachmentStream.deleteAllAttachmentFiles()

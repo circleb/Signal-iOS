@@ -80,6 +80,8 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
         chatListNavController.delegate = self
         delegate = self
         preferredDisplayMode = .oneBesideSecondary
+        presentsWithGesture = false
+        preferredPrimaryColumnWidthFraction = 0.42
 
         NotificationCenter.default.addObserver(self, selector: #selector(applyTheme), name: .themeDidChange, object: nil)
         NotificationCenter.default.addObserver(
@@ -97,10 +99,6 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
 
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-    }
-
-    override var preferredStatusBarStyle: UIStatusBarStyle {
-        return Theme.isDarkThemeEnabled ? .lightContent : .default
     }
 
     @objc
@@ -461,7 +459,29 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
                 comment: "A keyboard command to jump to the next conversation in the list."
             )
         )
-    ]
+    ] + [
+        UIKeyCommand(
+            action: #selector(selectPreviousConversation),
+            input: "\t",
+            modifierFlags: [.control, .shift],
+            discoverabilityTitle: OWSLocalizedString(
+                "KEY_COMMAND_PREVIOUS_CONVERSATION",
+                comment: "A keyboard command to jump to the previous conversation in the list."
+            )
+        ),
+        UIKeyCommand(
+            action: #selector(selectNextConversation),
+            input: "\t",
+            modifierFlags: .control,
+            discoverabilityTitle: OWSLocalizedString(
+                "KEY_COMMAND_NEXT_CONVERSATION",
+                comment: "A keyboard command to jump to the next conversation in the list."
+            )
+        ),
+    ].map {
+        $0.wantsPriorityOverSystemBehavior = true
+        return $0
+    }
 
     var selectedConversationKeyCommands: [UIKeyCommand] {
         return [
@@ -572,8 +592,8 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
         homeVC.chatListViewController.showAppSettings()
     }
 
-    func showAppSettingsWithMode(_ mode: ChatListViewController.ShowAppSettingsMode) {
-        homeVC.chatListViewController.showAppSettings(mode: mode)
+    func showAppSettingsWithMode(_ mode: ChatListViewController.ShowAppSettingsMode, completion: (() -> Void)? = nil) {
+        homeVC.chatListViewController.showAppSettings(mode: mode, completion: completion)
     }
 
     @objc
@@ -708,16 +728,21 @@ extension ConversationSplitViewController: UISplitViewControllerDelegate {
 
         return detailNavController
     }
+
+    func splitViewControllerDidExpand(_ svc: UISplitViewController) {
+        homeVC.chatListViewController.updateBarButtonItems()
+        homeVC.callsListViewController.updateBarButtonItems()
+        homeVC.storiesViewController.updateNavigationBar()
+    }
+
+    func splitViewControllerDidCollapse(_ svc: UISplitViewController) {
+        homeVC.chatListViewController.updateBarButtonItems()
+        homeVC.callsListViewController.updateBarButtonItems()
+        homeVC.storiesViewController.updateNavigationBar()
+    }
 }
 
 extension ConversationSplitViewController: UINavigationControllerDelegate {
-    func navigationController(_ navigationController: UINavigationController, didShow viewController: UIViewController, animated: Bool) {
-        // If we're collapsed and navigating to a list VC (either inbox or archive)
-        // the current conversation is no longer selected.
-        guard isCollapsed, viewController is ChatListViewController else { return }
-        selectedConversationViewController = nil
-    }
-
     func navigationController(_ navigationController: UINavigationController, interactionControllerFor animationController: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
         return navigationTransitionDelegate?.navigationController?(
             navigationController,
@@ -762,8 +787,10 @@ extension ConversationSplitViewController: DeviceTransferServiceObserver {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
 
-        AppEnvironment.shared.deviceTransferServiceRef.addObserver(self)
-        AppEnvironment.shared.deviceTransferServiceRef.startListeningForNewDevices()
+        if !BuildFlags.Backups.registrationFlow {
+            AppEnvironment.shared.deviceTransferServiceRef.addObserver(self)
+            AppEnvironment.shared.deviceTransferServiceRef.startListeningForNewDevices()
+        }
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -777,8 +804,10 @@ extension ConversationSplitViewController: DeviceTransferServiceObserver {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
 
-        AppEnvironment.shared.deviceTransferServiceRef.removeObserver(self)
-        AppEnvironment.shared.deviceTransferServiceRef.stopListeningForNewDevices()
+        if !BuildFlags.Backups.registrationFlow {
+            AppEnvironment.shared.deviceTransferServiceRef.removeObserver(self)
+            AppEnvironment.shared.deviceTransferServiceRef.stopListeningForNewDevices()
+        }
     }
 
     func deviceTransferServiceDiscoveredNewDevice(peerId: MCPeerID, discoveryInfo: [String: String]?) {

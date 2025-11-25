@@ -12,21 +12,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation OWSOutgoingPaymentMessage
 
-- (instancetype)initWithThread:(TSThread *)thread
-                   messageBody:(nullable NSString *)messageBody
-           paymentNotification:(TSPaymentNotification *)paymentNotification
-              expiresInSeconds:(uint32_t)expiresInSeconds
-            expireTimerVersion:(nullable NSNumber *)expireTimerVersion
-                   transaction:(DBReadTransaction *)transaction
+- (instancetype)initWithBuilder:(TSOutgoingMessageBuilder *)messageBuilder
+            paymentNotification:(TSPaymentNotification *)paymentNotification
+                    transaction:(DBReadTransaction *)transaction
 {
     OWSAssertDebug(paymentNotification != nil);
 
-    TSOutgoingMessageBuilder *messageBuilder = [TSOutgoingMessageBuilder outgoingMessageBuilderWithThread:thread];
-    // Body ranges unsupported.
-    messageBuilder.messageBody = messageBody;
-    messageBuilder.isViewOnceMessage = false;
-    messageBuilder.expiresInSeconds = expiresInSeconds;
-    messageBuilder.expireTimerVersion = expireTimerVersion;
     self = [super initOutgoingMessageWithBuilder:messageBuilder
                             additionalRecipients:@[]
                               explicitRecipients:@[]
@@ -65,6 +56,7 @@ NS_ASSUME_NONNULL_BEGIN
                 expiresInSeconds:(unsigned int)expiresInSeconds
                        giftBadge:(nullable OWSGiftBadge *)giftBadge
                isGroupStoryReply:(BOOL)isGroupStoryReply
+                          isPoll:(BOOL)isPoll
   isSmsMessageRestoredFromBackup:(BOOL)isSmsMessageRestoredFromBackup
               isViewOnceComplete:(BOOL)isViewOnceComplete
                isViewOnceMessage:(BOOL)isViewOnceMessage
@@ -108,6 +100,7 @@ NS_ASSUME_NONNULL_BEGIN
                   expiresInSeconds:expiresInSeconds
                          giftBadge:giftBadge
                  isGroupStoryReply:isGroupStoryReply
+                            isPoll:isPoll
     isSmsMessageRestoredFromBackup:isSmsMessageRestoredFromBackup
                 isViewOnceComplete:isViewOnceComplete
                  isViewOnceMessage:isViewOnceMessage

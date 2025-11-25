@@ -5,6 +5,7 @@
 
 import AVFoundation
 import GRDB
+import LibSignalClient
 import SignalServiceKit
 import SignalUI
 
@@ -17,14 +18,10 @@ class InternalSettingsViewController: OWSTableViewController2 {
 
     private let mode: Mode
 
-    private let appReadiness: AppReadinessSetter
-
     init(
         mode: Mode = .standard,
-        appReadiness: AppReadinessSetter
     ) {
         self.mode = mode
-        self.appReadiness = appReadiness
         super.init()
     }
 
@@ -44,9 +41,12 @@ class InternalSettingsViewController: OWSTableViewController2 {
         #if USE_DEBUG_UI
         debugSection.add(.disclosureItem(
             withText: "Debug UI",
-            actionBlock: { [weak self, appReadiness] in
+            actionBlock: { [weak self] in
                 guard let self = self else { return }
-                DebugUITableViewController.presentDebugUI(from: self, appReadiness: appReadiness)
+                DebugUITableViewController.presentDebugUI(
+                    fromViewController: self,
+                    thread: nil
+                )
             }
         ))
         #endif
@@ -128,24 +128,29 @@ class InternalSettingsViewController: OWSTableViewController2 {
 
         let backupsSection = OWSTableSection(title: "Backups")
 
-        if mode != .registration {
-            backupsSection.add(.actionItem(withText: "Validate Message Backup") {
-                self.validateMessageBackupProto()
-            })
-
-            backupsSection.add(.actionItem(withText: "Export Message Backup proto") {
-                self.exportMessageBackupProto()
-            })
+        let backupSettingsStore = BackupSettingsStore()
+        let db = DependenciesBridge.shared.db
+        let lastBackupDetails = db.read { tx in
+            return backupSettingsStore.lastBackupDetails(tx: tx)
         }
 
-        backupsSection.add(.switch(
-            withText: "Offload all attachments",
-            subtitle: "If on and \"Optimize Storage\" enabled, offload all attachments instead of only those >30d old",
-            isOn: { Attachment.offloadingThresholdOverride },
-            actionBlock: { _ in
-                Attachment.offloadingThresholdOverride = !Attachment.offloadingThresholdOverride
-            }
-        ))
+        if mode != .registration {
+            backupsSection.add(.actionItem(withText: "Export + Validate Message Backup proto") { [self] in
+                Task {
+                    await exportMessageBackupProto()
+                }
+            })
+        }
+        if BuildFlags.Backups.showOptimizeMedia {
+            backupsSection.add(.switch(
+                withText: "Offload all attachments",
+                subtitle: "If on and \"Optimize Storage\" enabled, offload all attachments instead of only those >30d old",
+                isOn: { Attachment.offloadingThresholdOverride },
+                actionBlock: { _ in
+                    Attachment.offloadingThresholdOverride = !Attachment.offloadingThresholdOverride
+                }
+            ))
+        }
         backupsSection.add(.switch(
             withText: "Disable transit tier downloads",
             subtitle: "Only download backed-up media, never last 45 days free tier media",
@@ -155,21 +160,66 @@ class InternalSettingsViewController: OWSTableViewController2 {
                     !BackupAttachmentDownloadEligibility.disableTransitTierDownloadsOverride
             }
         ))
-        backupsSection.add(.actionItem(withText: "Acquire Backup entitlement sans StoreKit") { [weak self] in
-            Task {
-                let backupTestFlightEntitlementManager = DependenciesBridge.shared.backupTestFlightEntitlementManager
-
-                do {
-                    try await backupTestFlightEntitlementManager.acquireEntitlement()
-                    self?.presentToast(text: "Successfully acquired Backup entitlement!")
-                } catch {
-                    self?.presentToast(text: "Failed to acquired Backup entitlement! \(error)")
-                }
+        backupsSection.add(.switch(
+            withText: "Don't reuse transit tier uploads",
+            subtitle: "Reupload all attachments for backups, even stuff <45d old",
+            isOn: { Upload.disableTransitTierUploadReuse },
+            actionBlock: { _ in
+                Upload.disableTransitTierUploadReuse =
+                    !Upload.disableTransitTierUploadReuse
             }
+        ))
+        backupsSection.add(.actionItem(withText: "Enable Backups onboarding flow") { [weak self] in
+            let backupSettingsStore = BackupSettingsStore()
+            let db = DependenciesBridge.shared.db
+
+            db.write { tx in
+                backupSettingsStore.wipeHaveBackupsEverBeenEnabled(tx: tx)
+            }
+
+            self?.presentToast(text: "Backups onboarding enabled!")
         })
+        backupsSection.add(.actionItem(withText: "Backup media integrity check") { [weak self] in
+            let vc = InternalListMediaViewController()
+            self?.navigationController?.pushViewController(vc, animated: true)
+        })
+        backupsSection.add(.copyableItem(
+            label: "Last Backup chats/messages file size",
+            value: lastBackupDetails.flatMap { ByteCountFormatter().string(for: $0.backupFileSizeBytes) }
+        ))
 
         if backupsSection.items.isEmpty.negated {
             contents.add(backupsSection)
+        }
+
+        do {
+            func makeFileBrowsingActionItem(_ title: String, _ fileUrl: URL) -> OWSTableItem {
+                return .actionItem(
+                    withText: title,
+                    actionBlock: { [weak self] in
+                        guard let self else { return }
+                        navigationController?.pushViewController(
+                            InternalFileBrowserViewController(fileURL: fileUrl),
+                            animated: true
+                        )
+                    }
+                )
+            }
+
+            let fileBrowsingSection = OWSTableSection(title: "Browse App Files")
+            fileBrowsingSection.add(makeFileBrowsingActionItem(
+                "App Container: Library",
+                URL(string: OWSFileSystem.appLibraryDirectoryPath())!.deletingLastPathComponent()
+            ))
+            fileBrowsingSection.add(makeFileBrowsingActionItem(
+                "App Container: Documents",
+                URL(string: OWSFileSystem.appDocumentDirectoryPath())!.deletingLastPathComponent()
+            ))
+            fileBrowsingSection.add(makeFileBrowsingActionItem(
+                "Shared App Container",
+                URL(string: OWSFileSystem.appSharedDataDirectoryPath())!.deletingLastPathComponent()
+            ))
+            contents.add(fileBrowsingSection)
         }
 
         let (
@@ -178,7 +228,9 @@ class InternalSettingsViewController: OWSTableViewController2 {
             messageCount,
             attachmentCount,
             donationSubscriberID,
-            storageServiceManifestVersion
+            storageServiceManifestVersion,
+            aciRegistrationId,
+            pniRegistrationId
         ) = SSKEnvironment.shared.databaseStorageRef.read { tx in
             return (
                 TSThread.anyFetchAll(transaction: tx).filter { !$0.isGroupThread }.count,
@@ -186,7 +238,9 @@ class InternalSettingsViewController: OWSTableViewController2 {
                 TSInteraction.anyCount(transaction: tx),
                 try? Attachment.Record.fetchCount(tx.database),
                 DonationSubscriptionManager.getSubscriberID(transaction: tx),
-                SSKEnvironment.shared.storageServiceManagerRef.currentManifestVersion(tx: tx)
+                SSKEnvironment.shared.storageServiceManagerRef.currentManifestVersion(tx: tx),
+                DependenciesBridge.shared.tsAccountManager.getRegistrationId(for: .aci, tx: tx),
+                DependenciesBridge.shared.tsAccountManager.getRegistrationId(for: .pni, tx: tx)
             )
         }
 
@@ -196,6 +250,8 @@ class InternalSettingsViewController: OWSTableViewController2 {
         regSection.add(.copyableItem(label: "ACI", value: localIdentifiers?.aci.serviceIdString))
         regSection.add(.copyableItem(label: "PNI", value: localIdentifiers?.pni?.serviceIdString))
         regSection.add(.copyableItem(label: "Device ID", value: "\(DependenciesBridge.shared.tsAccountManager.storedDeviceIdWithMaybeTransaction)"))
+        regSection.add(.copyableItem(label: "ACI Registration ID", value: aciRegistrationId.map({"\($0)"}) ?? "<missing>"))
+        regSection.add(.copyableItem(label: "PNI Registration ID", value: pniRegistrationId.map({"\($0)"}) ?? "<missing>"))
         regSection.add(.copyableItem(label: "Push Token", value: SSKEnvironment.shared.preferencesRef.pushToken))
         regSection.add(.copyableItem(label: "Profile Key", value: SSKEnvironment.shared.databaseStorageRef.read(block: SSKEnvironment.shared.profileManagerRef.localUserProfile(tx:))?.profileKey?.keyData.hexadecimalString ?? "none"))
         if let donationSubscriberID {
@@ -205,7 +261,7 @@ class InternalSettingsViewController: OWSTableViewController2 {
 
         let buildSection = OWSTableSection(title: "Build")
         buildSection.add(.copyableItem(label: "Environment", value: TSConstants.isUsingProductionService ? "Production" : "Staging"))
-        buildSection.add(.copyableItem(label: "Variant", value: FeatureFlags.buildVariantString))
+        buildSection.add(.copyableItem(label: "Variant", value: BuildFlags.buildVariantString))
         buildSection.add(.copyableItem(label: "Current Version", value: AppVersionImpl.shared.currentAppVersion))
         buildSection.add(.copyableItem(label: "First Version", value: AppVersionImpl.shared.firstAppVersion))
         if let buildDetails = Bundle.main.object(forInfoDictionaryKey: "BuildDetails") as? [String: AnyObject] {
@@ -308,188 +364,69 @@ private extension InternalSettingsViewController {
         SpinningCheckmarks.shouldSpin = !wasSpinning
     }
 
-    func validateMessageBackupProto() {
+    func exportMessageBackupProto() async {
+        let accountKeyStore = DependenciesBridge.shared.accountKeyStore
         let backupArchiveManager = DependenciesBridge.shared.backupArchiveManager
-        let backupKeyMaterial = DependenciesBridge.shared.backupKeyMaterial
+        let db = DependenciesBridge.shared.db
+        let errorPresenter = DependenciesBridge.shared.backupArchiveErrorPresenter
         let tsAccountManager = DependenciesBridge.shared.tsAccountManager
 
-        guard let localIdentifiers = SSKEnvironment.shared.databaseStorageRef.read(block: {tx in
-            return tsAccountManager.localIdentifiers(tx: tx)
-        }) else {
-            return
+        func presentBackupErrorsAndToast(_ message: String) {
+            errorPresenter.presentOverTopmostViewController { [self] in
+                presentToast(text: message)
+            }
         }
-        Task {
-            do {
-                let backupKey = try SSKEnvironment.shared.databaseStorageRef.read { tx in
-                    try backupKeyMaterial.backupKey(type: .messages, tx: tx)
+
+        let backupKey: MessageBackupKey
+        let exportMetadata: Upload.EncryptedBackupUploadMetadata
+        do {
+            (backupKey, exportMetadata) = try await ModalActivityIndicatorViewController.presentAndPropagateResult(
+                from: self
+            ) {
+                let (messageBackupKey, localIdentifiers) = try db.read { tx in
+                    let localIdentifiers = tsAccountManager.localIdentifiers(tx: tx)!
+                    return (
+                        try accountKeyStore.getMessageRootBackupKey(aci: localIdentifiers.aci, tx: tx)!,
+                        localIdentifiers,
+                    )
                 }
-                let metadata = try await backupArchiveManager.exportEncryptedBackup(
+
+                let backupKey = try MessageBackupKey(
+                    backupKey: messageBackupKey.backupKey,
+                    backupId: messageBackupKey.backupId
+                )
+
+                let exportMetadata = try await backupArchiveManager.exportEncryptedBackup(
                     localIdentifiers: localIdentifiers,
-                    backupKey: backupKey,
-                    backupPurpose: .remoteBackup,
+                    backupPurpose: .remoteExport(key: messageBackupKey, chatAuth: .implicit()),
                     progress: nil
                 )
-                try await backupArchiveManager.validateEncryptedBackup(
-                    fileUrl: metadata.fileUrl,
-                    localIdentifiers: localIdentifiers,
-                    backupKey: backupKey,
-                    backupPurpose: .remoteBackup
-                )
-                try? FileManager.default.removeItem(at: metadata.fileUrl)
-                await MainActor.run {
-                    self.presentToast(text: "Passed validation")
-                }
-            } catch {
-                await MainActor.run {
-                    DependenciesBridge.shared.backupArchiveErrorPresenter.presentOverTopmostViewController(completion: {
-                        self.presentToast(text: "Failed validation")
-                    })
-                }
+
+                return (backupKey, exportMetadata)
             }
-        }
-    }
-
-    func exportMessageBackupProto() {
-        ModalActivityIndicatorViewController.present(
-            fromViewController: self,
-            canCancel: false
-        ) { modal in
-            func dismissModalAndToast(_ message: String) {
-                DependenciesBridge.shared.backupArchiveErrorPresenter.presentOverTopmostViewController(completion: {
-                    modal.dismiss {
-                        self.presentToast(text: message)
-                    }
-                })
-            }
-
-            func exportMessageBackupProtoFile() {
-                Task {
-                    let result = await Result(catching: {
-                        try await self.exportMessageBackupProtoFile(presentingFrom: modal)
-                    })
-                    await MainActor.run {
-                        switch result {
-                        case .success:
-                            dismissModalAndToast("Success! Key copied to clipboard")
-                        case .failure(let error):
-                            dismissModalAndToast("Failed! \(error.localizedDescription)")
-                        }
-                    }
-                }
-            }
-
-            DispatchQueue.main.async {
-                let actionSheet = ActionSheetController(title: "Choose backup destination:")
-
-                let localFileAction = ActionSheetAction(title: "Local device") { _ in
-                    exportMessageBackupProtoFile()
-                }
-
-                let remoteFileAction = ActionSheetAction(title: "Remote server") { _ in
-                    Task {
-                        let result = await Result(catching: {
-                            try await self.exportMessageBackupProtoRemotely()
-                        })
-                        await MainActor.run {
-                            switch result {
-                            case .success:
-                                dismissModalAndToast("Done")
-                            case .failure(let error):
-                                dismissModalAndToast("Failed! \(error.localizedDescription)")
-                            }
-                        }
-                    }
-                }
-
-                actionSheet.addAction(localFileAction)
-                actionSheet.addAction(remoteFileAction)
-                modal.presentActionSheet(actionSheet)
-            }
-        }
-    }
-
-    // Right now this "local" backup uses the same format and encryption scheme
-    // as the remote backup. In the future, this should use the local backup
-    // format and encryption scheme.
-    func exportMessageBackupProtoFile(
-        presentingFrom vc: UIViewController
-    ) async throws {
-        let backupArchiveManager = DependenciesBridge.shared.backupArchiveManager
-        let backupKeyMaterial = DependenciesBridge.shared.backupKeyMaterial
-        let tsAccountManager = DependenciesBridge.shared.tsAccountManager
-
-        let (backupKey, localIdentifiers) = try SSKEnvironment.shared.databaseStorageRef.read { tx in
-            (
-                try backupKeyMaterial.backupKey(type: .messages, tx: tx),
-                tsAccountManager.localIdentifiers(tx: tx)
-            )
-        }
-
-        guard let localIdentifiers else {
+        } catch {
+            owsFailDebug("Failed to export Backup proto! \(error)")
+            presentBackupErrorsAndToast("Failed to export Backup proto!")
             return
         }
 
-        let metadata = try await backupArchiveManager.exportEncryptedBackup(
-            localIdentifiers: localIdentifiers,
-            backupKey: backupKey,
-            backupPurpose: .remoteBackup,
-            progress: nil
+        let keyString = "AES key: \(backupKey.aesKey.base64EncodedString())"
+        + "\nHMAC key: \(backupKey.hmacKey.base64EncodedString())"
+
+        let activityVC = UIActivityViewController(
+            activityItems: [exportMetadata.fileUrl],
+            applicationActivities: nil
         )
-
-        let messageBackupKey = try backupKey.asMessageBackupKey(for: localIdentifiers.aci)
-        let keyString = "AES key: \(messageBackupKey.aesKey.base64EncodedString())"
-            + "\nHMAC key: \(messageBackupKey.hmacKey.base64EncodedString())"
-
-        await withCheckedContinuation { continuation in
-            DispatchQueue.main.async {
-                let activityVC = UIActivityViewController(
-                    activityItems: [metadata.fileUrl],
-                    applicationActivities: nil
-                )
-                activityVC.popoverPresentationController?.sourceView = self.view
-                activityVC.completionWithItemsHandler = { _, _, _, _ in
-                    UIPasteboard.general.string = keyString
-                    continuation.resume()
-                }
-                vc.present(activityVC, animated: true)
-            }
-        }
-    }
-
-    func exportMessageBackupProtoRemotely() async throws {
-        let backupArchiveManager = DependenciesBridge.shared.backupArchiveManager
-        let backupIdManager = DependenciesBridge.shared.backupIdManager
-        let backupKeyMaterial = DependenciesBridge.shared.backupKeyMaterial
-        let tsAccountManager = DependenciesBridge.shared.tsAccountManager
-
-        let (backupKey, localIdentifiers) = try SSKEnvironment.shared.databaseStorageRef.read { tx in
-            (
-                try backupKeyMaterial.backupKey(type: .messages, tx: tx),
-                tsAccountManager.localIdentifiers(tx: tx)
+        activityVC.popoverPresentationController?.sourceView = view
+        activityVC.completionWithItemsHandler = { _, _, _, _ in
+            UIPasteboard.general.setItems(
+                [[UIPasteboard.typeAutomatic: keyString]],
+                options: [.expirationDate: Date().addingTimeInterval(120)]
             )
+
+            presentBackupErrorsAndToast("Success! Encryption key copied.")
         }
 
-        guard let localIdentifiers else {
-            return
-        }
-
-        let metadata = try await backupArchiveManager.exportEncryptedBackup(
-            localIdentifiers: localIdentifiers,
-            backupKey: backupKey,
-            backupPurpose: .remoteBackup,
-            progress: nil
-        )
-
-        let registeredBackupIDToken = try await backupIdManager.registerBackupId(
-            localIdentifiers: localIdentifiers,
-            auth: .implicit()
-        )
-
-        _ = try await backupArchiveManager.uploadEncryptedBackup(
-            metadata: metadata,
-            registeredBackupIDToken: registeredBackupIDToken,
-            auth: .implicit(),
-            progress: nil,
-        )
+        present(activityVC, animated: true)
     }
 }

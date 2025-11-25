@@ -5,10 +5,11 @@
 
 import Foundation
 
-/// Boradly speaking, this class does not perform PreKey operations. It just manages scheduling
+/// Broadly speaking, this class does not perform PreKey operations. It just manages scheduling
 /// them (they must occur in serial), including deciding which need to happen in the first place.
 /// Actual execution is handed off to ``PreKeyTaskManager``.
 public class PreKeyManagerImpl: PreKeyManager {
+    private let logger = PrefixedLogger(prefix: "[PreKey]")
 
     public enum Constants {
 
@@ -18,7 +19,7 @@ public class PreKeyManagerImpl: PreKeyManager {
         // Maximum amount of time that can elapse without rotating signed prekeys
         // before the message sending is disabled.
         static let SignedPreKeyMaxRotationDuration: TimeInterval = (
-            FeatureFlags.shouldUseTestIntervals ? (4 * .day) : (14 * .day)
+            BuildFlags.shouldUseTestIntervals ? (4 * .day) : (14 * .day)
         )
 
         /// Maximum amount of time a pre key can be used before a new one will be
@@ -39,7 +40,7 @@ public class PreKeyManagerImpl: PreKeyManager {
     private static let taskQueue = SerialTaskQueue()
 
     private let db: any DB
-    private let identityManager: PreKey.Shims.IdentityManager
+    private let identityManager: OWSIdentityManager
     private let keyValueStore: KeyValueStore
     private let protocolStoreManager: SignalProtocolStoreManager
     private let chatConnectionManager: any ChatConnectionManager
@@ -51,7 +52,7 @@ public class PreKeyManagerImpl: PreKeyManager {
         dateProvider: @escaping DateProvider,
         db: any DB,
         identityKeyMismatchManager: IdentityKeyMismatchManager,
-        identityManager: PreKey.Shims.IdentityManager,
+        identityManager: OWSIdentityManager,
         messageProcessor: MessageProcessor,
         preKeyTaskAPIClient: PreKeyTaskAPIClient,
         protocolStoreManager: SignalProtocolStoreManager,
@@ -102,22 +103,12 @@ public class PreKeyManagerImpl: PreKeyManager {
     }
 
     public func isAppLockedDueToPreKeyUpdateFailures(tx: DBReadTransaction) -> Bool {
-        let shouldCheckPniState = hasPniIdentityKey(tx: tx)
-        let needPreKeyRotation =
+        return (
             needsSignedPreKeyRotation(identity: .aci, tx: tx)
-            || (
-                shouldCheckPniState
-                && needsSignedPreKeyRotation(identity: .pni, tx: tx)
-            )
-
-        let needLastResortKeyRotation =
-            needsLastResortPreKeyRotation(identity: .aci, tx: tx)
-            || (
-                shouldCheckPniState
-                && needsLastResortPreKeyRotation(identity: .pni, tx: tx)
-            )
-
-        return needPreKeyRotation || needLastResortKeyRotation
+            || needsSignedPreKeyRotation(identity: .pni, tx: tx)
+            || needsLastResortPreKeyRotation(identity: .aci, tx: tx)
+            || needsLastResortPreKeyRotation(identity: .pni, tx: tx)
+        )
     }
 
     private func refreshOneTimePreKeysCheckDidSucceed() {
@@ -146,40 +137,48 @@ public class PreKeyManagerImpl: PreKeyManager {
             return true
         }()
 
-        _ = self._checkPreKeys(shouldCheckOneTimePreKeys: shouldCheckOneTimePreKeys, tx: tx)
+        // If we can throttle this check, and if we're changing our number, assume
+        // that the change number will refresh our pre keys. (This check is
+        // optional, so it's fine to skip it.)
+        let shouldSkipPniPreKeyCheck = shouldThrottle && changeNumberState.update(block: { $0.isChangingNumber })
+        if shouldSkipPniPreKeyCheck {
+            logger.warn("Skipping PNI pre key check due to change number.")
+        }
+
+        _ = self._checkPreKeys(
+            shouldCheckOneTimePreKeys: shouldCheckOneTimePreKeys,
+            shouldCheckPniPreKeys: !shouldSkipPniPreKeyCheck,
+            tx: tx,
+        )
     }
 
-    private func _checkPreKeys(shouldCheckOneTimePreKeys: Bool, tx: DBReadTransaction) -> Task<Void, any Error> {
-        var targets: PreKey.Target = [.signedPreKey, .lastResortPqPreKey]
+    private func _checkPreKeys(
+        shouldCheckOneTimePreKeys: Bool,
+        shouldCheckPniPreKeys: Bool,
+        tx: DBReadTransaction,
+    ) -> Task<Void, any Error> {
+        var targets: PreKeyTargets = [.signedPreKey, .lastResortPqPreKey]
         if shouldCheckOneTimePreKeys {
             targets.insert(target: .oneTimePreKey)
             targets.insert(target: .oneTimePqPreKey)
         }
-        let shouldPerformPniOp = hasPniIdentityKey(tx: tx)
-
-        return Self.taskQueue.enqueue { [weak self, chatConnectionManager, taskManager, targets] in
-            if OWSChatConnection.mustAppUseSocketsToMakeRequests {
-                try await chatConnectionManager.waitForIdentifiedConnectionToOpen()
-            } else {
-                // TODO: Migrate the NSE to use web sockets.
-                // The NSE generally launches only when network is available, and we try to
-                // run this only when we have network, but it's not harmful if that's not
-                // true, so this is fine.
-            }
+        return Self.taskQueue.enqueue { [self, chatConnectionManager, taskManager, targets] in
+            try await chatConnectionManager.waitForIdentifiedConnectionToOpen()
             try Task.checkCancellation()
             try await taskManager.refresh(identity: .aci, targets: targets, auth: .implicit())
-            if shouldPerformPniOp {
+            if shouldCheckPniPreKeys {
                 try Task.checkCancellation()
+                try await self.waitUntilNotChangingNumberIfNeeded(targets: targets)
                 try await taskManager.refresh(identity: .pni, targets: targets, auth: .implicit())
             }
-            if shouldCheckOneTimePreKeys {
-                self?.refreshOneTimePreKeysCheckDidSucceed()
+            if shouldCheckOneTimePreKeys && shouldCheckPniPreKeys {
+                self.refreshOneTimePreKeysCheckDidSucceed()
             }
         }
     }
 
     public func createPreKeysForRegistration() -> Task<RegistrationPreKeyUploadBundles, Error> {
-        PreKey.logger.info("Create registration prekeys")
+        logger.info("Create registration prekeys")
         /// Note that we do not report a `refreshOneTimePreKeysCheckDidSucceed`
         /// because this operation does not generate one time prekeys, so we
         /// shouldn't mark the routine refresh as having been "checked".
@@ -192,7 +191,7 @@ public class PreKeyManagerImpl: PreKeyManager {
         aciIdentityKeyPair: ECKeyPair,
         pniIdentityKeyPair: ECKeyPair
     ) -> Task<RegistrationPreKeyUploadBundles, Error> {
-        PreKey.logger.info("Create provisioning prekeys")
+        logger.info("Create provisioning prekeys")
         /// Note that we do not report a `refreshOneTimePreKeysCheckDidSucceed`
         /// because this operation does not generate one time prekeys, so we
         /// shouldn't mark the routine refresh as having been "checked".
@@ -208,7 +207,7 @@ public class PreKeyManagerImpl: PreKeyManager {
         _ bundles: RegistrationPreKeyUploadBundles,
         uploadDidSucceed: Bool
     ) -> Task<Void, Error> {
-        PreKey.logger.info("Finalize registration prekeys")
+        logger.info("Finalize registration prekeys")
         return Self.taskQueue.enqueue { [taskManager] in
             try await taskManager.persistAfterRegistration(
                 bundles: bundles,
@@ -218,7 +217,7 @@ public class PreKeyManagerImpl: PreKeyManager {
     }
 
     public func rotateOneTimePreKeysForRegistration(auth: ChatServiceAuth) -> Task<Void, Error> {
-        PreKey.logger.info("Rotate one-time prekeys for registration")
+        logger.info("Rotate one-time prekeys for registration")
 
         return Self.taskQueue.enqueue { [weak self, taskManager] in
             try Task.checkCancellation()
@@ -230,10 +229,10 @@ public class PreKeyManagerImpl: PreKeyManager {
     }
 
     public func rotateSignedPreKeysIfNeeded() -> Task<Void, Error> {
-        PreKey.logger.info("Rotating signed prekeys if needed")
+        logger.info("Rotating signed prekeys if needed")
 
         return db.read { tx in
-            return _checkPreKeys(shouldCheckOneTimePreKeys: false, tx: tx)
+            return _checkPreKeys(shouldCheckOneTimePreKeys: false, shouldCheckPniPreKeys: true, tx: tx)
         }
     }
 
@@ -255,16 +254,17 @@ public class PreKeyManagerImpl: PreKeyManager {
         forIdentity identity: OWSIdentity,
         alsoRefreshSignedPreKey shouldRefreshSignedPreKey: Bool
     ) async throws {
-        PreKey.logger.info("[\(identity)] Force refresh onetime prekeys (also refresh signed pre key? \(shouldRefreshSignedPreKey))")
+        logger.info("[\(identity)] Force refresh onetime prekeys (also refresh signed pre key? \(shouldRefreshSignedPreKey))")
         /// Note that we do not report a `refreshOneTimePreKeysCheckDidSucceed`
         /// because this operation does not generate BOTH types of one time prekeys,
         /// so we shouldn't mark the routine refresh as having been "checked".
 
-        var targets: PreKey.Target = [.oneTimePreKey, .oneTimePqPreKey]
+        var targets: PreKeyTargets = [.oneTimePreKey, .oneTimePqPreKey]
         if shouldRefreshSignedPreKey {
             targets.insert(.signedPreKey)
             targets.insert(target: .lastResortPqPreKey)
         }
+        try await waitUntilNotChangingNumberIfNeeded(targets: targets)
 
         let task = Self.taskQueue.enqueue { [taskManager, targets] in
             try Task.checkCancellation()
@@ -306,17 +306,10 @@ public class PreKeyManagerImpl: PreKeyManager {
                 return
             }
             do {
-                if OWSChatConnection.mustAppUseSocketsToMakeRequests {
-                    try await chatConnectionManager.waitForIdentifiedConnectionToOpen()
-                } else {
-                    // TODO: Migrate the NSE to use web sockets.
-                    // The NSE generally launches only when network is available, and we try to
-                    // run this only when we have network, but it's not harmful if that's not
-                    // true, so this is fine.
-                }
+                try await chatConnectionManager.waitForIdentifiedConnectionToOpen()
                 try await _refreshOneTimePreKeys(forIdentity: identity, alsoRefreshSignedPreKey: true)
             } catch {
-                Logger.warn("Couldn't rotate pre keys: \(error)")
+                logger.warn("Couldn't rotate pre keys: \(error)")
                 throw error
             }
         }
@@ -327,6 +320,40 @@ public class PreKeyManagerImpl: PreKeyManager {
                 transaction: tx
             )
         }
+    }
+
+    // MARK: - Change Number
+
+    private struct ChangeNumberState {
+        var isChangingNumber = false
+        var onNotChangingNumber = [NSObject: Monitor.Continuation]()
+    }
+    private let changeNumberState = AtomicValue(ChangeNumberState(), lock: .init())
+
+    private let notChangingNumberCondition = Monitor.Condition<ChangeNumberState>(
+        isSatisfied: { !$0.isChangingNumber },
+        waiters: \.onNotChangingNumber,
+    )
+
+    /// Waits until the current "Change Number" operation is resolved.
+    ///
+    /// If we're changing our number, the currently-active PNI identity key is
+    /// ambiguous (it's either the old one or the new one, but we don't know
+    /// which). We should therefore defer periodic pre key refreshes until after
+    /// we've finished changing our number.
+    private func waitUntilNotChangingNumberIfNeeded(targets: PreKeyTargets) async throws(CancellationError) {
+        guard targets.intersects([.signedPreKey, .lastResortPqPreKey]) else {
+            return
+        }
+        try await Monitor.waitForCondition(notChangingNumberCondition, in: changeNumberState)
+    }
+
+    public func setIsChangingNumber(_ isChangingNumber: Bool) {
+        Monitor.updateAndNotify(
+            in: changeNumberState,
+            block: { $0.isChangingNumber = isChangingNumber },
+            conditions: notChangingNumberCondition,
+        )
     }
 }
 

@@ -210,7 +210,14 @@ extension TSInteraction {
             else {
                 return true
             }
-            return updates.contains { $0.shouldAppearInInbox }
+            return updates.contains { update in
+                switch update {
+                case .wasMigrated, .localUserLeft, .otherUserLeft:
+                    return false
+                default:
+                    return true
+                }
+            }
         case .typeLocalUserEndedSession: return true
         case .typeRemoteUserEndedSession: return true
         case .userNotRegistered: return true
@@ -229,6 +236,7 @@ extension TSInteraction {
         case .blockedGroup: return true
         case .unblockedOtherUser: return true
         case .unblockedGroup: return true
+        case .typeEndPoll: return true
         }
     }
 }

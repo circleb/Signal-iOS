@@ -38,12 +38,6 @@ protocol SDSCodableModelDatabaseInterface {
         transaction: DBWriteTransaction
     )
 
-    /// Instantiate and remove all models of the given type from the database.
-    func removeAllModelsWithInstantiation<Model: SDSCodableModel>(
-        modelType: Model.Type,
-        transaction: DBWriteTransaction
-    )
-
     // MARK: Save
 
     /// Insert the given model to the database.
@@ -91,14 +85,6 @@ protocol SDSCodableModelDatabaseInterface {
         arguments: StatementArguments,
         batchingPreference: BatchingPreference,
         block: @escaping (Model, UnsafeMutablePointer<ObjCBool>) -> Void
-    )
-
-    /// Traverse all records' unique IDs, in no particular order.
-    func enumerateModelUniqueIds<Model: SDSCodableModel>(
-        modelType: Model.Type,
-        transaction: DBReadTransaction,
-        batched: Bool,
-        block: @escaping (String, UnsafeMutablePointer<ObjCBool>) -> Void
     )
 }
 

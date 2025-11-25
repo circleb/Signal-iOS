@@ -115,23 +115,20 @@ class ChatColorViewController: OWSTableViewController2 {
         self.mockConversationView = mockConversationView
         let previewSection = OWSTableSection()
         previewSection.hasBackground = false
-        previewSection.add(OWSTableItem { [weak self] in
+        previewSection.add(OWSTableItem {
             let cell = OWSTableItem.newCell()
             cell.selectionStyle = .none
-            guard let self = self else { return cell }
 
             wallpaperPreviewView.setContentHuggingLow()
             wallpaperPreviewView.setCompressionResistanceLow()
             cell.contentView.addSubview(wallpaperPreviewView)
-            wallpaperPreviewView.autoPinEdge(toSuperviewEdge: .left, withInset: self.cellHOuterLeftMargin)
-            wallpaperPreviewView.autoPinEdge(toSuperviewEdge: .right, withInset: self.cellHOuterRightMargin)
-            wallpaperPreviewView.autoPinHeightToSuperview()
+            wallpaperPreviewView.autoPinEdgesToSuperviewEdges()
 
             mockConversationView.setContentHuggingVerticalHigh()
             mockConversationView.setCompressionResistanceVerticalHigh()
             cell.contentView.addSubview(mockConversationView)
-            mockConversationView.autoPinEdge(toSuperviewEdge: .left, withInset: self.cellHOuterLeftMargin)
-            mockConversationView.autoPinEdge(toSuperviewEdge: .right, withInset: self.cellHOuterRightMargin)
+            mockConversationView.autoPinEdge(toSuperviewEdge: .left)
+            mockConversationView.autoPinEdge(toSuperviewEdge: .right)
             mockConversationView.autoPinEdge(toSuperviewEdge: .top, withInset: 24)
             mockConversationView.autoPinEdge(toSuperviewEdge: .bottom, withInset: 24)
 
@@ -346,7 +343,7 @@ class ChatColorViewController: OWSTableViewController2 {
 
 extension ChatColorViewController: MockConversationDelegate {
     var mockConversationViewWidth: CGFloat {
-        self.view.width - cellOuterInsets.totalWidth
+        self.view.width
     }
 }
 
@@ -389,13 +386,16 @@ private class ChatColorPicker: UIView {
                                              spacing: 28,
                                              layoutMargins: .zero)
 
-        let rowWidth: CGFloat = max(0,
-                                    chatColorViewController.view.width - CGFloat(
-                                        chatColorViewController.cellOuterInsets.totalWidth +
-                                            OWSTableViewController2.cellHInnerMargin * 2 +
-                                            hStackConfig.layoutMargins.totalWidth +
-                                            vStackConfig.layoutMargins.totalWidth
-        ))
+        let rowWidth: CGFloat = max(
+            0,
+            chatColorViewController.view.width -
+            chatColorViewController.view.safeAreaInsets.totalWidth -
+            CGFloat(
+                OWSTableViewController2.cellHInnerMargin * 2 +
+                hStackConfig.layoutMargins.totalWidth +
+                vStackConfig.layoutMargins.totalWidth
+            )
+        )
         let optionViewInnerSize: CGFloat = 56
         let optionViewSelectionThickness: CGFloat = 4
         let optionViewSelectionSpacing: CGFloat = 2

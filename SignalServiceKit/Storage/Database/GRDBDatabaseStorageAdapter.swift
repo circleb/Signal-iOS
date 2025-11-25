@@ -135,12 +135,7 @@ public class GRDBDatabaseStorageAdapter {
 
         try GRDBDatabaseStorageAdapter.ensureDatabaseKeySpecExists(keyFetcher: keyFetcher)
 
-        do {
-            // Crash if storage can't be initialized.
-            self.storage = try GRDBStorage(dbURL: databaseFileUrl, keyFetcher: keyFetcher)
-        } catch {
-            throw error
-        }
+        self.storage = try GRDBStorage(dbURL: databaseFileUrl, keyFetcher: keyFetcher)
     }
 
     deinit {
@@ -309,7 +304,7 @@ extension GRDBDatabaseStorageAdapter {
 
 // MARK: -
 
-extension GRDBDatabaseStorageAdapter: SDSDatabaseStorageAdapter {
+extension GRDBDatabaseStorageAdapter {
 
     #if TESTABLE_BUILD
     // TODO: We could eventually eliminate all nested transactions.
@@ -345,25 +340,6 @@ extension GRDBDatabaseStorageAdapter: SDSDatabaseStorageAdapter {
         }
     }
 
-    @discardableResult
-    public func writeWithTxCompletion<T>(
-        block: (DBWriteTransaction) -> TransactionCompletion<T>
-    ) throws -> T {
-
-        var value: T!
-        let _: Void = try writeWithTxCompletion { (transaction) in
-            let result = block(transaction)
-            switch result {
-            case .commit(let t):
-                value = t
-            case .rollback(let t):
-                value = t
-            }
-            return result.typeErased
-        }
-        return value
-    }
-
     public func read(block: (DBReadTransaction) -> Void) throws {
 
         #if TESTABLE_BUILD
@@ -386,7 +362,7 @@ extension GRDBDatabaseStorageAdapter: SDSDatabaseStorageAdapter {
         }
     }
 
-    public func writeWithTxCompletion(block: (DBWriteTransaction) -> TransactionCompletion<Void>) throws {
+    public func writeWithTxCompletion(block: (DBWriteTransaction) -> Database.TransactionCompletion) throws {
         #if TESTABLE_BUILD
         owsAssertDebug(Self.canOpenTransaction)
         // Check for nested tractions.
@@ -404,16 +380,16 @@ extension GRDBDatabaseStorageAdapter: SDSDatabaseStorageAdapter {
         var txCompletionBlocks: [DBWriteTransaction.CompletionBlock]!
 
         try pool.writeWithoutTransaction { database in
-            try database.inTransaction {
-                let txCompletion: TransactionCompletion<Void> = autoreleasepool {
+            try database.inTransaction { () -> Database.TransactionCompletion in
+                return autoreleasepool {
                     let tx = DBWriteTransaction(database: database)
-                    let txComplection = block(tx)
-                    tx.finalizeTransaction()
-                    txCompletionBlocks = tx.completionBlocks
+                    defer {
+                        tx.finalizeTransaction()
+                        txCompletionBlocks = tx.completionBlocks
+                    }
 
-                    return txComplection
+                    return block(tx)
                 }
-                return txCompletion.asGRDBCompletion
             }
         }
 
@@ -929,27 +905,15 @@ extension GRDBDatabaseStorageAdapter {
 
 extension GRDBDatabaseStorageAdapter {
     var databaseFileSize: UInt64 {
-        guard let fileSize = OWSFileSystem.fileSize(ofPath: databaseFilePath) else {
-            owsFailDebug("Could not determine file size.")
-            return 0
-        }
-        return fileSize.uint64Value
+        return (try? OWSFileSystem.fileSize(ofPath: databaseFilePath)) ?? 0
     }
 
     var databaseWALFileSize: UInt64 {
-        guard let fileSize = OWSFileSystem.fileSize(ofPath: databaseWALFilePath) else {
-            owsFailDebug("Could not determine file size.")
-            return 0
-        }
-        return fileSize.uint64Value
+        return (try? OWSFileSystem.fileSize(ofPath: databaseWALFilePath)) ?? 0
     }
 
     var databaseSHMFileSize: UInt64 {
-        guard let fileSize = OWSFileSystem.fileSize(ofPath: databaseSHMFilePath) else {
-            owsFailDebug("Could not determine file size.")
-            return 0
-        }
-        return fileSize.uint64Value
+        return (try? OWSFileSystem.fileSize(ofPath: databaseSHMFilePath)) ?? 0
     }
 }
 
@@ -1025,5 +989,20 @@ extension Error {
     public var grdbErrorForLogging: any Error {
         // If not a GRDB error, return unmodified.
         return (self as? GRDB.DatabaseError)?.forLogging ?? self
+    }
+
+    public func forceCastToDatabaseError() -> DatabaseError {
+        switch self {
+        case let error as GRDB.DatabaseError:
+            return error.forLogging
+        default:
+            owsFailDebug("The database threw a non-DatabaseError: \(self)")
+            return DatabaseError(
+                resultCode: .SQLITE_ERROR,
+                message: "\(self)",
+                sql: nil,
+                arguments: nil,
+            )
+        }
     }
 }

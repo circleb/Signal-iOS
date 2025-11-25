@@ -242,8 +242,8 @@ public class PreparedOutgoingMessage {
 
     // MARK: - Sending
 
-    public func send(_ sender: (TSOutgoingMessage) async throws -> Void) async throws {
-        try await sender(messageForSending)
+    public func send<T>(_ sender: (TSOutgoingMessage) async throws -> T) async throws -> T {
+        return try await sender(messageForSending)
     }
 
     public func attachmentUploadOperations(tx: DBReadTransaction) -> [() async throws -> Void] {
@@ -270,6 +270,10 @@ public class PreparedOutgoingMessage {
             error: error,
             transaction: tx
         )
+    }
+
+    public func updateWithSendSuccess(tx: DBWriteTransaction) {
+        messageForSendStateUpdates.updateWithSendSuccess(tx: tx)
     }
 
     // MARK: - Persistence
@@ -317,7 +321,7 @@ public class PreparedOutgoingMessage {
         }()
 
         if let body {
-            owsAssertDebug(body.lengthOfBytes(using: .utf8) <= kOversizeTextMessageSizeThreshold)
+            owsAssertDebug(body.lengthOfBytes(using: .utf8) <= OWSMediaUtils.kOversizeTextMessageSizeThresholdBytes)
         }
     }
 

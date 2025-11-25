@@ -17,7 +17,7 @@ public class ProvisioningManagerTests {
     private var mockDeviceProvisioningService: MockDeviceProvisioningService!
     private var mockIdentityManager: MockIdentityManager!
     private var mockLinkAndSyncManager: MockLinkAndSyncManager!
-    private var mockProfileManager: ProvisioningManager.Mocks.ProfileManager!
+    private var mockProfileManager: OWSFakeProfileManager!
     private var mockReceiptManager: ProvisioningManager.Mocks.ReceiptManager!
     private var mockTsAccountManager: MockTSAccountManager!
 
@@ -31,7 +31,7 @@ public class ProvisioningManagerTests {
         self.deviceManager = MockDeviceManager()
         self.mockDeviceProvisioningService = MockDeviceProvisioningService()
         self.mockLinkAndSyncManager = MockLinkAndSyncManager()
-        self.mockProfileManager = ProvisioningManager.Mocks.ProfileManager()
+        self.mockProfileManager = OWSFakeProfileManager()
         self.mockReceiptManager = ProvisioningManager.Mocks.ReceiptManager()
         self.mockTsAccountManager = MockTSAccountManager()
 
@@ -50,23 +50,24 @@ public class ProvisioningManagerTests {
         let myAci = Aci.randomForTesting()
         let myPhoneNumber = E164("+16505550100")!
         let myPni = Pni.randomForTesting()
-        let myRecipient = SignalRecipient(aci: myAci, pni: myPni, phoneNumber: myPhoneNumber)
         let profileKey = Aes256Key.generateRandom()
         let accountEntropyPool = AccountEntropyPool()
-        let mrbk = BackupKey.generateRandom()
+        let mrbk = MediaRootBackupKey(backupKey: .generateRandom())
         let readReceiptsEnabled = true
         let provisioningCode = "ABC123"
 
         let ephemeralDeviceId = "ephemeral-device-id"
         let newDeviceIdentityKeyPair = IdentityKeyPair.generate()
 
-        let accountKeyStore = AccountKeyStore()
+        let accountKeyStore = AccountKeyStore(
+            backupSettingsStore: BackupSettingsStore(),
+        )
         db.write { tx in
             accountKeyStore.setAccountEntropyPool(accountEntropyPool, tx: tx)
             accountKeyStore.setMediaRootBackupKey(mrbk, tx: tx)
-            recipientDatabaseTable.insertRecipient(myRecipient, transaction: tx)
             mockIdentityManager.setIdentityKeyPair(myAciIdentityKeyPair.asECKeyPair, for: .aci, tx: tx)
             mockIdentityManager.setIdentityKeyPair(myPniIdentityKeyPair.asECKeyPair, for: .pni, tx: tx)
+            _ = try! SignalRecipient.insertRecord(aci: myAci, phoneNumber: myPhoneNumber, pni: myPni, tx: tx)
         }
 
         mockTsAccountManager.localIdentifiersMock = {
@@ -76,7 +77,7 @@ public class ProvisioningManagerTests {
                 e164: myPhoneNumber
             )
         }
-        mockProfileManager.localUserProfile = OWSUserProfile(address: .localUser, profileKey: profileKey)
+        mockProfileManager.localProfile = OWSUserProfile(address: .localUser, profileKey: profileKey)
         mockReceiptManager.areReadReceiptsEnabledValue = readReceiptsEnabled
         mockDeviceProvisioningService.deviceProvisioningCodes.append(provisioningCode)
 
@@ -118,7 +119,7 @@ public class ProvisioningManagerTests {
         // values populated by the old device
         switch provisionMessage.rootKey {
         case .accountEntropyPool(let aep):
-            #expect(aep.rawData == accountEntropyPool.rawData)
+            #expect(aep == accountEntropyPool)
         case .masterKey:
             Issue.record("Expected AEP, but found MasterKey")
         }
@@ -156,14 +157,14 @@ private class MockLinkAndSyncManager: LinkAndSyncManager {
 
     func setIsLinkAndSyncEnabledOnPrimary(_ isEnabled: Bool, tx: DBWriteTransaction) {}
 
-    func generateEphemeralBackupKey() -> BackupKey {
-        return .forTesting()
+    func generateEphemeralBackupKey(aci: Aci) -> MessageRootBackupKey {
+        return MessageRootBackupKey(backupKey: .generateRandom(), aci: aci)
     }
 
     func waitForLinkingAndUploadBackup(
-        ephemeralBackupKey: BackupKey,
+        ephemeralBackupKey: MessageRootBackupKey,
         tokenId: DeviceProvisioningTokenId,
-        progress: OWSProgressSink
+        progress: OWSSequentialProgressRootSink<PrimaryLinkNSyncProgressPhase>
     ) async throws(PrimaryLinkNSyncError) {
         return
     }
@@ -171,8 +172,8 @@ private class MockLinkAndSyncManager: LinkAndSyncManager {
     func waitForBackupAndRestore(
         localIdentifiers: LocalIdentifiers,
         auth: ChatServiceAuth,
-        ephemeralBackupKey: BackupKey,
-        progress: OWSProgressSink
+        ephemeralBackupKey: MessageRootBackupKey,
+        progress: OWSSequentialProgressRootSink<SecondaryLinkNSyncProgressPhase>
     ) async throws(SecondaryLinkNSyncError) {
         return
     }

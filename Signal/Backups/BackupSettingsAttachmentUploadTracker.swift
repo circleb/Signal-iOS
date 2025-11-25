@@ -11,7 +11,9 @@ final class BackupSettingsAttachmentUploadTracker {
         enum State {
             case running
             case pausedLowBattery
+            case pausedLowPowerMode
             case pausedNeedsWifi
+            case pausedNeedsInternet
         }
 
         let state: State
@@ -25,7 +27,6 @@ final class BackupSettingsAttachmentUploadTracker {
             self.init(state: state, progress: OWSProgress(
                 completedUnitCount: bytesUploaded,
                 totalUnitCount: totalBytesToUpload,
-                sourceProgresses: [:]
             ))
         }
 
@@ -107,8 +108,7 @@ private class Tracker {
     }
 
     func start() {
-        state.enqueueUpdate { @MainActor [weak self] _state in
-            guard let self else { return }
+        state.enqueueUpdate { @MainActor [self] _state in
             _state.uploadQueueStatusObserver = observeUploadQueueStatus()
         }
     }
@@ -131,20 +131,21 @@ private class Tracker {
 
     @MainActor
     private func observeUploadQueueStatus() -> NotificationCenter.Observer {
+        // We only care about fullsize uploads, ignore thumbnails
         let uploadQueueStatusObserver = NotificationCenter.default.addObserver(
-            name: .backupAttachmentUploadQueueStatusDidChange
+            name: .backupAttachmentUploadQueueStatusDidChange(for: .fullsize)
         ) { [weak self] notification in
             guard let self else { return }
 
             handleQueueStatusUpdate(
-                backupAttachmentUploadQueueStatusReporter.currentStatus()
+                backupAttachmentUploadQueueStatusReporter.currentStatus(for: .fullsize)
             )
         }
 
         // Now that we're observing updates, handle the initial value as if we'd
         // just gotten it in an update.
         handleQueueStatusUpdate(
-            backupAttachmentUploadQueueStatusReporter.currentStatus()
+            backupAttachmentUploadQueueStatusReporter.currentStatus(for: .fullsize)
         )
 
         return uploadQueueStatusObserver
@@ -157,39 +158,34 @@ private class Tracker {
             _state.lastReportedUploadQueueStatus = queueStatus
 
             switch queueStatus {
-            case .running:
-                // If the queue is running, add an observer. It's important that
-                // we not do this until the queue is running, since the observer
-                // only operates on a snapshot of the queue and we want that
-                // snapshot to represent a running queue.
-                let observer = try? await backupAttachmentUploadProgress
+            case .empty:
+                yieldCurrentUploadUpdate(state: _state)
+            case
+                    .running,
+                    .noWifiReachability, .lowBattery, .lowPowerMode, .noReachability,
+                    .notRegisteredAndReady, .appBackgrounded, .suspended, .hasConsumedMediaTierCapacity:
+                // The queue isn't empty, so attach a new progress observer.
+                //
+                // Progress observers snapshot and filter the queue's state, so
+                // any time the queue is non-empty we want to make sure we have
+                // an observer with a filtered-snapshot of the latest state.
+                //
+                // For example, when we first enable paid-tier Backups the queue
+                // starts empty and is populated when we run list-media for the
+                // first time.
+                //
+                // The observer we attach will yield an update, so we don't need
+                // to here.
+                if let existingObserver = _state.uploadProgressObserver {
+                    await backupAttachmentUploadProgress.removeObserver(existingObserver)
+                }
+
+                _state.uploadProgressObserver = try? await backupAttachmentUploadProgress
                     .addObserver { [weak self] progressUpdate in
                         guard let self else { return }
-
                         handleUploadProgressUpdate(progressUpdate)
                     }
-
-                if let observer {
-                    owsAssertDebug(_state.uploadProgressObserver == nil)
-                    _state.uploadProgressObserver = observer
-                }
-
-                // We don't need to yield an upload update here: the progress
-                // observer we just added will do so.
-                return
-
-            case .empty, .notRegisteredAndReady:
-                if let uploadProgressObserver = _state.uploadProgressObserver {
-                    await backupAttachmentUploadProgress.removeObserver(uploadProgressObserver)
-                }
-
-                _state.uploadProgressObserver = nil
-
-            case .noWifiReachability, .lowBattery:
-                break
             }
-
-            yieldCurrentUploadUpdate(state: _state)
         }
     }
 
@@ -210,15 +206,30 @@ private class Tracker {
             return
         }
 
+        guard lastReportedUploadProgress.totalUnitCount > 0 else {
+            // We have no meaningful progress to report on.
+            return
+        }
+
         let uploadUpdateState: UploadUpdate.State? = {
             switch lastReportedUploadQueueStatus {
+            case .empty:
+                return nil
+            case .notRegisteredAndReady, .appBackgrounded, .suspended:
+                return nil
             case .running:
                 return .running
+            case .noReachability:
+                return .pausedNeedsInternet
             case .noWifiReachability:
                 return .pausedNeedsWifi
             case .lowBattery:
                 return .pausedLowBattery
-            case .empty, .notRegisteredAndReady:
+            case .lowPowerMode:
+                return .pausedLowPowerMode
+            case .hasConsumedMediaTierCapacity:
+                // This gets bubbled up via other mechanisms; to the UI
+                // this upload state doesn't show a bar so its nil.
                 return nil
             }
         }()

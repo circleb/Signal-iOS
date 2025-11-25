@@ -19,6 +19,7 @@ open class AttachmentManagerMock: AttachmentManager {
     open func createAttachmentPointers(
         from backupProtos: [OwnedAttachmentBackupPointerProto],
         uploadEra: String,
+        attachmentByteCounter: BackupArchiveAttachmentByteCounter,
         tx: DBWriteTransaction
     ) -> [OwnedAttachmentBackupPointerProto.CreationError] {
         // Do nothing
@@ -27,6 +28,14 @@ open class AttachmentManagerMock: AttachmentManager {
 
     open func createAttachmentStreams(
         consuming dataSources: [OwnedAttachmentDataSource],
+        tx: DBWriteTransaction
+    ) throws {
+        // Do nothing
+    }
+
+    open func updateAttachmentWithOversizeTextFromBackup(
+        attachmentId: Attachment.IDType,
+        pendingAttachment: PendingAttachment,
         tx: DBWriteTransaction
     ) throws {
         // Do nothing

@@ -53,7 +53,7 @@ public class PaymentsRestoreWalletCompleteViewController: OWSTableViewController
 
     private func buildBottomView() {
         let doneButton = OWSFlatButton.button(title: CommonStrings.doneButton,
-                                              font: UIFont.dynamicTypeBody.semibold(),
+                                              font: UIFont.dynamicTypeHeadline,
                                               titleColor: .white,
                                               backgroundColor: .ows_accentBlue,
                                               target: self,
@@ -71,12 +71,11 @@ public class PaymentsRestoreWalletCompleteViewController: OWSTableViewController
         bottomStack.axis = .vertical
         bottomStack.alignment = .fill
         bottomStack.isLayoutMarginsRelativeArrangement = true
-        bottomStack.layoutMargins = cellOuterInsetsWithMargin(top: 8, left: 20, right: 20)
+        bottomStack.layoutMargins = .init(top: 8, left: 20, bottom: 8, right: 20)
         bottomStack.addArrangedSubviews([
             doneButton,
             UIView.spacer(withHeight: 8),
             editButton,
-            UIView.spacer(withHeight: 8)
         ])
     }
 
@@ -114,7 +113,7 @@ public class PaymentsRestoreWalletCompleteViewController: OWSTableViewController
         let explanationLabel = UILabel()
         explanationLabel.text = OWSLocalizedString("SETTINGS_PAYMENTS_RESTORE_WALLET_COMPLETE_EXPLANATION",
                                                   comment: "Explanation of the 'review payments passphrase' step of the 'restore payments wallet' views.")
-        explanationLabel.font = .dynamicTypeBody2Clamped
+        explanationLabel.font = .dynamicTypeSubheadlineClamped
         explanationLabel.textColor = Theme.secondaryTextAndIconColor
         explanationLabel.textAlignment = .center
         explanationLabel.numberOfLines = 0
@@ -128,7 +127,7 @@ public class PaymentsRestoreWalletCompleteViewController: OWSTableViewController
         topStack.axis = .vertical
         topStack.alignment = .center
         topStack.isLayoutMarginsRelativeArrangement = true
-        topStack.layoutMargins = cellOuterInsetsWithMargin(top: 32, left: 20, bottom: 40, right: 20)
+        topStack.layoutMargins = .init(top: 32, left: 20, bottom: 40, right: 20)
         return topStack
     }
 

@@ -105,6 +105,24 @@
 			<string>Adaugă membri noi</string>
 		</dict>
 	</dict>
+	<key>BACKUP_SETTINGS_BACKUP_PLAN_FREE_HEADER_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Text + %1$d zi de backup al fișierelor</string>
+			<key>few</key>
+			<string>Text + %1$d zile de backup al fișierelor</string>
+			<key>other</key>
+			<string>Text + %1$d de zile de backup al fișierelor</string>
+		</dict>
+	</dict>
 	<key>CALLS_TAB_DELETE_MULTIPLE_TITLE</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -339,6 +357,60 @@
 			<string>Această culoare este folosită pentru %1$d de conversații. Vrei să salvezi modificările pentru toate conversațiile?</string>
 		</dict>
 	</dict>
+	<key>CHOOSE_BACKUP_PLAN_BULLET_RECENT_MEDIA_BACKUP_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Ultima %1$d zi de fișiere media</string>
+			<key>few</key>
+			<string>Ultimele %1$d zile de fișiere media</string>
+			<key>other</key>
+			<string>Ultimele %1$d de zile de fișiere media</string>
+		</dict>
+	</dict>
+	<key>CHOOSE_BACKUP_PLAN_DOWNGRADE_CONFIRMATION_ACTION_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Toate mesajele text și fișierele media din ultima %1$d zi vor fi incluse în backup dacă îți schimbi abonamentul.</string>
+			<key>few</key>
+			<string>Toate mesajele text și fișierele media din ultimele %1$d zile vor fi incluse în backup dacă îți schimbi abonamentul.</string>
+			<key>other</key>
+			<string>Toate mesajele text și fișierele media din ultimele %1$d de zile vor fi incluse în backup dacă îți schimbi abonamentul.</string>
+		</dict>
+	</dict>
+	<key>CHOOSE_BACKUP_PLAN_FREE_PLAN_SUBTITLE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Text + %1$d zi de fișiere media</string>
+			<key>few</key>
+			<string>Text + %1$d zile de fișiere media</string>
+			<key>other</key>
+			<string>Text + %1$d de zile de fișiere media</string>
+		</dict>
+	</dict>
 	<key>CONVERSATION_DELETE_CONFIRMATIONS_ALERT_TITLE_%d</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -548,24 +620,6 @@
 			<string>Numai %1$d modificări pot fi aplicate acestui mesaj.</string>
 			<key>other</key>
 			<string>Numai %1$d de modificări pot fi aplicate acestui mesaj.</string>
-		</dict>
-	</dict>
-	<key>FORWARD_MESSAGE_FIRST_FORWARD_PROCEED_%d</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@text@</string>
-		<key>text</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
-			<key>one</key>
-			<string>Trimite %1$d mesaj</string>
-			<key>few</key>
-			<string>Trimite %1$d mesaje</string>
-			<key>other</key>
-			<string>Trimite %1$d de mesaje</string>
 		</dict>
 	</dict>
 	<key>GROUPS_TOO_MANY_MEMBERS_ALERT_MESSAGE_%d</key>
@@ -1090,6 +1144,24 @@
 			<string>Pentru a menține &quot;%2$@&quot; conectat, deschide Signal pe dispozitivul respectiv în termen de %1$d de zile.</string>
 		</dict>
 	</dict>
+	<key>LINK_DEVICE_CONFIRMATION_ALERT_TRANSFER_SUBTITLE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Transferă mesajele text și fișierele media din ultima %1$d zi</string>
+			<key>few</key>
+			<string>Transferă mesajele text și fișierele media din ultimele %1$d zile</string>
+			<key>other</key>
+			<string>Transferă mesajele text și fișierele media din ultimele %1$d de zile</string>
+		</dict>
+	</dict>
 	<key>MANY_GROUPS_IN_COMMON_%d</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -1196,24 +1268,6 @@
 			<string>Redirecționează %1$d</string>
 			<key>other</key>
 			<string>Redirecționează %1$d</string>
-		</dict>
-	</dict>
-	<key>MESSAGES_VIEW_GROUP_N_MEMBERS_BLOCKED_%d</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@caption@</string>
-		<key>caption</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
-			<key>one</key>
-			<string>Ai blocat %1$d membru al acestui grup</string>
-			<key>few</key>
-			<string>Ai blocat %1$d membri ai acestui grup</string>
-			<key>other</key>
-			<string>Ai blocat %1$d de membri ai acestui grup</string>
 		</dict>
 	</dict>
 	<key>MESSAGE_ACTIONS_TOOLBAR_CAPTION_%d</key>
@@ -1504,6 +1558,24 @@
 			<string>Anulezi %1$d de invitații trimise de „%2$@”?</string>
 		</dict>
 	</dict>
+	<key>POLL_VOTE_COUNT</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d Vot</string>
+			<key>few</key>
+			<string>%1$d Voturi</string>
+			<key>other</key>
+			<string>%1$d de Voturi</string>
+		</dict>
+	</dict>
 	<key>PRIVATE_STORY_VIEWERS_%d</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -1718,6 +1790,78 @@
 			<string>%1$ld alții</string>
 			<key>other</key>
 			<string>%1$ld alții</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_AUDIO_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Acest mesaj vocal nu a fost transferat de pe telefonul tău când acest dispozitiv a fost asociat. Media și fișierele mai vechi de %1$d zi în momentul conectării dispozitivului nu pot fi sincronizate.</string>
+			<key>few</key>
+			<string>Acest mesaj vocal nu a fost transferat de pe telefonul tău când acest dispozitiv a fost asociat. Media și fișierele mai vechi de %1$d zile în momentul conectării dispozitivului nu pot fi sincronizate.</string>
+			<key>other</key>
+			<string>Acest mesaj vocal nu a fost transferat de pe telefonul tău când acest dispozitiv a fost asociat. Media și fișierele mai vechi de %1$d de zile în momentul conectării dispozitivului nu pot fi sincronizate.</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_FILE_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Acest fișier nu a fost transferat de pe telefonul tău când acest dispozitiv a fost asociat. Fișierele și conținutul media mai vechi de %1$d zi în momentul asocierii dispozitivului nu pot fi sincronizate.</string>
+			<key>few</key>
+			<string>Acest fișier nu a fost transferat de pe telefonul tău când acest dispozitiv a fost asociat. Fișierele și conținutul media mai vechi de %1$d zile în momentul asocierii dispozitivului nu pot fi sincronizate.</string>
+			<key>other</key>
+			<string>Acest fișier nu a fost transferat de pe telefonul tău când acest dispozitiv a fost asociat. Fișierele și conținutul media mai vechi de %1$d de zile în momentul asocierii dispozitivului nu pot fi sincronizate.</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_OVERSIZE_TEXT_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Textul complet din acest mesaj nu a fost transferat de pe telefonul tău atunci când acest dispozitiv a fost asociat. Fișierele mai vechi de %1$d zi la momentul asocierii dispozitivului nu pot fi sincronizate.</string>
+			<key>few</key>
+			<string>Textul complet din acest mesaj nu a fost transferat de pe telefonul tău atunci când acest dispozitiv a fost asociat. Fișierele mai vechi de %1$d zile la momentul asocierii dispozitivului nu pot fi sincronizate.</string>
+			<key>other</key>
+			<string>Textul complet din acest mesaj nu a fost transferat de pe telefonul tău atunci când acest dispozitiv a fost asociat. Fișierele mai vechi de %1$d de zile la momentul asocierii dispozitivului nu pot fi sincronizate.</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_STICKER_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Acest fișier nu a fost transferat de pe telefonul tău când acest dispozitiv a fost asociat. Fișierele și conținutul media mai vechi de %1$d zi în momentul asocierii dispozitivului nu pot fi sincronizate.</string>
+			<key>few</key>
+			<string>Acest fișier nu a fost transferat de pe telefonul tău când acest dispozitiv a fost asociat. Fișierele și conținutul media mai vechi de %1$d zile în momentul asocierii dispozitivului nu pot fi sincronizate.</string>
+			<key>other</key>
+			<string>Acest fișier nu a fost transferat de pe telefonul tău când acest dispozitiv a fost asociat. Fișierele și conținutul media mai vechi de %1$d de zile în momentul asocierii dispozitivului nu pot fi sincronizate.</string>
 		</dict>
 	</dict>
 	<key>USERNAME_SELECTION_TOO_SHORT_ERROR_MESSAGE_%d</key>

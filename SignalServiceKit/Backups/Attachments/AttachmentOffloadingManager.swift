@@ -50,6 +50,10 @@ extension Attachment {
             mediaTierInfo.isUploaded(currentUploadEra: currentUploadEra)
         else {
             // Don't offload until we've backed up to media tier.
+            // Note that attachments that are ineligible for media tier upload
+            // (some DMs, view-once, oversized text) won't be uploaded and therefore
+            // won't pass this check. We don't need to also check for "eligibility"
+            // here and can just rely on upload mechanisms to have checked that.
             return false
         }
         if
@@ -100,6 +104,7 @@ public class AttachmentOffloadingManagerImpl: AttachmentOffloadingManager {
     private let listMediaManager: BackupListMediaManager
     private let orphanedAttachmentCleaner: OrphanedAttachmentCleaner
     private let orphanedAttachmentStore: OrphanedAttachmentStore
+    private let tsAccountManager: TSAccountManager
 
     public init(
         attachmentStore: AttachmentStore,
@@ -112,6 +117,7 @@ public class AttachmentOffloadingManagerImpl: AttachmentOffloadingManager {
         listMediaManager: BackupListMediaManager,
         orphanedAttachmentCleaner: OrphanedAttachmentCleaner,
         orphanedAttachmentStore: OrphanedAttachmentStore,
+        tsAccountManager: TSAccountManager,
     ) {
         self.attachmentStore = attachmentStore
         self.attachmentThumbnailService = attachmentThumbnailService
@@ -123,20 +129,17 @@ public class AttachmentOffloadingManagerImpl: AttachmentOffloadingManager {
         self.listMediaManager = listMediaManager
         self.orphanedAttachmentCleaner = orphanedAttachmentCleaner
         self.orphanedAttachmentStore = orphanedAttachmentStore
+        self.tsAccountManager = tsAccountManager
     }
 
     public func offloadAttachmentsIfNeeded() async throws {
-        guard FeatureFlags.Backups.supported else {
+        guard BuildFlags.Backups.showOptimizeMedia else {
             return
         }
 
-        guard db.read(block: { backupPlanAllowsOffloading(tx: $0) }) else {
+        guard db.read(block: { offloadingIsAllowed(tx: $0) }) else {
             return
         }
-
-        // Query list media if needed to ensure we have the latest cdn info
-        // for all our uploads.
-        try await listMediaManager.queryListMediaIfNeeded()
 
         let startTimeMs = dateProvider().ows_millisecondsSince1970
         var lastAttachmentId: Attachment.IDType?
@@ -162,8 +165,13 @@ public class AttachmentOffloadingManagerImpl: AttachmentOffloadingManager {
     ) async throws -> Attachment.IDType? {
         let viewedTimestampCutoff = startTimeMs - Attachment.offloadingThresholdMs
 
+        let needsListMedia = db.read(block: listMediaManager.getNeedsQueryListMedia(tx:))
+        if needsListMedia {
+            throw NeedsListMediaError()
+        }
+
         let (candidateAttachments, didHitEnd) = try db.read { (tx) -> ([Attachment], Bool) in
-            guard backupPlanAllowsOffloading(tx: tx) else {
+            guard offloadingIsAllowed(tx: tx) else {
                 return ([], false)
             }
 
@@ -242,7 +250,7 @@ public class AttachmentOffloadingManagerImpl: AttachmentOffloadingManager {
         let pendingThumbnails = try await generateThumbnails(candidateAttachments)
 
         try await db.awaitableWrite { tx in
-            guard backupPlanAllowsOffloading(tx: tx) else {
+            guard offloadingIsAllowed(tx: tx) else {
                 return
             }
 
@@ -334,7 +342,11 @@ public class AttachmentOffloadingManagerImpl: AttachmentOffloadingManager {
         }
     }
 
-    private func backupPlanAllowsOffloading(tx: DBReadTransaction) -> Bool {
+    private func offloadingIsAllowed(tx: DBReadTransaction) -> Bool {
+        guard tsAccountManager.registrationState(tx: tx).isRegisteredPrimaryDevice else {
+            return false
+        }
+
         switch backupSettingsStore.backupPlan(tx: tx) {
         case .disabled, .disabling, .free:
             return false
@@ -391,31 +403,18 @@ public class AttachmentOffloadingManagerImpl: AttachmentOffloadingManager {
             $0[$1.id] = AttachmentStream.newRelativeFilePath()
         }
 
-        // orphanedAttachmentCleaner does not (and cannot) use structured concurrency
-        // but does open a database write, necessarily not an awaitableWrite. That is
-        // a no-no from this structured concurrency caller, so bridge back to non-structured
-        // concurrency to perform this step.
         // do the whole batch in one big write.
-        let thumbnailOrphanRecordIds: [Attachment.IDType: OrphanedAttachmentRecord.IDType]
-        thumbnailOrphanRecordIds = try await withCheckedThrowingContinuation { [orphanedAttachmentCleaner] (continuation) in
-            return DispatchQueue.global().async {
-                do {
-                    let results = try orphanedAttachmentCleaner.commitPendingAttachmentsWithSneakyTransaction(
-                        reservedThumbnailFilePaths.mapValues { reservedThumbnailFilePath in
-                            OrphanedAttachmentRecord(
-                                localRelativeFilePath: nil,
-                                localRelativeFilePathThumbnail: reservedThumbnailFilePath,
-                                localRelativeFilePathAudioWaveform: nil,
-                                localRelativeFilePathVideoStillFrame: nil
-                            )
-                        }
+        let thumbnailOrphanRecordIds: [Attachment.IDType: OrphanedAttachmentRecord.IDType] = try await orphanedAttachmentCleaner
+            .commitPendingAttachments(
+                reservedThumbnailFilePaths.mapValues { reservedThumbnailFilePath in
+                    OrphanedAttachmentRecord(
+                        localRelativeFilePath: nil,
+                        localRelativeFilePathThumbnail: reservedThumbnailFilePath,
+                        localRelativeFilePathAudioWaveform: nil,
+                        localRelativeFilePathVideoStillFrame: nil
                     )
-                    continuation.resume(returning: results)
-                } catch let error {
-                    continuation.resume(throwing: error)
                 }
-            }
-        }
+            )
 
         // Generate thumbnails in parallel
         let successfulThumbnails: Set<Attachment.IDType>
@@ -434,11 +433,19 @@ public class AttachmentOffloadingManagerImpl: AttachmentOffloadingManager {
                         return nil
                     }
 
-                    let thumbnailData = try attachmentThumbnailService.backupThumbnailData(image: thumbnailImage)
+                    let thumbnailData: Data
+                    do {
+                        thumbnailData = try attachmentThumbnailService.backupThumbnailData(image: thumbnailImage)
+                    } catch {
+                        // Unable to generate a small enough thumbnail, abort.
+                        // This attachment will just be offloaded with no local
+                        // thumbnail and can be redownloaded whenever.
+                        return nil
+                    }
 
                     let (encryptedThumbnailData, _) = try Cryptography.encrypt(
                         thumbnailData,
-                        encryptionKey: attachment.thumbnailEncryptionKey,
+                        attachmentKey: AttachmentKey(combinedKey: attachment.thumbnailEncryptionKey),
                         applyExtraPadding: true
                     )
 

@@ -5,7 +5,7 @@
 
 import SignalServiceKit
 import UIKit
-import YYImage
+import SDWebImage
 
 class MediaMessageView: UIView, AudioPlayerDelegate {
 
@@ -17,7 +17,6 @@ class MediaMessageView: UIView, AudioPlayerDelegate {
     // MARK: Initializers
 
     init(attachment: SignalAttachment, contentMode: UIView.ContentMode = .scaleAspectFit) {
-        assert(!attachment.hasError)
         self.attachment = attachment
 
         super.init(frame: CGRect.zero)
@@ -136,15 +135,17 @@ class MediaMessageView: UIView, AudioPlayerDelegate {
     }
 
     private func createAnimatedPreview() {
-        guard attachment.isValidImage,
-              let dataUrl = attachment.dataUrl,
-              let image = YYImage(contentsOfFile: dataUrl.path),
-              image.size.width > 0 && image.size.height > 0 else {
+        guard
+            attachment.dataSource.isValidImage,
+            let dataUrl = attachment.dataSource.dataUrl,
+            let image = SDAnimatedImage(contentsOfFile: dataUrl.path),
+            image.size.width > 0 && image.size.height > 0
+        else {
             createGenericPreview()
             return
         }
 
-        let animatedImageView = YYAnimatedImageView()
+        let animatedImageView = SDAnimatedImageView()
         animatedImageView.image = image
         let aspectRatio = image.size.width / image.size.height
 
@@ -180,9 +181,11 @@ class MediaMessageView: UIView, AudioPlayerDelegate {
     }
 
     private func createImagePreview() {
-        guard attachment.isValidImage,
-              let image = attachment.image(),
-              image.size.width > 0 && image.size.height > 0 else {
+        guard
+            attachment.dataSource.isValidImage,
+            let image = attachment.image(),
+            image.size.width > 0 && image.size.height > 0
+        else {
             createGenericPreview()
             return
         }
@@ -199,9 +202,11 @@ class MediaMessageView: UIView, AudioPlayerDelegate {
     }
 
     private func createVideoPreview() {
-        guard attachment.isValidVideo,
-              let image = attachment.videoPreview(),
-              image.size.width > 0 && image.size.height > 0 else {
+        guard
+            attachment.dataSource.isValidVideo,
+            let image = attachment.videoPreview(),
+            image.size.width > 0 && image.size.height > 0
+        else {
             createGenericPreview()
             return
         }
@@ -276,7 +281,7 @@ class MediaMessageView: UIView, AudioPlayerDelegate {
     }
 
     private func formattedFileName() -> String? {
-        guard let sourceFilename = attachment.sourceFilename else {
+        guard let sourceFilename = attachment.dataSource.sourceFilename?.filterFilename() else {
             return nil
         }
         let filename = sourceFilename.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
@@ -302,7 +307,7 @@ class MediaMessageView: UIView, AudioPlayerDelegate {
 
     private func createFileSizeLabel() -> UIView {
         let label = UILabel()
-        let fileSize = attachment.dataLength
+        let fileSize = attachment.dataSource.dataLength
         label.text = String(format: OWSLocalizedString("ATTACHMENT_APPROVAL_FILE_SIZE_FORMAT",
                                                      comment: "Format string for file size label in call interstitial view. Embeds: {{file size as 'N mb' or 'N kb'}}."),
                             OWSFormat.localizedFileSizeString(from: Int64(fileSize)))

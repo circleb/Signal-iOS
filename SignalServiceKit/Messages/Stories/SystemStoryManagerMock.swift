@@ -8,20 +8,20 @@ import Foundation
 public class SystemStoryManagerMock: SystemStoryManagerProtocol {
 
     /// In tests, set some other handler to this to return different results when the system under test calls enqueueOnboardingStoryDownload
-    public lazy var downloadOnboardingStoryHandler: () -> Promise<Void> = {
-        return .value(())
+    public lazy var downloadOnboardingStoryHandler: () -> Task<Void, any Error> = {
+        return Task {}
     }
 
-    public func enqueueOnboardingStoryDownload() -> Promise<Void> {
+    public func enqueueOnboardingStoryDownload() -> Task<Void, any Error> {
         return downloadOnboardingStoryHandler()
     }
 
     /// In tests, set some other handler to this to return different results when the system under test calls cleanUpOnboardingStoryIfNeeded
-    public lazy var cleanUpOnboardingStoryHandler: () -> Promise<Void> = {
-        return .value(())
+    public lazy var cleanUpOnboardingStoryHandler: () -> Task<Void, any Error> = {
+        return Task {}
     }
 
-    public func cleanUpOnboardingStoryIfNeeded() -> Promise<Void> {
+    public func cleanUpOnboardingStoryIfNeeded() -> Task<Void, any Error> {
         return cleanUpOnboardingStoryHandler()
     }
 
@@ -88,8 +88,8 @@ public class OnboardingStoryManagerFilesystemMock: OnboardingStoryManagerFilesys
         return true
     }
 
-    public override class func fileSize(of: URL) -> NSNumber? {
-        return NSNumber(value: 100)
+    public override class func fileSize(of: URL) throws -> UInt64 {
+        return 100
     }
 
     public override class func deleteFile(url: URL) throws {
@@ -100,7 +100,7 @@ public class OnboardingStoryManagerFilesystemMock: OnboardingStoryManagerFilesys
         return
     }
 
-    public override class func isValidImage(at url: URL, mimeType: String?) -> Bool {
+    public override class func isValidImage(at url: URL) -> Bool {
         return true
     }
 }
@@ -135,7 +135,7 @@ public class OnboardingStoryManagerStoryMessageFactoryMock: OnboardingStoryManag
     public override class func validateAttachmentContents(
         dataSource: any DataSource,
         mimeType: String
-    ) throws -> AttachmentDataSource {
+    ) async throws -> AttachmentDataSource {
         struct FakePendingAttachment: PendingAttachment {
             let blurHash: String? = nil
             let sha256ContentHash: Data = Data()

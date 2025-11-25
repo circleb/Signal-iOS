@@ -16,7 +16,7 @@ public extension GroupManager {
         success: (() -> Void)?
     ) {
 
-        guard groupThread.isLocalUserMemberOfAnyKind else {
+        guard groupThread.groupModel.groupMembership.isLocalUserMemberOfAnyKind else {
             owsFailDebug("unexpectedly trying to leave group for which we're not a member.")
             return
         }
@@ -26,14 +26,16 @@ public extension GroupManager {
             canCancel: false,
             asyncBlock: { modal in
                 do {
-                    try await SSKEnvironment.shared.databaseStorageRef.awaitableWrite { transaction in
-                        self.localLeaveGroupOrDeclineInvite(
+                    let databaseStorage = SSKEnvironment.shared.databaseStorageRef
+                    let leavePromise = await databaseStorage.awaitableWrite { tx in
+                        return self.localLeaveGroupOrDeclineInvite(
                             groupThread: groupThread,
                             replacementAdminAci: replacementAdminAci,
                             waitForMessageProcessing: true,
-                            tx: transaction
+                            tx: tx,
                         )
-                    }.awaitable()
+                    }
+                    _ = try await leavePromise.awaitable()
                     modal.dismiss { success?() }
                 } catch {
                     owsFailDebug("Leave group failed: \(error)")
@@ -73,6 +75,7 @@ public extension GroupManager {
                 "GROUPS_INVITE_ACCEPT_INVITE_FAILED",
                 comment: "Error indicating that an error occurred while accepting an invite."
             ))
+            throw error
         }
     }
 }

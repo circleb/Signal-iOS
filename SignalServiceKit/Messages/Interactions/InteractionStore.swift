@@ -5,17 +5,11 @@
 
 import Foundation
 public import GRDB
-import LibSignalClient
+public import LibSignalClient
 
 public protocol InteractionStore {
 
     // MARK: - 
-
-    /// Whether an interaction exists with the given unique ID.
-    func exists(uniqueId: String, tx: DBReadTransaction) -> Bool
-
-    /// Fetch the unique IDs of all interactions.
-    func fetchAllUniqueIds(tx: DBReadTransaction) -> [String]
 
     /// Fetch the interaction with the given SQLite row ID, if one exists.
     func fetchInteraction(
@@ -40,16 +34,6 @@ public protocol InteractionStore {
         tx: DBReadTransaction
     ) throws -> [TSInteraction]
 
-    /// Enumerate all interactions.
-    ///
-    /// - Parameter block
-    /// A block executed for each enumerated interaction. Returns `true` if
-    /// enumeration should continue, and `false` otherwise.
-    func enumerateAllInteractions(
-        tx: DBReadTransaction,
-        block: (TSInteraction) throws -> Bool
-    ) throws
-
     func fetchCursor(
         minRowIdExclusive: Int64?,
         maxRowIdInclusive: Int64?,
@@ -61,6 +45,13 @@ public protocol InteractionStore {
         rowId: Int64,
         tx: DBReadTransaction
     ) -> Bool
+
+    /// Fetch the message with the given timestamp and incomingMessageAuthor. If
+    /// incomingMessageAuthor is nil, returns any outgoing message with the timestamp.
+    func fetchMessage(
+        timestamp: UInt64,
+        incomingMessageAuthor: Aci?,
+        transaction: DBReadTransaction) throws -> TSMessage?
 
     // MARK: -
 
@@ -114,20 +105,12 @@ public class InteractionStoreImpl: InteractionStore {
 
     // MARK: -
 
-    public func exists(uniqueId: String, tx: DBReadTransaction) -> Bool {
-        return TSInteraction.anyExists(uniqueId: uniqueId, transaction: SDSDB.shimOnlyBridge(tx))
-    }
-
-    public func fetchAllUniqueIds(tx: DBReadTransaction) -> [String] {
-        return TSInteraction.anyAllUniqueIds(transaction: SDSDB.shimOnlyBridge(tx))
-    }
-
     public func fetchInteraction(
         rowId interactionRowId: Int64,
         tx: DBReadTransaction
     ) -> TSInteraction? {
         return InteractionFinder.fetch(
-            rowId: interactionRowId, transaction: SDSDB.shimOnlyBridge(tx)
+            rowId: interactionRowId, transaction: tx
         )
     }
 
@@ -135,7 +118,7 @@ public class InteractionStoreImpl: InteractionStore {
         uniqueId: String,
         tx: DBReadTransaction
     ) -> TSInteraction? {
-        return TSInteraction.anyFetch(uniqueId: uniqueId, transaction: SDSDB.shimOnlyBridge(tx))
+        return TSInteraction.anyFetch(uniqueId: uniqueId, transaction: tx)
     }
 
     public func findMessage(
@@ -148,7 +131,7 @@ public class InteractionStoreImpl: InteractionStore {
             withTimestamp: timestamp,
             threadId: threadId,
             author: author,
-            transaction: SDSDB.shimOnlyBridge(tx)
+            transaction: tx
         )
     }
 
@@ -158,22 +141,8 @@ public class InteractionStoreImpl: InteractionStore {
     ) throws -> [TSInteraction] {
         return try InteractionFinder.fetchInteractions(
             timestamp: timestamp,
-            transaction: SDSDB.shimOnlyBridge(tx)
+            transaction: tx
         )
-    }
-
-    public func enumerateAllInteractions(
-        tx: DBReadTransaction,
-        block: (TSInteraction) throws -> Bool
-    ) throws {
-        let cursor = TSInteraction.grdbFetchCursor(
-            transaction: SDSDB.shimOnlyBridge(tx)
-        )
-
-        while
-            let interaction = try cursor.next(),
-            try block(interaction)
-        {}
     }
 
     public func fetchCursor(
@@ -200,13 +169,13 @@ public class InteractionStoreImpl: InteractionStore {
         rowId: Int64,
         tx: DBReadTransaction
     ) -> Bool {
-        return message.insertedMessageHasRenderableContent(rowId: rowId, tx: SDSDB.shimOnlyBridge(tx))
+        return message.insertedMessageHasRenderableContent(rowId: rowId, tx: tx)
     }
 
     // MARK: -
 
     public func insertInteraction(_ interaction: TSInteraction, tx: DBWriteTransaction) {
-        interaction.anyInsert(transaction: SDSDB.shimOnlyBridge(tx))
+        interaction.anyInsert(transaction: tx)
     }
 
     public func updateInteraction<InteractionType: TSInteraction>(
@@ -214,7 +183,7 @@ public class InteractionStoreImpl: InteractionStore {
         tx: DBWriteTransaction,
         block: (InteractionType) -> Void
     ) {
-        interaction.anyUpdate(transaction: SDSDB.shimOnlyBridge(tx)) { interaction in
+        interaction.anyUpdate(transaction: tx) { interaction in
             guard let interaction = interaction as? InteractionType else {
                 owsFailBeta("Interaction of unexpected type! \(type(of: interaction))")
                 return
@@ -235,7 +204,7 @@ public class InteractionStoreImpl: InteractionStore {
             additionalRecipients: [],
             explicitRecipients: [],
             skippedRecipients: [],
-            transaction: SDSDB.shimOnlyBridge(tx)
+            transaction: tx
         )
     }
 
@@ -251,7 +220,7 @@ public class InteractionStoreImpl: InteractionStore {
             amount: amount,
             fee: fee,
             note: note,
-            transaction: SDSDB.shimOnlyBridge(tx)
+            transaction: tx
         )
     }
 
@@ -260,7 +229,7 @@ public class InteractionStoreImpl: InteractionStore {
         from sender: SignalServiceAddress,
         tx: DBWriteTransaction
     ) {
-        interaction.insertOrReplacePlaceholder(from: sender, transaction: SDSDB.shimOnlyBridge(tx))
+        interaction.insertOrReplacePlaceholder(from: sender, transaction: tx)
     }
 
     // MARK: - TSOutgoingMessage state updates
@@ -274,8 +243,37 @@ public class InteractionStoreImpl: InteractionStore {
         message.updateRecipientsFromNonLocalDevice(
             recipientStates,
             isSentUpdate: isSentUpdate,
-            transaction: SDSDB.shimOnlyBridge(tx)
+            transaction: tx
         )
+    }
+
+    public func fetchMessage(
+        timestamp: UInt64,
+        incomingMessageAuthor: Aci?,
+        transaction: DBReadTransaction
+    ) throws -> TSMessage? {
+        let records = try InteractionRecord.fetchAll(
+            transaction.database,
+            sql: """
+                SELECT *
+                FROM \(InteractionRecord.databaseTableName)
+                WHERE \(interactionColumn: .timestamp) = ?
+                """,
+            arguments: [timestamp]
+        )
+
+        for record in records {
+            if incomingMessageAuthor == nil, let outgoingMessage = try TSInteraction.fromRecord(record) as? TSOutgoingMessage {
+                return outgoingMessage
+            }
+
+            if let incomingMessage = try TSInteraction.fromRecord(record) as? TSIncomingMessage,
+               let authorUUID = incomingMessage.authorUUID,
+               try ServiceId.parseFrom(serviceIdString: authorUUID) == incomingMessageAuthor {
+                return incomingMessage
+            }
+        }
+        return nil
     }
 }
 
@@ -291,10 +289,6 @@ open class MockInteractionStore: InteractionStore {
 
     public func exists(uniqueId: String, tx: DBReadTransaction) -> Bool {
         return insertedInteractions.contains { $0.uniqueId == uniqueId }
-    }
-
-    public func fetchAllUniqueIds(tx: DBReadTransaction) -> [String] {
-        return insertedInteractions.map { $0.uniqueId }
     }
 
     open func fetchInteraction(
@@ -342,17 +336,6 @@ open class MockInteractionStore: InteractionStore {
         tx: DBReadTransaction
     ) throws -> [TSInteraction] {
         return insertedInteractions.filter { $0.timestamp == timestamp }
-    }
-
-    open func enumerateAllInteractions(
-        tx: DBReadTransaction,
-        block: (TSInteraction) throws -> Bool
-    ) throws {
-        for interaction in insertedInteractions {
-            if !(try block(interaction)) {
-                return
-            }
-        }
     }
 
     open func fetchCursor(
@@ -489,6 +472,15 @@ open class MockInteractionStore: InteractionStore {
         tx: DBWriteTransaction
     ) {
         // Unimplemented
+    }
+
+    public func fetchMessage(
+        timestamp: UInt64,
+        incomingMessageAuthor: Aci?,
+        transaction: DBReadTransaction
+    ) throws -> TSMessage? {
+        // Unimplemented
+        return nil
     }
 }
 

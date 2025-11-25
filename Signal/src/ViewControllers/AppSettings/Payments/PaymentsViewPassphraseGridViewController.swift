@@ -54,7 +54,7 @@ public class PaymentsViewPassphraseGridViewController: OWSTableViewController2 {
     private func buildBottomView() {
         let nextButton = OWSFlatButton.insetButton(
             title: CommonStrings.nextButton,
-            font: UIFont.dynamicTypeBody.semibold(),
+            font: UIFont.dynamicTypeHeadline,
             titleColor: .white,
             backgroundColor: .ows_accentBlue,
             target: self,
@@ -66,10 +66,9 @@ public class PaymentsViewPassphraseGridViewController: OWSTableViewController2 {
         bottomStack.axis = .vertical
         bottomStack.alignment = .fill
         bottomStack.isLayoutMarginsRelativeArrangement = true
-        bottomStack.layoutMargins = cellOuterInsetsWithMargin(top: 8, left: 20, right: 20)
+        bottomStack.layoutMargins = .init(top: 8, left: 20, bottom: 8, right: 20)
         bottomStack.addArrangedSubviews([
             nextButton,
-            UIView.spacer(withHeight: 8)
         ])
     }
 
@@ -90,7 +89,7 @@ public class PaymentsViewPassphraseGridViewController: OWSTableViewController2 {
             guard let self = self else { return cell }
             let passphraseGrid = self.buildPassphraseGrid(passphrase: passphrase)
             cell.contentView.addSubview(passphraseGrid)
-            passphraseGrid.autoPinEdgesToSuperviewMargins()
+            passphraseGrid.autoPinEdgesToSuperviewEdges()
             return cell
         },
         actionBlock: nil))
@@ -123,7 +122,7 @@ public class PaymentsViewPassphraseGridViewController: OWSTableViewController2 {
         let explanationLabel = UILabel()
         explanationLabel.text = OWSLocalizedString("SETTINGS_PAYMENTS_VIEW_PASSPHRASE_WORDS_EXPLANATION",
                                                   comment: "Header text for the 'review payments passphrase words' step in the 'view payments passphrase' settings.")
-        explanationLabel.font = .dynamicTypeBody2Clamped
+        explanationLabel.font = .dynamicTypeSubheadlineClamped
         explanationLabel.textColor = Theme.secondaryTextAndIconColor
         explanationLabel.textAlignment = .center
         explanationLabel.numberOfLines = 0
@@ -135,7 +134,7 @@ public class PaymentsViewPassphraseGridViewController: OWSTableViewController2 {
         topStack.axis = .vertical
         topStack.alignment = .center
         topStack.isLayoutMarginsRelativeArrangement = true
-        topStack.layoutMargins = cellOuterInsetsWithMargin(top: 32, left: 20, bottom: 40, right: 20)
+        topStack.layoutMargins = .init(top: 32, left: 20, bottom: 40, right: 20)
         return topStack
     }
 
@@ -155,7 +154,7 @@ public class PaymentsViewPassphraseGridViewController: OWSTableViewController2 {
         topStack.axis = .vertical
         topStack.alignment = .center
         topStack.isLayoutMarginsRelativeArrangement = true
-        topStack.layoutMargins = cellOuterInsetsWithMargin(hMargin: 20, vMargin: 16)
+        topStack.layoutMargins = .init(hMargin: 20, vMargin: 16)
         return topStack
     }
 
@@ -180,9 +179,10 @@ public class PaymentsViewPassphraseGridViewController: OWSTableViewController2 {
                                                 message: OWSLocalizedString("SETTINGS_PAYMENTS_VIEW_PASSPHRASE_COPY_TO_CLIPBOARD_CONFIRM_MESSAGE",
                                                                            comment: "Message for the 'copy recovery passphrase to clipboard confirm' alert in the payment settings."))
 
-        actionSheet.addAction(ActionSheetAction(title: CommonStrings.copyButton,
-                                                accessibilityIdentifier: "payments.settings.copy_passphrase_to_clipboard",
-                                                style: .default) { [weak self] _ in
+        actionSheet.addAction(ActionSheetAction(
+            title: CommonStrings.copyButton,
+            style: .default
+        ) { [weak self] _ in
             self?.didTapCopyToClipboard()
         })
 

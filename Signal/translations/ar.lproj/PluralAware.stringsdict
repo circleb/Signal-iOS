@@ -141,6 +141,30 @@
 			<string>إضافة أعضاء جُدُد</string>
 		</dict>
 	</dict>
+	<key>BACKUP_SETTINGS_BACKUP_PLAN_FREE_HEADER_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>zero</key>
+			<string>النسخ الاحتياطي للنص و%1$d يوم من ملفات الوسائط</string>
+			<key>one</key>
+			<string>النسخ الاحتياطي للنص و%1$d يوم من ملفات الوسائط</string>
+			<key>two</key>
+			<string>النسخ الاحتياطي للنص و%1$d يومين من ملفات الوسائط</string>
+			<key>few</key>
+			<string>النسخ الاحتياطي للنص و%1$d أيام من ملفات الوسائط</string>
+			<key>many</key>
+			<string>النسخ الاحتياطي للنص و%1$d يومًا من ملفات الوسائط</string>
+			<key>other</key>
+			<string>النسخ الاحتياطي للنص و%1$d يومٍ من ملفات الوسائط</string>
+		</dict>
+	</dict>
 	<key>CALLS_TAB_DELETE_MULTIPLE_TITLE</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -453,6 +477,78 @@
 			<string>يُستخدَم هذا اللون في %1$d دردشةٍ. هل تريد حفظ التغييرات لجميع الدردشات؟</string>
 		</dict>
 	</dict>
+	<key>CHOOSE_BACKUP_PLAN_BULLET_RECENT_MEDIA_BACKUP_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>zero</key>
+			<string>الأيام %1$d الأخيرة من الوسائط</string>
+			<key>one</key>
+			<string>اليوم %1$d الأخير من الوسائط</string>
+			<key>two</key>
+			<string>اليومان %1$d الأخيران من الوسائط</string>
+			<key>few</key>
+			<string>الأيام %1$d الأخيرة من الوسائط</string>
+			<key>many</key>
+			<string>الأيام %1$d الأخيرة من الوسائط</string>
+			<key>other</key>
+			<string>الأيام %1$d الأخيرة من الوسائط</string>
+		</dict>
+	</dict>
+	<key>CHOOSE_BACKUP_PLAN_DOWNGRADE_CONFIRMATION_ACTION_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>zero</key>
+			<string>سَيتم تضمين كل رسائلك النصية وآخر %1$d يوم من ملفات الوسائط في نسختك الاحتياطية إذا غيَّرتَ خطتك.</string>
+			<key>one</key>
+			<string>سَيتم تضمين كل رسائلك النصية وآخر %1$d يوم من ملفات الوسائط في نسختك الاحتياطية إذا غيَّرتَ خطتك.</string>
+			<key>two</key>
+			<string>سَيتم تضمين كل رسائلك النصية وآخر %1$d يومين من ملفات الوسائط في نسختك الاحتياطية إذا غيَّرتَ خطتك.</string>
+			<key>few</key>
+			<string>سَيتم تضمين كل رسائلك النصية وآخر %1$d أيام من ملفات الوسائط في نسختك الاحتياطية إذا غيَّرتَ خطتك.</string>
+			<key>many</key>
+			<string>سَيتم تضمين كل رسائلك النصية وآخر %1$d يومًا من ملفات الوسائط في نسختك الاحتياطية إذا غيَّرتَ خطتك.</string>
+			<key>other</key>
+			<string>سَيتم تضمين كل رسائلك النصية وآخر 45 يومٍ من ملفات الوسائط في نسختك الاحتياطية إذا غيَّرتَ خطتك.</string>
+		</dict>
+	</dict>
+	<key>CHOOSE_BACKUP_PLAN_FREE_PLAN_SUBTITLE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>zero</key>
+			<string>الرسائل النصية + %1$d أيام من الوسائط</string>
+			<key>one</key>
+			<string>الرسائل النصية + %1$d يوم من الوسائط</string>
+			<key>two</key>
+			<string>الرسائل النصية + %1$d يومين من الوسائط</string>
+			<key>few</key>
+			<string>الرسائل النصية + %1$d أيام من الوسائط</string>
+			<key>many</key>
+			<string>الرسائل النصية + %1$d يومًا من الوسائط</string>
+			<key>other</key>
+			<string>الرسائل النصية + %1$d يومٍ من الوسائط</string>
+		</dict>
+	</dict>
 	<key>CONVERSATION_DELETE_CONFIRMATIONS_ALERT_TITLE_%d</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -734,30 +830,6 @@
 			<string>يمكن تطبيق %1$d تعديلًا فقط على هذه الرسالة.</string>
 			<key>other</key>
 			<string>يمكن تطبيق %1$d تعديلٍ فقط على هذه الرسالة.</string>
-		</dict>
-	</dict>
-	<key>FORWARD_MESSAGE_FIRST_FORWARD_PROCEED_%d</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@text@</string>
-		<key>text</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
-			<key>zero</key>
-			<string>أرسل %1$d رسائل</string>
-			<key>one</key>
-			<string>أرسل رسالة واحدة</string>
-			<key>two</key>
-			<string>أرسل %1$d رسالتين</string>
-			<key>few</key>
-			<string>أرسل %1$d رسائل</string>
-			<key>many</key>
-			<string>أرسل %1$d رسالةً</string>
-			<key>other</key>
-			<string>أرسل %1$d رسالةٍ</string>
 		</dict>
 	</dict>
 	<key>GROUPS_TOO_MANY_MEMBERS_ALERT_MESSAGE_%d</key>
@@ -1456,6 +1528,30 @@
 			<string>لتُبقي &quot;%2$@&quot; مُرتبِطًا، افتح تطبيق سيجنال على ذلك الجهاز في غضون %1$d يومٍ.</string>
 		</dict>
 	</dict>
+	<key>LINK_DEVICE_CONFIRMATION_ALERT_TRANSFER_SUBTITLE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>zero</key>
+			<string>انقل رسائلك النصية وآخر %1$d يوم من الوسائط</string>
+			<key>one</key>
+			<string>انقل رسائلك النصية وآخر %1$d يوم من الوسائط</string>
+			<key>two</key>
+			<string>انقل رسائلك النصية وآخر %1$d يومين من الوسائط</string>
+			<key>few</key>
+			<string>انقل رسائلك النصية وآخر %1$d أيام من الوسائط</string>
+			<key>many</key>
+			<string>انقل رسائلك النصية وآخر %1$d يومًا من الوسائط</string>
+			<key>other</key>
+			<string>انقل رسائلك النصية وآخر %1$d يومٍ من الوسائط</string>
+		</dict>
+	</dict>
 	<key>MANY_GROUPS_IN_COMMON_%d</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -1598,30 +1694,6 @@
 			<string>إعادة توجيه %1$d</string>
 			<key>other</key>
 			<string>إعادة توجيه %1$d</string>
-		</dict>
-	</dict>
-	<key>MESSAGES_VIEW_GROUP_N_MEMBERS_BLOCKED_%d</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@caption@</string>
-		<key>caption</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
-			<key>zero</key>
-			<string>قُمتَ بحظر %1$d عضو من هذه المجموعة</string>
-			<key>one</key>
-			<string>قُمتَ بحظر %1$d عضو من هذه المجموعة</string>
-			<key>two</key>
-			<string>قُمتَ بحظر %1$d عضوين من هذه المجموعة</string>
-			<key>few</key>
-			<string>قُمتَ بحظر %1$d أعضاء من هذه المجموعة</string>
-			<key>many</key>
-			<string>قُمتَ بحظر %1$d عضوًا من هذه المجموعة</string>
-			<key>other</key>
-			<string>قُمتَ بحظر %1$d عضوٍ من هذه المجموعة</string>
 		</dict>
 	</dict>
 	<key>MESSAGE_ACTIONS_TOOLBAR_CAPTION_%d</key>
@@ -2008,6 +2080,30 @@
 			<string>هل ترغبُ بإلغاء %1$d دعوةٍ أَرسلها &quot;%2$@&quot;؟</string>
 		</dict>
 	</dict>
+	<key>POLL_VOTE_COUNT</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>zero</key>
+			<string>%1$d أصوات</string>
+			<key>one</key>
+			<string>%1$d صوت</string>
+			<key>two</key>
+			<string>%1$d صوتين</string>
+			<key>few</key>
+			<string>%1$d أصوات</string>
+			<key>many</key>
+			<string>%1$d صوت</string>
+			<key>other</key>
+			<string>%1$d صوت</string>
+		</dict>
+	</dict>
 	<key>PRIVATE_STORY_VIEWERS_%d</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -2294,6 +2390,102 @@
 			<string>%1$ld آخرون</string>
 			<key>other</key>
 			<string>%1$ld آخرون</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_AUDIO_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>zero</key>
+			<string>تعذَّر تحويل هذه الرسالة الصوتية من هاتفك عندما تمَّ ربط هذا الجهاز. لا يمكن مُزامنة الملفات والوسائط التي تعود إلى أكثر من %1$d يوم منذ الوقت الذي تمَّ فيه ربط الجهاز.</string>
+			<key>one</key>
+			<string>تعذَّر تحويل هذه الرسالة الصوتية من هاتفك عندما تمَّ ربط هذا الجهاز. لا يمكن مُزامنة الملفات والوسائط التي تعود إلى أكثر من %1$d يوم منذ الوقت الذي تمَّ فيه ربط الجهاز.</string>
+			<key>two</key>
+			<string>تعذَّر تحويل هذه الرسالة الصوتية من هاتفك عندما تمَّ ربط هذا الجهاز. لا يمكن مُزامنة الملفات والوسائط التي تعود إلى أكثر من %1$d يومين منذ الوقت الذي تمَّ فيه ربط الجهاز.</string>
+			<key>few</key>
+			<string>تعذَّر تحويل هذه الرسالة الصوتية من هاتفك عندما تمَّ ربط هذا الجهاز. لا يمكن مُزامنة الملفات والوسائط التي تعود إلى أكثر من %1$d أيام منذ الوقت الذي تمَّ فيه ربط الجهاز.</string>
+			<key>many</key>
+			<string>تعذَّر تحويل هذه الرسالة الصوتية من هاتفك عندما تمَّ ربط هذا الجهاز. لا يمكن مُزامنة الملفات والوسائط التي تعود إلى أكثر من %1$d يومًا منذ الوقت الذي تمَّ فيه ربط الجهاز.</string>
+			<key>other</key>
+			<string>تعذَّر تحويل هذه الرسالة الصوتية من هاتفك عندما تمَّ ربط هذا الجهاز. لا يمكن مُزامنة الملفات والوسائط التي تعود إلى أكثر من %1$d يومٍ منذ الوقت الذي تمَّ فيه ربط الجهاز.</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_FILE_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>zero</key>
+			<string>لم يُنقَل هذا الملف من هاتفك عندما تمَّ ربط هذا الجهاز. لا يمكن مُزامنة الملفات والوسائط التي تعود إلى أكثر من %1$d يوم منذ الوقت الذي تمَّ فيه ربط الجهاز.</string>
+			<key>one</key>
+			<string>لم يُنقَل هذا الملف من هاتفك عندما تمَّ ربط هذا الجهاز. لا يمكن مُزامنة الملفات والوسائط التي تعود إلى أكثر من %1$d يوم منذ الوقت الذي تمَّ فيه ربط الجهاز.</string>
+			<key>two</key>
+			<string>لم يُنقَل هذا الملف من هاتفك عندما تمَّ ربط هذا الجهاز. لا يمكن مُزامنة الملفات والوسائط التي تعود إلى أكثر من %1$d يومين منذ الوقت الذي تمَّ فيه ربط الجهاز.</string>
+			<key>few</key>
+			<string>لم يُنقَل هذا الملف من هاتفك عندما تمَّ ربط هذا الجهاز. لا يمكن مُزامنة الملفات والوسائط التي تعود إلى أكثر من %1$d أيام منذ الوقت الذي تمَّ فيه ربط الجهاز.</string>
+			<key>many</key>
+			<string>لم يُنقَل هذا الملف من هاتفك عندما تمَّ ربط هذا الجهاز. لا يمكن مُزامنة الملفات والوسائط التي تعود إلى أكثر من %1$d يومًا منذ الوقت الذي تمَّ فيه ربط الجهاز.</string>
+			<key>other</key>
+			<string>لم يُنقَل هذا الملف من هاتفك عندما تمَّ ربط هذا الجهاز. لا يمكن مُزامنة الملفات والوسائط التي تعود إلى أكثر من %1$d يومٍ منذ الوقت الذي تمَّ فيه ربط الجهاز.</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_OVERSIZE_TEXT_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>zero</key>
+			<string>تعذَّر تحويل هذا النص الكامل من هاتفك عندما تمَّ ربط هذا الجهاز. لا يمكن مُزامنة الملفات والوسائط التي تعود إلى أكثر من %1$d يوم منذ الوقت الذي تمَّ فيه ربط الجهاز.</string>
+			<key>one</key>
+			<string>تعذَّر تحويل النص الكامل من هاتفك عندما تمَّ ربط هذا الجهاز. لا يمكن مُزامنة الملفات والوسائط التي تعود إلى أكثر من %1$d يوم منذ الوقت الذي تمَّ فيه ربط الجهاز.</string>
+			<key>two</key>
+			<string>تعذَّر تحويل النص الكامل من هاتفك عندما تمَّ ربط هذا الجهاز. لا يمكن مُزامنة الملفات والوسائط التي تعود إلى أكثر من %1$d يومين منذ الوقت الذي تمَّ فيه ربط الجهاز.</string>
+			<key>few</key>
+			<string>تعذَّر تحويل النص الكامل من هاتفك عندما تمَّ ربط هذا الجهاز. لا يمكن مُزامنة الملفات والوسائط التي تعود إلى أكثر من %1$d أيام منذ الوقت الذي تمَّ فيه ربط الجهاز.</string>
+			<key>many</key>
+			<string>تعذَّر تحويل النص الكامل من هاتفك عندما تمَّ ربط هذا الجهاز. لا يمكن مُزامنة الملفات والوسائط التي تعود إلى أكثر من %1$d يومًا منذ الوقت الذي تمَّ فيه ربط الجهاز.</string>
+			<key>other</key>
+			<string>تعذَّر تحويل النص الكامل من هاتفك عندما تمَّ ربط هذا الجهاز. لا يمكن مُزامنة الملفات والوسائط التي تعود إلى أكثر من %1$d يومٍ منذ الوقت الذي تمَّ فيه ربط الجهاز.</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_STICKER_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>zero</key>
+			<string>تعذَّر تحويل هذا المُلصَق من هاتفك عندما كان هذا الجهاز مُرتبِطًا. لا يمكن مُزامنة الملفات والوسائط التي تعود إلى أكثر من %1$d يوم منذ الوقت الذي تمَّ فيه ربط الجهاز.</string>
+			<key>one</key>
+			<string>تعذَّر تحويل هذا المُلصَق من هاتفك عندما كان هذا الجهاز مُرتبِطًا. لا يمكن مُزامنة الملفات والوسائط التي تعود إلى أكثر من %1$d يوم منذ الوقت الذي تمَّ فيه ربط الجهاز.</string>
+			<key>two</key>
+			<string>تعذَّر تحويل هذا المُلصَق من هاتفك عندما كان هذا الجهاز مُرتبِطًا. لا يمكن مُزامنة الملفات والوسائط التي تعود إلى أكثر من %1$d يومين منذ الوقت الذي تمَّ فيه ربط الجهاز.</string>
+			<key>few</key>
+			<string>تعذَّر تحويل هذا المُلصَق من هاتفك عندما كان هذا الجهاز مُرتبِطًا. لا يمكن مُزامنة الملفات والوسائط التي تعود إلى أكثر من %1$d أيام منذ الوقت الذي تمَّ فيه ربط الجهاز.</string>
+			<key>many</key>
+			<string>تعذَّر تحويل هذا المُلصَق من هاتفك عندما كان هذا الجهاز مُرتبِطًا. لا يمكن مُزامنة الملفات والوسائط التي تعود إلى أكثر من %1$d يومًا منذ الوقت الذي تمَّ فيه ربط الجهاز.</string>
+			<key>other</key>
+			<string>تعذَّر تحويل هذا المُلصَق من هاتفك عندما كان هذا الجهاز مُرتبِطًا. لا يمكن مُزامنة الملفات والوسائط التي تعود إلى أكثر من %1$d يومٍ منذ الوقت الذي تمَّ فيه ربط الجهاز.</string>
 		</dict>
 	</dict>
 	<key>USERNAME_SELECTION_TOO_SHORT_ERROR_MESSAGE_%d</key>

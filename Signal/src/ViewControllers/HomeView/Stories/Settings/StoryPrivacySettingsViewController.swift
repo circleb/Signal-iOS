@@ -15,7 +15,7 @@ class StoryPrivacySettingsViewController: OWSTableViewController2 {
 
         if navigationController?.viewControllers.count == 1 {
             title = OWSLocalizedString("STORY_PRIVACY_TITLE", comment: "Title for the story privacy settings view")
-            navigationItem.leftBarButtonItem = .doneButton(dismissingFrom: self)
+            navigationItem.rightBarButtonItem = .doneButton(dismissingFrom: self)
         } else {
             title = OWSLocalizedString(
                 "STORY_SETTINGS_TITLE",
@@ -135,8 +135,8 @@ class StoryPrivacySettingsViewController: OWSTableViewController2 {
             comment: "Footer for the 'turn off' section of the stories settings"
         )
         contents.add(turnOffStoriesSection)
-        turnOffStoriesSection.add(.actionItem(
-            withText: OWSLocalizedString(
+        turnOffStoriesSection.add(.item(
+            name: OWSLocalizedString(
                 "STORIES_SETTINGS_TURN_OFF_STORIES_BUTTON",
                 comment: "Button to turn off stories on the story privacy settings view"
             ),

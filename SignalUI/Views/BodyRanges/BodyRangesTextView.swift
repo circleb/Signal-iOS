@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import LibSignalClient
+public import LibSignalClient
 public import SignalServiceKit
 
 public protocol BodyRangesTextViewDelegate: UITextViewDelegate {
@@ -15,7 +15,7 @@ public protocol BodyRangesTextViewDelegate: UITextViewDelegate {
     // It doesn't matter what this key is; but when it changes cached mention names will be discarded.
     // Typically, we want this to change in new thread contexts and such.
     func textViewMentionCacheInvalidationKey(_ textView: BodyRangesTextView) -> String
-    func textViewMentionPickerPossibleAddresses(_ textView: BodyRangesTextView, tx: DBReadTransaction) -> [SignalServiceAddress]
+    func textViewMentionPickerPossibleAcis(_ textView: BodyRangesTextView, tx: DBReadTransaction) -> [Aci]
 
     func textViewDisplayConfiguration(_ textView: BodyRangesTextView) -> HydratedMessageBody.DisplayConfiguration
     func mentionPickerStyle(_ textView: BodyRangesTextView) -> MentionPickerStyle
@@ -59,6 +59,7 @@ open class BodyRangesTextView: OWSTextView, EditableMessageBodyDelegate {
         delegate = self
         editableBody.editableBodyDelegate = self
         textAlignment = .natural
+        enablesReturnKeyAutomatically = true
     }
 
     public override var layoutManager: NSLayoutManager {
@@ -104,15 +105,15 @@ open class BodyRangesTextView: OWSTextView, EditableMessageBodyDelegate {
             text: "@",
             ranges: MessageBodyRanges(mentions: [NSRange(location: 0, length: 1): mentionAci], styles: [])
         )
-        let (hydrated, possibleAddresses) = DependenciesBridge.shared.db.read { tx in
+        let (hydrated, possibleAcis) = DependenciesBridge.shared.db.read { tx in
             return (
                 body.hydrating(mentionHydrator: ContactsMentionHydrator.mentionHydrator(transaction: tx)),
-                bodyRangesDelegate.textViewMentionPickerPossibleAddresses(self, tx: tx)
+                bodyRangesDelegate.textViewMentionPickerPossibleAcis(self, tx: tx)
             )
         }
         let hydratedPlaintext = hydrated.asPlaintext()
 
-        if possibleAddresses.contains(mentionAddress) {
+        if possibleAcis.contains(mentionAci) {
             editableBody.beginEditing()
             editableBody.replaceCharacters(in: range, withMentionAci: mentionAci, txProvider: DependenciesBridge.shared.db.readTxProvider)
             editableBody.endEditing()
@@ -168,6 +169,12 @@ open class BodyRangesTextView: OWSTextView, EditableMessageBodyDelegate {
     }
 
     public override var textColor: UIColor? {
+        didSet {
+            editableBody.didUpdateTheming()
+        }
+    }
+
+    open override var font: UIFont? {
         didSet {
             editableBody.didUpdateTheming()
         }
@@ -234,96 +241,74 @@ open class BodyRangesTextView: OWSTextView, EditableMessageBodyDelegate {
     }
 
     private weak var pickerView: MentionPicker?
-    private weak var pickerViewTopConstraint: NSLayoutConstraint?
+
     private func didBeginTypingMention() {
-        guard let bodyRangesDelegate = bodyRangesDelegate else { return }
+        guard let bodyRangesDelegate else { return }
 
         bodyRangesDelegate.textViewDidBeginTypingMention(self)
 
-        pickerView?.removeFromSuperview()
-
-        let mentionableAddresses = SSKEnvironment.shared.databaseStorageRef.read { tx in
-            return bodyRangesDelegate.textViewMentionPickerPossibleAddresses(self, tx: tx)
+        if let pickerView {
+            pickerView.removeFromSuperview()
+            self.pickerView = nil
         }
-
-        guard !mentionableAddresses.isEmpty else { return }
 
         guard let pickerReferenceView = bodyRangesDelegate.textViewMentionPickerReferenceView(self),
-            let pickerParentView = bodyRangesDelegate.textViewMentionPickerParentView(self) else { return }
+              let pickerParentView = bodyRangesDelegate.textViewMentionPickerParentView(self) else { return }
+
+        let mentionableAcis = SSKEnvironment.shared.databaseStorageRef.read { tx in
+            return bodyRangesDelegate.textViewMentionPickerPossibleAcis(self, tx: tx)
+        }
+        guard !mentionableAcis.isEmpty else { return }
 
         let pickerView = MentionPicker(
-            mentionableAddresses: mentionableAddresses,
-            style: bodyRangesDelegate.mentionPickerStyle(self)
-        ) { [weak self] selectedAddress in
-            self?.insertTypedMention(address: selectedAddress)
+            mentionableAcis: mentionableAcis,
+            style: bodyRangesDelegate.mentionPickerStyle(self)) { [weak self] selectedAddress in
+                self?.insertTypedMention(address: selectedAddress)
+            }
+
+        // IS THIS EVEN POSSIBLE?
+        guard let currentlyTypingMentionText, pickerView.mentionTextChanged(currentlyTypingMentionText) else {
+            state = .notTypingMention
+            return
         }
+
         self.pickerView = pickerView
 
+        // Add to super view and set up constraints.
+        pickerView.translatesAutoresizingMaskIntoConstraints = false
         pickerParentView.insertSubview(pickerView, belowSubview: pickerReferenceView)
-        pickerView.autoPinWidthToSuperview()
-        pickerView.autoPinEdge(toSuperviewSafeArea: .top, withInset: 0, relation: .greaterThanOrEqual)
+        NSLayoutConstraint.activate([
+            pickerView.topAnchor.constraint(greaterThanOrEqualTo: pickerParentView.safeAreaLayoutGuide.topAnchor),
+            pickerView.leadingAnchor.constraint(equalTo: pickerParentView.safeAreaLayoutGuide.leadingAnchor),
+            pickerView.trailingAnchor.constraint(equalTo: pickerParentView.safeAreaLayoutGuide.trailingAnchor),
+            pickerView.bottomAnchor.constraint(equalTo: pickerReferenceView.topAnchor),
+        ])
 
-        let animationTopConstraint = pickerView.autoPinEdge(.top, to: .top, of: pickerReferenceView)
-
-        guard let currentlyTypingMentionText = currentlyTypingMentionText,
-            pickerView.mentionTextChanged(currentlyTypingMentionText) else {
-                pickerView.removeFromSuperview()
-                self.pickerView = nil
-                state = .notTypingMention
-                return
+        // Do initial layout - make sure views are in their final position before being presented.
+        UIView.performWithoutAnimation {
+            pickerView.prepareToAnimateIn()
+            pickerParentView.layoutIfNeeded()
+            pickerView.updateHeightIfNeeded()
         }
+
+        // Fade in.
+        pickerView.animateIn()
 
         ImpactHapticFeedback.impactOccurred(style: .light)
-
-        pickerParentView.layoutIfNeeded()
-
-        // Slide up.
-        UIView.animate(withDuration: 0.25) {
-            pickerView.alpha = 1
-            animationTopConstraint.isActive = false
-            self.pickerViewTopConstraint = pickerView.autoPinEdge(.bottom, to: .top, of: pickerReferenceView)
-            pickerParentView.layoutIfNeeded()
-        }
     }
 
     private func didEndTypingMention() {
         bodyRangesDelegate?.textViewDidEndTypingMention(self)
 
-        guard let pickerView = pickerView else { return }
+        guard let pickerView else { return }
 
-        self.pickerView = nil
-
-        let pickerViewTopConstraint = self.pickerViewTopConstraint
-        self.pickerViewTopConstraint = nil
-
-        guard let bodyRangesDelegate = bodyRangesDelegate,
-            let pickerReferenceView = bodyRangesDelegate.textViewMentionPickerReferenceView(self),
-            let pickerParentView = bodyRangesDelegate.textViewMentionPickerParentView(self) else {
-                pickerView.removeFromSuperview()
-                return
-        }
-
-        let style = bodyRangesDelegate.mentionPickerStyle(self)
-
-        // Slide down.
-        UIView.animate(withDuration: 0.25, animations: {
-            pickerViewTopConstraint?.isActive = false
-            pickerView.autoPinEdge(.top, to: .top, of: pickerReferenceView)
-            pickerParentView.layoutIfNeeded()
-
-            switch style {
-            case .composingAttachment:
-                pickerView.alpha = 0
-            case .groupReply, .`default`:
-                break
-            }
-        }) { _ in
+        pickerView.animateOut { _ in
             pickerView.removeFromSuperview()
         }
     }
 
     private func didUpdateMentionText(_ text: String) {
-        if let pickerView = pickerView, !pickerView.mentionTextChanged(text) {
+        if let pickerView, !pickerView.mentionTextChanged(text) {
             state = .notTypingMention
         }
     }
@@ -712,10 +697,8 @@ open class BodyRangesTextView: OWSTextView, EditableMessageBodyDelegate {
 
     public func editableMessageBodyHydrator(tx: DBReadTransaction) -> MentionHydrator {
         var possibleMentionAcis = Set<Aci>()
-        bodyRangesDelegate?.textViewMentionPickerPossibleAddresses(self, tx: tx).forEach {
-            if let aci = $0.aci {
-                possibleMentionAcis.insert(aci)
-            }
+        bodyRangesDelegate?.textViewMentionPickerPossibleAcis(self, tx: tx).forEach {
+            possibleMentionAcis.insert($0)
         }
         let hydrator = ContactsMentionHydrator.mentionHydrator(transaction: tx)
         return { aci in
@@ -847,8 +830,8 @@ extension BodyRangesTextView {
             var messageBody = try? NSKeyedUnarchiver.unarchivedObject(ofClass: MessageBody.self, from: encodedMessageBody) {
             editableBody.beginEditing()
             DependenciesBridge.shared.db.read { tx in
-                if let possibleAddresses = bodyRangesDelegate?.textViewMentionPickerPossibleAddresses(self, tx: tx) {
-                    messageBody = messageBody.forPasting(intoContextWithPossibleAddresses: possibleAddresses, transaction: tx)
+                if let possibleAcis = bodyRangesDelegate?.textViewMentionPickerPossibleAcis(self, tx: tx) {
+                    messageBody = messageBody.forPasting(intoContextWithPossibleAcis: possibleAcis, transaction: tx)
                 }
                 editableBody.replaceCharacters(in: selectedRange, withPastedMessageBody: messageBody, txProvider: { $0(tx) })
             }

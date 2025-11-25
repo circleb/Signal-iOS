@@ -11,17 +11,21 @@ import LibSignalClient
 public enum RegistrationBackupRestoreError {
     case generic
     case backupNotFound
-    case incorrectBackupKey
+    case incorrectRecoveryKey
     case versionMismatch
-    case networkError
-    case timeout
+    case retryableSVR🐝Error
+    case unretryableSVR🐝Error
+    case networkError(retryable: Bool)
+    case rateLimited
+    case cancellation
 }
 
 public enum RegistrationBackupErrorNextStep {
     case skipRestore
-    case incorrectBackupKey
+    case incorrectRecoveryKey
     case tryAgain
     case restartQuickRestore
+    case rateLimited
 }
 
 public protocol RegistrationCoordinatorBackupErrorPresenter {
@@ -40,27 +44,28 @@ public class RegistrationCoordinatorBackupErrorPresenterImpl:
     RegistrationCoordinatorBackupErrorPresenter,
     SFSafariViewControllerDelegate
 {
-    private enum Constants {
-        static let incompatibleVersionFAQURL = URL(string: "https://support.signal.org/hc/articles/360007059752")!
-        static let backupKeyFAQURL = URL(string: "https://support.signal.org/hc/articles/360007059752")!
-        static let itunesStoreUrl = URL(string: "https://itunes.apple.com/app/id874139669")!
-    }
-
     public func mapToRegistrationError(error: Error) -> RegistrationBackupRestoreError {
         switch error {
+        case let httpError as OWSHTTPError where httpError.responseStatusCode == 429:
+            return .rateLimited
         case _ where error.isNetworkFailureOrTimeout:
-            return .networkError
+            return .networkError(retryable: error.isRetryable)
         case _ where error is BackupKeyMaterialError:
-            // Missing backup key
-            return .incorrectBackupKey
+            // Missing recovery key
+            return .incorrectRecoveryKey
         case BackupAuthCredentialFetchError.noExistingBackupId:
             // Usually because backups haven't been set up yet.
             return .backupNotFound
         case SignalError.verificationFailed:
-            return .incorrectBackupKey
+            return .incorrectRecoveryKey
         case _ where error is SignalError:
             // LibSignalError (e.g. - creating credentials)
-            return .incorrectBackupKey
+            return .incorrectRecoveryKey
+        case let httpError as OWSHTTPError where httpError.responseStatusCode == 401:
+            // Incorrect AEP
+            // -- and/or --
+            // No public key registered for this backupID (AEP+ACI)
+            return .incorrectRecoveryKey
         case let httpError as OWSHTTPError where httpError.responseStatusCode == 404:
             // No backup found in the CDN
             return .backupNotFound
@@ -70,9 +75,20 @@ public class RegistrationCoordinatorBackupErrorPresenterImpl:
             return .generic
         case _ where error is CancellationError:
             // Consider this a timeout, try again
-            return .timeout
+            return .cancellation
         case BackupImportError.unsupportedVersion:
             return .versionMismatch
+        case let error as SVR🐝Error:
+            switch error {
+            case .retryableAutomatically, .retryableByUser:
+                return .retryableSVR🐝Error
+            case .unrecoverable:
+                return .unretryableSVR🐝Error
+            case .incorrectRecoveryKey:
+                return .incorrectRecoveryKey
+            case .cancellationError:
+                return .cancellation
+            }
         default:
             return .generic
         }
@@ -121,7 +137,9 @@ public class RegistrationCoordinatorBackupErrorPresenterImpl:
         var actions = [ActionSheetAction]()
 
         switch error {
-        case .generic where isQuickRestore:
+        case
+                .generic where isQuickRestore,
+                .incorrectRecoveryKey where isQuickRestore:
             // If this is QuickRestore flow, present message about re-scanning
             title = OWSLocalizedString(
                 "REGISTRATION_BACKUP_RESTORE_ERROR_GENERIC_RETRY_TITLE",
@@ -162,23 +180,48 @@ public class RegistrationCoordinatorBackupErrorPresenterImpl:
                 continuation.resume(returning: .skipRestore)
             })
             actions.append(ActionSheetAction(title: tryAgainString) { _ in
-                continuation.resume(returning: .tryAgain)
+                continuation.resume(returning: .incorrectRecoveryKey)
             })
-        case .incorrectBackupKey:
+        case .rateLimited:
             title = OWSLocalizedString(
                 "REGISTRATION_BACKUP_RESTORE_ERROR_INCORRECT_KEY_TITLE",
-                comment: "Title for a sheet warning users about an incorrect backup key."
+                comment: "Title for a sheet warning users about an incorrect recovery key."
             )
             message = OWSLocalizedString(
-                "REGISTRATION_BACKUP_RESTORE_ERROR_INCORRECT_KEY_BODY",
-                comment: "Body for a sheet warning users about an incorrect backup key."
+                "REGISTRATION_BACKUP_RESTORE_ERROR_INCORRECT_KEY_RATE_LIMIT_BODY",
+                comment: "Body for a sheet warning users about an incorrect recovery key and having hit a rate limit on retries."
             )
-            actions.append(ActionSheetAction(title: tryAgainString) { _ in
-                continuation.resume(returning: .incorrectBackupKey)
+            actions.append(ActionSheetAction(title: CommonStrings.okButton) { _ in
+                continuation.resume(returning: .rateLimited)
             })
             actions.append(ActionSheetAction(title: CommonStrings.help) { _ in
                 self.presentSupportArticle(
-                    url: Constants.backupKeyFAQURL,
+                    url: URL.Support.backups,
+                    presenter: presenter
+                ) {
+                    self.presentError(
+                        error: error,
+                        isQuickRestore: isQuickRestore,
+                        from: presenter,
+                        continuation: continuation
+                    )
+                }
+            })
+        case .incorrectRecoveryKey:
+            title = OWSLocalizedString(
+                "REGISTRATION_BACKUP_RESTORE_ERROR_INCORRECT_KEY_TITLE",
+                comment: "Title for a sheet warning users about an incorrect recovery key."
+            )
+            message = OWSLocalizedString(
+                "REGISTRATION_BACKUP_RESTORE_ERROR_INCORRECT_KEY_BODY",
+                comment: "Body for a sheet warning users about an incorrect recovery key."
+            )
+            actions.append(ActionSheetAction(title: tryAgainString) { _ in
+                continuation.resume(returning: .incorrectRecoveryKey)
+            })
+            actions.append(ActionSheetAction(title: CommonStrings.help) { _ in
+                self.presentSupportArticle(
+                    url: URL.Support.backups,
                     presenter: presenter
                 ) {
                     self.presentError(
@@ -216,7 +259,7 @@ public class RegistrationCoordinatorBackupErrorPresenterImpl:
             }
             actions.append(ActionSheetAction(title: CommonStrings.learnMore) { _ in
                 self.presentSupportArticle(
-                    url: Constants.incompatibleVersionFAQURL,
+                    url: URL.Support.backups,
                     presenter: presenter
                 ) {
                     self.presentError(
@@ -227,7 +270,43 @@ public class RegistrationCoordinatorBackupErrorPresenterImpl:
                     )
                 }
             })
-        case .networkError, .timeout:
+        case .retryableSVR🐝Error, .cancellation:
+            title = OWSLocalizedString(
+                "REGISTRATION_BACKUP_RESTORE_ERROR_RETRYABLE_SERVER_ERROR_TITLE",
+                comment: "Title for a sheet telling users to try restoring a backup again after a server error."
+            )
+            message = OWSLocalizedString(
+                "REGISTRATION_BACKUP_RESTORE_ERROR_RETRYABLE_SERVER_ERROR_BODY",
+                comment: "Body for a sheet telling users to try restoring a backup again after a server error."
+            )
+
+            actions.append(ActionSheetAction(title: tryAgainString) { _ in
+                continuation.resume(returning: .tryAgain)
+            })
+            actions.append(ActionSheetAction(title: CommonStrings.cancelButton) { _ in
+                continuation.resume(returning: .skipRestore)
+            })
+        case .unretryableSVR🐝Error:
+            title = OWSLocalizedString(
+                "REGISTRATION_BACKUP_RESTORE_ERROR_UNRETRYABLE_SERVER_ERROR_TITLE",
+                comment: "Title for a sheet telling users restoring a backup unrecoverably failed."
+            )
+            message = OWSLocalizedString(
+                "REGISTRATION_BACKUP_RESTORE_ERROR_UNRETRYABLE_SERVER_ERROR_BODY",
+                comment: "Body for a sheet telling users restoring a backup unrecoverably failed."
+            )
+
+            actions.append(ActionSheetAction(title: CommonStrings.contactSupport) { @MainActor _ in
+                    Task { @MainActor in
+                        self.presentContactSupportSheet(presenter: presenter) {
+                            continuation.resume(returning: .skipRestore)
+                        }
+                    }
+            })
+            actions.append(ActionSheetAction(title: CommonStrings.okButton) { _ in
+                continuation.resume(returning: .skipRestore)
+            })
+        case .networkError(let isRetryable):
             title = OWSLocalizedString(
                 "REGISTRATION_BACKUP_RESTORE_ERROR_NETWORK_TITLE",
                 comment: "Title for a sheet warning users about a network error during backup restore."
@@ -237,9 +316,15 @@ public class RegistrationCoordinatorBackupErrorPresenterImpl:
                 comment: "Body for a sheet warning users about a network error during backup restore."
             )
 
-            actions.append(ActionSheetAction(title: tryAgainString) { _ in
-                continuation.resume(returning: .tryAgain)
-            })
+            if isRetryable {
+                actions.append(ActionSheetAction(title: tryAgainString) { _ in
+                    continuation.resume(returning: .tryAgain)
+                })
+            } else {
+                actions.append(ActionSheetAction(title: tryAgainString) { _ in
+                    continuation.resume(returning: .skipRestore)
+                })
+            }
             actions.append(ActionSheetAction(title: CommonStrings.contactSupport) { @MainActor _ in
                 Task { @MainActor in
                     self.presentContactSupportSheet(presenter: presenter) {
@@ -324,9 +409,10 @@ public class RegistrationCoordinatorBackupErrorPresenterImpl:
     private func presentAppStorePage(
         completion: @escaping () -> Void
     ) {
-        UIApplication.shared.open(Constants.itunesStoreUrl) { _ in
-            completion()
-        }
+        CurrentAppContext().open(
+            TSConstants.appStoreUrl,
+            completion: { _ in completion() }
+        )
     }
 
     @objc

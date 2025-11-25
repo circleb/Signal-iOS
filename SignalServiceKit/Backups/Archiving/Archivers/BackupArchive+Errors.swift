@@ -22,6 +22,7 @@ extension BackupArchive {
                 case paymentNotification
                 case giftBadge
                 case viewOnceMessage
+                case poll
             }
 
             /// An error occurred serializing the proto.
@@ -68,6 +69,9 @@ extension BackupArchive {
             /// disallows it and the proto cannot represent it.
             case themedCustomChatColor
 
+            /// A `TSInteraction` database row was invalid, and we couldn't
+            /// instantiate a `TSInteraction` from it.
+            case invalidInteractionDatabaseRow(RawError)
             /// An incoming message has an invalid or missing author address information,
             /// causing the message to be skipped.
             case invalidIncomingMessageAuthor
@@ -103,7 +107,6 @@ extension BackupArchive {
             /// A reaction has an invalid or missing author address information, causing the
             /// reaction to be skipped.
             case invalidReactionAddress
-
             /// A reaction has an invalid (too large) timestamp.
             case invalidReactionTimestamp
 
@@ -222,6 +225,36 @@ extension BackupArchive {
 
             /// A message unexpectedly had edit history.
             case unexpectedRevisionsOnMessage(UnexpectedRevisionsMessageType)
+
+            /// A poll terminate message was missing a question
+            case pollEndMissingQuestion
+
+            /// A poll terminate message was missing all persistable data
+            case pollEndMissingPersistableData
+
+            /// An interaction that claims to be a poll does not have associated poll data
+            case pollMissing
+
+            /// Poll option should have a rowId but it does not
+            case pollOptionIdMissing
+
+            /// Poll db row doesn't fit into PollRecord Swift type
+            case invalidPollRecordDatabaseRow
+
+            /// Poll option db row doesn't fit into PollOptionRecord Swift type
+            case invalidPollOptionRecordDatabaseRow
+
+            /// Poll vote db row doesn't fit into PollVoteRecord Swift type
+            case invalidPollVoteRecordDatabaseRow
+
+            /// An interaction that claims to be a poll does not have a poll question
+            case pollMessageMissingQuestionBody
+
+            /// A poll vote recipient id was not found
+            case pollVoteAuthorSignalRecipientIdMissing
+
+            /// Author Aci for end poll message was invalid
+            case endPollUpdateInvalidAuthorAci
         }
 
         private let type: ErrorType
@@ -291,6 +324,7 @@ extension BackupArchive {
                     .customDistributionListBlocklistViewMode,
                     .distributionListMissingDeletionTimestamp,
                     .distributionListInvalidTimestamp,
+                    .invalidInteractionDatabaseRow,
                     .invalidIncomingMessageAuthor,
                     .invalidOutgoingMessageRecipient,
                     .invalidQuoteAuthor,
@@ -335,7 +369,17 @@ extension BackupArchive {
                     .unviewedViewOnceMessageTooManyAttachments,
                     .adHocCallDoesNotHaveCallLinkAsConversationId,
                     .invalidAdHocCallTimestamp,
-                    .unexpectedRevisionsOnMessage:
+                    .unexpectedRevisionsOnMessage,
+                    .pollMissing,
+                    .pollOptionIdMissing,
+                    .invalidPollRecordDatabaseRow,
+                    .invalidPollOptionRecordDatabaseRow,
+                    .invalidPollVoteRecordDatabaseRow,
+                    .pollMessageMissingQuestionBody,
+                    .pollVoteAuthorSignalRecipientIdMissing,
+                    .endPollUpdateInvalidAuthorAci,
+                    .pollEndMissingQuestion,
+                    .pollEndMissingPersistableData:
                 // Log any others as we see them.
                 return nil
             }
@@ -398,8 +442,23 @@ extension BackupArchive {
                     .unviewedViewOnceMessageTooManyAttachments,
                     .adHocCallDoesNotHaveCallLinkAsConversationId,
                     .invalidAdHocCallTimestamp,
-                    .unexpectedRevisionsOnMessage:
+                    .unexpectedRevisionsOnMessage,
+                    .pollMissing,
+                    .pollOptionIdMissing,
+                    .invalidPollRecordDatabaseRow,
+                    .invalidPollOptionRecordDatabaseRow,
+                    .invalidPollVoteRecordDatabaseRow,
+                    .pollMessageMissingQuestionBody,
+                    .pollVoteAuthorSignalRecipientIdMissing,
+                    .endPollUpdateInvalidAuthorAci,
+                    .pollEndMissingQuestion,
+                    .pollEndMissingPersistableData:
                 return .error
+            case .invalidInteractionDatabaseRow:
+                // We've seen real world databases with interaction rows that
+                // failed to deserialize into TSInteraciton instances. We'll
+                // drop them from the Backup.
+                return .warning
             case .contactThreadMissingAddress:
                 // We've seen real-world databases with TSContactThreads that
                 // have no contact identifiers (aci/pni/e64).
@@ -478,6 +537,8 @@ extension BackupArchive {
 
             case blockedRecipientFetchError(RawError)
             case blockedGroupFetchError(RawError)
+
+            case oversizedTextCacheFetchError(RawError)
 
             /// These should never happen; it means some invariant in the backup code
             /// we could not enforce with the type system was broken. Nothing was wrong with
@@ -604,6 +665,13 @@ extension BackupArchive {
                 /// A ``BackupProto_DirectStoryReplyMessage`` was in a group thread.
                 case directStoryReplyInGroupThread
 
+                /// A ``BackupProto_StandardMessage/text`` had inlined oversize text that
+                /// was too long (even for oversized text there is a limit).
+                case standardMessageWayTooOversizedBody
+                /// A ``BackupProto_StandardMessage/longText`` was present despite an inlined
+                /// oversize message body (longer than standard message body length). Long text
+                /// pointers should only be included if the attachment is undownloaded and unavailable for inlining.
+                case longTextStandardMessageWithOversizeBody
                 /// A ``BackupProto_StandardMessage/longText`` was present despite an empty
                 /// message body (the body text must always be a prefix of the long text)
                 case longTextStandardMessageMissingBody
@@ -611,6 +679,9 @@ extension BackupArchive {
                 /// A quoted message had no body, attachment, gift badge, or other
                 /// content in its representation of the original being quoted.
                 case quotedMessageEmptyContent
+                /// The text body in a quoted message was too long (as enforced by standard message sending).
+                /// Oversized text in quotes is unsupported on all platforms.
+                case quotedMessageOversizeText
 
                 /// A link preview with an empty string for the url
                 case linkPreviewEmptyUrl
@@ -745,6 +816,24 @@ extension BackupArchive {
                 /// The recipient on an ad hoc call was not a call link. No other
                 /// recipient types are valid for an ad hoc call.
                 case recipientOfAdHocCallWasNotCallLink
+
+                /// The poll terminate message was not in a group chat
+                case pollTerminateNotFromGroupChat
+
+                /// The poll terminate message author had an invalid non-contact Address
+                case pollTerminateAuthorNotContact
+
+                /// Poll question was empty
+                case pollQuestionEmpty
+
+                /// The poll vote message author had an invalid non-contact Address
+                case pollVoteAuthorNotContact
+
+                /// We only expect one vote count per author, but there were multiple
+                case pollVoteCountRepeated
+
+                /// We expect all authors to have an associated latest vote count, but there wasn't
+                case noPollVoteCountForAuthor
             }
 
             /// The proto contained invalid or self-contradictory data, e.g an invalid ACI.
@@ -775,6 +864,15 @@ extension BackupArchive {
             /// enforce with the type system was broken. Nothing was wrong with
             /// the proto; its the iOS code that has a bug somewhere.
             case developerError(OWSAssertionError)
+
+            /// Poll failed to insert in SQL
+            case pollCreateFailedToInsertInDatabase
+
+            /// Poll vote failed to insert in SQL
+            case pollVoteFailedToInsertInDatabase
+
+            /// Poll terminate failed to insert in SQL
+            case pollTerminateFailedToInsertInDatabase
         }
 
         private let type: ErrorType
@@ -847,8 +945,11 @@ extension BackupArchive {
                         .directStoryReplyMessageEmptyWithLongText,
                         .directStoryReplyFromNonAci,
                         .directStoryReplyInGroupThread,
+                        .standardMessageWayTooOversizedBody,
+                        .longTextStandardMessageWithOversizeBody,
                         .longTextStandardMessageMissingBody,
                         .quotedMessageEmptyContent,
+                        .quotedMessageOversizeText,
                         .linkPreviewEmptyUrl,
                         .linkPreviewUrlNotInBody,
                         .contactMessageMissingContactAttachment,
@@ -890,7 +991,13 @@ extension BackupArchive {
                         .invalidAttachmentClientUUID,
                         .callLinkInvalidRootKey,
                         .callLinkUsedAsChatRecipient,
-                        .recipientOfAdHocCallWasNotCallLink:
+                        .recipientOfAdHocCallWasNotCallLink,
+                        .pollTerminateNotFromGroupChat,
+                        .pollTerminateAuthorNotContact,
+                        .pollQuestionEmpty,
+                        .pollVoteAuthorNotContact,
+                        .pollVoteCountRepeated,
+                        .noPollVoteCountForAuthor:
                     // Collapse all others by the id of the containing frame.
                     return idLogString
                 }
@@ -912,6 +1019,10 @@ extension BackupArchive {
             case .failedToSetBackupPlan, .developerError:
                 // Log each of these as we see them.
                 return nil
+            case .pollCreateFailedToInsertInDatabase,
+                    .pollVoteFailedToInsertInDatabase,
+                    .pollTerminateFailedToInsertInDatabase:
+                return typeLogString
             }
         }
 
@@ -948,7 +1059,10 @@ extension BackupArchive {
                         .directStoryReplyMessageEmptyWithLongText,
                         .directStoryReplyFromNonAci,
                         .directStoryReplyInGroupThread,
+                        .standardMessageWayTooOversizedBody,
+                        .longTextStandardMessageWithOversizeBody,
                         .longTextStandardMessageMissingBody,
+                        .quotedMessageOversizeText,
                         .linkPreviewEmptyUrl,
                         .contactMessageMissingContactAttachment,
                         .contactAttachmentPhoneNumberMissingValue,
@@ -989,7 +1103,13 @@ extension BackupArchive {
                         .invalidAttachmentClientUUID,
                         .callLinkInvalidRootKey,
                         .callLinkUsedAsChatRecipient,
-                        .recipientOfAdHocCallWasNotCallLink:
+                        .recipientOfAdHocCallWasNotCallLink,
+                        .pollTerminateNotFromGroupChat,
+                        .pollTerminateAuthorNotContact,
+                        .pollQuestionEmpty,
+                        .pollVoteAuthorNotContact,
+                        .pollVoteCountRepeated,
+                        .noPollVoteCountForAuthor:
                     return .error
                 case .quotedMessageEmptyContent:
                     // It was historically possible to end up with a quote that
@@ -1013,7 +1133,10 @@ extension BackupArchive {
                     .databaseInsertionFailed,
                     .failedToSetBackupPlan,
                     .failedToEnqueueAttachmentDownload,
-                    .developerError:
+                    .developerError,
+                    .pollCreateFailedToInsertInDatabase,
+                    .pollVoteFailedToInsertInDatabase,
+                    .pollTerminateFailedToInsertInDatabase:
                 return .error
             }
         }
@@ -1064,7 +1187,7 @@ extension BackupArchive {
             self.error = error
             self.wasFrameDropped = wasFrameDropped
             // Don't serialize proto frames if we aren't displaying errors.
-            if let protoFrame, FeatureFlags.Backups.errorDisplay {
+            if let protoFrame, BuildFlags.Backups.errorDisplay {
                 do {
                     self.protoJson = try String(
                         data: JSONSerialization.data(
@@ -1104,6 +1227,8 @@ extension BackupArchive {
     fileprivate static let maxCollapsedIdLogCount = 10
 
     public struct CollapsedErrorLog {
+        private let logger: PrefixedLogger
+
         public private(set) var typeLogString: String
         public private(set) var exampleCallsiteString: String
         public private(set) var exampleProtoFrameJson: String?
@@ -1113,6 +1238,8 @@ extension BackupArchive {
         public private(set) var logLevel: BackupArchive.LogLevel
 
         init(_ error: LoggableErrorAndProto) {
+            self.logger = PrefixedLogger(prefix: "[Backups]")
+
             self.typeLogString = error.error.typeLogString
             self.exampleCallsiteString = error.error.callsiteLogString
             self.exampleProtoFrameJson = error.protoJson
@@ -1142,9 +1269,9 @@ extension BackupArchive {
                 + "example callsite: \(exampleCallsiteString)"
             switch logLevel {
             case .warning:
-                Logger.warn(logString)
+                logger.warn(logString)
             case .error:
-                Logger.error(logString)
+                logger.error(logString)
             }
         }
     }

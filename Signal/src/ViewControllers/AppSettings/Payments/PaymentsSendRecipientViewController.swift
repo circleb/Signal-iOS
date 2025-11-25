@@ -32,14 +32,10 @@ class PaymentsSendRecipientViewController: RecipientPickerContainerViewControlle
         recipientPicker.shouldHideLocalRecipient = true
         recipientPicker.groupsToShow = .noGroups
         recipientPicker.delegate = self
-        addChild(recipientPicker)
-        view.addSubview(recipientPicker.view)
-        recipientPicker.view.autoPin(toTopLayoutGuideOf: self, withInset: 0)
-        recipientPicker.view.autoPinEdge(toSuperviewEdge: .leading)
-        recipientPicker.view.autoPinEdge(toSuperviewEdge: .trailing)
-        recipientPicker.view.autoPinEdge(toSuperviewEdge: .bottom)
 
-        navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(didTapDismiss))
+        addRecipientPicker()
+
+        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(didTapDismiss))
     }
 
     @objc

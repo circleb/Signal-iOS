@@ -47,6 +47,12 @@ public struct BackupArchiveExportProgress {
     public func didExportFrame() {
         progressSource.incrementCompletedUnitCount(by: 1)
     }
+
+    public func didCloseStream() {
+        // We used an estimate to populate the unit count originally, so make
+        // sure we complete the progress when we're done.
+        progressSource.complete()
+    }
 }
 
 // MARK: -
@@ -67,9 +73,7 @@ public struct BackupArchiveImportFramesProgress {
         sink: OWSProgressSink,
         fileUrl: URL
     ) async throws -> Self {
-        guard let totalByteCount = OWSFileSystem.fileSize(of: fileUrl)?.uint64Value else {
-            throw OWSAssertionError("Unable to read file size")
-        }
+        let totalByteCount = try OWSFileSystem.fileSize(of: fileUrl)
 
         let progressSource = await sink.addSource(
             withLabel: "Backup Import: Frame Restore",

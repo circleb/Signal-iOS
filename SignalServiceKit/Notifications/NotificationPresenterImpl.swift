@@ -18,25 +18,6 @@ public import LibSignalClient
 /// there is no need for an adapter pattern, and instead the appropriate NotificationActionHandler is
 /// wired directly into the appropriate callback point.
 
-public enum AppNotificationCategory: CaseIterable {
-    case incomingMessageWithActions_CanReply
-    case incomingMessageWithActions_CannotReply
-    case incomingMessageWithoutActions
-    case incomingMessageFromNoLongerVerifiedIdentity
-    case incomingReactionWithActions_CanReply
-    case incomingReactionWithActions_CannotReply
-    case infoOrErrorMessage
-    case missedCallWithActions
-    case missedCallWithoutActions
-    case missedCallFromNoLongerVerifiedIdentity
-    case internalError
-    case incomingGroupStoryReply
-    case failedStorySend
-    case transferRelaunch
-    case deregistration
-    case newDeviceLinked
-}
-
 /// Represents "custom" notification actions. These are the ones that appear
 /// when long-pressing a notification. Their identifiers (rawValues) are
 /// passed to iOS via UNNotificationAction.
@@ -63,6 +44,8 @@ public enum AppNotificationDefaultAction: String {
     case reregister
     case showChatList
     case showLinkedDevices
+    case showBackupsSettings
+    case listMediaIntegrityCheck
 }
 
 public struct AppNotificationUserInfo {
@@ -76,6 +59,7 @@ public struct AppNotificationUserInfo {
     public var storyMessageId: String?
     public var storyTimestamp: UInt64?
     public var threadId: String?
+    public var voteAuthorServiceIdBinary: Data?
 
     public init() {
     }
@@ -103,6 +87,7 @@ public struct AppNotificationUserInfo {
         self.storyMessageId = userInfo[UserInfoKey.storyMessageId] as? String
         self.storyTimestamp = userInfo[UserInfoKey.storyTimestamp] as? UInt64
         self.threadId = userInfo[UserInfoKey.threadId] as? String
+        self.voteAuthorServiceIdBinary = userInfo[UserInfoKey.voteAuthorServiceIdBinary] as? Data
     }
 
     private enum UserInfoKey {
@@ -116,6 +101,7 @@ public struct AppNotificationUserInfo {
         public static let storyMessageId = "Signal.AppNotificationsUserInfoKey.storyMessageId"
         public static let storyTimestamp = "Signal.AppNotificationsUserInfoKey.storyTimestamp"
         public static let threadId = "Signal.AppNotificationsUserInfoKey.threadId"
+        public static let voteAuthorServiceIdBinary = "Signal.AppNotificationsUserInfoKey.voteAuthorServiceIdBinary"
     }
 
     func build() -> [String: Any] {
@@ -150,45 +136,65 @@ public struct AppNotificationUserInfo {
         if let threadId {
             result[UserInfoKey.threadId] = threadId
         }
+        if let voteAuthorServiceIdBinary {
+            result[UserInfoKey.voteAuthorServiceIdBinary] = voteAuthorServiceIdBinary
+        }
         return result
     }
 }
 
-extension AppNotificationCategory {
-    var identifier: String {
+// MARK: -
+
+public enum AppNotificationCategory: String, CaseIterable {
+    case incomingMessageWithActions_CanReply = "Signal.AppNotificationCategory.incomingMessageWithActions"
+    case incomingMessageWithActions_CannotReply = "Signal.AppNotificationCategory.incomingMessageWithActionsNoReply"
+    case incomingMessageWithoutActions = "Signal.AppNotificationCategory.incomingMessage"
+    case incomingMessageFromNoLongerVerifiedIdentity = "Signal.AppNotificationCategory.incomingMessageFromNoLongerVerifiedIdentity"
+    case incomingReactionWithActions_CanReply = "Signal.AppNotificationCategory.incomingReactionWithActions"
+    case incomingReactionWithActions_CannotReply = "Signal.AppNotificationCategory.incomingReactionWithActionsNoReply"
+    case infoOrErrorMessage = "Signal.AppNotificationCategory.infoOrErrorMessage"
+    case missedCallWithActions = "Signal.AppNotificationCategory.missedCallWithActions"
+    case missedCallWithoutActions = "Signal.AppNotificationCategory.missedCall"
+    case missedCallFromNoLongerVerifiedIdentity = "Signal.AppNotificationCategory.missedCallFromNoLongerVerifiedIdentity"
+    case internalError = "Signal.AppNotificationCategory.internalError"
+    case incomingGroupStoryReply = "Signal.AppNotificationCategory.incomingGroupStoryReply"
+    case failedStorySend = "Signal.AppNotificationCategory.failedStorySend"
+    case transferRelaunch = "Signal.AppNotificationCategory.transferRelaunch"
+    case deregistration = "Signal.AppNotificationCategory.authErrorLogout"
+    case newDeviceLinked = "Signal.AppNotificationCategory.newDeviceLinked"
+    case backupsEnabled = "Signal.AppNotificationCategory.backupsEnabled"
+    case backupsMediaTierQuotaConsumed = "Signal.AppNotificationCategory.backupsMediaTierQuotaConsumed"
+    case listMediaIntegrityCheckFailure = "Signal.AppNotificationCategory.listMediaIntegrityCheckFailure"
+    case pollEndNotification = "Signal.AppNotificationCategory.pollEndNotification"
+    case pollVoteNotification = "Signal.AppNotificationCategory.pollVoteNotification"
+
+    var shouldClearOnAppActivate: Bool {
         switch self {
-        case .incomingMessageWithActions_CanReply:
-            return "Signal.AppNotificationCategory.incomingMessageWithActions"
-        case .incomingMessageWithActions_CannotReply:
-            return "Signal.AppNotificationCategory.incomingMessageWithActionsNoReply"
-        case .incomingMessageWithoutActions:
-            return "Signal.AppNotificationCategory.incomingMessage"
-        case .incomingMessageFromNoLongerVerifiedIdentity:
-            return "Signal.AppNotificationCategory.incomingMessageFromNoLongerVerifiedIdentity"
-        case .incomingReactionWithActions_CanReply:
-            return "Signal.AppNotificationCategory.incomingReactionWithActions"
-        case .incomingReactionWithActions_CannotReply:
-            return "Signal.AppNotificationCategory.incomingReactionWithActionsNoReply"
-        case .infoOrErrorMessage:
-            return "Signal.AppNotificationCategory.infoOrErrorMessage"
-        case .missedCallWithActions:
-            return "Signal.AppNotificationCategory.missedCallWithActions"
-        case .missedCallWithoutActions:
-            return "Signal.AppNotificationCategory.missedCall"
-        case .missedCallFromNoLongerVerifiedIdentity:
-            return "Signal.AppNotificationCategory.missedCallFromNoLongerVerifiedIdentity"
-        case .internalError:
-            return "Signal.AppNotificationCategory.internalError"
-        case .incomingGroupStoryReply:
-            return "Signal.AppNotificationCategory.incomingGroupStoryReply"
-        case .failedStorySend:
-            return "Signal.AppNotificationCategory.failedStorySend"
-        case .transferRelaunch:
-            return "Signal.AppNotificationCategory.transferRelaunch"
-        case .deregistration:
-            return "Signal.AppNotificationCategory.authErrorLogout"
-        case .newDeviceLinked:
-            return "Signal.AppNotificationCategory.newDeviceLinked"
+        case
+                .incomingMessageWithActions_CanReply,
+                .incomingMessageWithActions_CannotReply,
+                .incomingMessageWithoutActions,
+                .incomingMessageFromNoLongerVerifiedIdentity,
+                .incomingReactionWithActions_CanReply,
+                .incomingReactionWithActions_CannotReply,
+                .infoOrErrorMessage,
+                .missedCallWithActions,
+                .missedCallWithoutActions,
+                .missedCallFromNoLongerVerifiedIdentity,
+                .incomingGroupStoryReply,
+                .failedStorySend,
+                .transferRelaunch,
+                .deregistration,
+                .pollEndNotification,
+                .pollVoteNotification:
+            return true
+        case
+                .newDeviceLinked,
+                .backupsEnabled,
+                .backupsMediaTierQuotaConsumed,
+                .listMediaIntegrityCheckFailure,
+                .internalError:
+            return false
         }
     }
 
@@ -225,14 +231,24 @@ extension AppNotificationCategory {
             return []
         case .newDeviceLinked:
             return []
+        case .backupsEnabled:
+            return []
+        case .backupsMediaTierQuotaConsumed:
+            return []
+        case .listMediaIntegrityCheckFailure:
+            return []
+        case .pollEndNotification:
+            return []
+        case .pollVoteNotification:
+            return []
         }
     }
 }
 
+// MARK: -
+
 let kAudioNotificationsThrottleCount = 2
 let kAudioNotificationsThrottleInterval: TimeInterval = 5
-
-// MARK: -
 
 public class NotificationPresenterImpl: NotificationPresenter {
     private let presenter = UserNotificationPresenter()
@@ -514,14 +530,14 @@ public class NotificationPresenterImpl: NotificationPresenter {
         if isThreadMuted(thread, transaction: transaction) {
             guard thread.isGroupThread else { return false }
 
-            guard let localAddress = tsAccountManager.localIdentifiersWithMaybeSneakyTransaction?.aciAddress else {
+            guard let localIdentifiers = tsAccountManager.localIdentifiers(tx: transaction) else {
                 owsFailDebug("Missing local address")
                 return false
             }
 
-            let mentionedAddresses = MentionFinder.mentionedAddresses(for: incomingMessage, transaction: transaction)
-            let localUserIsQuoted = incomingMessage.quotedMessage?.authorAddress.isEqualToAddress(localAddress) ?? false
-            guard mentionedAddresses.contains(localAddress) || localUserIsQuoted else {
+            let mentionedAcis = MentionFinder.mentionedAcis(for: incomingMessage, tx: transaction)
+            let localUserIsQuoted = incomingMessage.quotedMessage?.authorAddress.isEqualToAddress(localIdentifiers.aciAddress) ?? false
+            guard mentionedAcis.contains(localIdentifiers.aci) || localUserIsQuoted else {
                 return false
             }
 
@@ -587,6 +603,139 @@ public class NotificationPresenterImpl: NotificationPresenter {
             thread: thread,
             transaction: transaction
         )
+    }
+
+    public func notifyUserOfPollEnd(
+        forMessage message: TSIncomingMessage,
+        thread: TSThread,
+        transaction: DBWriteTransaction
+    ) {
+        guard let notifiableThread = NotifiableThread(thread) else {
+            owsFailDebug("Can't notify for \(type(of: thread))")
+            return
+        }
+
+        guard !isThreadMuted(thread, transaction: transaction) else { return }
+
+        // Poll terminate notifications only get displayed if we can include the poll details.
+        let previewType = self.previewType(tx: transaction)
+        guard previewType == .namePreview else {
+            return
+        }
+        owsPrecondition(Self.shouldShowActions(for: previewType))
+
+        let notificationTitle = self.notificationTitle(
+            for: notifiableThread,
+            senderAddress: message.authorAddress,
+            isGroupStoryReply: false,
+            previewType: previewType,
+            tx: transaction
+        )
+
+        let pollEndedFormat = OWSLocalizedString(
+            "POLL_ENDED_NOTIFICATION",
+            comment: "Notification that {{contact}} ended a poll with question {{poll question}}"
+        )
+        guard let pollQuestion = message.body else {
+            return
+        }
+
+        let pollAuthorName = SSKEnvironment.shared.contactManagerRef.nameForAddress(
+            message.authorAddress,
+            localUserDisplayMode: .noteToSelf,
+            short: false,
+            transaction: transaction
+        )
+
+        let notificationBody: String = "\u{1F4CA}" + String(format: pollEndedFormat, pollAuthorName.string, pollQuestion)
+
+        let intent = thread.generateSendMessageIntent(context: .senderAddress(message.authorAddress), transaction: transaction)
+
+        var userInfo = AppNotificationUserInfo()
+        let threadUniqueId = thread.uniqueId
+        userInfo.threadId = threadUniqueId
+
+        enqueueNotificationAction(afterCommitting: transaction) {
+            await self.notifyViaPresenter(
+                category: .pollEndNotification,
+                title: notificationTitle,
+                body: notificationBody,
+                threadIdentifier: threadUniqueId,
+                userInfo: userInfo,
+                intent: intent.map { ($0, .incoming) },
+                soundQuery: .thread(threadUniqueId)
+            )
+        }
+    }
+
+    public func notifyUserOfPollVote(
+        forMessage message: TSOutgoingMessage,
+        voteAuthor: Aci,
+        thread: TSThread,
+        transaction: DBWriteTransaction
+    ) {
+        guard let notifiableThread = NotifiableThread(thread) else {
+            owsFailDebug("Can't notify for \(type(of: thread))")
+            return
+        }
+
+        guard !isThreadMuted(thread, transaction: transaction) else { return }
+
+        // Poll vote notifications only get displayed if we can include the poll details.
+        let previewType = self.previewType(tx: transaction)
+        guard previewType == .namePreview else {
+            return
+        }
+        owsPrecondition(Self.shouldShowActions(for: previewType))
+
+        let notificationTitle = self.notificationTitle(
+            for: notifiableThread,
+            senderAddress: SignalServiceAddress(voteAuthor),
+            isGroupStoryReply: false,
+            previewType: previewType,
+            tx: transaction
+        )
+
+        let pollVotedFormat = OWSLocalizedString(
+            "POLL_VOTED_NOTIFICATION",
+            comment: "Notification that {{contact}} voted in a poll with question {{poll question}}"
+        )
+        guard let pollQuestion = message.body else {
+            return
+        }
+
+        let voteAuthorName = SSKEnvironment.shared.contactManagerRef.nameForAddress(
+            SignalServiceAddress(voteAuthor),
+            localUserDisplayMode: .noteToSelf,
+            short: false,
+            transaction: transaction
+        )
+
+        let notificationBody: String = "\u{1F4CA}" + String(format: pollVotedFormat, voteAuthorName.string, pollQuestion)
+
+        var userInfo = AppNotificationUserInfo()
+        let threadUniqueId = thread.uniqueId
+        userInfo.threadId = threadUniqueId
+        userInfo.voteAuthorServiceIdBinary = voteAuthor.serviceIdBinary
+        userInfo.messageId = message.uniqueId
+
+        let intent = thread.generateSendMessageIntent(context: .senderAddress(SignalServiceAddress(voteAuthor)), transaction: transaction)
+
+        enqueueNotificationAction(afterCommitting: transaction) {
+            if await self.presenter.existingPollVoteNotification(author: voteAuthor.serviceIdBinary, pollId: message.uniqueId) {
+                return
+            }
+
+            await self.notifyViaPresenter(
+                category: .pollVoteNotification,
+                title: notificationTitle,
+                body: notificationBody,
+                threadIdentifier: threadUniqueId,
+                userInfo: userInfo,
+                intent: intent.map { ($0, .incoming) },
+                soundQuery: .thread(threadUniqueId)
+            )
+        }
     }
 
     private enum NotifiableThread {
@@ -932,7 +1081,7 @@ public class NotificationPresenterImpl: NotificationPresenter {
     }
 
     public func notifyTestPopulation(ofErrorMessage errorString: String) {
-        // Fail debug on all devices. External devices should still log the error string.
+        // External devices should still log the error string.
         Logger.error("Fatal error occurred: \(errorString).")
         guard DebugFlags.testPopulationErrorAlerts else {
             return
@@ -1018,6 +1167,74 @@ public class NotificationPresenterImpl: NotificationPresenter {
                         comment: "Body for system notification when a new device is linked. Embeds {{ time the device was linked }}"
                     ),
                     deviceLinkTimestamp.formatted(date: .omitted, time: .shortened)
+                ),
+                threadIdentifier: nil,
+                userInfo: userInfo,
+                soundQuery: .global
+            )
+        }
+    }
+
+    public func scheduleNotifyForBackupsEnabled(backupsTimestamp: Date) {
+        var userInfo = AppNotificationUserInfo()
+        userInfo.defaultAction = .showBackupsSettings
+        enqueueNotificationAction {
+            await self.presenter.cancelPendingNotificationsForBackupsEnabled()
+
+            await self.notifyViaPresenter(
+                category: .backupsEnabled,
+                title: ResolvableValue(resolvedValue: OWSLocalizedString(
+                    "BACKUPS_TURNED_ON_TITLE",
+                    comment: "Title for system notification or megaphone when backups is enabled"
+                )),
+                body: String(
+                    format: OWSLocalizedString(
+                        "BACKUPS_TURNED_ON_NOTIFICATION_BODY_FORMAT",
+                        comment: "Body for system notification or megaphone when backups is enabled. Embeds {{ time backups was enabled }}"
+                    ),
+                    backupsTimestamp.formatted(date: .omitted, time: .shortened)
+                ),
+                threadIdentifier: nil,
+                userInfo: userInfo,
+                soundQuery: .global
+            )
+        }
+    }
+
+    public func notifyUserOfMediaTierQuotaConsumed() {
+        var userInfo = AppNotificationUserInfo()
+        userInfo.defaultAction = .showBackupsSettings
+        enqueueNotificationAction {
+            await self.notifyViaPresenter(
+                category: .backupsMediaTierQuotaConsumed,
+                title: ResolvableValue(resolvedValue: OWSLocalizedString(
+                    "BACKUP_SETTINGS_OUT_OF_STORAGE_SPACE_NOTIFICATION_TITLE",
+                    comment: "Title for a notification telling the user they are out of remote storage space."
+                )),
+                body: OWSLocalizedString(
+                    "BACKUP_SETTINGS_OUT_OF_STORAGE_SPACE_NOTIFICATION_SUBTITLE",
+                    comment: "Subtitle for a notification telling the user they are out of remote storage space."
+                ),
+                threadIdentifier: nil,
+                userInfo: userInfo,
+                soundQuery: .global
+            )
+        }
+    }
+
+    public func notifyUserOfListMediaIntegrityCheckFailure() {
+        var userInfo = AppNotificationUserInfo()
+        userInfo.defaultAction = .listMediaIntegrityCheck
+        enqueueNotificationAction {
+            await self.notifyViaPresenter(
+                category: .listMediaIntegrityCheckFailure,
+                title: ResolvableValue(resolvedValue: OWSLocalizedString(
+                    "BACKUPS_MEDIA_UPLOAD_FAILURE_NOTIFICATION_TITLE",
+                    comment: "Title for system notification when we detect paid backup media uploads have encountered a problem"
+                )),
+                body: OWSLocalizedString(
+                    "BACKUPS_MEDIA_UPLOAD_FAILURE_NOTIFICATION_BODY",
+                    comment: "Body for system notification when we detect paid backup media uploads have encountered a problem"
                 ),
                 threadIdentifier: nil,
                 userInfo: userInfo,
@@ -1159,8 +1376,8 @@ public class NotificationPresenterImpl: NotificationPresenter {
                     switch infoMessage.groupUpdateMetadata(localIdentifiers: localIdentifiers) {
                     case .legacyRawString, .nonGroupUpdate:
                         groupUpdateAuthor = nil
-                    case .newGroup(_, let updateMetadata), .modelDiff(_, _, let updateMetadata):
-                        switch updateMetadata.source {
+                    case .newGroup(_, let source), .modelDiff(_, _, let source):
+                        switch source {
                         case .unknown, .localUser:
                             groupUpdateAuthor = nil
                         case .legacyE164(let e164):
@@ -1405,16 +1622,12 @@ public class NotificationPresenterImpl: NotificationPresenter {
         presenter.clearAllNotifications()
     }
 
-    public func clearAllNotificationsExceptNewLinkedDevices() {
-        Self.clearAllNotificationsExceptNewLinkedDevices()
-    }
-
-    public static func clearAllNotificationsExceptNewLinkedDevices() {
-        UserNotificationPresenter.clearAllNotificationsExceptNewLinkedDevices()
+    public func clearNotificationsForAppActivate() {
+        presenter.clearNotificationsForAppActivate()
     }
 
     public func clearDeliveredNewLinkedDevicesNotifications() {
-        UserNotificationPresenter.clearDeliveredNewLinkedDevicesNotifications()
+        presenter.clearDeliveredNewLinkedDevicesNotifications()
     }
 
     // MARK: - Serialization

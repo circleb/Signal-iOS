@@ -60,15 +60,25 @@ public enum RegistrationStep: Equatable {
     // MARK: From Backup
 
     /// If the user elects to restore from backup and doesn't have their old phone,
-    /// they are prompted to manually enter their backup key.
-    case enterBackupKey
+    /// they are prompted to manually enter their recovery key.
+    case enterRecoveryKey(RegistrationEnterAccountEntropyPoolState)
 
     // MARK: - Post-Registration
 
     /// The path taken to get to the restore options screen
-    public enum RestorePath {
+    public enum RestorePath: Equatable {
+        public enum BackupTier {
+            case free
+            case paid
+        }
+
+        public enum Platform {
+            case android
+            case ios
+        }
+
         /// Restore backup, transfer from old device, small skip button
-        case quickRestore
+        case quickRestore(BackupTier?, Platform)
         /// Restore backup, prominent skip button
         case manualRestore
         /// Transfer from device, restore backup, prominent skip button
@@ -155,7 +165,7 @@ public enum RegistrationStep: Equatable {
         case .pinAttemptsExhaustedWithoutReglock: return "pinAttemptsExhaustedWithoutReglock"
         case .captchaChallenge: return "captchaChallenge"
         case .reglockTimeout: return "reglockTimeout"
-        case .enterBackupKey: return "enterBackupKey"
+        case .enterRecoveryKey: return "enterRecoveryKey"
         case .chooseRestoreMethod: return "chooseRestoreMethod"
         case .confirmRestoreFromBackup: return "confirmRestoreFromBackup"
         case .phoneNumberDiscoverability: return "phoneNumberDiscoverability"

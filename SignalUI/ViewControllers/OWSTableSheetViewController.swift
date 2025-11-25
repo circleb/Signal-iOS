@@ -36,81 +36,55 @@ open class OWSTableSheetViewController: InteractiveSheetViewController {
         // `maximumHeight` prevents the view's height from extending into top safe area.)
         return tableView.contentSize.height
             + tableView.contentInset.totalHeight
-            + footerStack.frame.height
+            + (tableViewController.bottomFooter?.height ?? 0)
             + bottomSafeAreaContentPadding
     }
 
-    private var contentSizeObservation: NSKeyValueObservation?
-
-    public init() {
-        super.init()
+    public override init(visualEffect: UIVisualEffect? = nil) {
+        super.init(visualEffect: visualEffect)
 
         tableViewController.shouldDeferInitialLoad = false
 
         super.allowsExpansion = false
-        contentSizeObservation = tableViewController.tableView.observe(\.contentSize, changeHandler: { [weak self] (_, _) in
-            guard let self = self else { return }
-            self.updateMinimizedHeight()
-        })
     }
 
     public func updateMinimizedHeight() {
         self.minimizedHeight = self.contentSizeHeight
     }
 
-    deinit {
-        contentSizeObservation?.invalidate()
-    }
-
-    open var footerStack: UIStackView = {
-        let view = UIStackView()
-        view.axis = .vertical
-        view.distribution = .fill
-        view.alignment = .center
-        view.preservesSuperviewLayoutMargins = true
-        return view
-    }()
-
     public override func viewDidLoad() {
         super.viewDidLoad()
 
         addChild(tableViewController)
         contentView.addSubview(tableViewController.view)
-        contentView.addSubview(footerStack)
+        tableViewController.didMove(toParent: self)
 
-        tableViewController.view.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .bottom)
-        footerStack.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
-        tableViewController.view.autoPinEdge(.bottom, to: .top, of: footerStack)
+        tableViewController.view.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            tableViewController.view.topAnchor.constraint(equalTo: contentView.topAnchor),
+            tableViewController.view.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            tableViewController.view.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            tableViewController.view.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+        ])
 
-        minimizedHeight = contentSizeHeight
-
-        updateViewState()
+        updateTableContents(shouldReload: true)
     }
 
     public override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
 
-        updateViewState()
-    }
-
-    private var previousMinimizedHeight: CGFloat?
-    private var previousSafeAreaInsets: UIEdgeInsets?
-    public func updateViewState() {
-        if previousSafeAreaInsets != tableViewController.view.safeAreaInsets {
-            updateTableContents()
-            previousSafeAreaInsets = tableViewController.view.safeAreaInsets
-        }
         // The table view might not have its final size when this method is called.
         // Run a layout pass so that we compute the correct height constraints.
         self.tableViewController.tableView.layoutIfNeeded()
+        self.updateMinimizedHeight()
     }
 
-    public override func themeDidChange() {
-        super.themeDidChange()
-        updateTableContents()
+    public func updateTableContents(shouldReload: Bool = true) {
+        tableViewController.setContents(tableContents(), shouldReload: shouldReload)
+        updateMinimizedHeight()
     }
 
-    open func updateTableContents(shouldReload: Bool = true) {
-
+    open func tableContents() -> OWSTableContents {
+        return OWSTableContents()
     }
 }

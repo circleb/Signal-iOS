@@ -14,13 +14,16 @@ public class RegistrationTransferProgressViewController: OWSViewController {
 
     public init(progress: Progress) {
         self.progressView = TransferProgressView(progress: progress)
+
         super.init()
+
+        navigationItem.hidesBackButton = true
     }
 
-    override public func loadView() {
-        view = UIView()
+    override public func viewDidLoad() {
+        super.viewDidLoad()
 
-        view.backgroundColor = Theme.backgroundColor
+        view.backgroundColor = .Signal.background
 
         let titleLabel = UILabel.titleLabelForRegistration(
             text: OWSLocalizedString(
@@ -28,9 +31,7 @@ public class RegistrationTransferProgressViewController: OWSViewController {
                 comment: "The title on the view that shows receiving progress"
             )
         )
-        view.addSubview(titleLabel)
         titleLabel.accessibilityIdentifier = "onboarding.transferProgress.titleLabel"
-        titleLabel.setContentHuggingHigh()
 
         let explanationLabel = UILabel.explanationLabelForRegistration(
             text: OWSLocalizedString(
@@ -39,37 +40,28 @@ public class RegistrationTransferProgressViewController: OWSViewController {
             )
         )
         explanationLabel.accessibilityIdentifier = "onboarding.transferProgress.bodyLabel"
-        explanationLabel.setContentHuggingHigh()
 
-        let cancelButton = OWSFlatButton.linkButtonForRegistration(
-            title: CommonStrings.cancelButton,
-            target: self,
-            selector: #selector(didTapCancel)
+        let cancelButton = UIButton(
+            configuration: .mediumSecondary(title: CommonStrings.cancelButton),
+            primaryAction: UIAction { [weak self] _ in
+                self?.didTapCancel()
+            }
         )
 
         let topSpacer = UIView.vStretchingSpacer()
         let bottomSpacer = UIView.vStretchingSpacer()
 
-        let stackView = UIStackView(arrangedSubviews: [
+        addStaticContentStackView(arrangedSubviews: [
             titleLabel,
             explanationLabel,
             topSpacer,
             progressView,
             bottomSpacer,
-            cancelButton
+            cancelButton.enclosedInVerticalStackView(isFullWidthButton: false)
         ])
-        stackView.axis = .vertical
-        stackView.alignment = .fill
-        stackView.spacing = 12
-        view.addSubview(stackView)
-        stackView.autoPinEdgesToSuperviewMargins()
-
-        topSpacer.autoMatch(.height, to: .height, of: bottomSpacer)
-    }
-
-    override public func viewDidLoad() {
-        super.viewDidLoad()
-        navigationItem.setHidesBackButton(true, animated: false)
+        topSpacer.translatesAutoresizingMaskIntoConstraints = false
+        bottomSpacer.translatesAutoresizingMaskIntoConstraints = false
+        topSpacer.heightAnchor.constraint(equalTo: bottomSpacer.heightAnchor).isActive = true
     }
 
     override public func viewWillAppear(_ animated: Bool) {
@@ -91,7 +83,6 @@ public class RegistrationTransferProgressViewController: OWSViewController {
 
     // MARK: - Events
 
-    @objc
     func didTapCancel() {
         Logger.info("")
 
@@ -163,91 +154,30 @@ extension RegistrationTransferProgressViewController: DeviceTransferServiceObser
     }
 }
 
-private class TransferRelaunchSheet: InteractiveSheetViewController {
-    let stackView = UIStackView()
+private class TransferRelaunchSheet: HeroSheetViewController {
+    override var canBeDismissed: Bool { false }
 
-    public override var canBeDismissed: Bool { false }
-
-    public override var sheetBackgroundColor: UIColor { Theme.tableView2PresentedBackgroundColor }
-
-    override public func viewDidLoad() {
-        super.viewDidLoad()
-
-        minimizedHeight = 460
-        super.allowsExpansion = false
-
-        stackView.axis = .vertical
-        stackView.layoutMargins = UIEdgeInsets(hMargin: 24, vMargin: 24)
-        stackView.spacing = 22
-        stackView.isLayoutMarginsRelativeArrangement = true
-        contentView.addSubview(stackView)
-
-        let image = UIImage(named: "transfer_complete")
-        let imageView = UIImageView(image: image)
-        imageView.contentMode = .scaleAspectFit
-        stackView.addArrangedSubview(imageView)
-        imageView.autoSetDimensions(to: CGSize(width: 128, height: 64))
-
-        let titleLabel = UILabel()
-        titleLabel.textAlignment = .center
-        titleLabel.font = UIFont.dynamicTypeTitle2.semibold()
-        titleLabel.text = OWSLocalizedString(
-            "TRANSFER_COMPLETE_SHEET_TITLE",
-            comment: "Title for bottom sheet shown when device transfer completes on the receiving device."
-        )
-        stackView.addArrangedSubview(titleLabel)
-
-        let subtitleLabel = UILabel()
-        subtitleLabel.text = OWSLocalizedString(
-            "TRANSFER_COMPLETE_SHEET_SUBTITLE",
-            comment: "Subtitle for bottom sheet shown when device transfer completes on the receiving device."
-        )
-        subtitleLabel.textAlignment = .center
-        subtitleLabel.font = .dynamicTypeBody
-        subtitleLabel.numberOfLines = 0
-        subtitleLabel.lineBreakMode = .byWordWrapping
-        stackView.addArrangedSubview(subtitleLabel)
-
-        let exitButton = UIButton()
-        exitButton.backgroundColor = .ows_accentBlue
-        exitButton.layer.cornerRadius = 8
-        exitButton.ows_titleEdgeInsets = UIEdgeInsets(hMargin: 0, vMargin: 18)
-        exitButton.setTitleColor(.ows_white, for: .normal)
-        exitButton.setTitle(
-            OWSLocalizedString(
+    init() {
+        super.init(
+            hero: .image(UIImage(named: "transfer_complete")!),
+            title: OWSLocalizedString(
+                "TRANSFER_COMPLETE_SHEET_TITLE",
+                comment: "Title for bottom sheet shown when device transfer completes on the receiving device."
+            ),
+            body: OWSLocalizedString(
+                "TRANSFER_COMPLETE_SHEET_SUBTITLE",
+                comment: "Subtitle for bottom sheet shown when device transfer completes on the receiving device."
+            ),
+            primaryButton: .init(title: OWSLocalizedString(
                 "TRANSFER_COMPLETE_SHEET_BUTTON",
                 comment: "Button for bottom sheet shown when device transfer completes on the receiving device. Tapping will terminate the Signal app and trigger a notification to relaunch."
-            ),
-            for: .normal
+            )) { _ in
+                Self.didTapExitButton()
+            }
         )
-        exitButton.addTarget(self, action: #selector(didTapExitButton), for: .touchUpInside)
-        contentView.addSubview(exitButton)
-        exitButton.autoPinEdge(
-            .leading,
-            to: .leading,
-            of: contentView,
-            withOffset: 32,
-            relation: .greaterThanOrEqual
-        ).priority = .required
-        exitButton.autoPinEdge(
-            .trailing,
-            to: .trailing,
-            of: contentView,
-            withOffset: -32,
-            relation: .greaterThanOrEqual
-        ).priority = .required
-        exitButton.autoSetDimension(.width, toSize: 325, relation: .greaterThanOrEqual)
-        exitButton.autoSetDimension(.height, toSize: 48, relation: .greaterThanOrEqual)
-        exitButton.autoPinEdge(.bottom, to: .bottom, of: contentView, withOffset: -50)
-        exitButton.autoHCenterInSuperview()
-
-        stackView.autoPinEdge(.top, to: .top, of: contentView)
-        stackView.autoPinWidth(toWidthOf: contentView)
-        stackView.autoHCenterInSuperview()
     }
 
-    @objc
-    private func didTapExitButton() {
+    private static func didTapExitButton() {
         Logger.info("")
         SSKEnvironment.shared.notificationPresenterRef.notifyUserToRelaunchAfterTransfer {
             Logger.info("Deliberately terminating app post-transfer.")
@@ -255,3 +185,23 @@ private class TransferRelaunchSheet: InteractiveSheetViewController {
         }
     }
 }
+
+// MARK: -
+
+#if DEBUG
+
+@available(iOS 17, *)
+#Preview("Transfer Progress") {
+    return UINavigationController(
+        rootViewController: RegistrationTransferProgressViewController(
+            progress: .discreteProgress(totalUnitCount: 1024)
+        )
+    )
+}
+
+@available(iOS 17, *)
+#Preview("Relaunch Sheet") {
+    return TransferRelaunchSheet( )
+}
+
+#endif

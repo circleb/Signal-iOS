@@ -45,6 +45,14 @@ struct ProfileSheetSheetCoordinator {
 }
 
 class MemberActionSheet: OWSTableSheetViewController {
+    override var sheetBackgroundColor: UIColor {
+        if #available(iOS 26, *), BuildFlags.iOS26SDKIsAvailable {
+            .clear
+        } else {
+            super.sheetBackgroundColor
+        }
+    }
+
     private var groupViewHelper: GroupViewHelper?
 
     var avatarView: ConversationAvatarView?
@@ -64,7 +72,17 @@ class MemberActionSheet: OWSTableSheetViewController {
         self.address = address
         self.spoilerState = spoilerState
 
+#if compiler(>=6.2)
+        if #available(iOS 26.0, *) {
+            super.init(visualEffect: UIGlassEffect())
+            self.topCornerRadius = 40
+            self.tableViewController.backgroundStyle = .none
+        } else {
+            super.init()
+        }
+#else
         super.init()
+#endif
 
         tableViewController.defaultSeparatorInsetLeading =
             OWSTableViewController2.cellHInnerMargin + 24 + OWSTableItem.iconSpacing
@@ -112,13 +130,8 @@ class MemberActionSheet: OWSTableSheetViewController {
         viewController.present(self, animated: true)
     }
 
-    // When presenting the contact view, we must retain ourselves
-    // as we are the delegate. This will get released when contact
-    // editing has concluded.
-    private var strongSelf: MemberActionSheet?
-    public override func updateTableContents(shouldReload: Bool = true) {
+    public override func tableContents() -> OWSTableContents {
         let contents = OWSTableContents()
-        defer { tableViewController.setContents(contents, shouldReload: shouldReload) }
 
         let topSpacerSection = OWSTableSection()
         topSpacerSection.customHeaderHeight = 12
@@ -130,12 +143,14 @@ class MemberActionSheet: OWSTableSheetViewController {
         section.customHeaderView = ConversationHeaderBuilder.buildHeader(
             for: thread,
             sizeClass: .eighty,
-            options: [.message, .videoCall, .audioCall],
+            options: [.message, .videoCall, .audioCall, .noBackground],
             delegate: self
         )
 
         // If the local user, show no options.
-        guard !address.isLocalAddress else { return }
+        guard !address.isLocalAddress else {
+            return contents
+        }
 
         // Nickname
         section.add(.item(
@@ -177,7 +192,7 @@ class MemberActionSheet: OWSTableSheetViewController {
                     self?.didTapUnblockThread {}
                 }
             ))
-            return
+            return contents
         }
 
         section.add(.item(
@@ -310,6 +325,8 @@ class MemberActionSheet: OWSTableSheetViewController {
                 }
             }
         ))
+
+        return contents
     }
 
     private func viewSystemContactDetails(contactAddress: SignalServiceAddress) {

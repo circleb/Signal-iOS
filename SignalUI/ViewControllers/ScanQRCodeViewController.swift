@@ -280,6 +280,18 @@ public class QRCodeScanViewController: OWSViewController {
             name: .OWSApplicationDidBecomeActive,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(logSessionRuntimeError),
+            name: .AVCaptureSessionRuntimeError,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(logSessionInterruptError),
+            name: .AVCaptureSessionWasInterrupted,
+            object: nil
+        )
     }
 
     @objc
@@ -298,6 +310,28 @@ public class QRCodeScanViewController: OWSViewController {
         }
     }
 
+    @objc
+    private func logSessionRuntimeError(notification: Notification) {
+        guard let error = notification.userInfo?[AVCaptureSessionErrorKey] as? NSError else {
+            Logger.info("Error running AVCaptureSession: no specific error provided")
+            return
+        }
+
+        Logger.error("Error running AVCaptureSession: \(error.localizedDescription)")
+    }
+
+    @objc
+    private func logSessionInterruptError(notification: Notification) {
+        if let userInfo = notification.userInfo {
+            guard let reasonValue = userInfo[AVCaptureSessionInterruptionReasonKey] as? NSNumber,
+                  let reason = AVCaptureSession.InterruptionReason(rawValue: reasonValue.intValue) else {
+                Logger.info("session was interrupted for no apparent reason")
+                return
+            }
+            Logger.info("session was interrupted with reason code: \(reason.rawValue)")
+        }
+    }
+
     // MARK: - Scanning
 
     private func stopScanning() {
@@ -311,6 +345,7 @@ public class QRCodeScanViewController: OWSViewController {
         AssertIsOnMainThread()
 
         guard nil == scanner else {
+            Logger.info("Early return because scanner is not nil")
             return
         }
 
@@ -362,6 +397,7 @@ public class QRCodeScanViewController: OWSViewController {
             scanner == nil,
             !delegateHasAcceptedScanResults.get()
         else {
+            Logger.info("Early return. Scanner is not nil or delegate has already accepted scan results")
             return
         }
 
@@ -649,6 +685,7 @@ extension QRCodeScanViewController: QRCodeSampleBufferScannerDelegate {
             let delegate = self.delegate,
             !delegateHasAcceptedScanResults.get()
         else {
+            Logger.info("Early return, delegate has already accepted scan results")
             return
         }
 
@@ -710,13 +747,19 @@ private class QRCodeScanner {
     ) {
         self.prefersFrontFacingCamera = prefersFrontFacingCamera
         output = QRCodeScanOutput(sampleBufferDelegate: sampleBufferDelegate)
+
+        if #available(iOS 16.0, *) {
+            if session.isMultitaskingCameraAccessSupported {
+                session.isMultitaskingCameraAccessEnabled = true
+            }
+        }
     }
 
     deinit {
         sessionQueue.async(.promise) { [session] in
             session.stopRunning()
         }.done {
-            Logger.debug("stopCapture completed")
+            Logger.info("stopCapture completed")
         }.catch { error in
             owsFailDebug("Error: \(error)")
         }
@@ -771,7 +814,10 @@ private class QRCodeScanner {
         }
 
         // If the session is already running, no need to do anything.
-        guard !self.session.isRunning else { return Promise.value(()) }
+        guard !self.session.isRunning else {
+            Logger.info("Early return, session already running")
+            return Promise.value(())
+        }
 
         let initialCaptureOrientation = AVCaptureVideoOrientation(interfaceOrientation: initialOrientation) ?? .portrait
 

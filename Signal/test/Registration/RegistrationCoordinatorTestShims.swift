@@ -15,7 +15,6 @@ extension RegistrationCoordinatorImpl {
         public typealias ContactsStore = _RegistrationCoordinator_CNContactsStoreMock
         public typealias DeviceTransferService = _RegistrationCoordinator_DeviceTransferServiceMock
         public typealias ExperienceManager = _RegistrationCoordinator_ExperienceManagerMock
-        public typealias FeatureFlags = _RegistrationCoordinator_FeatureFlagsMock
         public typealias IdentityManager = _RegistrationCoordinator_IdentityManagerMock
         public typealias MessagePipelineSupervisor = _RegistrationCoordinator_MessagePipelineSupervisorMock
         public typealias MessageProcessor = _RegistrationCoordinator_MessageProcessorMock
@@ -47,7 +46,7 @@ public class _RegistrationCoordinator_ContactsManagerMock: _RegistrationCoordina
     }
 }
 
-// MARK: CNContacts
+// MARK: - CNContacts
 
 public class _RegistrationCoordinator_CNContactsStoreMock: _RegistrationCoordinator_CNContactsStoreShim {
 
@@ -55,17 +54,16 @@ public class _RegistrationCoordinator_CNContactsStoreMock: _RegistrationCoordina
 
     public var doesNeedContactsAuthorization = false
 
-    public func needsContactsAuthorization() -> Guarantee<Bool> {
-        return .value(doesNeedContactsAuthorization)
+    public func needsContactsAuthorization() -> Bool {
+        return doesNeedContactsAuthorization
     }
 
-    public func requestContactsAuthorization() -> Guarantee<Void> {
+    public func requestContactsAuthorization() async {
         doesNeedContactsAuthorization = false
-        return .value(())
     }
 }
 
-// MARK: DeviceTransferService
+// MARK: - DeviceTransferService
 
 public class _RegistrationCoordinator_DeviceTransferServiceMock: _RegistrationCoordinator_DeviceTransferServiceShim {
     public func startAcceptingTransfersFromOldDevices(mode: Signal.DeviceTransferService.TransferMode) throws -> URL {
@@ -77,7 +75,11 @@ public class _RegistrationCoordinator_DeviceTransferServiceMock: _RegistrationCo
     public func removeObserver(_ observer: any Signal.DeviceTransferServiceObserver) { }
 
     public func stopAcceptingTransfersFromOldDevices() { }
+
+    public func cancelTransferFromOldDevice() { }
 }
+
+// MARK: - ExperienceUpgradeManager
 
 public class _RegistrationCoordinator_ExperienceManagerMock: _RegistrationCoordinator_ExperienceManagerShim {
 
@@ -98,13 +100,6 @@ public class _RegistrationCoordinator_ExperienceManagerMock: _RegistrationCoordi
         didEnableAllGetStartedCards = true
         enableAllGetStartedCardsMock?()
     }
-}
-
-public class _RegistrationCoordinator_FeatureFlagsMock: _RegistrationCoordinator_FeatureFlagsShim {
-
-    public init() {}
-
-    public var backupSupported: Bool { false }
 }
 
 // MARK: - IdentityManager
@@ -171,7 +166,7 @@ public class _RegistrationCoordinator_OWS2FAManagerMock: _RegistrationCoordinato
 
     public var didMarkPinEnabled: ((String) -> Void)?
 
-    public func markPinEnabled(_ pin: String, _ tx: SignalServiceKit.DBWriteTransaction) {
+    public func markPinEnabled(pin: String, resetReminderInterval: Bool, tx: SignalServiceKit.DBWriteTransaction) {
         didMarkPinEnabled?(pin)
     }
 
@@ -184,34 +179,44 @@ public class _RegistrationCoordinator_OWS2FAManagerMock: _RegistrationCoordinato
 
 // MARK: - PreKeyManager
 
-public class _RegistrationCoordinator_PreKeyManagerMock: _RegistrationCoordinator_PreKeyManagerShim {
+public class _RegistrationCoordinator_PreKeyManagerMock: PreKeyManager {
     var run: RegistrationCoordinatorTest.RegistrationTestRun
     init(run: RegistrationCoordinatorTest.RegistrationTestRun) {
         self.run = run
     }
 
-    public typealias CreatePreKeysMock = (() -> Promise<RegistrationPreKeyUploadBundles>)
+    public func isAppLockedDueToPreKeyUpdateFailures(tx: DBReadTransaction) -> Bool { fatalError() }
+    public func checkPreKeysIfNecessary(tx: DBReadTransaction) { fatalError() }
+    public func rotatePreKeysOnUpgradeIfNecessary(for identity: OWSIdentity) async throws { fatalError() }
+    public func createPreKeysForProvisioning(aciIdentityKeyPair: ECKeyPair, pniIdentityKeyPair: ECKeyPair) -> Task<RegistrationPreKeyUploadBundles, any Error> { fatalError() }
+    public func rotateSignedPreKeysIfNeeded() -> Task<Void, any Error> { fatalError() }
+    public func refreshOneTimePreKeys(forIdentity identity: OWSIdentity, alsoRefreshSignedPreKey shouldRefreshSignedPreKey: Bool) { fatalError() }
+
+    public typealias CreatePreKeysMock = (() -> Task<RegistrationPreKeyUploadBundles, any Error>)
     private var createPreKeysMocks = [CreatePreKeysMock]()
     public func addCreatePreKeysMock(_ mock: @escaping CreatePreKeysMock) { createPreKeysMocks.append(mock) }
-    public func createPreKeysForRegistration() -> Promise<RegistrationPreKeyUploadBundles> {
+    public func createPreKeysForRegistration() -> Task<RegistrationPreKeyUploadBundles, any Error> {
         run.addObservedStep(.createPreKeys)
         return createPreKeysMocks.removeFirst()()
     }
 
-    public typealias FinalizePreKeysMock = ((Bool) -> Promise<Void>)
+    public typealias FinalizePreKeysMock = ((Bool) -> Task<Void, any Error>)
     private var finalizePreKeysMocks = [FinalizePreKeysMock]()
     public func addFinalizePreKeyMock(_ mock: @escaping FinalizePreKeysMock) { finalizePreKeysMocks.append(mock) }
-    public func finalizeRegistrationPreKeys(_ bundles: RegistrationPreKeyUploadBundles, uploadDidSucceed: Bool) -> Promise<Void> {
+    public func finalizeRegistrationPreKeys(_ bundles: RegistrationPreKeyUploadBundles, uploadDidSucceed: Bool) -> Task<Void, any Error> {
         run.addObservedStep(.finalizePreKeys)
         return finalizePreKeysMocks.removeFirst()(uploadDidSucceed)
     }
 
-    public typealias RotateOneTimePreKeysMock = ((ChatServiceAuth) -> Promise<Void>)
+    public typealias RotateOneTimePreKeysMock = ((ChatServiceAuth) -> Task<Void, any Error>)
     private var rotateOneTimePreKeysMocks = [RotateOneTimePreKeysMock]()
     public func addRotateOneTimePreKeyMock(_ mock: @escaping RotateOneTimePreKeysMock) { rotateOneTimePreKeysMocks.append(mock) }
-    public func rotateOneTimePreKeysForRegistration(auth: ChatServiceAuth) -> Promise<Void> {
+    public func rotateOneTimePreKeysForRegistration(auth: ChatServiceAuth) -> Task<Void, any Error> {
         run.addObservedStep(.rotateOneTimePreKeys)
         return rotateOneTimePreKeysMocks.removeFirst()(auth)
+    }
+
+    public func setIsChangingNumber(_ isChangingNumber: Bool) {
     }
 }
 
@@ -263,32 +268,31 @@ public class _RegistrationCoordinator_PushRegistrationManagerMock: _Registration
 
     public var doesNeedNotificationAuthorization = false
 
-    public func needsNotificationAuthorization() -> Guarantee<Bool> {
-        return .value(doesNeedNotificationAuthorization)
+    public func needsNotificationAuthorization() async -> Bool {
+        return doesNeedNotificationAuthorization
     }
 
-    public func registerUserNotificationSettings() -> Guarantee<Void> {
+    public func registerUserNotificationSettings() async {
         doesNeedNotificationAuthorization = true
-        return .value(())
     }
 
-    public typealias RequestPushTokenMock = (() -> Guarantee<Registration.RequestPushTokensResult>)
+    public typealias RequestPushTokenMock = (() async -> Registration.RequestPushTokensResult)
     private var requestPushTokenMocks = [RequestPushTokenMock]()
     public func addRequestPushTokenMock(_ mock: @escaping RequestPushTokenMock) {
         requestPushTokenMocks.append(mock)
     }
-    public func requestPushToken() -> Guarantee<Registration.RequestPushTokensResult> {
+    public func requestPushToken() async -> Registration.RequestPushTokensResult {
         run.addObservedStep(.requestPushToken)
-        return requestPushTokenMocks.removeFirst()()
+        return await requestPushTokenMocks.removeFirst()()
     }
 
-    public typealias RecevePreAuthChallengeTokenMock = (() -> Guarantee<String>)
-    private var receivePreAuthChallengeTokenMocks = [RecevePreAuthChallengeTokenMock]()
-    public func addReceivePreAuthChallengeTokenMock(_ mock: @escaping RecevePreAuthChallengeTokenMock) {
-        receivePreAuthChallengeTokenMocks.append(mock)
+    public typealias ReceivePreAuthChallengeTokenMock = (() async -> String)
+    private var receivePreAuthChallengeTokenMock: ReceivePreAuthChallengeTokenMock!
+    public func setReceivePreAuthChallengeTokenMock(_ mock: @escaping ReceivePreAuthChallengeTokenMock) {
+        receivePreAuthChallengeTokenMock = mock
     }
-    public func receivePreAuthChallengeToken() -> Guarantee<String> {
-        return receivePreAuthChallengeTokenMocks.removeFirst()()
+    public func receivePreAuthChallengeToken() async -> String {
+        return await receivePreAuthChallengeTokenMock()
     }
 
     public var didClearPreAuthChallengeToken = false
@@ -340,9 +344,9 @@ public class _RegistrationCoordinator_StorageServiceManagerMock: _RegistrationCo
     public typealias RotateManifestMock = (StorageServiceManagerManifestRotationMode, AuthedDevice) -> Promise<Void>
     private var rotateManifestMocks = [RotateManifestMock]()
     public func addRotateManifestMock(_ mock: @escaping RotateManifestMock) { rotateManifestMocks.append(mock) }
-    public func rotateManifest(mode: StorageServiceManagerManifestRotationMode, authedDevice: AuthedDevice) -> Promise<Void> {
+    public func rotateManifest(mode: StorageServiceManagerManifestRotationMode, authedDevice: AuthedDevice) async throws {
         run.addObservedStep(.rotateManifest)
-        return rotateManifestMocks.removeFirst()(mode, authedDevice)
+        return try await rotateManifestMocks.removeFirst()(mode, authedDevice).awaitable()
     }
 
     public typealias RestoreOrCreateManifestIfNecessaryMock = (AuthedDevice, StorageService.MasterKeySource) -> Promise<Void>
@@ -386,8 +390,8 @@ public class _RegistrationCoordinator_UDManagerMock: _RegistrationCoordinator_UD
 public class _RegistrationCoordinator_UsernameApiClientMock: _RegistrationCoordinator_UsernameApiClientShim {
     public init() {}
 
-    public var confirmReservedUsernameMocks = [(reservedUsername: Usernames.HashedUsername, encryptedUsernameForLink: Data, chatServiceAuth: ChatServiceAuth) -> Promise<Usernames.ApiClientConfirmationResult>]()
-    public func confirmReservedUsername(reservedUsername: Usernames.HashedUsername, encryptedUsernameForLink: Data, chatServiceAuth: ChatServiceAuth) -> Promise<Usernames.ApiClientConfirmationResult> {
-        return confirmReservedUsernameMocks.removeFirst()(reservedUsername, encryptedUsernameForLink, chatServiceAuth)
+    public var confirmReservedUsernameMocks = [(reservedUsername: Usernames.HashedUsername, encryptedUsernameForLink: Data, chatServiceAuth: ChatServiceAuth) async throws -> Usernames.ApiClientConfirmationResult]()
+    public func confirmReservedUsername(reservedUsername: Usernames.HashedUsername, encryptedUsernameForLink: Data, chatServiceAuth: ChatServiceAuth) async throws -> Usernames.ApiClientConfirmationResult {
+        return try await confirmReservedUsernameMocks.removeFirst()(reservedUsername, encryptedUsernameForLink, chatServiceAuth)
     }
 }

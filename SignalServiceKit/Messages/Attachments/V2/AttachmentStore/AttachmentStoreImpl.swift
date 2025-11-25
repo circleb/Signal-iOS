@@ -100,6 +100,15 @@ public class AttachmentStoreImpl: AttachmentStore {
         }
     }
 
+    public func fetchMaxRowId(tx: DBReadTransaction) throws -> Attachment.IDType? {
+        return try Attachment.Record
+            .select(
+                max(Column(Attachment.Record.CodingKeys.sqliteId)),
+                as: Int64.self,
+            )
+            .fetchOne(tx.database)
+    }
+
     public func fetch(
         ids: [Attachment.IDType],
         tx: DBReadTransaction
@@ -429,7 +438,8 @@ public class AttachmentStoreImpl: AttachmentStore {
         into attachment: Attachment,
         encryptionKey: Data,
         validatedMimeType: String,
-        transitTierInfo: Attachment.TransitTierInfo?,
+        latestTransitTierInfo: Attachment.TransitTierInfo?,
+        originalTransitTierInfo: Attachment.TransitTierInfo?,
         mediaTierInfo: Attachment.MediaTierInfo?,
         thumbnailMediaTierInfo: Attachment.ThumbnailMediaTierInfo?,
         tx: DBWriteTransaction
@@ -443,7 +453,8 @@ public class AttachmentStoreImpl: AttachmentStore {
             into: attachment,
             encryptionKey: encryptionKey,
             mimeType: validatedMimeType,
-            transitTierInfo: transitTierInfo,
+            latestTransitTierInfo: latestTransitTierInfo,
+            originalTransitTierInfo: originalTransitTierInfo,
             mediaTierInfo: mediaTierInfo,
             thumbnailMediaTierInfo: thumbnailMediaTierInfo
         ))
@@ -491,23 +502,6 @@ public class AttachmentStoreImpl: AttachmentStore {
                 )
             )
         }
-        newRecord.sqliteId = id
-        try newRecord.checkAllUInt64FieldsFitInInt64()
-        try newRecord.update(tx.database)
-    }
-
-    public func removeTransitTierInfo(
-        forAttachmentId id: Attachment.IDType,
-        tx: DBWriteTransaction
-    ) throws {
-        let existingAttachment = fetch(ids: [id], tx: tx).first
-        guard let existingAttachment else {
-            throw OWSAssertionError("Attachment does not exist")
-        }
-
-        var newRecord = Attachment.Record(
-            params: .forRemovingTransitTierInfo(attachment: existingAttachment)
-        )
         newRecord.sqliteId = id
         try newRecord.checkAllUInt64FieldsFitInInt64()
         try newRecord.update(tx.database)
@@ -693,7 +687,7 @@ public class AttachmentStoreImpl: AttachmentStore {
         _ attachmentParams: Attachment.ConstructionParams,
         reference referenceParams: AttachmentReference.ConstructionParams,
         tx: DBWriteTransaction
-    ) throws {
+    ) throws -> Attachment.IDType {
         // Find if there is already an attachment with the same plaintext hash.
         let sha256ContentHash = attachmentParams.sha256ContentHash ?? attachmentParams.streamInfo?.sha256ContentHash
         let existingRecord = try sha256ContentHash.map {
@@ -741,6 +735,8 @@ public class AttachmentStoreImpl: AttachmentStore {
             try! attachmentRecord.delete(tx.database)
             throw ownerError
         }
+
+        return attachmentRowId
     }
 
     /// The "global wallpaper" reference is a special case.

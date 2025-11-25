@@ -104,7 +104,8 @@ class NotificationService: UNNotificationServiceExtension {
             // Detect and handle "no GRDB file" and "no keychain access".
             if !hasShownFirstUnlockError {
                 hasShownFirstUnlockError = true
-                logger.error("DB Keys not accessible; showing error.", flushImmediately: true)
+                logger.error("DB Keys not accessible; showing error.")
+                logger.flush()
                 let content = UNMutableNotificationContent()
                 let notificationFormat = OWSLocalizedString(
                     "NOTIFICATION_BODY_PHONE_LOCKED_FORMAT",
@@ -115,7 +116,8 @@ class NotificationService: UNNotificationServiceExtension {
             } else {
                 // Only show a single error if we receive multiple pushes
                 // before first device unlock.
-                logger.error("DB Keys not accessible; completing silently.", flushImmediately: true)
+                logger.error("DB Keys not accessible; completing silently.")
+                logger.flush()
                 let emptyContent = UNMutableNotificationContent()
                 return emptyContent
             }
@@ -144,19 +146,7 @@ class NotificationService: UNNotificationServiceExtension {
             APNSRotationStore.didReceiveAPNSPush(transaction: transaction)
         }
 
-        let useWebSocket: Bool = OWSChatConnection.canAppUseSocketsToMakeRequests
-
-        // Do this unconditionally to ensure the flag gets reset when useWebSocket's value changes.
-        SSKEnvironment.shared.messageFetcherJobRef.prepareToFetchViaREST()
-
-        if !useWebSocket {
-            if await globalEnvironment.askMainAppToHandleReceipt(logger: logger) {
-                logger.info("Received notification handled by main application, memoryUsage: \(LocalDevice.memoryUsageString).")
-                return UNMutableNotificationContent()
-            }
-        }
-
-        let result = await self.fetchAndProcessMessages(useWebSocket: useWebSocket, logger: logger)
+        let result = await self.fetchAndProcessMessages(logger: logger)
         await didMarkApnsReceived
         return result
     }
@@ -187,7 +177,7 @@ class NotificationService: UNNotificationServiceExtension {
     }
 
     @MainActor
-    private func fetchAndProcessMessages(useWebSocket: Bool, logger: NSELogger) async -> UNNotificationContent {
+    private func fetchAndProcessMessages(logger: NSELogger) async -> UNNotificationContent {
         if DependenciesBridge.shared.appExpiry.isExpired(now: Date()) {
             Logger.warn("Not processing notifications for expired application.")
             return UNMutableNotificationContent()
@@ -197,33 +187,13 @@ class NotificationService: UNNotificationServiceExtension {
             try await startProxyIfEnabled()
             defer { SignalProxy.stopRelayServer() }
 
-            if !useWebSocket {
-                globalEnvironment.processingMessageCounter.increment()
-            }
-            defer {
-                if !useWebSocket {
-                    globalEnvironment.processingMessageCounter.decrement()
-                }
-            }
-
-            let backgroundMessageFetcher = DependenciesBridge.shared.backgroundMessageFetcherFactory.buildFetcher(useWebSocket: useWebSocket)
+            let backgroundMessageFetcher = DependenciesBridge.shared.backgroundMessageFetcherFactory.buildFetcher()
 
             let fetchResult = await Result(catching: {
-                if useWebSocket {
-                    await backgroundMessageFetcher.start()
-                } else {
-                    try await SSKEnvironment.shared.messageFetcherJobRef.fetchViaRest()
-                }
-
+                await backgroundMessageFetcher.start()
                 try await backgroundMessageFetcher.waitForFetchingProcessingAndSideEffects()
             })
-            if useWebSocket {
-                // Wrap the cleanup of message processing in a new Task, so if we're
-                // canceled, that method doesn't inherit our cancellation.
-                await Task {
-                    await backgroundMessageFetcher.stopAndWaitBeforeSuspending()
-                }.value
-            }
+            await backgroundMessageFetcher.stopAndWaitBeforeSuspending()
             try fetchResult.get()
         } catch is CancellationError {
             Logger.warn("Message fetching & processing canceled.")

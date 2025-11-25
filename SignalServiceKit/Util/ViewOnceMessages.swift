@@ -29,8 +29,8 @@ public class ViewOnceMessages: NSObject {
         Task {
             while true {
                 let databaseStorage = SSKEnvironment.shared.databaseStorageRef
+                var afterRowId: Int64?
                 while true {
-                    var afterRowId: Int64?
                     await databaseStorage.awaitableWrite { tx in
                         let messages: [TSMessage]
                         (messages, afterRowId) = ViewOnceMessageFinder().fetchSomeIncompleteViewOnceMessages(after: afterRowId, limit: 100, tx: tx)
@@ -171,7 +171,10 @@ public class ViewOnceMessages: NSObject {
         envelope: SSKProtoEnvelope,
         transaction: DBWriteTransaction
     ) -> ViewOnceSyncMessageProcessingResult {
-        guard let messageSender = Aci.parseFrom(aciString: message.senderAci) else {
+        guard let messageSender = Aci.parseFrom(
+            serviceIdBinary: message.senderAciBinary,
+            serviceIdString: message.senderAci,
+        ) else {
             owsFailDebug("Invalid messageSender.")
             return .invalidSyncMessage
         }
@@ -252,7 +255,7 @@ private class ViewOnceMessageFinder {
                 sql: """
                 SELECT *
                 FROM \(InteractionRecord.databaseTableName)
-                \(DEBUG_INDEXED_BY("Interaction_incompleteViewOnce_partial", or: "index_interactions_on_view_once"))
+                \(DEBUG_INDEXED_BY("Interaction_incompleteViewOnce_partial"))
                 WHERE \(interactionColumn: .isViewOnceMessage) = 1
                 AND \(interactionColumn: .isViewOnceComplete) = 0
                 AND \(interactionColumn: .id) > ?
@@ -266,7 +269,7 @@ private class ViewOnceMessageFinder {
                 sql: """
                 SELECT *
                 FROM \(InteractionRecord.databaseTableName)
-                \(DEBUG_INDEXED_BY("Interaction_incompleteViewOnce_partial", or: "index_interactions_on_view_once"))
+                \(DEBUG_INDEXED_BY("Interaction_incompleteViewOnce_partial"))
                 WHERE \(interactionColumn: .isViewOnceMessage) = 1
                 AND \(interactionColumn: .isViewOnceComplete) = 0
                 ORDER BY \(interactionColumn: .id)

@@ -15,9 +15,8 @@ class ProxyLinkSheetViewController: OWSTableSheetViewController {
         super.init()
     }
 
-    override func updateTableContents(shouldReload: Bool = true) {
+    override func tableContents() -> OWSTableContents {
         let contents = OWSTableContents()
-        defer { tableViewController.setContents(contents, shouldReload: shouldReload) }
 
         let proxyHost = url.fragment!
 
@@ -83,7 +82,7 @@ class ProxyLinkSheetViewController: OWSTableSheetViewController {
 
                         let presentingVC = self?.presentingViewController
                         _ = Task(priority: .userInitiated) {
-                            if await ProxyConnectionChecker.checkConnectionAndNotify() {
+                            if await ProxyConnectionChecker(chatConnectionManager: DependenciesBridge.shared.chatConnectionManager).checkConnection() {
                                 presentingVC?.presentToast(text: OWSLocalizedString("PROXY_CONNECTED_SUCCESSFULLY", comment: "The provided proxy connected successfully"))
                             } else {
                                 presentingVC?.presentToast(text: OWSLocalizedString("PROXY_FAILED_TO_CONNECT", comment: "The provided proxy couldn't connect"))
@@ -104,11 +103,13 @@ class ProxyLinkSheetViewController: OWSTableSheetViewController {
 
             return cell
         }))
+
+        return contents
     }
 
     private func button(title: String, titleColor: UIColor, touchHandler: @escaping () -> Void) -> OWSFlatButton {
         let flatButton = OWSFlatButton()
-        flatButton.setTitle(title: title, font: UIFont.dynamicTypeBodyClamped.semibold(), titleColor: titleColor)
+        flatButton.setTitle(title: title, font: UIFont.dynamicTypeHeadlineClamped, titleColor: titleColor)
         flatButton.setBackgroundColors(upColor: tableViewController.cellBackgroundColor)
         flatButton.setPressedBlock(touchHandler)
         flatButton.useDefaultCornerRadius()

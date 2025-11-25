@@ -106,10 +106,6 @@ public class ContactsViewHelper {
 
 public extension ContactsViewHelper {
 
-    private enum Constant {
-        static let contactsAccessNotAllowedLearnMoreURL = URL(string: "https://support.signal.org/hc/articles/360007319011#ipad_contacts")!
-    }
-
     enum ReadPurpose {
         case share
         case invite
@@ -211,7 +207,6 @@ public extension ContactsViewHelper {
                 "AB_PERMISSION_MISSING_ACTION_NOT_NOW",
                 comment: "Button text to dismiss missing contacts permission alert"
             ),
-            accessibilityIdentifier: UIView.accessibilityIdentifier(containerName: "ContactAccess", name: "not_now"),
             style: .cancel
         ))
 
@@ -242,7 +237,7 @@ public extension ContactsViewHelper {
 
     static func presentContactAccessNotAllowedLearnMore(from viewController: UIViewController) {
         viewController.present(
-            SFSafariViewController(url: Constant.contactsAccessNotAllowedLearnMoreURL),
+            SFSafariViewController(url: URL.Support.contactAccessNotAllowed),
             animated: true
         )
     }

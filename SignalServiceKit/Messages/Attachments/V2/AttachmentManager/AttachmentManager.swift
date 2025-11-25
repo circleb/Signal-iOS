@@ -34,6 +34,7 @@ public protocol AttachmentManager {
     func createAttachmentPointers(
         from backupProtos: [OwnedAttachmentBackupPointerProto],
         uploadEra: String,
+        attachmentByteCounter: BackupArchiveAttachmentByteCounter,
         tx: DBWriteTransaction
     ) -> [OwnedAttachmentBackupPointerProto.CreationError]
 
@@ -43,6 +44,17 @@ public protocol AttachmentManager {
     /// Creates a reference from the owner to the attachments.
     func createAttachmentStreams(
         consuming dataSources: [OwnedAttachmentDataSource],
+        tx: DBWriteTransaction
+    ) throws
+
+    /// Update an existing placeholder attachment with the full oversized text attachment file
+    /// we restored from a backup.
+    /// May reuse an existing attachment stream if matched by content, which will delete
+    /// both the provided pending files and the placeholder attachment whose id was provided,
+    /// pointing all its references to the existing duplicate.
+    func updateAttachmentWithOversizeTextFromBackup(
+        attachmentId: Attachment.IDType,
+        pendingAttachment: PendingAttachment,
         tx: DBWriteTransaction
     ) throws
 

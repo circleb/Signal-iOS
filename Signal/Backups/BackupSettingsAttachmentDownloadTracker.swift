@@ -11,6 +11,7 @@ final class BackupSettingsAttachmentDownloadTracker {
             case suspended
             case running
             case pausedLowBattery
+            case pausedLowPowerMode
             case pausedNeedsWifi
             case pausedNeedsInternet
             case outOfDiskSpace(bytesRequired: UInt64)
@@ -27,7 +28,6 @@ final class BackupSettingsAttachmentDownloadTracker {
             self.init(state: state, progress: OWSProgress(
                 completedUnitCount: bytesDownloaded,
                 totalUnitCount: totalBytesToDownload,
-                sourceProgresses: [:]
             ))
         }
 
@@ -144,7 +144,7 @@ private class Tracker {
         BackupAttachmentDownloadQueueStatus
     ) {
         let observer = NotificationCenter.default.addObserver(
-            name: .backupAttachmentDownloadQueueStatusDidChange
+            name: .backupAttachmentDownloadQueueStatusDidChange(mode: .fullsize)
         ) { [weak self] _ in
             guard let self else { return }
 
@@ -153,13 +153,13 @@ private class Tracker {
 
         return (
             observer,
-            backupAttachmentDownloadQueueStatusReporter.currentStatus()
+            backupAttachmentDownloadQueueStatusReporter.currentStatus(for: .fullsize)
         )
     }
 
     @MainActor
     private func handleDownloadQueueStatusUpdate() {
-        let queueStatus = backupAttachmentDownloadQueueStatusReporter.currentStatus()
+        let queueStatus = backupAttachmentDownloadQueueStatusReporter.currentStatus(for: .fullsize)
 
         state.enqueueUpdate { [self] _state in
             _state.lastReportedDownloadQueueStatus = queueStatus
@@ -206,12 +206,14 @@ private class Tracker {
                 return .pausedNeedsInternet
             case .lowBattery:
                 return .pausedLowBattery
+            case .lowPowerMode:
+                return .pausedLowPowerMode
             case .lowDiskSpace:
                 return .outOfDiskSpace(bytesRequired: max(
                     lastReportedDownloadProgress.remainingUnitCount,
                     backupAttachmentDownloadQueueStatusReporter.minimumRequiredDiskSpaceToCompleteDownloads()
                 ))
-            case .empty, .notRegisteredAndReady:
+            case .empty, .notRegisteredAndReady, .appBackgrounded:
                 return nil
             }
         }()

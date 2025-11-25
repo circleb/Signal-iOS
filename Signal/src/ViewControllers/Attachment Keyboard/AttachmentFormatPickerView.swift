@@ -14,6 +14,7 @@ protocol AttachmentFormatPickerDelegate: AnyObject {
     func didTapContact()
     func didTapLocation()
     func didTapPayment()
+    func didTapPoll()
 }
 
 class AttachmentFormatPickerView: UIView {
@@ -34,13 +35,18 @@ class AttachmentFormatPickerView: UIView {
     }()
 
     private lazy var contentView: UIStackView = {
-        let buttons = AttachmentType.cases(isGroup: isGroup).map {
-            let button = AttachmentTypeButton(attachmentType: $0)
-            button.isVerticallyCompactAppearance = traitCollection.verticalSizeClass == .compact
-            button.addTarget(self, action: #selector(didTapAttachmentButton), for: .touchUpInside)
-            return button
+        let subviews = AttachmentType.cases(isGroup: isGroup).map { attachmentType in
+            let subview = AttachmentTypeView(attachmentType: attachmentType)
+            subview.isVerticallyCompactAppearance = traitCollection.verticalSizeClass == .compact
+            subview.button.addAction(
+                UIAction(handler: { [weak self] _ in
+                    self?.didTapAttachmentButton(attachmentType: attachmentType)
+                }),
+                for: .touchUpInside
+            )
+            return subview
         }
-        let stackView = UIStackView(arrangedSubviews: buttons)
+        let stackView = UIStackView(arrangedSubviews: subviews)
         stackView.spacing = 12
         stackView.axis = .horizontal
         stackView.alignment = .top
@@ -50,17 +56,12 @@ class AttachmentFormatPickerView: UIView {
 
     private let isGroup: Bool
 
-    @objc
-    private func didTapAttachmentButton(sender: Any) {
-        guard
-            let delegate = attachmentFormatPickerDelegate,
-            let attachmentTypeButton = sender as? AttachmentTypeButton
-        else {
-            return
-        }
+    private func didTapAttachmentButton(attachmentType: AttachmentType) {
+        guard let delegate = attachmentFormatPickerDelegate else { return }
+
         // Delay event handling a bit so that pressed state of the button is visible.
         DispatchQueue.main.async {
-            switch attachmentTypeButton.attachmentType {
+            switch attachmentType {
             case .photo:
                 delegate.didTapPhotos()
             case .gif:
@@ -73,6 +74,8 @@ class AttachmentFormatPickerView: UIView {
                 delegate.didTapContact()
             case .location:
                 delegate.didTapLocation()
+            case .poll:
+                delegate.didTapPoll()
             }
         }
     }
@@ -104,8 +107,8 @@ class AttachmentFormatPickerView: UIView {
         super.traitCollectionDidChange(previousTraitCollection)
         let isLandscapeLayout = traitCollection.verticalSizeClass == .compact
         contentView.arrangedSubviews.forEach { subview in
-            guard let button = subview as? AttachmentTypeButton else { return }
-            button.isVerticallyCompactAppearance = isLandscapeLayout
+            guard let view = subview as? AttachmentTypeView else { return }
+            view.isVerticallyCompactAppearance = isLandscapeLayout
         }
         invalidateIntrinsicContentSize()
     }
@@ -177,20 +180,25 @@ class AttachmentFormatPickerView: UIView {
         case photo
         case gif
         case file
+        case poll
         case contact
         case location
         case payment
 
         private static var contactCases: [AttachmentType] {
-            if SUIEnvironment.shared.paymentsRef.shouldShowPaymentsUI {
-                return cases(except: [])
-            } else {
-                return cases(except: [.payment])
+            var casesToExclude: [AttachmentType] = [.poll]
+            if !SSKEnvironment.shared.paymentsHelperRef.arePaymentsEnabled {
+                casesToExclude.append(.payment)
             }
+
+            return cases(except: casesToExclude)
         }
 
         private static var groupCases: [AttachmentType] {
-            cases(except: [.payment])
+            if !RemoteConfig.current.pollCreate {
+                return cases(except: [.payment, .poll])
+            }
+            return cases(except: [.payment])
         }
 
         private static func cases(except: [AttachmentType]) -> [AttachmentType] {
@@ -206,69 +214,86 @@ class AttachmentFormatPickerView: UIView {
         }
     }
 
-    private class AttachmentTypeButton: UIControl {
+    private class AttachmentTypeView: UIView {
 
-        private class DimmablePillView: PillView {
+        @available(iOS, deprecated: 26.0)
+        private class ShrinkingOnTapButton: UIButton {
 
-            private let dimmerView: UIView = {
-                let view = UIView()
-                view.backgroundColor = Theme.isDarkThemeEnabled ? .ows_whiteAlpha10 : .ows_blackAlpha10
-                view.alpha = 0
-                return view
-            }()
-
-            // Implicitly animatable.
-            var isDimmed: Bool = false {
+            override var isHighlighted: Bool {
                 didSet {
-                    dimmerView.alpha = isDimmed ? 1 : 0
+                    setIsPressed(isHighlighted, animated: window != nil)
                 }
             }
 
-            override init(frame: CGRect) {
-                super.init(frame: frame)
-                addSubview(dimmerView)
+            private var _isPressed = false
+
+            private var isPressed: Bool {
+                get { _isPressed }
+                set { setIsPressed(newValue, animated: false) }
             }
 
-            required init?(coder aDecoder: NSCoder) {
-                fatalError("init(coder:) has not been implemented")
-            }
+            private func setIsPressed(_ isPressed: Bool, animated: Bool) {
+                _isPressed = isPressed
 
-            override func layoutSubviews() {
-                super.layoutSubviews()
-                dimmerView.frame = bounds
+                let changes = {
+                    self.transform = isPressed ? .scale(0.9) : .identity
+                }
+                guard animated else {
+                    changes()
+                    return
+                }
+
+                let animator = UIViewPropertyAnimator(duration: 0.15, springDamping: 0.64, springResponse: 0.25)
+                animator.addAnimations(changes)
+                animator.startAnimation()
             }
         }
+
+        let button: UIButton = {
+            let button: UIButton
+            if #available(iOS 26, *), BuildFlags.iOS26SDKIsAvailable {
+#if compiler(>=6.2)
+                button = UIButton(configuration: .glass())
+#else
+                button = UIButton(configuration: .plain())
+#endif
+            } else {
+                button = ShrinkingOnTapButton(configuration: .gray())
+                button.configuration?.background.backgroundColorTransformer = UIConfigurationColorTransformer { [weak button] _ in
+                    let baseColor = UIColor.Signal.secondaryFill
+                    guard let button, button.isHighlighted else {
+                        return baseColor
+                    }
+                    // Tinted color for "highlighted" state.
+                    let tintColor = button.traitCollection.userInterfaceStyle == .dark ? UIColor.white : UIColor.black
+                    return baseColor.blended(with: tintColor, alpha: 0.1)
+                }
+            }
+            button.configuration?.baseForegroundColor = .Signal.label
+            button.configuration?.cornerStyle = .capsule
+            return button
+        }()
 
         let attachmentType: AttachmentType
 
         var isVerticallyCompactAppearance = false {
             didSet {
-                imageViewPillBoxHeightConstraint.constant = isVerticallyCompactAppearance ? 40 : 50
+                buttonHeightConstraint.constant = isVerticallyCompactAppearance ? 40 : 50
             }
         }
 
-        private let imageViewPillBox: DimmablePillView = {
-            let pillView = DimmablePillView()
-            pillView.isUserInteractionEnabled = false
-            pillView.backgroundColor = Theme.isDarkThemeEnabled ? UIColor(white: 1, alpha: 0.16) : UIColor(white: 0, alpha: 0.08)
-            return pillView
-        }()
-
-        private lazy var imageViewPillBoxHeightConstraint: NSLayoutConstraint = {
-            imageViewPillBox.heightAnchor.constraint(equalToConstant: 50)
-        }()
-
-        private let iconImageView: UIImageView = {
-            let imageView = UIImageView()
-            imageView.contentMode = .center
-            imageView.tintColor = Theme.isDarkThemeEnabled ? .white : .black
-            return imageView
+        private lazy var buttonHeightConstraint: NSLayoutConstraint = {
+            button.heightAnchor.constraint(equalToConstant: 50)
         }()
 
         private let textLabel: UILabel = {
             let label = UILabel()
             label.font = .dynamicTypeFootnoteClamped.medium()
-            label.textColor = Theme.secondaryTextAndIconColor
+            if #available(iOS 26, *), BuildFlags.iOS26SDKIsAvailable {
+                label.textColor = .Signal.label
+            } else {
+                label.textColor = .Signal.secondaryLabel
+            }
             label.textAlignment = .center
             label.numberOfLines = 2
             label.adjustsFontSizeToFitWidth = true
@@ -283,51 +308,18 @@ class AttachmentFormatPickerView: UIView {
 
             translatesAutoresizingMaskIntoConstraints = false
 
-            imageViewPillBox.addSubview(iconImageView)
-            iconImageView.autoPinEdgesToSuperviewEdges()
-
-            addSubview(imageViewPillBox)
+            addSubview(button)
             NSLayoutConstraint.activate([
-                imageViewPillBox.widthAnchor.constraint(equalToConstant: 76),
-                imageViewPillBoxHeightConstraint
+                button.widthAnchor.constraint(equalToConstant: 76),
+                buttonHeightConstraint
             ])
-            imageViewPillBox.autoPinEdges(toSuperviewEdgesExcludingEdge: .bottom)
+            button.autoPinEdges(toSuperviewEdgesExcludingEdge: .bottom)
 
             addSubview(textLabel)
-            textLabel.autoPinEdge(.top, to: .bottom, of: imageViewPillBox, withOffset: 8)
+            textLabel.autoPinEdge(.top, to: .bottom, of: button, withOffset: 8)
             textLabel.autoPinEdges(toSuperviewEdgesExcludingEdge: .top)
 
             configure()
-        }
-
-        override var isHighlighted: Bool {
-            didSet {
-                setIsPressed(isHighlighted, animated: window != nil)
-            }
-        }
-
-        private var _isPressed = false
-
-        private var isPressed: Bool {
-            get { _isPressed }
-            set { setIsPressed(newValue, animated: false) }
-        }
-
-        private func setIsPressed(_ isPressed: Bool, animated: Bool) {
-            _isPressed = isPressed
-
-            let changes = {
-                self.imageViewPillBox.isDimmed = isPressed
-                self.imageViewPillBox.transform = isPressed ? .scale(0.9) : .identity
-            }
-            guard animated else {
-                changes()
-                return
-            }
-
-            let animator = UIViewPropertyAnimator(duration: 0.15, springDamping: 0.64, springResponse: 0.25)
-            animator.addAnimations(changes)
-            animator.startAnimation()
         }
 
         @available(*, unavailable, message: "Unimplemented")
@@ -358,12 +350,14 @@ class AttachmentFormatPickerView: UIView {
             case .payment:
                 text = OWSLocalizedString("ATTACHMENT_KEYBOARD_PAYMENT", comment: "A button to select a payment from the Attachment Keyboard")
                 imageName = "payment-28"
+            case .poll:
+                text = OWSLocalizedString("ATTACHMENT_KEYBOARD_POLL", comment: "A button to select a poll from the Attachment Keyboard")
+                imageName = "poll-28"
             }
 
             textLabel.text = text
-            iconImageView.image = UIImage(imageLiteralResourceName: imageName)
+            button.configuration?.image = UIImage(imageLiteralResourceName: imageName)
             accessibilityIdentifier = UIView.accessibilityIdentifier(in: self, name: "format-\(attachmentType.rawValue)")
         }
     }
-
 }

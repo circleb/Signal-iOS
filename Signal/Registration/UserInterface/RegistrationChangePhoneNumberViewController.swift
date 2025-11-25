@@ -43,6 +43,8 @@ class RegistrationChangePhoneNumberViewController: OWSTableViewController2 {
 
         oldValueViews.delegate = self
         newValueViews.delegate = self
+
+        shouldAvoidKeyboard = true
     }
 
     public func updateState(_ newState: RegistrationPhoneNumberViewState.ChangeNumberInitialEntry) {
@@ -85,14 +87,11 @@ class RegistrationChangePhoneNumberViewController: OWSTableViewController2 {
         navigationItem.leftBarButtonItem = .cancelButton { [weak self] in
             self?.presenter?.exitRegistration()
         }
-
-        updateTableContents()
-    }
-
-    fileprivate func updateNavigationBar() {
-        navigationItem.rightBarButtonItem = .doneButton { [weak self] in
+        navigationItem.rightBarButtonItem = .button(title: CommonStrings.nextButton, style: .done) { [weak self] in
             self?.tryToContinue()
         }
+
+        updateTableContents()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -101,21 +100,11 @@ class RegistrationChangePhoneNumberViewController: OWSTableViewController2 {
         updateTableContents()
     }
 
-    public override func themeDidChange() {
-        super.themeDidChange()
-
-        updateTableContents()
-    }
-
     func updateTableContents() {
         let contents = OWSTableContents()
-
         contents.add(buildTableSection(valueViews: oldValueViews))
         contents.add(buildTableSection(valueViews: newValueViews))
-
         self.contents = contents
-
-        updateNavigationBar()
     }
 
     fileprivate func buildTableSection(valueViews: ChangePhoneNumberValueViews) -> OWSTableSection {
@@ -128,15 +117,21 @@ class RegistrationChangePhoneNumberViewController: OWSTableViewController2 {
         )
         let countryCodeFormatted = String(format: countryCodeFormat, valueViews.plusPrefixedCallingCode, valueViews.countryCode)
         section.add(.item(
-            name: OWSLocalizedString("SETTINGS_CHANGE_PHONE_NUMBER_COUNTRY_CODE_FIELD", comment: "Label for the 'country code' row in the 'change phone number' settings."),
-            textColor: Theme.primaryTextColor,
+            name: OWSLocalizedString(
+                "SETTINGS_CHANGE_PHONE_NUMBER_COUNTRY_CODE_FIELD",
+                comment: "Label for the 'country code' row in the 'change phone number' settings."
+            ),
+            textColor: .Signal.label,
             accessoryText: countryCodeFormatted,
             accessoryType: .disclosureIndicator,
             actionBlock: { [weak self] in self?.showCountryCodePicker(valueViews: valueViews) }
         ))
         section.add(.item(
-            name: OWSLocalizedString("SETTINGS_CHANGE_PHONE_NUMBER_PHONE_NUMBER_FIELD", comment: "Label for the 'phone number' row in the 'change phone number' settings."),
-            textColor: Theme.primaryTextColor,
+            name: OWSLocalizedString(
+                "SETTINGS_CHANGE_PHONE_NUMBER_PHONE_NUMBER_FIELD",
+                comment: "Label for the 'phone number' row in the 'change phone number' settings."
+            ),
+            textColor: .Signal.label,
             accessoryContentView: valueViews.nationalNumberTextField
         ))
 
@@ -169,8 +164,7 @@ class RegistrationChangePhoneNumberViewController: OWSTableViewController2 {
     }
 
     fileprivate func showCountryCodePicker(valueViews: ChangePhoneNumberValueViews) {
-        let countryCodeController = CountryCodeViewController()
-        countryCodeController.countryCodeDelegate = valueViews
+        let countryCodeController = CountryCodeViewController(delegate: valueViews)
         countryCodeController.interfaceOrientationMask = UIDevice.current.isIPad ? .all : .portrait
         let navigationController = OWSNavigationController(rootViewController: countryCodeController)
         self.present(navigationController, animated: true, completion: nil)
@@ -262,14 +256,10 @@ class RegistrationChangePhoneNumberViewController: OWSTableViewController2 {
 // MARK: -
 
 extension RegistrationChangePhoneNumberViewController: ChangePhoneNumberValueViewsDelegate {
-    fileprivate func valueDidChange(valueViews: ChangePhoneNumberValueViews) {
-        AssertIsOnMainThread()
 
-        updateNavigationBar()
-    }
+    fileprivate func valueDidChange(valueViews: ChangePhoneNumberValueViews) { }
 
-    fileprivate func valueDidPressEnter(valueViews: ChangePhoneNumberValueViews) {
-    }
+    fileprivate func valueDidPressEnter(valueViews: ChangePhoneNumberValueViews) { }
 
     fileprivate func valueDidUpdateCountryState(valueViews: ChangePhoneNumberValueViews) {
         updateTableContents()
@@ -333,8 +323,8 @@ private class ChangePhoneNumberValueViews: NSObject {
 
     fileprivate let nationalNumberTextField: UITextField = {
         let field = UITextField()
-        field.font = UIFont.dynamicTypeBodyClamped
-        field.textColor = Theme.primaryTextColor
+        field.font = .dynamicTypeBodyClamped
+        field.textColor = .Signal.label
         field.textAlignment = (CurrentAppContext().isRTL ? .left : .right)
         field.textContentType = .telephoneNumber
 
@@ -448,3 +438,41 @@ extension ChangePhoneNumberValueViews: CountryCodeViewControllerDelegate {
         delegate?.valueDidUpdateCountryState(valueViews: self)
     }
 }
+
+// MARK: -
+
+#if DEBUG
+
+private class PreviewRegistrationChangePhoneNumberPresenter: RegistrationChangePhoneNumberPresenter {
+    func submitProspectiveChangeNumberE164(newE164: E164) {
+        print("")
+    }
+
+    func exitRegistration() {
+        print("")
+    }
+}
+
+@available(iOS 17, *)
+#Preview {
+    let semaphore = DispatchSemaphore(value: 0)
+    Task.detached {
+        await MockSSKEnvironment.activate()
+        semaphore.signal()
+    }
+    semaphore.wait()
+    let presenter = PreviewRegistrationChangePhoneNumberPresenter()
+    return UINavigationController(
+        rootViewController: RegistrationChangePhoneNumberViewController(
+            state: RegistrationPhoneNumberViewState.ChangeNumberInitialEntry(
+                oldE164: E164("+12395550180")!,
+                newE164: nil,
+                hasConfirmed: false,
+                invalidE164Error: nil
+            ),
+            presenter: presenter
+        )
+    )
+}
+
+#endif

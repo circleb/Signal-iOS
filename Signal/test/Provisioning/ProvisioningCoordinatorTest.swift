@@ -19,19 +19,19 @@ public class ProvisioningCoordinatorTest: XCTestCase {
     private var chatConnectionManagerMock: ChatConnectionManagerMock!
     private var identityManagerMock: MockIdentityManager!
     private var accountKeyStore: AccountKeyStore!
-    private var messageFactoryMock: Mocks.MessageFactory!
+    private var networkManagerMock: MockNetworkManager!
     private var prekeyManagerMock: MockPreKeyManager!
-    private var profileManagerMock: Mocks.ProfileManager!
+    private var profileManagerMock: OWSFakeProfileManager!
     private var pushRegistrationManagerMock: Mocks.PushRegistrationManager!
     private var receiptManagerMock: Mocks.ReceiptManager!
     private var registrationStateChangeManagerMock: MockRegistrationStateChangeManager!
     private var signalServiceMock: OWSSignalServiceMock!
     private var storageServiceManagerMock: FakeStorageServiceManager!
     private var svrMock: SecureValueRecoveryMock!
-    private var syncManagerMock: Mocks.SyncManager!
+    private var syncManagerMock: OWSMockSyncManager!
     private var threadStoreMock: MockThreadStore!
     private var tsAccountManagerMock: MockTSAccountManager!
-    private var udManagerMock: Mocks.UDManager!
+    private var udManagerMock: OWSMockUDManager!
 
     public override func setUp() async throws {
 
@@ -49,8 +49,10 @@ public class ProvisioningCoordinatorTest: XCTestCase {
         self.identityManagerMock = .init(recipientIdFinder: recipientIdFinder)
 
         self.chatConnectionManagerMock = .init()
-        self.accountKeyStore = .init()
-        self.messageFactoryMock = .init()
+        self.accountKeyStore = .init(
+            backupSettingsStore: BackupSettingsStore(),
+        )
+        self.networkManagerMock = .init()
         self.prekeyManagerMock = .init()
         self.profileManagerMock = .init()
         self.pushRegistrationManagerMock = .init()
@@ -63,21 +65,26 @@ public class ProvisioningCoordinatorTest: XCTestCase {
         self.threadStoreMock = .init()
         self.tsAccountManagerMock = .init()
         self.udManagerMock = .init()
+        let preKeyStore = PreKeyStore()
 
         self.provisioningCoordinator = ProvisioningCoordinatorImpl(
             chatConnectionManager: chatConnectionManagerMock,
             db: mockDb,
-            deviceService: MockOWSDeviceService(),
             identityManager: identityManagerMock,
             linkAndSyncManager: MockLinkAndSyncManager(),
             accountKeyStore: accountKeyStore,
-            messageFactory: messageFactoryMock,
+            networkManager: networkManagerMock,
             preKeyManager: prekeyManagerMock,
             profileManager: profileManagerMock,
             pushRegistrationManager: pushRegistrationManagerMock,
             receiptManager: receiptManagerMock,
             registrationStateChangeManager: registrationStateChangeManagerMock,
-            signalProtocolStoreManager: MockSignalProtocolStoreManager(),
+            registrationWebSocketManager: MockRegistrationWebSocketManager(),
+            signalProtocolStoreManager: SignalProtocolStoreManager(
+                aciProtocolStore: .mock(identity: .aci, preKeyStore: preKeyStore),
+                pniProtocolStore: .mock(identity: .pni, preKeyStore: preKeyStore),
+                preKeyStore: preKeyStore,
+            ),
             signalService: signalServiceMock,
             storageServiceManager: storageServiceManagerMock,
             svr: svrMock,
@@ -100,7 +107,7 @@ public class ProvisioningCoordinatorTest: XCTestCase {
             aciIdentityKeyPair: IdentityKeyPair.generate(),
             pniIdentityKeyPair: IdentityKeyPair.generate(),
             profileKey: .generateRandom(),
-            mrbk: BackupKey.forTesting(),
+            mrbk: MediaRootBackupKey(backupKey: .generateRandom()),
             ephemeralBackupKey: nil,
             areReadReceiptsEnabled: true,
             provisioningCode: "1234"
@@ -118,8 +125,6 @@ public class ProvisioningCoordinatorTest: XCTestCase {
         mockSession.responder = { request in
             if request.url.absoluteString.hasSuffix("v1/devices/link") {
                 return try! JSONEncoder().encode(verificationResponse)
-            } else if request.url.absoluteString.hasSuffix("v1/devices/capabilities") {
-                return Data()
             } else {
                 XCTFail("Unexpected request!")
                 return Data()
@@ -133,6 +138,13 @@ public class ProvisioningCoordinatorTest: XCTestCase {
             )
             return mockSession
         }
+
+        networkManagerMock.asyncRequestHandlers.append({ request, _ in
+            if request.url.absoluteString.hasSuffix("v1/devices/capabilities") {
+                return HTTPResponse(requestUrl: request.url, status: 200, headers: HttpHeaders(), bodyData: Data())
+            }
+            throw OWSAssertionError("")
+        })
 
         pushRegistrationManagerMock.mockRegistrationId = .init(apnsToken: "apn")
 
@@ -154,7 +166,7 @@ public class ProvisioningCoordinatorTest: XCTestCase {
         XCTAssert(didSetLocalIdentifiers)
         XCTAssert(prekeyManagerMock.didFinalizeRegistrationPrekeys)
         XCTAssertEqual(
-            profileManagerMock.localUserProfileMock?.profileKey,
+            profileManagerMock.localProfileKey,
             provisioningMessage.profileKey
         )
         XCTAssertEqual(
@@ -186,9 +198,9 @@ extension ProvisioningCoordinatorTest {
 
         var responder: ((TSRequest) -> Data)?
 
-        override func performRequest(_ rawRequest: TSRequest) async throws -> any HTTPResponse {
+        override func performRequest(_ rawRequest: TSRequest) async throws -> HTTPResponse {
             let responseBody = responder!(rawRequest)
-            return HTTPResponseImpl(
+            return HTTPResponse(
                 requestUrl: rawRequest.url,
                 status: 200,
                 headers: HttpHeaders(),
@@ -206,14 +218,14 @@ private class MockLinkAndSyncManager: LinkAndSyncManager {
 
     func setIsLinkAndSyncEnabledOnPrimary(_ isEnabled: Bool, tx: DBWriteTransaction) {}
 
-    func generateEphemeralBackupKey() -> BackupKey {
-        return .forTesting()
+    func generateEphemeralBackupKey(aci: Aci) -> MessageRootBackupKey {
+        return MessageRootBackupKey(backupKey: .generateRandom(), aci: aci)
     }
 
     func waitForLinkingAndUploadBackup(
-        ephemeralBackupKey: BackupKey,
+        ephemeralBackupKey: MessageRootBackupKey,
         tokenId: DeviceProvisioningTokenId,
-        progress: OWSProgressSink
+        progress: OWSSequentialProgressRootSink<PrimaryLinkNSyncProgressPhase>
     ) async throws(PrimaryLinkNSyncError) {
         return
     }
@@ -221,42 +233,9 @@ private class MockLinkAndSyncManager: LinkAndSyncManager {
     func waitForBackupAndRestore(
         localIdentifiers: LocalIdentifiers,
         auth: ChatServiceAuth,
-        ephemeralBackupKey: BackupKey,
-        progress: OWSProgressSink
+        ephemeralBackupKey: MessageRootBackupKey,
+        progress: OWSSequentialProgressRootSink<SecondaryLinkNSyncProgressPhase>
     ) async throws(SecondaryLinkNSyncError) {
         return
     }
-}
-
-private class MockOWSDeviceService: OWSDeviceService {
-
-    init() {}
-
-    func refreshDevices() async throws -> Bool {
-        return true
-    }
-
-    func renameDevice(device: SignalServiceKit.OWSDevice, toEncryptedName encryptedName: String) async throws {
-        // do nothing
-    }
-
-    func unlinkDevice(deviceId: DeviceId, auth: SignalServiceKit.ChatServiceAuth) async throws {
-        // do nothing
-    }
-}
-
-private class MockSignalProtocolStoreManager: SignalProtocolStoreManager {
-    private let aciProtocolStore = MockSignalProtocolStore(identity: .aci)
-    private let pniProtocolStore = MockSignalProtocolStore(identity: .pni)
-
-    init() {}
-
-    func signalProtocolStore(for identity: SignalServiceKit.OWSIdentity) -> any SignalServiceKit.SignalProtocolStore {
-        switch identity {
-        case .aci: aciProtocolStore
-        case .pni: pniProtocolStore
-        }
-    }
-
-    func removeAllKeys(tx: DBWriteTransaction) {}
 }

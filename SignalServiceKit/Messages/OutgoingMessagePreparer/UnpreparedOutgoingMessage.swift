@@ -16,13 +16,17 @@ public class UnpreparedOutgoingMessage {
 
     public static func forMessage(
         _ message: TSOutgoingMessage,
+        body: ValidatedMessageBody?,
         unsavedBodyMediaAttachments: [AttachmentDataSource] = [],
-        oversizeTextDataSource: AttachmentDataSource? = nil,
         linkPreviewDraft: LinkPreviewDataSource? = nil,
         quotedReplyDraft: DraftQuotedReplyModel.ForSending? = nil,
         messageStickerDraft: MessageStickerDataSource? = nil,
-        contactShareDraft: ContactShareDraft.ForSending? = nil
+        contactShareDraft: ContactShareDraft.ForSending? = nil,
+        poll: CreatePollMessage? = nil
     ) -> UnpreparedOutgoingMessage {
+        let oversizeTextDataSource = (body?.oversizeText).map {
+            AttachmentDataSource.pendingAttachment($0)
+        }
         if !message.shouldBeSaved {
             owsAssertDebug(
                 unsavedBodyMediaAttachments.isEmpty
@@ -42,7 +46,8 @@ public class UnpreparedOutgoingMessage {
                 linkPreviewDraft: linkPreviewDraft,
                 quotedReplyDraft: quotedReplyDraft,
                 messageStickerDraft: messageStickerDraft,
-                contactShareDraft: contactShareDraft
+                contactShareDraft: contactShareDraft,
+                poll: poll
             )))
         }
     }
@@ -126,6 +131,7 @@ public class UnpreparedOutgoingMessage {
             let quotedReplyDraft: DraftQuotedReplyModel.ForSending?
             let messageStickerDraft: MessageStickerDataSource?
             let contactShareDraft: ContactShareDraft.ForSending?
+            let poll: CreatePollMessage?
         }
 
         struct EditMessage {
@@ -232,10 +238,23 @@ public class UnpreparedOutgoingMessage {
             return $0
         }
 
+        if message.poll != nil {
+            message.message.update(withIsPoll: true, transaction: tx)
+        }
+
         message.message.anyInsert(transaction: tx)
         guard let messageRowId = message.message.sqliteRowId else {
             // We failed to insert!
             throw OWSAssertionError("Failed to insert message!")
+        }
+
+        if let poll = message.poll {
+            try DependenciesBridge.shared.pollMessageManager.processOutgoingPollCreate(
+                interactionId: messageRowId,
+                pollOptions: poll.options,
+                allowsMultiSelect: poll.allowMultiple,
+                transaction: tx
+            )
         }
 
         if let oversizeTextDataSource = message.oversizeTextDataSource {

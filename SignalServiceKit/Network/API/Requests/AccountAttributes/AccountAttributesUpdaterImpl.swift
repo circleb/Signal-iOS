@@ -71,13 +71,21 @@ public class AccountAttributesUpdaterImpl: AccountAttributesUpdater {
 
     public func updateAccountAttributes(authedAccount: AuthedAccount) async throws {
         await db.awaitableWrite { tx in
-            self.kvStore.setDate(self.dateProvider(), key: Keys.latestUpdateRequestDate, transaction: tx)
+            self.kvStore.setData(
+                Randomness.generateRandomBytes(16),
+                key: Keys.latestUpdateRequestToken,
+                transaction: tx,
+            )
         }
         try await self.updateAccountAttributesIfNecessaryAttempt(authedAccount: authedAccount)
     }
 
     public func scheduleAccountAttributesUpdate(authedAccount: AuthedAccount, tx: DBWriteTransaction) {
-        self.kvStore.setDate(self.dateProvider(), key: Keys.latestUpdateRequestDate, transaction: tx)
+        self.kvStore.setData(
+            Randomness.generateRandomBytes(16),
+            key: Keys.latestUpdateRequestToken,
+            transaction: tx,
+        )
         tx.addSyncCompletion {
             Task {
                 try await self.updateAccountAttributesIfNecessaryAttempt(authedAccount: authedAccount)
@@ -112,16 +120,24 @@ public class AccountAttributesUpdaterImpl: AccountAttributesUpdater {
             case no
             case yes(
                 currentDeviceCapabilities: AccountAttributes.Capabilities,
-                lastAttributeRequestDate: Date?,
-                registrationState: TSRegistrationState
+                lastAttributeRequestToken: Data?,
+                registrationState: TSRegistrationState,
+                aciRegistrationId: UInt32,
+                pniRegistrationId: UInt32
             )
         }
 
         let shouldUpdate = db.read { tx -> ShouldUpdate in
             let registrationState = self.tsAccountManager.registrationState(tx: tx)
             let isRegistered = registrationState.isRegistered
+            let aciRegistrationId = self.tsAccountManager.getRegistrationId(for: .aci, tx: tx)
+            let pniRegistrationId = self.tsAccountManager.getRegistrationId(for: .pni, tx: tx)
 
-            guard isRegistered else {
+            guard
+                isRegistered,
+                let aciRegistrationId,
+                let pniRegistrationId
+            else {
                 return .no
             }
 
@@ -130,12 +146,14 @@ public class AccountAttributesUpdaterImpl: AccountAttributesUpdater {
             let currentDeviceCapabilities = AccountAttributes.Capabilities(hasSVRBackups: hasBackedUpMasterKey)
 
             // Check if there's been a request for an attributes update.
-            let lastAttributeRequestDate = self.kvStore.getDate(Keys.latestUpdateRequestDate, transaction: tx)
-            if lastAttributeRequestDate != nil {
+            let lastAttributeRequestToken = self.kvStore.getData(Keys.latestUpdateRequestToken, transaction: tx)
+            if lastAttributeRequestToken != nil {
                 return .yes(
                     currentDeviceCapabilities: currentDeviceCapabilities,
-                    lastAttributeRequestDate: lastAttributeRequestDate,
-                    registrationState: registrationState
+                    lastAttributeRequestToken: lastAttributeRequestToken,
+                    registrationState: registrationState,
+                    aciRegistrationId: aciRegistrationId,
+                    pniRegistrationId: pniRegistrationId
                 )
             }
 
@@ -149,8 +167,10 @@ public class AccountAttributesUpdaterImpl: AccountAttributesUpdater {
             if lastUpdateDeviceCapabilities != currentDeviceCapabilities.requestParameters {
                 return .yes(
                     currentDeviceCapabilities: currentDeviceCapabilities,
-                    lastAttributeRequestDate: lastAttributeRequestDate,
-                    registrationState: registrationState
+                    lastAttributeRequestToken: lastAttributeRequestToken,
+                    registrationState: registrationState,
+                    aciRegistrationId: aciRegistrationId,
+                    pniRegistrationId: pniRegistrationId
                 )
             }
             // Check if the app version has changed.
@@ -158,8 +178,10 @@ public class AccountAttributesUpdaterImpl: AccountAttributesUpdater {
             if lastUpdateAppVersion != currentAppVersion {
                 return .yes(
                     currentDeviceCapabilities: currentDeviceCapabilities,
-                    lastAttributeRequestDate: lastAttributeRequestDate,
-                    registrationState: registrationState
+                    lastAttributeRequestToken: lastAttributeRequestToken,
+                    registrationState: registrationState,
+                    aciRegistrationId: aciRegistrationId,
+                    pniRegistrationId: pniRegistrationId
                 )
             }
             return .no
@@ -167,12 +189,22 @@ public class AccountAttributesUpdaterImpl: AccountAttributesUpdater {
         switch shouldUpdate {
         case .no:
             return
-        case let .yes(currentDeviceCapabilities, lastAttributeRequestDate, registrationState):
+        case let .yes(
+            currentDeviceCapabilities,
+            lastAttributeRequestToken,
+            registrationState,
+            aciRegistrationId,
+            pniRegistrationId
+        ):
             Logger.info("Updating account attributes.")
             let reportedDeviceCapabilities: AccountAttributes.Capabilities
             if registrationState.isPrimaryDevice == true {
-                let attributes = await db.awaitableWrite { tx in
-                    accountAttributesGenerator.generateForPrimary(tx: tx)
+                let attributes = db.read { tx in
+                    accountAttributesGenerator.generateForPrimary(
+                        aciRegistrationId: aciRegistrationId,
+                        pniRegistrationId: pniRegistrationId,
+                        tx: tx
+                    )
                 }
 
                 let request = AccountAttributesRequestFactory(
@@ -181,7 +213,7 @@ public class AccountAttributesUpdaterImpl: AccountAttributesUpdater {
                     attributes,
                     auth: authedAccount.chatServiceAuth
                 )
-                _ = try await networkManager.asyncRequest(request, canUseWebSocket: false)
+                _ = try await networkManager.asyncRequest(request)
 
                 reportedDeviceCapabilities = attributes.capabilities
             } else {
@@ -191,7 +223,7 @@ public class AccountAttributesUpdaterImpl: AccountAttributesUpdater {
                     currentDeviceCapabilities,
                     auth: authedAccount.chatServiceAuth
                 )
-                _ = try await networkManager.asyncRequest(request, canUseWebSocket: false)
+                _ = try await networkManager.asyncRequest(request)
 
                 reportedDeviceCapabilities = currentDeviceCapabilities
             }
@@ -207,10 +239,10 @@ public class AccountAttributesUpdaterImpl: AccountAttributesUpdater {
                 // Clear the update request unless a new update has been requested
                 // while this update was in flight.
                 if
-                    let lastAttributeRequestDate,
-                    lastAttributeRequestDate == self.kvStore.getDate(Keys.latestUpdateRequestDate, transaction: tx)
+                    let lastAttributeRequestToken,
+                    lastAttributeRequestToken == self.kvStore.getData(Keys.latestUpdateRequestToken, transaction: tx)
                 {
-                    self.kvStore.removeValue(forKey: Keys.latestUpdateRequestDate, transaction: tx)
+                    self.kvStore.removeValue(forKey: Keys.latestUpdateRequestToken, transaction: tx)
                 }
             }
 
@@ -223,7 +255,7 @@ public class AccountAttributesUpdaterImpl: AccountAttributesUpdater {
     }
 
     private enum Keys {
-        static let latestUpdateRequestDate = "latestUpdateRequestDate"
+        static let latestUpdateRequestToken = "latestUpdateRequestDate"
         static let lastUpdateDeviceCapabilities = "lastUpdateDeviceCapabilities"
         static let lastUpdateAppVersion = "lastUpdateAppVersion"
     }

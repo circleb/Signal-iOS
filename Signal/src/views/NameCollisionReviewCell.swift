@@ -63,7 +63,7 @@ final class NameCollisionCell: UITableViewCell {
         let label = UILabel()
 
         label.textColor = Theme.primaryTextColor
-        label.font = UIFont.dynamicTypeBody.semibold()
+        label.font = UIFont.dynamicTypeHeadline
         label.adjustsFontForContentSizeCategory = true
         label.numberOfLines = 0
 
@@ -72,7 +72,7 @@ final class NameCollisionCell: UITableViewCell {
 
     let separatorView: UIView = {
         let hairline = UIView()
-        hairline.backgroundColor = Theme.cellSeparatorColor
+        hairline.backgroundColor = Theme.tableView2SeparatorColor
         hairline.autoSetDimension(.height, toSize: .hairlineWidth)
         let separator = UIView()
         separator.addSubview(hairline)
@@ -137,7 +137,7 @@ final class NameCollisionCell: UITableViewCell {
         }
         verticalStack.addArrangedSubview(nameLabel)
 
-        let detailFont = UIFont.dynamicTypeBody2
+        let detailFont = UIFont.dynamicTypeSubheadline
 
         // Verified
         if model.isVerified {

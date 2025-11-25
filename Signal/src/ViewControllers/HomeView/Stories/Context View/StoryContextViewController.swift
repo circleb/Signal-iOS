@@ -270,7 +270,7 @@ class StoryContextViewController: OWSViewController {
         view.addSubview(closeButton)
         closeButton.autoSetDimensions(to: CGSize(square: 56))
         closeButton.autoPinEdge(toSuperviewSafeArea: .top)
-        closeButton.autoPinEdge(toSuperviewSafeArea: .leading)
+        closeButton.autoPinEdge(toSuperviewSafeArea: .trailing)
 
         loadStoryItems { [weak self] storyItems in
             // If there are no stories for this context, dismiss.
@@ -393,7 +393,19 @@ class StoryContextViewController: OWSViewController {
                     attachment = .text(textAttachment)
                 }
 
-                let contextButton = ContextMenuButton(empty: ())
+                let contextButton = ContextMenuButton(
+                    empty: (),
+                    onWillDisplayContextMenu: { [weak self] in
+                        guard let self else { return }
+                        pause()
+                    },
+                    onDidDismissContextMenu: { [weak self] in
+                        guard let self else { return }
+                        if !contextMenuGenerator.isDisplayingFollowup {
+                            play()
+                        }
+                    },
+                )
                 let actions = SSKEnvironment.shared.databaseStorageRef.read { tx -> [UIAction] in
                     self.contextMenuGenerator.nativeContextMenuActions(
                         for: currentItem.message,
@@ -405,7 +417,6 @@ class StoryContextViewController: OWSViewController {
                     )
                 }
                 contextButton.setActions(actions: actions)
-                contextButton.delegate = self
                 return contextButton
             }()
 
@@ -1095,17 +1106,6 @@ extension StoryContextViewController: StoryItemMediaViewDelegate {
 
     func storyItemMediaViewShouldBeMuted(_ storyItemMediaView: StoryItemMediaView) -> Bool {
         return delegate?.storyContextViewControllerShouldBeMuted(self) ?? false
-    }
-
-    func contextMenuWillDisplay(from _: ContextMenuButton) {
-        pause()
-    }
-
-    func contextMenuDidDismiss(from _: ContextMenuButton) {
-        guard !contextMenuGenerator.isDisplayingFollowup else {
-            return
-        }
-        play()
     }
 }
 

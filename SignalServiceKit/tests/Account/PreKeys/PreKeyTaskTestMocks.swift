@@ -13,48 +13,15 @@ import LibSignalClient
 // MARK: - Mocks
 //
 //
-extension PreKey {
+extension PreKeyTaskManager {
     enum Mocks {
-        typealias APIClient = _PreKey_APIClientMock
-        typealias DateProvider = _PreKey_DateProviderMock
-        typealias IdentityManager = _PreKey_IdentityManagerMock
-        typealias IdentityKeyMismatchManager = _PreKey_IdentityKeyMismatchManagerMock
+        typealias APIClient = _PreKeyTaskManager_APIClientMock
+        typealias DateProvider = _PreKeyTaskManager_DateProviderMock
+        typealias IdentityKeyMismatchManager = _PreKeyTaskManager_IdentityKeyMismatchManagerMock
     }
 }
 
-//
-//
-// MARK: - Mock Implementations
-//
-//
-
-class _PreKey_IdentityManagerMock: PreKey.Shims.IdentityManager {
-
-    var aciKeyPair: ECKeyPair?
-    var pniKeyPair: ECKeyPair?
-
-    func identityKeyPair(for identity: OWSIdentity, tx: SignalServiceKit.DBReadTransaction) -> ECKeyPair? {
-        switch identity {
-        case .aci:
-            return aciKeyPair
-        case .pni:
-            return pniKeyPair
-        }
-    }
-
-    func generateNewIdentityKeyPair() -> ECKeyPair { ECKeyPair.generateKeyPair() }
-
-    func store(keyPair: ECKeyPair?, for identity: OWSIdentity, tx: DBWriteTransaction) {
-        switch identity {
-        case .aci:
-            aciKeyPair = keyPair
-        case .pni:
-            pniKeyPair = keyPair
-        }
-    }
-}
-
-class _PreKey_IdentityKeyMismatchManagerMock: IdentityKeyMismatchManager {
+class _PreKeyTaskManager_IdentityKeyMismatchManagerMock: IdentityKeyMismatchManager {
     func recordSuspectedIssueWithPniIdentityKey(tx: DBWriteTransaction) {
     }
 
@@ -67,21 +34,21 @@ class _PreKey_IdentityKeyMismatchManagerMock: IdentityKeyMismatchManager {
     }
 }
 
-class _PreKey_DateProviderMock {
+class _PreKeyTaskManager_DateProviderMock {
     var currentDate: Date = Date()
     func targetDate() -> Date { return currentDate }
 }
 
-class _PreKey_APIClientMock: PreKeyTaskAPIClient {
+class _PreKeyTaskManager_APIClientMock: PreKeyTaskAPIClient {
     var currentPreKeyCount: Int?
     var currentPqPreKeyCount: Int?
 
     var setPreKeysResult: ConsumableMockPromise<Void> = .unset
     var identity: OWSIdentity?
-    var signedPreKeyRecord: SignalServiceKit.SignedPreKeyRecord?
-    var preKeyRecords: [SignalServiceKit.PreKeyRecord]?
-    var pqLastResortPreKeyRecord: SignalServiceKit.KyberPreKeyRecord?
-    var pqPreKeyRecords: [SignalServiceKit.KyberPreKeyRecord]?
+    var signedPreKeyRecord: LibSignalClient.SignedPreKeyRecord?
+    var preKeyRecords: [LibSignalClient.PreKeyRecord]?
+    var pqLastResortPreKeyRecord: LibSignalClient.KyberPreKeyRecord?
+    var pqPreKeyRecords: [LibSignalClient.KyberPreKeyRecord]?
     var auth: ChatServiceAuth?
 
     func getAvailablePreKeys(for identity: OWSIdentity) async throws -> (ecCount: Int, pqCount: Int) {
@@ -90,10 +57,10 @@ class _PreKey_APIClientMock: PreKeyTaskAPIClient {
 
     func registerPreKeys(
         for identity: OWSIdentity,
-        signedPreKeyRecord: SignalServiceKit.SignedPreKeyRecord?,
-        preKeyRecords: [SignalServiceKit.PreKeyRecord]?,
-        pqLastResortPreKeyRecord: SignalServiceKit.KyberPreKeyRecord?,
-        pqPreKeyRecords: [SignalServiceKit.KyberPreKeyRecord]?,
+        signedPreKeyRecord: LibSignalClient.SignedPreKeyRecord?,
+        preKeyRecords: [LibSignalClient.PreKeyRecord]?,
+        pqLastResortPreKeyRecord: LibSignalClient.KyberPreKeyRecord?,
+        pqPreKeyRecords: [LibSignalClient.KyberPreKeyRecord]?,
         auth: ChatServiceAuth
     ) async throws {
         try await setPreKeysResult.consumeIntoPromise().awaitable()

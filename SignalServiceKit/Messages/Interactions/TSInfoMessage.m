@@ -36,6 +36,7 @@ const InfoMessageUserInfoKey InfoMessageUserInfoKeyPhoneNumberDisplayNameBeforeL
     = @"InfoMessageUserInfoKeyPhoneNumberDisplayNameBeforeLearningProfileName";
 const InfoMessageUserInfoKey InfoMessageUserInfoKeyUsernameDisplayNameBeforeLearningProfileName
     = @"InfoMessageUserInfoKeyUsernameDisplayNameBeforeLearningProfileName";
+const InfoMessageUserInfoKey InfoMessageUserInfoKeyEndPoll = @"InfoMessageUserInfoKeyEndPoll";
 
 NSUInteger TSInfoMessageSchemaVersion = 2;
 
@@ -82,6 +83,8 @@ NSUInteger TSInfoMessageSchemaVersion = 2;
                      timestamp:(uint64_t)timestamp
                     serverGuid:(nullable NSString *)serverGuid
                    messageType:(TSInfoMessageType)messageType
+            expireTimerVersion:(nullable NSNumber *)expireTimerVersion
+              expiresInSeconds:(unsigned int)expiresInSeconds
            infoMessageUserInfo:(nullable NSDictionary<InfoMessageUserInfoKey, id> *)infoMessageUserInfo
 {
     TSMessageBuilder *builder;
@@ -90,6 +93,12 @@ NSUInteger TSInfoMessageSchemaVersion = 2;
     } else {
         builder = [TSMessageBuilder messageBuilderWithThread:thread];
     }
+
+    if (expiresInSeconds > 0 && expireTimerVersion != nil) {
+        builder.expiresInSeconds = expiresInSeconds;
+        builder.expireTimerVersion = expireTimerVersion;
+    }
+
     self = [super initMessageWithBuilder:builder];
     if (!self) {
         return self;
@@ -135,6 +144,7 @@ NSUInteger TSInfoMessageSchemaVersion = 2;
                 expiresInSeconds:(unsigned int)expiresInSeconds
                        giftBadge:(nullable OWSGiftBadge *)giftBadge
                isGroupStoryReply:(BOOL)isGroupStoryReply
+                          isPoll:(BOOL)isPoll
   isSmsMessageRestoredFromBackup:(BOOL)isSmsMessageRestoredFromBackup
               isViewOnceComplete:(BOOL)isViewOnceComplete
                isViewOnceMessage:(BOOL)isViewOnceMessage
@@ -170,6 +180,7 @@ NSUInteger TSInfoMessageSchemaVersion = 2;
                   expiresInSeconds:expiresInSeconds
                          giftBadge:giftBadge
                  isGroupStoryReply:isGroupStoryReply
+                            isPoll:isPoll
     isSmsMessageRestoredFromBackup:isSmsMessageRestoredFromBackup
                 isViewOnceComplete:isViewOnceComplete
                  isViewOnceMessage:isViewOnceMessage
@@ -333,6 +344,9 @@ NSUInteger TSInfoMessageSchemaVersion = 2;
             return OWSLocalizedString(@"INFO_MESSAGE_ACCEPTED_MESSAGE_REQUEST",
                 @"An info message inserted into the chat when you accept a message request, in a 1:1 or group "
                 @"chat.");
+        case TSInfoMessageTypeEndPoll: {
+            return [self endPollDescriptionWithTransaction:transaction];
+        }
     }
 
     OWSFailDebug(@"Unknown info message type");
@@ -340,11 +354,6 @@ NSUInteger TSInfoMessageSchemaVersion = 2;
 }
 
 #pragma mark - OWSReadTracking
-
-- (uint64_t)expireStartedAt
-{
-    return 0;
-}
 
 - (void)markAsReadAtTimestamp:(uint64_t)readTimestamp
                        thread:(TSThread *)thread

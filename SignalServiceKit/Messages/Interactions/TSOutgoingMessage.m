@@ -12,7 +12,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-const NSUInteger kOversizeTextMessageSizeThreshold = 2 * 1024;
 
 NSString *const kTSOutgoingMessageSentRecipientAll = @"kTSOutgoingMessageSentRecipientAll";
 
@@ -90,6 +89,7 @@ NSUInteger const TSOutgoingMessageSchemaVersion = 1;
                 expiresInSeconds:(unsigned int)expiresInSeconds
                        giftBadge:(nullable OWSGiftBadge *)giftBadge
                isGroupStoryReply:(BOOL)isGroupStoryReply
+                          isPoll:(BOOL)isPoll
   isSmsMessageRestoredFromBackup:(BOOL)isSmsMessageRestoredFromBackup
               isViewOnceComplete:(BOOL)isViewOnceComplete
                isViewOnceMessage:(BOOL)isViewOnceMessage
@@ -130,6 +130,7 @@ NSUInteger const TSOutgoingMessageSchemaVersion = 1;
                   expiresInSeconds:expiresInSeconds
                          giftBadge:giftBadge
                  isGroupStoryReply:isGroupStoryReply
+                            isPoll:isPoll
     isSmsMessageRestoredFromBackup:isSmsMessageRestoredFromBackup
                 isViewOnceComplete:isViewOnceComplete
                  isViewOnceMessage:isViewOnceMessage
@@ -435,17 +436,33 @@ NSUInteger const TSOutgoingMessageSchemaVersion = 1;
     }
 
     NSString *body = self.body;
-    NSString *trimmedBody = [body trimToUtf8ByteCount:(NSInteger)kOversizeTextMessageSizeThreshold];
+    NSString *trimmedBody =
+        [body trimToUtf8ByteCount:(NSInteger)OWSMediaUtilsObjc.kOversizeTextMessageSizeThresholdBytes];
+    // It was historically possible to end up with a message in the database that
+    // exceeds this threshold, and therefore possible to hit this assert (by forwarding
+    // an older message). But it is good for us to know when this happens.
     OWSAssertDebug(body.length == trimmedBody.length);
-    [builder setBody:trimmedBody];
 
-    NSArray<SSKProtoBodyRange *> *bodyRanges =
-        [self.bodyRanges toProtoBodyRangesWithBodyLength:(NSInteger)self.body.length];
-    if (bodyRanges.count > 0) {
-        [builder setBodyRanges:bodyRanges];
+    if (self.isPoll) {
+        SSKProtoDataMessagePollCreate *_Nullable pollCreateProto = [self buildPollProtoWithTx:transaction];
 
-        if (requiredProtocolVersion < SSKProtoDataMessageProtocolVersionMentions) {
-            requiredProtocolVersion = SSKProtoDataMessageProtocolVersionMentions;
+        if (!pollCreateProto) {
+            OWSFailDebug(@"Could not build poll protobuf");
+        }
+        [builder setPollCreate:pollCreateProto];
+
+        requiredProtocolVersion = SSKProtoDataMessageProtocolVersionPolls;
+    } else {
+        [builder setBody:trimmedBody];
+
+        NSArray<SSKProtoBodyRange *> *bodyRanges =
+            [self.bodyRanges toProtoBodyRangesWithBodyLength:(NSInteger)self.body.length];
+        if (bodyRanges.count > 0) {
+            [builder setBodyRanges:bodyRanges];
+
+            if (requiredProtocolVersion < SSKProtoDataMessageProtocolVersionMentions) {
+                requiredProtocolVersion = SSKProtoDataMessageProtocolVersionMentions;
+            }
         }
     }
 
@@ -455,8 +472,12 @@ NSUInteger const TSOutgoingMessageSchemaVersion = 1;
             SSKProtoDataMessageReactionBuilder *reactionBuilder =
                 [SSKProtoDataMessageReaction builderWithEmoji:self.storyReactionEmoji
                                                     timestamp:self.storyTimestamp.unsignedLongLongValue];
-            // ACI TODO: Use `serviceIdString` to populate this value.
-            [reactionBuilder setTargetAuthorAci:self.storyAuthorUuidString];
+            if (BuildFlagsObjC.serviceIdStrings) {
+                [reactionBuilder setTargetAuthorAci:self.storyAuthorAci.serviceIdString];
+            }
+            if (BuildFlagsObjC.serviceIdBinaryConstantOverhead) {
+                [reactionBuilder setTargetAuthorAciBinary:self.storyAuthorAci.serviceIdBinary];
+            }
 
             NSError *error;
             SSKProtoDataMessageReaction *_Nullable reaction = [reactionBuilder buildAndReturnError:&error];
@@ -472,8 +493,12 @@ NSUInteger const TSOutgoingMessageSchemaVersion = 1;
         }
 
         SSKProtoDataMessageStoryContextBuilder *storyContextBuilder = [SSKProtoDataMessageStoryContext builder];
-        // ACI TODO: Use `serviceIdString` to populate this value.
-        [storyContextBuilder setAuthorAci:self.storyAuthorUuidString];
+        if (BuildFlagsObjC.serviceIdStrings) {
+            [storyContextBuilder setAuthorAci:self.storyAuthorAci.serviceIdString];
+        }
+        if (BuildFlagsObjC.serviceIdBinaryConstantOverhead) {
+            [storyContextBuilder setAuthorAciBinary:self.storyAuthorAci.serviceIdBinary];
+        }
         [storyContextBuilder setSentTimestamp:self.storyTimestamp.unsignedLongLongValue];
 
         [builder setStoryContext:[storyContextBuilder buildInfallibly]];

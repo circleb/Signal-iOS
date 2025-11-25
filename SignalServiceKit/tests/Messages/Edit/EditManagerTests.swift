@@ -43,28 +43,28 @@ class EditManagerTests: SSKBaseTest {
 
     func testBasicValidation() throws {
         let targetMessage = createIncomingMessage(with: thread) { builder in
-            builder.messageBody = "BAR"
+            builder.setMessageBody(AttachmentContentValidatorMock.mockValidatedBody("BAR"))
             builder.authorAci = authorAci
             builder.expireStartedAt = 3
         }
 
         let editMessage = createEditDataMessage { $0.setBody("FOO") }
-        let dataStoreMock = EditManagerDataStoreMock(targetMessage: targetMessage)
-        let editMessageStoreMock = EditMessageStoreMock()
         let editManager = EditManagerImpl(context:
             .init(
+                attachmentContentValidator: AttachmentContentValidatorMock(),
                 attachmentStore: AttachmentStoreMock(),
-                dataStore: dataStoreMock,
                 editManagerAttachments: MockEditManagerAttachments(),
-                editMessageStore: editMessageStoreMock,
+                editMessageStore: EditMessageStore(),
                 receiptManagerShim: ReceiptManagerMock()
             )
         )
 
+        var newMessage: TSMessage!
         try db.write { tx in
-            _ = try editManager.processIncomingEditMessage(
+            targetMessage.anyInsert(transaction: tx)
+            newMessage = try editManager.processIncomingEditMessage(
                 editMessage,
-                serverTimestamp: 1,
+                serverTimestamp: 2,
                 serverGuid: UUID().uuidString,
                 serverDeliveryTimestamp: 1234,
                 thread: thread,
@@ -75,15 +75,20 @@ class EditManagerTests: SSKBaseTest {
                 )),
                 tx: tx
             )
+        }
 
+        try db.read { tx in
+            // Inserted edit
             compare(
-                dataStoreMock.editMessageCopy,
+                newMessage,
                 targetMessage,
                 propertyList: editPropertyList
             )
 
+            // original
+            let dbOriginal = try InteractionFinder.fetchInteractions(timestamp: targetMessage.timestamp, transaction: tx).first!
             compare(
-                dataStoreMock.oldMessageCopy,
+                dbOriginal,
                 targetMessage,
                 propertyList: originalPropetyList
             )
@@ -96,14 +101,12 @@ class EditManagerTests: SSKBaseTest {
             builder.isViewOnceMessage = true
         }
         let editMessage = createEditDataMessage { _ in }
-        let dataStoreMock = EditManagerDataStoreMock(targetMessage: targetMessage)
-        let editMessageStoreMock = EditMessageStoreMock()
         let editManager = EditManagerImpl(context:
             .init(
+                attachmentContentValidator: AttachmentContentValidatorMock(),
                 attachmentStore: AttachmentStoreMock(),
-                dataStore: dataStoreMock,
                 editManagerAttachments: MockEditManagerAttachments(),
-                editMessageStore: editMessageStoreMock,
+                editMessageStore: EditMessageStore(),
                 receiptManagerShim: ReceiptManagerMock()
             )
         )
@@ -137,22 +140,19 @@ class EditManagerTests: SSKBaseTest {
     func testContactShareEditMessageFails() {
         let targetMessage = createIncomingMessage(with: thread) { builder in
             builder.authorAci = authorAci
+            builder.contactShare = OWSContact(name: .init(givenName: "Test"))
         }
 
         let editMessage = createEditDataMessage { _ in }
-        let dataStoreMock = EditManagerDataStoreMock(targetMessage: targetMessage)
-        let editMessageStoreMock = EditMessageStoreMock()
         let editManager = EditManagerImpl(context:
             .init(
+                attachmentContentValidator: AttachmentContentValidatorMock(),
                 attachmentStore: AttachmentStoreMock(),
-                dataStore: dataStoreMock,
                 editManagerAttachments: MockEditManagerAttachments(),
-                editMessageStore: editMessageStoreMock,
+                editMessageStore: EditMessageStore(),
                 receiptManagerShim: ReceiptManagerMock()
             )
         )
-
-        dataStoreMock.isContactShare = true
 
         db.write { tx in
             do {
@@ -185,15 +185,12 @@ class EditManagerTests: SSKBaseTest {
             builder.authorAci = authorAci
         }
         let editMessage = createEditDataMessage { _ in }
-        let dataStoreMock = EditManagerDataStoreMock(targetMessage: targetMessage)
-        let editMessageStoreMock = EditMessageStoreMock()
-
         let editManager = EditManagerImpl(context:
             .init(
+                attachmentContentValidator: AttachmentContentValidatorMock(),
                 attachmentStore: AttachmentStoreMock(),
-                dataStore: dataStoreMock,
                 editManagerAttachments: MockEditManagerAttachments(),
-                editMessageStore: editMessageStoreMock,
+                editMessageStore: EditMessageStore(),
                 receiptManagerShim: ReceiptManagerMock()
             )
         )
@@ -233,15 +230,12 @@ class EditManagerTests: SSKBaseTest {
             builder.serverTimestamp = bigInt
         }
         let editMessage = createEditDataMessage { _ in }
-        let dataStoreMock = EditManagerDataStoreMock(targetMessage: targetMessage)
-        let editMessageStoreMock = EditMessageStoreMock()
-
         let editManager = EditManagerImpl(context:
             .init(
+                attachmentContentValidator: AttachmentContentValidatorMock(),
                 attachmentStore: AttachmentStoreMock(),
-                dataStore: dataStoreMock,
                 editManagerAttachments: MockEditManagerAttachments(),
-                editMessageStore: editMessageStoreMock,
+                editMessageStore: EditMessageStore(),
                 receiptManagerShim: ReceiptManagerMock()
             )
         )
@@ -358,106 +352,10 @@ class EditManagerTests: SSKBaseTest {
         )
         messageBuilder.serverTimestamp = 1
         customizeBlock(messageBuilder)
-        let targetMessage = messageBuilder.build()
-        targetMessage.replaceRowId(1, uniqueId: "1")
-        return targetMessage
+        return messageBuilder.build()
     }
 
     // MARK: - Test Mocks
-
-    private class EditManagerDataStoreMock: EditManagerImpl.Shims.DataStore {
-        func createOutgoingEditMessage(
-            thread: TSThread,
-            targetMessageTimestamp: UInt64,
-            editMessage: TSOutgoingMessage,
-            tx: DBReadTransaction
-        ) -> OutgoingEditMessage {
-            return try! OutgoingEditMessage(dictionary: [:])
-        }
-
-        func build(
-            _ builder: TSOutgoingMessageBuilder,
-            tx: DBReadTransaction
-        ) -> TSOutgoingMessage {
-            return builder.build(transaction: SDSDB.shimOnlyBridge(tx))
-        }
-
-        var isContactShare = false
-
-        func isMessageContactShare(_ message: TSMessage) -> Bool {
-            return isContactShare
-        }
-
-        func update(
-            _ message: TSOutgoingMessage,
-            withRecipientAddressStates: [SignalServiceAddress: TSOutgoingMessageRecipientState]?,
-            tx: DBWriteTransaction
-        ) {}
-
-        let targetMessage: TSMessage?
-        var editMessageCopy: TSMessage?
-        var oldMessageCopy: TSMessage?
-
-        init(targetMessage: TSMessage?) {
-            self.targetMessage = targetMessage
-        }
-
-        func insert(_ message: TSMessage, tx: DBWriteTransaction) {
-            oldMessageCopy = message
-            message.replaceRowId(2, uniqueId: message.uniqueId)
-        }
-
-        func overwritingUpdate(_ message: TSMessage, tx: DBWriteTransaction) {
-            editMessageCopy = message
-        }
-    }
-
-    private class EditMessageStoreMock: EditMessageStore {
-        func editTarget(
-            timestamp: UInt64,
-            authorAci: Aci?,
-            tx: DBReadTransaction
-        ) -> EditMessageTarget? {
-            return nil
-        }
-
-        func findMessage(
-            fromEdit edit: TSMessage,
-            tx: DBReadTransaction
-        ) -> TSMessage? {
-            nil
-        }
-
-        func numberOfEdits(
-            for message: TSMessage,
-            tx: DBReadTransaction
-        ) -> Int {
-            return 1
-        }
-
-        func findEditHistory<MessageType: TSMessage>(
-            for message: MessageType,
-            tx: DBReadTransaction
-        ) throws -> [(record: EditRecord, message: MessageType?)] {
-            return []
-        }
-
-        func findEditDeleteRecords<MessageType: TSMessage>(
-            for message: MessageType,
-            tx: DBReadTransaction
-        ) throws -> [(record: EditRecord, message: MessageType?)] {
-            return []
-        }
-
-        var editRecord: EditRecord?
-
-        func insert(_ editRecord: EditRecord, tx: DBWriteTransaction) {
-            self.editRecord = editRecord
-        }
-
-        func update(_ editRecord: EditRecord, tx: DBWriteTransaction) throws {}
-
-    }
 
     private class ReceiptManagerMock: EditManagerImpl.Shims.ReceiptManager {
         func messageWasRead(
@@ -470,8 +368,8 @@ class EditManagerTests: SSKBaseTest {
     // MARK: - Test Data
 
     /// There are three types
-    ///     'match': The values before and after should always match.
-    ///     'change': If the value is present, it should change before and after the edit
+    ///     'unchanged': The values before and after should always match.
+    ///     'changed': If the value is present, it should change before and after the edit
     ///     'ignore': Properties that arent checked in these tests
     enum EditedMessageValidationType {
         case unchanged
@@ -484,11 +382,11 @@ class EditManagerTests: SSKBaseTest {
         "isOutgoing": .unchanged,
         "editState": .changed,
         "body": .changed,
-        "bodyRanges": .changed,
+        "bodyRanges": .ignore, // MessageBodyRanges are not equatable, so ignore
         "expiresInSeconds": .unchanged,
         "expireTimerVersion": .unchanged,
         "expireStartedAt": .unchanged,
-        "schemaVersion": .unchanged,
+        "schemaVersion": .ignore,
         "quotedMessage": .unchanged,
         "contactShare": .unchanged,
         "linkPreview": .unchanged,
@@ -510,6 +408,7 @@ class EditManagerTests: SSKBaseTest {
         "storyAuthorUuidString": .unchanged,
         "isGroupStoryReply": .unchanged,
         "isStoryReply": .unchanged,
+        "isPoll": .unchanged,
         "hash": .ignore,
         "superclass": .ignore,
         "description": .ignore,
@@ -521,11 +420,11 @@ class EditManagerTests: SSKBaseTest {
         "isOutgoing": .unchanged,
         "editState": .changed,
         "body": .unchanged,
-        "bodyRanges": .unchanged,
+        "bodyRanges": .ignore,
         "expiresInSeconds": .unchanged,
         "expireTimerVersion": .unchanged,
         "expireStartedAt": .unchanged,
-        "schemaVersion": .unchanged,
+        "schemaVersion": .ignore,
         "quotedMessage": .unchanged,
         "contactShare": .unchanged,
         "linkPreview": .unchanged,
@@ -547,6 +446,7 @@ class EditManagerTests: SSKBaseTest {
         "storyAuthorUuidString": .unchanged,
         "isGroupStoryReply": .unchanged,
         "isStoryReply": .unchanged,
+        "isPoll": .unchanged,
         "hash": .ignore,
         "superclass": .ignore,
         "description": .ignore,

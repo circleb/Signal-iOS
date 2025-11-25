@@ -70,6 +70,12 @@
 /* Label for button that lets you send a message to a contact. */
 "ACTION_SEND_MESSAGE" = "ارسال پیام";
 
+/* Message shown in an action sheet when a generic error occurs. */
+"ACTION_SHEET_DISPLAYABLE_ERROR_GENERIC_ERROR" = "مشکلی پیش آمد. لطفاً با پشتیبانی تماس بگیرید.";
+
+/* Message shown in an action sheet when a network error occurs. */
+"ACTION_SHEET_DISPLAYABLE_ERROR_NETWORK_ERROR" = "مشکلی پیش آمد. اتصال خود را بررسی و دوباره تلاش کنید.";
+
 /* A label for 'tap to download' buttons. */
 "ACTION_TAP_TO_DOWNLOAD" = "برای بارگیری ضربه بزنید";
 
@@ -234,6 +240,15 @@
 
 /* Error indicating that the app could not restore transferred data. */
 "APP_LAUNCH_FAILURE_RESTORE_FAILED_TITLE" = "امکان تکمیل انتقال وجود نداشت";
+
+/* Action in an action sheet offering to wipe all app data. */
+"APP_LAUNCH_FAILURE_WIPE_APP_DATA_ACTION_TITLE" = "بازنشانی داده‌های برنامه";
+
+/* Message for an action sheet confirming the user wants to wipe all app data. */
+"APP_LAUNCH_FAILURE_WIPE_APP_DATA_CONFIRMATION_MESSAGE" = "همه داده‌های برنامه برای همیشه حذف خواهد شد. این اقدام فقط وقتی لازم است که قادر به راه‌اندازی برنامه نباشید.";
+
+/* Title for an action sheet confirming the user wants to wipe all app data. */
+"APP_LAUNCH_FAILURE_WIPE_APP_DATA_CONFIRMATION_TITLE" = "همه داده‌های برنامه بازنشانی شود؟";
 
 /* Text prompting user to edit their profile name. */
 "APP_SETTINGS_EDIT_PROFILE_NAME_PROMPT" = "نام خود را وارد کنید";
@@ -418,6 +433,9 @@
 /* A button to open the photo picker from the Attachment Keyboard */
 "ATTACHMENT_KEYBOARD_PHOTOS" = "تصاویر";
 
+/* A button to select a poll from the Attachment Keyboard */
+"ATTACHMENT_KEYBOARD_POLL" = "نظرسنجی";
+
 /* Accessibility label for attaching photos */
 "ATTACHMENT_LABEL" = "پیوست";
 
@@ -478,14 +496,8 @@
 /* Message when trying to show a voice message that has expired and is unavailable for download */
 "AUDIO_UNAVAILABLE_MESSAGE_LABEL" = "پیام صوتی در دسترس نیست";
 
-/* Message for sheet shown when tapping a voice message that has expired and is unavailable for download */
-"AUDIO_UNAVAILABLE_SHEET_MESSAGE" = "در زمان اتصال این دستگاه، این پیام صوتی از گوشی شما انتقال داده نشد. فایل‌ها و رسانه‌های قدیمی‌تر از ۴۵ روز در زمان اتصال دستگاه، قابل همگام‌سازی نیستند.";
-
 /* Title for sheet shown when tapping a voice message that has expired and is unavailable for download */
 "AUDIO_UNAVAILABLE_SHEET_TITLE" = "پیام صوتی در دسترس نیست";
-
-/* Username for backup key autofill */
-"AUTOFILL_BACKUP_KEY_USERNAME" = "پشتیبان‌های سیگنال";
 
 /* Text prompting the user to choose a color when editing their avatar */
 "AVATAR_EDIT_VIEW_CHOOSE_A_COLOR" = "یک رنگ انتخاب کنید";
@@ -511,7 +523,7 @@
 /* return to the previous screen */
 "BACK_BUTTON" = "بازگشت";
 
-/* Action text for Backup Key reminder megaphone */
+/* Action text for Recovery Key reminder megaphone */
 "BACKUP_ENABLEMENT_REMINDER_MEGAPHONE_ACTION" = "روشن کردن";
 
 /* Body for Backup enablement reminder megaphone */
@@ -523,41 +535,53 @@
 /* Snooze text for Backup enablement reminder megaphone */
 "BACKUP_ENABLEMENT_REMINDER_NOT_NOW_ACTION" = "حالا نه";
 
-/* Text used as placeholder in backup key text view. */
-"BACKUP_KEY_PLACEHOLDER" = "رمز پشتیبان";
+/* Toast indicating that the user has copied their recovery key. */
+"BACKUP_KEY_COPIED_MESSAGE_TOAST" = "رمز بازیابی کپی شد";
 
-/* Title of button to tap if you forgot your backup key. */
+/* Text used as placeholder in recovery key text view. */
+"BACKUP_KEY_PLACEHOLDER" = "رمز بازیابی";
+
+/* Title of button to tap if you forgot your recovery key. */
 "BACKUP_KEY_REMINDER_FORGOT_KEY" = "رمز را فراموش کردید؟";
 
-/* Action text for Backup Key reminder megaphone */
+/* Action text for Recovery Key reminder megaphone */
 "BACKUP_KEY_REMINDER_MEGAPHONE_ACTION" = "تأیید";
 
-/* Body for Backup Key reminder megaphone */
+/* Body for Recovery Key reminder megaphone */
 "BACKUP_KEY_REMINDER_MEGAPHONE_BODY" = "هر چند وقت یک‌بار از شما می‌خواهیم که رمزتان را تأیید کنید تا مطمئن شویم هنوز از آن مطلع هستید";
 
-/* Title for Backup Key reminder megaphone */
-"BACKUP_KEY_REMINDER_MEGAPHONE_TITLE" = "رمز پشتیبان خود را تأیید کنید";
+/* Title for Recovery Key reminder megaphone */
+"BACKUP_KEY_REMINDER_MEGAPHONE_TITLE" = "رمز بازیابی‌تان را تأیید کنید";
 
-/* Snooze text for Backup Key reminder megaphone */
+/* Snooze text for Recovery Key reminder megaphone */
 "BACKUP_KEY_REMINDER_NOT_NOW_ACTION" = "حالا نه";
 
-/* Toast indicating that the Backup Key was correct. */
-"BACKUP_KEY_REMINDER_SUCCESSFUL_TOAST" = "رمز پشتیبان درست است. رمزتان را امن نگه دارید.";
+/* Toast indicating that the Recovery Key was correct. */
+"BACKUP_KEY_REMINDER_SUCCESSFUL_TOAST" = "رمز بازیابی صحیح است. رمزتان را امن نگه دارید.";
 
-/* Body for a sheet warning users to their 'Backup Key' safe. */
+/* Button label for action sheet to cancel backup onboarding */
+"BACKUP_ONBOARDING_CANCEL_SHEET_ACTION" = "خروج از راه‌اندازی نسخه پشتیبان";
+
+/* Message for action sheet when attempting to cancel backup onboarding */
+"BACKUP_ONBOARDING_CANCEL_SHEET_MESSAGE" = "راه‌اندازی نسخه پشتیبان را تکمیل نکردید، و هیچ نسخه پشتیبان ایجاد نشد. می‌توانید پشتیبان‌گیری را در تنظیمات فعال کنید.";
+
+/* Title for action sheet when attempting to cancel backup onboarding */
+"BACKUP_ONBOARDING_CANCEL_SHEET_TITLE" = "از راه‌اندازی نسخه پشتیبان خارج می‌شوید؟";
+
+/* Body for a sheet warning users to their 'Recovery Key' safe. */
 "BACKUP_ONBOARDING_CONFIRM_KEY_KEEP_KEY_SAFE_SHEET_BODY" = "اگر کلید خود را گم کنید، سیگنال نمی‌تواند در بازیابی نسخه پشتیبان به شما کمک کند. آن را در مکانی امن و مطمئن نگهداری کنید و با دیگران به اشتراک نگذارید.";
 
-/* Title for a sheet warning users to their 'Backup Key' safe. */
+/* Title for a sheet warning users to their 'Recovery Key' safe. */
 "BACKUP_ONBOARDING_CONFIRM_KEY_KEEP_KEY_SAFE_SHEET_TITLE" = "در مراقبت از کلید خود بکوشید";
 
-/* Title for a button offering to let users see their 'Backup Key'. */
+/* Title for a button offering to let users see their 'Recovery Key'. */
 "BACKUP_ONBOARDING_CONFIRM_KEY_SEE_KEY_AGAIN_BUTTON_TITLE" = "مشاهده دوباره کلید";
 
-/* Subtitle for a view asking users to confirm their 'Backup Key'. */
-"BACKUP_ONBOARDING_CONFIRM_KEY_SUBTITLE" = "رمز پشتیبان را که به‌تازگی ثبت کرده‌اید وارد کنید";
+/* Subtitle for a view asking users to confirm their 'Recovery Key'. */
+"BACKUP_ONBOARDING_CONFIRM_KEY_SUBTITLE" = "رمز بازیابی که ثبت کردید را وارد کنید";
 
-/* Title for a view asking users to confirm their 'Backup Key'. */
-"BACKUP_ONBOARDING_CONFIRM_KEY_TITLE" = "رمز پشتیبان خود را تأیید کنید";
+/* Title for a view asking users to confirm their 'Recovery Key'. */
+"BACKUP_ONBOARDING_CONFIRM_KEY_TITLE" = "رمز بازیابی خود را تأیید کنید";
 
 /* Bullet point on a view introducing Backups during an onboarding flow. */
 "BACKUP_ONBOARDING_INTRO_BULLET_1" = "سرتاسر رمزگذاری‌شده";
@@ -568,62 +592,113 @@
 /* Bullet point on a view introducing Backups during an onboarding flow. */
 "BACKUP_ONBOARDING_INTRO_BULLET_3" = "هر موقع خواستید، نسخه پشتیبان خود را حذف کنید";
 
+/* A toast shown when 'Not Now' is tapped from the Backups onboarding intro. */
+"BACKUP_ONBOARDING_INTRO_NOT_NOW_TOAST" = "می‌توانید پشتیبان‌گیری را در تنظیمات فعال کنید.";
+
 /* Subtitle for a view introducing Backups during an onboarding flow. */
 "BACKUP_ONBOARDING_INTRO_SUBTITLE" = "با استفاده از سرویس ذخیره‌سازی سرتاسر رمزگذاری‌شده و امن سیگنال، از پیام‌ها و رسانه‌های خود پشتیبان‌گیری کنید. وقتی تلفن جدید می‌گیرید یا سیگنال را دوباره نصب می‌کنید، هرگز پیامی را از دست ندهید.";
 
 /* Title for a view introducing Backups during an onboarding flow. */
-"BACKUP_ONBOARDING_INTRO_TITLE" = "پشتیبان‌های سیگنال";
+"BACKUP_ONBOARDING_INTRO_TITLE" = "پشتیبان‌های امن سیگنال";
 
-/* Subtitle for a view introducing the 'Backup Key' during an onboarding flow. */
-"BACKUP_ONBOARDING_KEY_INTRO_SUBTITLE" = "رمز پشتیبان شما یک کد ۶۴ رقمی است که می‌توانید با آن هنگام نصب مجدد سیگنال، نسخه پشتیبان خود را بازیابی کنید.\n\nاگر کلید خود را فراموش کنید، نمی‌توانید نسخه پشتیبان خود را بازیابی کنید. سیگنال نمی‌تواند به شما کمک کند نسخه پشتیبان خود را بازیابی کنید.";
+/* Text for a bullet point in a view introducing the 'Recovery Key' during an onboarding flow. */
+"BACKUP_ONBOARDING_KEY_INTRO_BULLET_1" = "رمز بازیابی شما یک کد ۶۴ نویسه‌ای است که برای بازیابی نسخه پشتیبان خود به آن نیاز خواهید داشت.";
 
-/* Title for a view introducing the 'Backup Key' during an onboarding flow. */
-"BACKUP_ONBOARDING_KEY_INTRO_TITLE" = "کلید پشتیبان شما";
+/* Text for a bullet point in a view introducing the 'Recovery Key' during an onboarding flow. */
+"BACKUP_ONBOARDING_KEY_INTRO_BULLET_2" = "رمز بازیابی خود را در جایی امن مانند برنامه مدیریت رمز عبور ذخیره کنید و آن را با کسی به اشتراک نگذارید.";
 
-/* Title for a button allowing users to copy their 'Backup Key' to the clipboard. */
+/* Text for a bullet point in a view introducing the 'Recovery Key' during an onboarding flow. */
+"BACKUP_ONBOARDING_KEY_INTRO_BULLET_3" = "اگر آن را گم کنید، نمی‌توانید پیام‌هایتان را بازیابی کنید.";
+
+/* Title for a continue button for a view introducing the 'Recovery Key' during an onboarding flow. */
+"BACKUP_ONBOARDING_KEY_INTRO_CONTINUE_BUTTON_TITLE" = "مشاهده رمز بازیابی";
+
+/* Title for a view introducing the 'Recovery Key' during an onboarding flow. */
+"BACKUP_ONBOARDING_KEY_INTRO_TITLE" = "رمز بازیابی";
+
+/* Body for a sheet shown when your Backup plan is downgraded. */
+"BACKUP_PLAN_DOWNGRADED_SHEET_BODY" = "اشتراک پشتیبان‌گیری شما منقضی شده است، زیرا با روش پرداخت شما تمدید نشد.\n\nبرای ادامه پشتیبان‌گیری از فایل‌های رسانه، می‌توانید دوباره مشترک شوید. شما همچنان به طرح رایگان پشتیبان‌های سیگنال دسترسی خواهید داشت.";
+
+/* Body for a sheet shown when your Backup plan is downgraded because you stopped using TestFlight. */
+"BACKUP_PLAN_DOWNGRADED_SHEET_BODY_TESTFLIGHT" = "اشتراک پشتیبان‌گیری شما منقضی شده است، زیرا دیگر از TestFlight استفاده نمی‌کنید.\n\nبرای ادامه پشتیبان‌گیری از فایل‌های رسانه، می‌توانید دوباره مشترک شوید. شما همچنان به طرح رایگان پشتیبان‌های سیگنال دسترسی خواهید داشت.";
+
+/* Primary button for a sheet shown when your Backup plan is downgraded. */
+"BACKUP_PLAN_DOWNGRADED_SHEET_PRIMARY_BUTTON" = "مدیریت پشتیبان‌ها";
+
+/* Title for a sheet shown when your Backup plan is downgraded. */
+"BACKUP_PLAN_DOWNGRADED_SHEET_TITLE" = "اشتراک نسخه پشتیبان شما منقضی شده است";
+
+/* Title for a button allowing users to copy their 'Recovery Key' to the clipboard. */
 "BACKUP_RECORD_KEY_COPY_TO_CLIPBOARD_BUTTON_TITLE" = "کپی به کلیپ‌بورد";
 
-/* Subtitle for a view allowing users to record their 'Backup Key'. */
+/* Title for a button allowing users to create a new 'Recovery Key'. */
+"BACKUP_RECORD_KEY_CREATE_NEW_KEY_BUTTON_TITLE" = "ایجاد رمز جدید";
+
+/* Subtitle for a view allowing users to record their 'Recovery Key'. */
 "BACKUP_RECORD_KEY_SUBTITLE" = "این کلید برای بازیابی حساب و اطلاعات شما ضروری است. این کلید را در مکانی امن نگهداری کنید. اگر آن را گم کنید، نمی‌توانید حساب خود را بازیابی کنید.";
 
-/* Title for a view allowing users to record their 'Backup Key'. */
-"BACKUP_RECORD_KEY_TITLE" = "کلید پشتیبان خود را ضبط کنید";
+/* Title for a view allowing users to record their 'Recovery Key'. */
+"BACKUP_RECORD_KEY_TITLE" = "رمز بازیابی خود را ثبت کنید";
+
+/* Subtitle for a progress spinner on a modal tracking active downloading. Embeds 1:{{ the amount downloaded as a file size, e.g. 100 MB }}; 2:{{ the total amount to download as a file size, e.g. 1 GB }}; 3:{{ the amount downloaded as a percentage, e.g. 10% }}. */
+"BACKUP_RESTORE_MODAL_DOWNLOAD_PROGRESS_SUBTITLE" = "‏%1$@ از %2$@ (%3$@)";
+
+/* Subtitle for a progress spinner on a modal when waiting for a backup restore to start */
+"BACKUP_RESTORE_MODAL_PREPARING_SUBTITLE" = "در حال آماده‌سازی برای بازیابی";
+
+/* Title for a progress spinner on a modal when restoring messages */
+"BACKUP_RESTORE_MODAL_TITLE" = "در حال بازیابی پیام‌ها…";
+
+/* Message describing that the Background App Refresh permission is disabled for Signal. \"Background App Refresh\" should be localized the same way it is in iOS Settings app permissions. */
+"BACKUP_SETTINGS_BACKGROUND_APP_REFRESH_DISABLED_MESSAGE" = "پشتیبان‌گیری خودکار غیرفعال است. با به‌روزرسانی مجوزهای سیگنال، پشتیبان‌گیری خودکار را فعال کنید.";
+
+/* Add-on to a message describing that the Background App Refresh permission is disabled for Signal. \"Background App Refresh\" should be localized the same way it is in iOS Settings app permissions. */
+"BACKUP_SETTINGS_BACKGROUND_APP_REFRESH_DISABLED_MESSAGE_UPDATE_NOW" = "حالا به‌روز کنید";
+
+/* Title for a button that takes the users to Signal's iOS Settings page. */
+"BACKUP_SETTINGS_BACKGROUND_APP_REFRESH_DISABLED_SHEET_GO_TO_SETTINGS_BUTTON" = "به تنظیمات بروید";
+
+/* Message for a sheet warning the user about the Background App Refresh permission. \"Background App Refresh\" should be localized the same way it is in iOS Settings app permissions. */
+"BACKUP_SETTINGS_BACKGROUND_APP_REFRESH_DISABLED_SHEET_MESSAGE" = "برای اینکه سیگنال بتواند به‌طور خودکار از پیام‌های شما پشتیبان‌گیری کند، روی «رفتن به تنظیمات» در زیر ضربه بزنید و «تازه‌سازی برنامه پس‌زمینه» را فعال کنید";
+
+/* Title for a sheet warning the user about the Background App Refresh permission. \"Background App Refresh\" should be localized the same way it is in iOS Settings app permissions. */
+"BACKUP_SETTINGS_BACKGROUND_APP_REFRESH_DISABLED_SHEET_TITLE" = "پشتیبان‌گیری خودکار غیرفعال شد";
 
 /* Message for an action sheet explaining that performing a backup failed with a generic error. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_GENERIC_ERROR" = "Something went wrong creating your backup. Please try again, or contact support.";
+"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_GENERIC_ERROR" = "مشکلی حین ایجاد نسخه پشتیبان شما پیش آمد. لطفاً دوباره تلاش کنید، یا با پشتیبانی تماس بگیرید.";
 
 /* Title for a button in an action sheet allowing users to perform a backup, ignoring that WiFi is required. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NEED_WIFI_ACTION" = "Allow Backups Using Cellular";
+"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NEED_WIFI_ACTION" = "اجازه دادن به پشتیبان‌گیری با استفاده از اینترنت همراه";
 
 /* Message for an action sheet explaining that performing a backup failed because WiFi is required. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NEED_WIFI_MESSAGE" = "Backing up using cellular may result in data charges. You can connect to a WiFi network or allow backups using cellular.";
+"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NEED_WIFI_MESSAGE" = "پشتیبان‌گیری با استفاده از اینترنت همراه ممکن است منجر به هزینه اینترنت شود. می‌توانید به شبکه WiFi متصل شوید یا پشتیبان‌گیری با استفاده از اینترنت همراه را مجاز کنید.";
 
 /* Title for an action sheet explaining that performing a backup failed because WiFi is required. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NEED_WIFI_TITLE" = "Allow Backups Using Cellular Data?";
+"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NEED_WIFI_TITLE" = "پشتیبان‌گیری با استفاده از اینترنت همراه مجاز شود؟";
 
 /* Message for an action sheet explaining that performing a backup failed with a network error. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NETWORK_ERROR" = "Something went wrong creating your backup. Check your internet connection and try again.";
+"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NETWORK_ERROR" = "مشکلی حین ایجاد نسخه پشتیبان شما پیش آمد. اتصال اینترنت خود را بررسی و دوباره امتحان کنید.";
 
-/* Description for a progress bar tracking a multi-step backup operation. Embeds {{ the percentage complete of the overall operation, e.g. 20% }}. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION" = "Creating backup: %1$@";
+/* Description for a progress bar tracking the optimizing of Backup media. */
+"BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION_OPTIMIZING_MEDIA" = "در حال بهینه‌سازی فایل رسانه...";
 
-/* Description for a progress bar tracking a multi-step backup operation, where we are currently creating the backup. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION_CREATING_BACKUP" = "Exporting backup...";
+/* Description for a progress bar tracking the preparation of a Backup. Embeds 1:{{ the percentage completed preformatted as a percent, e.g. 10% }}. */
+"BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION_PREPARING_BACKUP" = "در حال آماده‌سازی نسخه پشتیبان (%1$@)";
 
-/* Description for a progress bar tracking a multi-step backup operation, where we are currently uploading the backup. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION_UPLOADING_BACKUP" = "Uploading backup...";
+/* Description for a progress bar tracking the processing of Backup media. */
+"BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION_PROCESSING_MEDIA" = "در حال پردازش فایل رسانه...";
 
-/* Description for a progress bar tracking a multi-step backup operation, where we are currently uploading backup media. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION_UPLOADING_MEDIA" = "Uploading backup media...";
+/* Message describing to the user that the last backup failed. */
+"BACKUP_SETTINGS_BACKUP_FAILED_MESSAGE" = "آخرین پشتیبان‌گیری شما انجام نشد. مطمئن شوید که تلفن شما به Wi-Fi متصل است و با ضربه زدن روی «اکنون پشتیبان‌گیری شود»، دوباره امتحان کنید";
 
 /* Title for a button allowing users to upgrade from a free to paid backup plan. */
 "BACKUP_SETTINGS_BACKUP_PLAN_FREE_ACTION_BUTTON_TITLE" = "ارتقا";
 
+/* Text describing the user's free backup plan when they have Backups disabled. */
+"BACKUP_SETTINGS_BACKUP_PLAN_FREE_AND_DISABLED_DESCRIPTION" = "پشتیبان‌گیری را خاموش کردید";
+
 /* Text describing the user's free backup plan. */
 "BACKUP_SETTINGS_BACKUP_PLAN_FREE_DESCRIPTION" = "طرح پشتیبان شما خالی است";
-
-/* Header describing what the free backup plan includes. */
-"BACKUP_SETTINGS_BACKUP_PLAN_FREE_HEADER" = "پشتیبان‌گیری متن + رسانه ۴۵ روز گذشته";
 
 /* Message for a view indicating we failed to fetch someone's Backup plan due to an unexpected error. */
 "BACKUP_SETTINGS_BACKUP_PLAN_GENERIC_ERROR_MESSAGE" = "خطایی رخ داد. لطفاً با پشتیبانی تماس بگیرید.";
@@ -652,11 +727,26 @@
 /* Text explaining that a user's paid plan, which has been canceled, expired on a past date. Embeds {{ the formatted expiration date }}. */
 "BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_CANCELED_PAST_EXPIRATION_FORMAT" = "در %1$@ منقضی شد";
 
+/* Title for a button allowing users to manage a paid backup plan that failed to renew. */
+"BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_FAILED_TO_RENEW_ACTION_BUTTON_TITLE" = "مدیریت اشتراک";
+
+/* Text describing that the user's paid backup plan has failed to renew. */
+"BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_FAILED_TO_RENEW_DESCRIPTION_1" = "روش پرداخت رد شد";
+
+/* Text describing that the user's paid backup plan has failed to renew. */
+"BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_FAILED_TO_RENEW_DESCRIPTION_2" = "بررسی کنید تا مطمئن شوید که روش پرداخت شما به‌روز است";
+
 /* Title for a button allowing users to manage their backup plan as a tester. */
 "BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_FREE_FOR_TESTERS_ACTION_BUTTON_TITLE" = "مدیریت طرح";
 
 /* Text describing that the user's backup plan is paid, but free for them as a tester. */
-"BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_FREE_FOR_TESTERS_DESCRIPTION" = "پولی است، اما تا زمانی که آزمایش‌کننده بمانید، رایگان است";
+"BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_FREE_FOR_TESTERS_DESCRIPTION" = "پولی (رایگان برای کاربران TestFlight)";
+
+/* Title for a button allowing users to renew their backup subscription on this device. */
+"BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_IAP_NOT_FOUND_LOCALLY_ACTION_BUTTON_TITLE" = "تمدید";
+
+/* Text describing that the user's paid backup plan did not correspond to a App Store subscription on this device. */
+"BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_IAP_NOT_FOUND_LOCALLY_DESCRIPTION" = "اشتراک شما در این دستگاه یافت نشد. برای ادامه استفاده از «پشتیبان‌های سیگنال»، تمدید کنید.";
 
 /* Header describing what the paid backup plan includes. */
 "BACKUP_SETTINGS_BACKUP_PLAN_PAID_HEADER" = "پشتیبان‌گیری متن + تمام رسانه‌ها";
@@ -691,6 +781,33 @@
 /* Header for a menu section related to settings for when Backups are enabled. */
 "BACKUP_SETTINGS_BACKUPS_ENABLED_SECTION_HEADER" = "جزئیات پشتیبان";
 
+/* Notice that backups is a beta feature */
+"BACKUP_SETTINGS_BETA_NOTICE_HEADER" = "این قابلیت بتا است و به‌مرور زمان بهبود خواهد یافت.";
+
+/* Message shown in an action sheet when the user tries to create a new Recovery Key, but is not registered. */
+"BACKUP_SETTINGS_CREATE_NEW_KEY_ERROR_NOT_REGISTERED" = "برای ایجاد رمز بازیابی جدید، باید ثبت‌نام کرده باشید.";
+
+/* Explanation text for a sheet warning users they've reached a rate limit for creating Recovery Key. {{ Embeds 1: the preformatted time they must wait before enabling backups, such as \"1 week\" or \"6 hours\". }} */
+"BACKUP_SETTINGS_CREATE_NEW_KEY_LIMIT_REACHED_WARNING_SHEET_BODY" = "اگر رمز بازیابی جدید ایجاد کنید، نمی‌توانید پشتیبان‌گیری را برای %1$@ فعال کنید. برای جلوگیری از سوءاستفاده، تعداد رمزهایی که می‌توانید ایجاد کنید محدود است.";
+
+/* Action in an action sheet allowing to continue to rotate their key */
+"BACKUP_SETTINGS_CREATE_NEW_KEY_LIMIT_REACHED_WARNING_SHEET_CONTINUE_ACTION" = "ایجاد رمز جدید";
+
+/* Title for a sheet warning users they've reached a rate limit for creating Recovery Key. */
+"BACKUP_SETTINGS_CREATE_NEW_KEY_LIMIT_REACHED_WARNING_SHEET_TITLE" = "به سقف ایجاد رمز بازیابی رسیده‌اید";
+
+/* Toast shown when a new Recovery Key has been created successfully. */
+"BACKUP_SETTINGS_CREATE_NEW_KEY_SUCCESS_TOAST" = "رمز جدید ایجاد شد!";
+
+/* TItle for a sheet warning users that Backups must be disabled to create a new Recovery Key. */
+"BACKUP_SETTINGS_CREATE_NEW_KEY_WARNING_SHEET_BACKUPS_MUST_BE_DISABLED_TITLE" = "غیرفعال‌سازی و ایجاد کلید جدید";
+
+/* Body for a sheet warning users about creating a new Recovery Key. */
+"BACKUP_SETTINGS_CREATE_NEW_KEY_WARNING_SHEET_BODY" = "ایجاد رمز جدید فقط در صورتی ضروری است که شخص دیگری رمز شما را بداند. برای ایجاد رمز جدید، ابتدا نسخه‌های پشتیبان باید غیرفعال شوند.\n\nبعد از غیرفعال‌سازی پشتیبان‌ها و ایجاد رمز جدید، باید نسخه پشتیبان خود را دوباره فعال و بارگذاری کنید.";
+
+/* Title for a sheet warning users about creating a new Recovery Key. */
+"BACKUP_SETTINGS_CREATE_NEW_KEY_WARNING_SHEET_TITLE" = "رمز بازیابی جدید ایجاد کنید";
+
 /* Footer for a menu section allowing users to turn off Backups. */
 "BACKUP_SETTINGS_DISABLE_BACKUPS_BUTTON_FOOTER" = "با این کار تمام اطلاعات نسخه پشتیبان شما حذف می‌شود. هیچ نسخه پشتیبان جدیدی ایجاد نخواهد شد.";
 
@@ -721,6 +838,15 @@
 /* Message shown in an action sheet when the user tries to disable Backups, but is not registered. */
 "BACKUP_SETTINGS_DISABLING_ERROR_NOT_REGISTERED" = "برای غیرفعال کردن پشتیبان‌گیری، باید ثبت‌نام کرده باشید.";
 
+/* Button for an action sheet shown when the user disables Backups, letting them manage their subscription. */
+"BACKUP_SETTINGS_DISABLING_SUBSCRIPTION_CANCEL_ACTION_SHEET_MANAGE_SUBSCRIPTION_BUTTON" = "مدیریت اشتراک";
+
+/* Message for an action sheet shown when the user disables Backups, but is still subscribed to the paid plan. */
+"BACKUP_SETTINGS_DISABLING_SUBSCRIPTION_CANCEL_ACTION_SHEET_MESSAGE" = "اگر می‌خواهید اشتراکتان را لغو کنید، روی «مدیریت اشتراک > سیگنال > لغو اشتراک» ضربه بزنید.";
+
+/* Title for an action sheet shown when the user disables Backups, but is still subscribed to the paid plan. */
+"BACKUP_SETTINGS_DISABLING_SUBSCRIPTION_CANCEL_ACTION_SHEET_TITLE" = "همچنان مشترک طرح پشتیبان‌گیری پولی هستید";
+
 /* Title for a button shown in Backup Settings that lets a user cancel an in-progress download. */
 "BACKUP_SETTINGS_DOWNLOAD_PROGRESS_ACTION_BUTTON_CANCEL_DOWNLOAD" = "لغو دانلود";
 
@@ -732,6 +858,9 @@
 
 /* Subtitle for a progress bar tracking downloads that are paused because of low battery. */
 "BACKUP_SETTINGS_DOWNLOAD_PROGRESS_SUBTITLE_PAUSED_LOW_BATTERY" = "دانلود موقتاً متوقف شد: باتری دستگاه کم است";
+
+/* Subtitle for a progress bar tracking downloads that are paused because of low power mode. */
+"BACKUP_SETTINGS_DOWNLOAD_PROGRESS_SUBTITLE_PAUSED_LOW_POWER_MODE" = "دانلود موقتاً متوقف شد: حالت شارژ کم";
 
 /* Subtitle for a progress bar tracking downloads that are paused because they need more disk space available. Embeds {{ the amount of space needed as a file size, e.g. 100 MB }}. */
 "BACKUP_SETTINGS_DOWNLOAD_PROGRESS_SUBTITLE_PAUSED_NEEDS_DISK_SPACE" = "فضای کافی برای دانلود رسانه وجود ندارد. برای ادامه، %1$@ فضا خالی کنید.";
@@ -769,14 +898,23 @@
 /* Text explaining that the user's last backup was yesterday. Embeds {{ the time of the backup }}. */
 "BACKUP_SETTINGS_ENABLED_LAST_BACKUP_YESTERDAY_FORMAT" = "دیروز %1$@";
 
-/* Label for a menu item offering to show the user their backup key. */
-"BACKUP_SETTINGS_ENABLED_VIEW_BACKUP_KEY_LABEL" = "مشاهده کلید پشتیبان";
+/* Label for a menu item offering to show the user their recovery key. */
+"BACKUP_SETTINGS_ENABLED_VIEW_BACKUP_KEY_LABEL" = "مشاهده رمز بازیابی";
+
+/* Body for a sheet explaining that the user's Backups subscription was not found on this device. */
+"BACKUP_SETTINGS_IAP_NOT_FOUND_LOCALLY_SHEET_BODY" = "اشتراک شما در این دستگاه بازیابی نشد. این اتفاق ممکن است در صورتی رخ دهد که با یک حساب اپل دیگر وارد اپ استور شده باشید یا از یک گوشی اندروید منتقل کرده باشید.\n\nاگر اشتراک فعالی در تلفن قدیمی خود دارید، قبل از تمدید آن را لغو کنید.";
+
+/* Button for a sheet explaining that the user's Backups subscription was not found on this device. */
+"BACKUP_SETTINGS_IAP_NOT_FOUND_LOCALLY_SHEET_GOT_IT_BUTTON" = "فهمیدم";
+
+/* Title for a sheet explaining that the user's Backups subscription was not found on this device. */
+"BACKUP_SETTINGS_IAP_NOT_FOUND_LOCALLY_SHEET_TITLE" = "اشتراک یافت نشد";
 
 /* Title for a button allowing users to trigger a manual backup. */
 "BACKUP_SETTINGS_MANUAL_BACKUP_BUTTON_TITLE" = "اکنون پشتیبان‌گیری شود";
 
 /* Title for a button shown under a progress bar tracking a manual backup, which lets the user cancel the backup. */
-"BACKUP_SETTINGS_MANUAL_BACKUP_CANCEL_BUTTON" = "Cancel Backup";
+"BACKUP_SETTINGS_MANUAL_BACKUP_CANCEL_BUTTON" = "لغو پشتیبان‌گیری";
 
 /* Action in an action sheet allowing users to download their offloaded media later. */
 "BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_DOWNLOAD_SHEET_LATER_ACTION" = "بعداً دانلود شود";
@@ -791,7 +929,7 @@
 "BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_DOWNLOAD_SHEET_TITLE" = "رسانه آفلودشده دانلود شود؟";
 
 /* Message for an action sheet warning users who are testers about the Optimize Local Storage feature. */
-"BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_TESTER_WARNING_SHEET_MESSAGE" = "رسانه آفلودشده تا زمانی که همچنان آزمایش‌کننده بمانید، در دسترس خواهد بود. قبل از ترک برنامه آزمایشی، مطمئن شوید که تمام رسانه‌های خود را دانلود کرده‌اید.";
+"BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_TESTER_WARNING_SHEET_MESSAGE" = "فایل‌های رسانه آفلود‌شده مادامی که از TestFlight استفاده می‌کنید در دسترس خواهند بود. قبل از ترک برنامه آزمایشی، مطمئن شوید که تمام فایل رسانه خود را دانلود کرده‌اید.";
 
 /* Title for an action sheet warning users who are testers about the Optimize Local Storage feature. */
 "BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_TESTER_WARNING_SHEET_TITLE" = "آزمایش رسانه آفلودشده";
@@ -800,13 +938,19 @@
 "BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_TOGGLE_FOOTER_AVAILABLE" = "رسانه‌های استفاده‌نشده پاک می‌شوند، اما می‌توانید هر زمانی که خواستید از نسخه پشتیبان خود دانلودشان کنید.";
 
 /* Footer for a toggle allowing users to change the Optimize Local Storage setting, if the toggle is available and they are a tester. */
-"BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_TOGGLE_FOOTER_AVAILABLE_FOR_TESTERS" = "رسانه استفاده‌نشده آفلود می‌شود، اما می‌توانید تا زمانی که همچنان آزمایش‌کننده هستید، آنها را از نسخه پشتیبان خود دانلود کنید.";
+"BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_TOGGLE_FOOTER_AVAILABLE_FOR_TESTERS" = "فایل‌های رسانه استفاده‌نشده آفلود خواهند شد، اما مادامی که از TestFlight استفاده می‌کنید، هر وقت خواستید می‌توانید آن‌ها را از نسخه پشتیبان خود دانلود کنید.";
 
 /* Footer for a toggle allowing users to change the Optimize Local Storage setting, if the toggle is unavailable. */
 "BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_TOGGLE_FOOTER_UNAVAILABLE" = "بهینه‌سازی فضای ذخیره‌سازی فقط با نسخه پولی پشتیبان‌های سیگنال امکان‌پذیر است. برای استفاده از این قابلیت، طرح پشتیبان‌گیری خود را ارتقا دهید.";
 
 /* Title for a toggle allowing users to change the Optimize Local Storage setting. */
 "BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_TOGGLE_TITLE" = "بهینه‌سازی فضای ذخیره‌سازی در دستگاه";
+
+/* Subtitle for a notification telling the user they are out of remote storage space. */
+"BACKUP_SETTINGS_OUT_OF_STORAGE_SPACE_NOTIFICATION_SUBTITLE" = "به سقف فضای ذخیره‌سازی نسخه پشتیبان خود رسیده‌اید. در سیگنال فضا آزاد کنید تا پشتیبان‌گیری گفتگوها و رسانه را ادامه دهید.";
+
+/* Title for a notification telling the user they are out of remote storage space. */
+"BACKUP_SETTINGS_OUT_OF_STORAGE_SPACE_NOTIFICATION_TITLE" = "فضای ذخیره‌سازی نسخه پشتیبان پر است";
 
 /* Title for a button allowing users to re-enable Backups, after it had been previously disabled. */
 "BACKUP_SETTINGS_REENABLE_BACKUPS_BUTTON_TITLE" = "فعال‌سازی مجدد پشتیبان‌گیری‌ها";
@@ -820,29 +964,71 @@
 /* Title for a sheet warning the user about skipping downloads. */
 "BACKUP_SETTINGS_SKIP_DOWNLOADS_WARNING_SHEET_TITLE" = "دانلود رد شود؟";
 
+/* Title for detail button in notice that the user's Backups subscription couldn't be redeemed. */
+"BACKUP_SETTINGS_SUBSCRIPTION_ALREADY_REDEEMED_NOTICE_DETAIL_BUTTON" = "جزئیات";
+
+/* Title for notice that the user's Backups subscription couldn't be redeemed. */
+"BACKUP_SETTINGS_SUBSCRIPTION_ALREADY_REDEEMED_NOTICE_TITLE" = "اشتراک نسخه‌های پشتیبان شما آزادسازی نشد";
+
+/* Body for a sheet explaining that the user's Backups subscription was already redeemed. */
+"BACKUP_SETTINGS_SUBSCRIPTION_ALREADY_REDEEMED_SHEET_BODY" = "دستگاه‌های زیادی در این ماه تلاش به آزادسازی اشتراک شما کرده‌اند.\n\nممکن است حساب سیگنال خود را چندین بار ثبت کرده باشید، یا دستگاه‌های زیادی دارید که از یک اشتراک استفاده می‌کنند.";
+
+/* Button for a sheet explaining that the user's Backups subscription was already redeemed. */
+"BACKUP_SETTINGS_SUBSCRIPTION_ALREADY_REDEEMED_SHEET_GOT_IT_BUTTON" = "فهمیدم";
+
+/* Title for a sheet explaining that the user's Backups subscription was already redeemed. */
+"BACKUP_SETTINGS_SUBSCRIPTION_ALREADY_REDEEMED_SHEET_TITLE" = "اشتراک نسخه‌های پشتیبان شما آزادسازی نشد";
+
 /* Subtitle for a progress bar tracking uploads that are paused because of low battery. */
-"BACKUP_SETTINGS_UPLOAD_PROGRESS_SUBTITLE_PAUSED_LOW_BATTERY" = "بارگذاری موقتاً متوقف شد: باتری دستگاه کم است";
+"BACKUP_SETTINGS_UPLOAD_PROGRESS_SUBTITLE_PAUSED_LOW_BATTERY" = "بارگذاری فایل رسانه موقتاً متوقف شد: شارژ باتری دستگاه کم است";
+
+/* Subtitle for a progress bar tracking uploads that are paused because of low power mode. */
+"BACKUP_SETTINGS_UPLOAD_PROGRESS_SUBTITLE_PAUSED_LOW_POWER_MODE" = "بارگذاری فایل رسانه موقتاً متوقف شد: حالت شارژ کم";
+
+/* Subtitle for a progress bar tracking uploads that are paused because they need an internet connection */
+"BACKUP_SETTINGS_UPLOAD_PROGRESS_SUBTITLE_PAUSED_NEEDS_INTERNET" = "بارگذاری فایل رسانه موقتاً متوقف شد: بدون اینترنت…";
 
 /* Subtitle for a progress bar tracking uploads that are paused because they need WiFi. */
-"BACKUP_SETTINGS_UPLOAD_PROGRESS_SUBTITLE_PAUSED_NEEDS_WIFI" = "بارگذاری موقتاً متوقف شد: در حال انتظار برای Wi-Fi";
+"BACKUP_SETTINGS_UPLOAD_PROGRESS_SUBTITLE_PAUSED_NEEDS_WIFI" = "بارگذاری فایل رسانه موقتاً متوقف شد: در انتظار Wi-Fi";
 
-/* Subtitle for a progress bar tracking active uploading. Embeds 1:{{ the amount uploaded as a file size, e.g. 100 MB }}; 2:{{ the total amount to upload as a file size, e.g. 1 GB }}; 3:{{ the amount uploaded as a percentage, e.g. 10% }}. */
+/* Subtitle for a progress bar tracking uploads that are paused because the user is out of remote storage space. Embeds 1:{{ total storage space provided, e.g. 100 GB }}; 2:{{ space the user needs to free up by deleting media, e.g. 1 GB }}. */
+"BACKUP_SETTINGS_UPLOAD_PROGRESS_SUBTITLE_PAUSED_OUT_OF_STORAGE_SPACE_FORMAT" = "فضای ذخیره‌سازی %1$@ که در طرح پشتیبان‌گیری شما لحاظ شده، به انتها رسیده است. برای پشتیبان‌گیری از گفتگوها و رسانه‌های جدید، در سیگنال %2$@ فضا آزاد کنید و سپس روی «اکنون پشتیبان‌گیری شود» ضربه بزنید.";
+
+/* Subtitle for a progress bar tracking active uploading. Embeds 1:{{ the amount uploaded as a file size, e.g. 100 MB }}; 2:{{ the total amount to upload as a file size, e.g. 1 GB }}; 3:{{ the percentage uploaded as a percent, e.g. 40% }}. */
 "BACKUP_SETTINGS_UPLOAD_PROGRESS_SUBTITLE_RUNNING" = "در حال بارگذاری %1$@ از %2$@ ‏(%3$@)";
 
 /* Message for a sheet shown after the user enables backups. */
-"BACKUP_SETTINGS_WELCOME_TO_BACKUPS_SHEET_MESSAGE" = "بسته به اندازه نسخه پشتیبان شما، این امر ممکن است زمان زیادی طول بکشد. هنگام پشتیبان‌گیری، می‌توانید مثل همیشه از تلفن خود استفاده کنید.";
-
-/* Title for the primary button for a sheet shown after the user enables backups. */
-"BACKUP_SETTINGS_WELCOME_TO_BACKUPS_SHEET_PRIMARY_BUTTON" = "اکنون پشتیبان‌گیری شود";
-
-/* Title for the secondary button for a sheet shown after the user enables backups. */
-"BACKUP_SETTINGS_WELCOME_TO_BACKUPS_SHEET_SECONDARY_BUTTON" = "بعداً پشتیبان‌گیری شود";
+"BACKUP_SETTINGS_WELCOME_TO_BACKUPS_SHEET_MESSAGE" = "بسته به اندازه نسخه پشتیبان شما، این کار ممکن است زمان زیادی طول بکشد. حین اجرای پشتیبان‌گیری می‌توانید به روال معمول از سیگنال استفاده کنید.";
 
 /* Title for a sheet shown after the user enables backups. */
-"BACKUP_SETTINGS_WELCOME_TO_BACKUPS_SHEET_TITLE" = "به «پشتیبان‌های سیگنال» خوش آمدید. اکنون پشتیبان‌گیری را شروع کنید.";
+"BACKUP_SETTINGS_WELCOME_TO_BACKUPS_SHEET_TITLE" = "به «پشتیبان‌گیری امن سیگنال» خوش آمدید. اکنون پشتیبان‌گیری را شروع کنید.";
+
+/* Message for a sheet shown when your Backup subscription fails to renew. */
+"BACKUP_SUBSCRIPTION_FAILED_TO_RENEW_SHEET_MESSAGE" = "بررسی کنید تا مطمئن شوید که روش پرداخت شما به‌روز است. روی «مدیریت اشتراک > «سیگنال» > به‌روزرسانی روش پرداخت» ضربه بزنید.";
+
+/* Primary button for a sheet shown when your Backup subscription fails to renew. */
+"BACKUP_SUBSCRIPTION_FAILED_TO_RENEW_SHEET_PRIMARY_BUTTON" = "مدیریت اشتراک";
+
+/* Title for a sheet shown when your Backup subscription fails to renew. */
+"BACKUP_SUBSCRIPTION_FAILED_TO_RENEW_SHEET_TITLE" = "اشتراک نسخه پشتیبان شما تمدید نشد";
+
+/* Body for system notification when we detect paid backup media uploads have encountered a problem */
+"BACKUPS_MEDIA_UPLOAD_FAILURE_NOTIFICATION_BODY" = "لطفاً برای کمک به رفع مشکل، گزارش‌های اشکال‌زدایی را برای ما ارسال کنید!";
+
+/* Title for system notification when we detect paid backup media uploads have encountered a problem */
+"BACKUPS_MEDIA_UPLOAD_FAILURE_NOTIFICATION_TITLE" = "پشتیبان‌گیری فایل‌های رسانه شما با خطا مواجه شد";
 
 /* Title for the 'Backup' settings menu. */
-"BACKUPS_SETTINGS_TITLE" = "پشتیبان‌های سیگنال";
+"BACKUPS_SETTINGS_TITLE" = "پشتیبان‌های امن";
+
+/* Body for system notification or megaphone when backups is enabled. Embeds {{ time backups was enabled }} */
+"BACKUPS_TURNED_ON_NOTIFICATION_BODY_FORMAT" = "نسخه‌های پشتیبان سیگنال در %1$@ برای این حساب روشن شدند. برای مشاهده، ضربه بزنید.";
+
+/* Title for system notification or megaphone when backups is enabled */
+"BACKUPS_TURNED_ON_TITLE" = "شما «نسخه‌های پشتیبان» را روشن کردید";
+
+/* Action text for backups enabled megaphone taking user to backup settings */
+"BACKUPS_VIEW_SETTINGS_BUTTON" = "مشاهدهٔ تنظیمات";
 
 /* Section header for badge view section in the badge configuration page */
 "BADGE_CONFIGURATION_BADGE_SECTION_TITLE" = "نشان‌های من";
@@ -919,6 +1105,9 @@
 /* Accessibility label for banner close button */
 "BANNER_CLOSE_ACCESSIBILITY_LABEL" = "بستن بنر";
 
+/* Beta label */
+"BETA_LABEL" = "بتا";
+
 /* An explanation of the consequences of blocking a group. */
 "BLOCK_GROUP_BEHAVIOR_EXPLANATION" = "شما دیگر از این گروه پیام یا به‌روزرسانی دریافت نخواهید کرد.";
 
@@ -987,9 +1176,6 @@
 
 /* An explanation of the consequences of blocking another user. */
 "BLOCK_USER_BEHAVIOR_EXPLANATION" = "کاربران مسدودشده، امکان تماس با شما یا ارسال پیام به شما را نخواهند داشت.";
-
-/* Tooltip highlighting the blur image editing tool. */
-"BLUR_TOOLTIP" = "جدید: چهره‌ها را محو کنید یا روی هر ناحیه‌‌ای برای محو کردن بکشید.";
 
 /* Default text for the custom amount field of the boost view. */
 "BOOST_VIEW_CUSTOM_AMOUNT_PLACEHOLDER" = "مبلغ دلخواه را وارد کنید";
@@ -1525,17 +1711,8 @@
 /* Text for a bullet point in a list of Backup features, describing that all text messages are included. */
 "CHOOSE_BACKUP_PLAN_BULLET_FULL_TEXT_BACKUP" = "پشتیبان‌گیری کامل پیامک";
 
-/* Text for a bullet point in a list of Backup features, describing that recent media is included. */
-"CHOOSE_BACKUP_PLAN_BULLET_RECENT_MEDIA_BACKUP" = "رسانه‌های ۴۵ روز اخیر";
-
-/* Text for a bullet point in a list of Backup features, describing the amount of included storage. */
-"CHOOSE_BACKUP_PLAN_BULLET_STORAGE_AMOUNT" = "۱ ترابایت حافظه (حدود ۲۵۰ هزار عکس)";
-
-/* Message shown in an action sheet when the user tries to confirm a plan selection, but encountered a generic error. */
-"CHOOSE_BACKUP_PLAN_CONFIRMATION_ERROR_GENERIC_ERROR" = "مشکلی پیش آمد. لطفاً با پشتیبانی تماس بگیرید.";
-
-/* Message shown in an action sheet when the user tries to confirm a plan selection, but encountered a network error. */
-"CHOOSE_BACKUP_PLAN_CONFIRMATION_ERROR_NETWORK_ERROR" = "مشکلی پیش آمد. اتصال خود را بررسی و دوباره تلاش کنید.";
+/* Text for a bullet point in a list of Backup features, describing the amount of included storage. Embeds {{ the amount of storage preformatted as a localized byte count, e.g. '100 GB' }}. */
+"CHOOSE_BACKUP_PLAN_BULLET_STORAGE_AMOUNT" = "%1$@ فضای ذخیره‌سازی";
 
 /* Message shown in an action sheet when the user tries to confirm a plan selection, but is not registered. */
 "CHOOSE_BACKUP_PLAN_CONFIRMATION_ERROR_NOT_REGISTERED" = "برای فعال کردن پشتیبان‌گیری، باید ثبت‌نام کرده باشید.";
@@ -1544,13 +1721,25 @@
 "CHOOSE_BACKUP_PLAN_CONFIRMATION_ERROR_PURCHASE" = "مشکلی پیش آمد. لطفاً دوباره امتحان کنید.";
 
 /* Message shown in an action sheet when the user tries to confirm selecting the paid plan, but encountered an error while redeeming their completed purchase. */
-"CHOOSE_BACKUP_PLAN_CONFIRMATION_ERROR_PURCHASE_REDEMPTION" = "مشکلی پیش آمد. لطفاً با پشتیبانی تماس بگیرید.";
+"CHOOSE_BACKUP_PLAN_CONFIRMATION_ERROR_PURCHASE_REDEMPTION" = "مشکلی در فعال‌سازی خرید شما پیش آمد. لطفاً با پشتیبانی تماس بگیرید.";
+
+/* Message shown in an action sheet when the user tries to confirm a plan selection, but encounters a rate limit. They should wait the requested amount of time and try again. */
+"CHOOSE_BACKUP_PLAN_CONFIRMATION_ERROR_RATE_LIMITED" = "از آنجایی که به سقف رمزهای بازیابی جدید خود رسیده‌اید، برای جلوگیری از سوءاستفاده، قادر به فعال کردن پشتیبان‌گیری برای %1$@ نخواهید بود. %1$@ صبر کنید و دوباره امتحان کنید.";
+
+/* Message shown in an action sheet when the user tries to confirm a plan selection, but encounters a rate limit. They should wait the requested amount of time and try again. {{ Embeds 1 & 2: the preformatted time they must wait before enabling backups, such as \"1 week\" or \"6 hours\". }} */
+"CHOOSE_BACKUP_PLAN_CONFIRMATION_ERROR_RATE_LIMITED_TITLE" = "پشتیبان‌گیری فعال نشد";
 
 /* A label indicating that a given Backup plan option is what the user has already enabled. */
 "CHOOSE_BACKUP_PLAN_CURRENT_PLAN_LABEL" = "طرح فعلی";
 
-/* Subtitle for the free plan option, when choosing a Backup plan. */
-"CHOOSE_BACKUP_PLAN_FREE_PLAN_SUBTITLE" = "پیامک + رسانه‌های ۴۵ روز اخیر";
+/* Text for a button that will downgrade the user from the paid Backup plan to the free one. */
+"CHOOSE_BACKUP_PLAN_DOWNGRADE_BUTTON_TEXT" = "تغییر طرح";
+
+/* Button for an action sheet confirming the user wants to downgrade their Backup plan. */
+"CHOOSE_BACKUP_PLAN_DOWNGRADE_CONFIRMATION_ACTION_SHEET_PROCEED_BUTTON" = "تغییر طرح";
+
+/* Title for an action sheet confirming the user wants to downgrade their Backup plan. */
+"CHOOSE_BACKUP_PLAN_DOWNGRADE_CONFIRMATION_ACTION_SHEET_TITLE" = "به نسخه رایگان تغییر کند؟";
 
 /* Title for the free plan option, when choosing a Backup plan. */
 "CHOOSE_BACKUP_PLAN_FREE_PLAN_TITLE" = "رایگان";
@@ -1568,10 +1757,13 @@
 "CHOOSE_BACKUP_PLAN_SUBSCRIBE_PAID_BUTTON_TEXT" = "اشتراک به‌قیمت %1$@ در ماه";
 
 /* Subtitle for a view allowing users to choose a Backup plan. */
-"CHOOSE_BACKUP_PLAN_SUBTITLE" = "تمام نسخه‌های پشتیبان سرتاسر رمزگذاری شده‌اند. سیگنال یک شرکت غیرانتفاعی است—پرداخت هزینه برای پشتیبان‌گیری به پشتیبانی از مأموریت ما کمک می‌کند.";
+"CHOOSE_BACKUP_PLAN_SUBTITLE" = "نسخه‌های پشتیبان سرتاسر رمزگذاری شده‌اند. سیگنال یک شرکت غیرانتفاعی است. پرداخت هزینه برای پشتیبان‌گیری به پشتیبانی از ما کمک می‌کند.";
+
+/* Title for a label allowing users to view Signal's Terms & Conditions. */
+"CHOOSE_BACKUP_PLAN_TERM_AND_PRIVACY_POLICY_TEXT" = "شرایط و سیاست های حفظ حریم خصوصی";
 
 /* Title for a view allowing users to choose a Backup plan. */
-"CHOOSE_BACKUP_PLAN_TITLE" = "طرح پشتیبان خود را انتخاب کنید";
+"CHOOSE_BACKUP_PLAN_TITLE" = "طرح پشتیبان را انتخاب کنید";
 
 /* Title for the color & wallpaper settings view. */
 "COLOR_AND_WALLPAPER_SETTINGS_TITLE" = "رنگ و کاغذدیواری گفتگو";
@@ -2374,23 +2566,17 @@
 /* Subheader for an action sheet explaining that a Note to Self deleted on this device will be deleted on the user's other devices as well. */
 "DELETE_FOR_ME_NOTE_TO_SELF_LINKED_DEVICES_PRESENT_ACTION_SHEET_SUBHEADER" = "این پیام از همه دستگاه‌های شما حذف خواهد شد.";
 
-/* Label for a button in an info sheet confirming that deletes are now synced across devices. */
-"DELETE_FOR_ME_SYNC_MESSAGE_INFO_SHEET_BUTTON" = "فهمیدم";
-
-/* Subtitle for an info sheet explaining that deletes are now synced across devices. */
-"DELETE_FOR_ME_SYNC_MESSAGE_INFO_SHEET_SUBTITLE" = "وقتی پیام‌ها یا گفتگوها را حذف می‌کنید، از تلفن شما و همه دستگاه‌های متصل حذف می‌شوند.";
-
-/* Title for an info sheet explaining that deletes are now synced across devices. */
-"DELETE_FOR_ME_SYNC_MESSAGE_INFO_SHEET_TITLE" = "اکنون حذف در همه دستگاه‌های شما همگام‌سازی می‌شود";
-
 /* Label indicating a user who deleted their account. */
 "DELETED_USER" = "حساب پاک‌شده";
 
 /* Notification warning the user that they have been de-registered. */
 "DEREGISTRATION_NOTIFICATION" = "در این دستگاه از سیگنال خارج شده‌اید.";
 
-/* Label for button that lets users re-register using the same phone number. */
-"DEREGISTRATION_REREGISTER_WITH_SAME_PHONE_NUMBER" = "ثبت نام دوباره این شماره تلفن";
+/* Button that lets users re-register using the same phone number. */
+"DEREGISTRATION_REREGISTER_BUTTON" = "ثبت نام دوباره";
+
+/* Title for prompt that lets users re-register using the same phone number. */
+"DEREGISTRATION_REREGISTER_PROMPT_TITLE" = "این شماره تلفن دوباره ثبت شود؟";
 
 /* Label warning the user that they have been de-registered. */
 "DEREGISTRATION_WARNING" = "این دستگاه دیگر ثبت‌شده نیست. دلیل آن احتمالاً این است که شماره تلفن خود را روی دستگاه دیگری در سیگنال ثبت کرده‌اید.";
@@ -2518,6 +2704,42 @@
 /* The title for the action sheet asking the user to scan the QR code to transfer */
 "DEVICE_TRANSFER_SCANNING_TITLE" = "دستگاه جدیدتان را روبروی دوربین قرار دهید";
 
+/* Status message on new device when cancelling transfer. */
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_CANCELLING" = "در حال لغو اتصال به آیفون قدیمی…";
+
+/* Status message on new device when connecting to old device. */
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_CONNECTING" = "در حال اتصال به آیفون قدیمی…";
+
+/* Description message on new device displayed during device transfer. */
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_CONNECTING_MESSAGE" = "دستگاه قدیمی‌تان را نزدیک بیاورید و مطمئن شوید که Wi-Fi و بلوتوث فعال باشند.";
+
+/* Status message on new device when transfer is starting. */
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_STARTING" = "در حال انتظار برای اتصال به آیفون قدیمی…";
+
+/* Description in the progress view displayed after failure of device transfer. */
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_TRANSFER_FAILED_BODY" = "انتقال به دستگاه جدید ناموفق بود. لطفاً دستگاه قدیمی‌تان را نزدیک بیاورید، و دوباره امتحان کنید.";
+
+/* Title for a progress view displayed after failure of device transfer. */
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_TRANSFER_FAILED_TITLE" = "انتقال موفق نبود";
+
+/* Title for a progress view displayed during device transfer. */
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_TRANSFERRING" = "در حال انتقال";
+
+/* Description in the progress view displayed during device transfer. */
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_TRANSFERRING_DESCRIPTION" = "هر دو دستگاه را نزدیک هم قرار دهید. هیچکدام را خاموش نکنید و سیگنال را باز نگه دارید. عملیات انتقال رمزگذاری سرتاسری شده است.";
+
+/* Status message on old device when cancelling transfer. */
+"DEVICE_TRANSFER_STATUS_OLD_DEVICE_CANCELLING" = "در حال لغو اتصال به آیفون جدید…";
+
+/* Status message on new device when connecting to new device. */
+"DEVICE_TRANSFER_STATUS_OLD_DEVICE_CONNECTING" = "در حال اتصال به آیفون جدید…";
+
+/* Description message on old device displayed during device transfer. */
+"DEVICE_TRANSFER_STATUS_OLD_DEVICE_CONNECTING_MESSAGE" = "دستگاه جدیدتان را نزدیک بیاورید و مطمئن شوید که Wi-Fi و بلوتوث فعال باشند.";
+
+/* Status message on old device when transfer is starting. */
+"DEVICE_TRANSFER_STATUS_OLD_DEVICE_STARTING" = "در حال انتظار برای اتصال به آیفون جدید…";
+
 /* The explanation on the action sheet that shows transfer progress */
 "DEVICE_TRANSFER_TRANSFERRING_EXPLANATION" = "هر دو دستگاه را نزدیک هم قرار دهید. هیچکدام را خاموش نکنید و سیگنال را باز نگه دارید.";
 
@@ -2625,6 +2847,12 @@
 
 /* If a donation badge has been sent, indicates that it's expired and can no longer be redeemed. This is shown in the chat. */
 "DONATE_ON_BEHALF_OF_A_FRIEND_CHAT_EXPIRED" = "منقضی‌شده";
+
+/* Message for an action sheet shown when the user tries to cancel their donation subscription, but they have a pending donation. */
+"DONATE_SCREEN_CANCEL_SUBSCRIPTION_PENDING_DONATION_WARNING_MESSAGE" = "یک اهدای مالی در انتظار تأیید دارید. اگر اشتراکتان را لغو کنید، اهدای مالی‌تان تمدید نخواهد شد اما اهدای مالی در انتظار تأیید، لغو نخواهد شد.";
+
+/* Title for an action sheet shown when the user tries to cancel their donation subscription, but they have a pending donation. */
+"DONATE_SCREEN_CANCEL_SUBSCRIPTION_PENDING_DONATION_WARNING_TITLE" = "کمک مالی در انتظار تأیید";
 
 /* Message in an alert presented when the user tries to make a donation, but already has an iDEAL donation that is currently awaiting approval. */
 "DONATE_SCREEN_ERROR_MESSAGE_APPROVE_IDEAL_DONATION_BEFORE_MAKING_ANOTHER_DONATION" = "اهدای مالی iDEAL شما در حال پردازش است. برای تأیید پرداخت‌تان و قبل از اهدای مالی دیگر، اپلیکیشن بانک‌تان را بررسی کنید.";
@@ -3061,11 +3289,11 @@
 /* Call setup status label */
 "END_CALL_UNCATEGORIZED_FAILURE" = "تماس ناموفق";
 
-/* Label explaining that an entered 'Backup Key' is incorrect. */
-"ENTER_ACCOUNT_ENTROPY_POOL_VIEW_INCORRECT_AEP_LABEL" = "رمز پشتیبان نادرست است";
+/* Label explaining that an entered 'Recovery Key' is incorrect. */
+"ENTER_ACCOUNT_ENTROPY_POOL_VIEW_INCORRECT_AEP_LABEL" = "رمز بازیابی نادرست";
 
-/* Label explaining that an entered 'Backup Key' is malformed. */
-"ENTER_ACCOUNT_ENTROPY_POOL_VIEW_MALFORMED_AEP_LABEL" = "رمز پشتیبان نامعتبر است";
+/* Label explaining that an entered 'Recovery Key' is malformed. */
+"ENTER_ACCOUNT_ENTROPY_POOL_VIEW_MALFORMED_AEP_LABEL" = "رمز بازیابی نامعتبر";
 
 /* Error indicating that a message could not be forwarded. */
 "ERROR_COULD_NOT_FORWARD_MESSAGES_1" = "امکان بازارسال پیام فراهم نبود.";
@@ -3199,9 +3427,6 @@
 /* action sheet header when re-sending message which failed because of an invalid key signature */
 "FAILED_SENDING_BECAUSE_INVALID_KEY_SIGNATURE" = "پیام ارسال نشد، چون %1$@ نیاز به به‌روزرسانی و باز کردن دوبارۀ سیگنال دارد.";
 
-/* action sheet header when re-sending message which failed because of too many attempts */
-"FAILED_SENDING_BECAUSE_RATE_LIMIT" = "خطاهای زیادی با این مخاطب وجود دارد. لطفا بعدا تلاش کنید.";
-
 /* action sheet header when re-sending message which failed because of untrusted identity keys */
 "FAILED_SENDING_BECAUSE_UNTRUSTED_IDENTITY_KEY" = "کد امنیتی شما با %1$@ به تازگی تغییر کرده است. بهتر است قبل از ارسال دوباره این ‍پیام آن را تایید نمایید.";
 
@@ -3222,9 +3447,6 @@
 
 /* Footer for message cell for documents/files when they are expired and unavailable for download */
 "FILE_UNAVAILABLE_FOOTER" = "فایل موجود نیست";
-
-/* Message for sheet shown when tapping a document/file that has expired and is unavailable for download */
-"FILE_UNAVAILABLE_SHEET_MESSAGE" = "در زمان اتصال این دستگاه، این فایل از تلفن شما منتقل نشد. فایل‌ها و رسانه‌های قدیمی‌تر از ۴۵ روز در زمان اتصال دستگاه، قابل همگام‌سازی نیستند.";
 
 /* Title for sheet shown when tapping a document/file that has expired and is unavailable for download */
 "FILE_UNAVAILABLE_SHEET_TITLE" = "فایل موجود نیست";
@@ -3258,12 +3480,6 @@
 
 /* Tooltip notifying users that the flip camera button moved to the picture-in-picture view of themselves in a call */
 "FLIP_CAMERA_BUTTON_MOVED_TO_PIP_TOOLTIP" = "«برگرداندن دوربین» به اینجا منتقل شده است، برای امتحان کردن آن روی ویدیوی خود ضربه بزنید";
-
-/* Message for alert with information about forwarding messages. */
-"FORWARD_MESSAGE_FIRST_FORWARD_MESSAGE" = "پیام‌های بازارسال‌شده حالا بلافاصله ارسال می‌شوند.";
-
-/* Title for alert with information about forwarding messages. */
-"FORWARD_MESSAGE_FIRST_FORWARD_TITLE" = "بازارسال‌های سریع‌تر";
 
 /* Indicates that a single message was forwarded. */
 "FORWARD_MESSAGE_MESSAGES_SENT_1" = "پیام ارسال شد";
@@ -3501,9 +3717,6 @@
 
 /* Toast view text informing user about swiping to speaker view */
 "GROUP_CALL_SPEAKER_VIEW_TOAST" = "برای تغییر نماها به سمت بالا بکشید.";
-
-/* Tooltip highlighting group calls. */
-"GROUP_CALL_START_TOOLTIP" = "برای شروع تماس گروهی اینجا ضربه بزنید";
 
 /* Text explaining that you started a group call. */
 "GROUP_CALL_STARTED_BY_YOU" = "شما یک تماس گروهی آغاز کردید";
@@ -4171,6 +4384,18 @@
 /* Title for the conversation list's 'archive' mode. */
 "HOME_VIEW_TITLE_ARCHIVE" = "آرشیو";
 
+/* Title for the conversation list's backup storage full context menu action. */
+"HOME_VIEW_TITLE_BACKUP_OUT_OF_STORAGE_QUOTA" = "فضای ذخیره‌سازی نسخه پشتیبان پر است";
+
+/* Title for the conversation list's failed to redeem backup subscription context menu action. */
+"HOME_VIEW_TITLE_BACKUP_SUBSCRIPTION_FAILED_TO_REDEEM" = "خطای اشتراک پشتیبان";
+
+/* Title for the conversation list's backup subscription not found locally context menu action. */
+"HOME_VIEW_TITLE_BACKUP_SUBSCRIPTION_NOT_FOUND_LOCALLY" = "اشتراک پشتیبان یافت نشد";
+
+/* Title for the conversation list's failed to backup context menu action. */
+"HOME_VIEW_TITLE_FAILED_TO_BACKUP" = "پشتیبان‌گیری ناموفق بود";
+
 /* Title for the 'Select Chats' option in the ChatList. */
 "HOME_VIEW_TITLE_SELECT_CHATS" = "انتخاب گفتگوها";
 
@@ -4238,7 +4463,7 @@
 "INACTIVE_LINKED_DEVICE_REMINDER_MEGAPHONE_TITLE" = "دستگاه متصل‌شدۀ غیرفعال";
 
 /* Body for an in-app megaphone about a user's inactive primary device. */
-"INACTIVE_PRIMARY_DEVICE_REMINDER_MEGAPHONE_BODY" = "To keep your account active, open HCP on your primary device.";
+"INACTIVE_PRIMARY_DEVICE_REMINDER_MEGAPHONE_BODY" = "برای فعال نگه داشتن حسابتان، سیگنال را در دستگاه اصلی خود باز کنید.";
 
 /* Title for a button in an in-app megaphone about a user's inactive primary device, temporarily dismissing the megaphone. */
 "INACTIVE_PRIMARY_DEVICE_REMINDER_MEGAPHONE_GOT_IT_BUTTON" = "فهمیدم";
@@ -4247,7 +4472,7 @@
 "INACTIVE_PRIMARY_DEVICE_REMINDER_MEGAPHONE_LEARN_MORE_BUTTON" = "بیشتر بدانید";
 
 /* Title for an in-app megaphone about a user's inactive primary device. */
-"INACTIVE_PRIMARY_DEVICE_REMINDER_MEGAPHONE_TITLE" = "Open HCP on your phone";
+"INACTIVE_PRIMARY_DEVICE_REMINDER_MEGAPHONE_TITLE" = "باز کردن سیگنال روی گوشی";
 
 /* Label reminding the user that they are in archive mode, and that muted chats remain archived when they receive a new message. */
 "INBOX_VIEW_ARCHIVE_MODE_MUTED_CHATS_REMINDER" = "گفتگوهای بی‌صدایی که بایگانی می‌شوند، پس از دریافت پیام جدید همچنان در بایگانی خواهند ماند.";
@@ -4453,8 +4678,8 @@
 /* confirm the users intent to link a new device */
 "LINK_DEVICE_CONFIRMATION_ALERT_TITLE" = "پایان پیوند دهی";
 
-/* subtitle for choosing to send message history when linking a new device */
-"LINK_DEVICE_CONFIRMATION_ALERT_TRANSFER_SUBTITLE" = "همه پیام‌های متنی و رسانه ۴۵ روز گذشته خود را انتقال دهید";
+/* Subtitle for choosing to send message history when linking a new device, if you have the paid tier enabled. */
+"LINK_DEVICE_CONFIRMATION_ALERT_TRANSFER_PAID_PLAN_SUBTITLE" = "پیامک‌ها و تمام رسانه خود را منتقل کنید";
 
 /* title for choosing to send message history when linking a new device */
 "LINK_DEVICE_CONFIRMATION_ALERT_TRANSFER_TITLE" = "انتقال تاریخچه پیام";
@@ -4571,7 +4796,7 @@
 "LINKED_DEVICES_EMPTY_STATE" = "هیچ دستگاه متصلی وجود ندارد";
 
 /* Description for header of the linked devices list */
-"LINKED_DEVICES_HEADER_DESCRIPTION" = "از سیگنال روی دسکتاپ یا آی‌پد استفاده کنید. پیام‌های شما با دستگاه‌های متصل شما همگام‌سازی می‌شوند.";
+"LINKED_DEVICES_HEADER_DESCRIPTION" = "Use HCP on desktop or iPad.";
 
 /* Footer text below the list of currently-linked devices */
 "LINKED_DEVICES_LIST_FOOTER" = "پیام‌ها و اطلاعات گفتگو با رمزگذاری سرتاسری در همه دستگاه‌ها محافظت می‌شوند";
@@ -5422,20 +5647,35 @@
 /* Label for the 'skip and create new pin' button when reglock is disabled during onboarding. */
 "ONBOARDING_2FA_SKIP_AND_CREATE_NEW_PIN" = "رد شدن و ایجاد یک رمز جدید";
 
+/* Label for action to use Recovery Key instead of PIN for registration. */
+"ONBOARDING_2FA_SKIP_AND_USE_RECOVERY_KEY" = "استفاده از رمز بازیابی";
+
 /* Explanation for the skip pin entry action sheet during onboarding. */
 "ONBOARDING_2FA_SKIP_PIN_ENTRY_MESSAGE" = "اگر نمی‌توانید پین را به یاد بیاورید، یک پین جدید ایجاد کنید. شما می‌توانید ثبت‌نام و از حساب‌تان استفاده کنید اما تنظیمات ذخیره‌ شده مانند اطلاعت پروفایل‌تان را از دست می‌دهید.";
 
 /* Title for the skip pin entry action sheet during onboarding. */
 "ONBOARDING_2FA_SKIP_PIN_ENTRY_TITLE" = "رد شدن از وارد کردن رمز؟";
 
-/* The body for the device transfer 'choice' view 'transfer' option */
-"ONBOARDING_CHOOSE_RESTORE_METHOD_BACKUPS_BODY" = "پیامک‌ها و فایل‌های رسانه خود را از طرح پشتیبان‌گیری پولی سیگنال خود بازیابی کنید";
+/* The body for the device transfer 'choice' view 'restore backup' option */
+"ONBOARDING_CHOOSE_RESTORE_METHOD_BACKUPS_BODY" = "حساب و پیام‌هایتان را از نسخه پشتیبان سیگنال خود بازیابی کنید";
 
-/* The title for the device transfer 'choice' view 'transfer' option */
-"ONBOARDING_CHOOSE_RESTORE_METHOD_BACKUPS_TITLE" = "بازیابی پشتیبان سیگنال";
+/* The title for the device transfer 'choice' view 'restore backup' option */
+"ONBOARDING_CHOOSE_RESTORE_METHOD_BACKUPS_TITLE" = "پشتیبان‌گیری امن سیگنال را بازیابی کنید";
+
+/* Body for a sheet warning users about skipping restore. */
+"ONBOARDING_CHOOSE_RESTORE_METHOD_CONFIRM_SKIP_RESTORE_BODY" = "اگر اکنون رد شوید، بعداً نمی‌توانید بازیابی کنید. اگر پشتیبان‌گیری را در این دستگاه دوباره فعال کنید، نسخه پشتیبان فعلی شما با تاریخچه پیام جدیدتان جایگزین خواهد شد.";
+
+/* Title for a sheet warning users about skipping restore. */
+"ONBOARDING_CHOOSE_RESTORE_METHOD_CONFIRM_SKIP_RESTORE_TITLE" = "بازیابی رد شود؟";
 
 /* If a user is installing Signal on a new phone, they may be asked whether they want to restore their device from a backup. This is a description of that question. */
 "ONBOARDING_CHOOSE_RESTORE_METHOD_DESCRIPTION" = "انتخاب کنید که می‌خواهید چطور تاریخچه پیام و داده‌های حسابتان را بازیابی کنید.";
+
+/* Message body displayed to a user during registration if there are no restore options available. */
+"ONBOARDING_CHOOSE_RESTORE_METHOD_NONE_AVAILABLE_BODY" = "چون در حال انتقال از اندروید به iOS هستید، تنها راه انتقال پیام‌ها و فایل‌های رسانه‌تان این است که «پشتیبان‌های سیگنال» را در دستگاه قدیمی‌تان فعال‌سازی کنید.";
+
+/* Title displayed to a user during registration if there are no restore options available. */
+"ONBOARDING_CHOOSE_RESTORE_METHOD_NONE_AVAILABLE_TITLE" = "هیچ نسخه پشتیبانی برای بازیابی وجود ندارد";
 
 /* The body for the skip restore 'choice' option */
 "ONBOARDING_CHOOSE_RESTORE_METHOD_SKIP_RESTORE_BODY" = "ادامه بدون انتقال پیام‌ها و رسانه‌های خود";
@@ -5474,10 +5714,10 @@
 "ONBOARDING_CONFIRM_BACKUP_RESTORE_DESCRIPTION" = "آخرین پشتیبان‌گیری در %1$@ ساعت %2$@ انجام شده است. حجم نسخه پشتیبان شما %3$@ است";
 
 /* Description for form confirming restore from backup without size detail. */
-"ONBOARDING_CONFIRM_BACKUP_RESTORE_DESCRIPTION_NO_SIZE" = "Your last backup was made on %1$@ at %2$@.";
+"ONBOARDING_CONFIRM_BACKUP_RESTORE_DESCRIPTION_NO_SIZE" = "آخرین پشتیبان‌گیری در %1$@ در %2$@ انجام شده است.";
 
 /* Details confirming manual restore from backup. */
-"ONBOARDING_CONFIRM_BACKUP_RESTORE_DESCRIPTION_NO_SIZE_DETAIL" = "If you choose not to restore now, you won’t be able to restore later. Your media will restore in the background.";
+"ONBOARDING_CONFIRM_BACKUP_RESTORE_DESCRIPTION_NO_SIZE_DETAIL" = "اگر انتخابتان این باشد که اکنون بازیابی نکنید، بعداً قادر به بازیابی نخواهید بود. فایل رسانه شما در پس‍‌زمینه بازیابی خواهد شد.";
 
 /* Text for action button to skip the restore. */
 "ONBOARDING_CONFIRM_BACKUP_RESTORE_SKIP_ACTION" = "رد کردن بازیابی";
@@ -5647,11 +5887,29 @@
 /* Label warning the user that they should update Signal to continue using payments. */
 "OUTDATED_PAYMENT_CLIENT_REMINDER_TEXT" = "برای ادامه استفاده از پرداخت‌ها، سیگنال را به‌روزرسانی کنید. موجودی شما ممکن است به‌روز نباشد.";
 
+/* Body of prompt notifying restore was cancelled. */
+"OUTGOING_DEVICE_REGISTRATION_CANCELLED_RESTORE_BODY" = "بازیابی لغو شد. لطفاً دوباره امتحان کنید.";
+
+/* Title of prompt notifying restore was cancelled. */
+"OUTGOING_DEVICE_REGISTRATION_CANCELLED_RESTORE_TITLE" = "بازیابی لغو شد";
+
 /* Body of prompt notifying registration without restore completed on the new device. */
 "OUTGOING_DEVICE_REGISTRATION_COMPLETE_BODY" = "حساب سیگنال شما در دستگاه دیگرتان فعال شده است. اکنون سیگنال در این دستگاه غیرفعال است.";
 
 /* Title of prompt notifying registration without restore completed on the new device. */
 "OUTGOING_DEVICE_REGISTRATION_COMPLETE_TITLE" = "ثبت‌نام تکمیل شد";
+
+/* Body of prompt notifying restore failed. */
+"OUTGOING_DEVICE_REGISTRATION_FAILED_RESTORE_BODY" = "بازیابی پیام‌ها از دستگاه دیگرتان حاوی داده‌های نامعتبر یا منقضی‌شده بود.  لطفاً دوباره امتحان کنید.";
+
+/* Title of prompt notifying restore failed. */
+"OUTGOING_DEVICE_REGISTRATION_FAILED_RESTORE_TITLE" = "بازیابی ناموفق بود";
+
+/* Body of prompt notifying restore failed for unknown reasons. */
+"OUTGOING_DEVICE_REGISTRATION_UNKNOWN_ERROR_BODY" = "خطای ناشناخته، لطفاً دوباره امتحان کنید.";
+
+/* Title of prompt notifying restore failed for unknown reasons. */
+"OUTGOING_DEVICE_REGISTRATION_UNKNOWN_ERROR_TITLE" = "خطای ناشناخته";
 
 /* Body of prompt notifying device restore started on the new device. */
 "OUTGOING_DEVICE_RESTORE_COMPLETE_BODY" = "حساب سیگنال و پیام‌های شما در حال انتقال به دستگاه دیگر شماست. اکنون سیگنال در این دستگاه غیرفعال است.";
@@ -5706,9 +5964,6 @@
 
 /* Footer for message cell for long text when it is expired and unavailable for download */
 "OVERSIZE_TEXT_UNAVAILABLE_FOOTER" = "این پیام ناقص است";
-
-/* Message for sheet shown when tapping oversized text that has expired and is unavailable for download */
-"OVERSIZE_TEXT_UNAVAILABLE_SHEET_MESSAGE" = "در زمان اتصال این دستگاه، متن کامل این پیام از تلفن شما منتقل نشد. پیامک‌های قدیمی‌تر از ۴۵ روز در زمان اتصال دستگاه، قابل همگام‌سازی نیستند.";
 
 /* Title for sheet shown when tapping oversized text that has expired and is unavailable for download */
 "OVERSIZE_TEXT_UNAVAILABLE_SHEET_TITLE" = "پیام کامل در دسترس نیست";
@@ -6034,9 +6289,6 @@
 /* Message indicating that a request to join the group was successfully approved. Embeds {{ the name of the approved user }}. */
 "PENDING_GROUP_MEMBERS_REQUEST_APPROVED_FORMAT" = "«%1$@» افزوده شد.";
 
-/* Label for the 'view requests' button in the pending member requests banner. */
-"PENDING_GROUP_MEMBERS_REQUEST_BANNER_VIEW_REQUESTS" = "دیدن درخواست‌ها";
-
 /* Message indicating that a request to join the group was successfully denied. Embeds {{ the name of the denied user }}. */
 "PENDING_GROUP_MEMBERS_REQUEST_DENIED_FORMAT" = "«%1$@» رد شد.";
 
@@ -6238,21 +6490,6 @@
 /* The re-creation explanation in the 'pin creation' view. */
 "PIN_CREATION_RECREATION_EXPLANATION" = "تا زمانی که این دستگاه ثبت شده باشد شما می‌توانید پین خود را تغییر دهید.";
 
-/* Action of the 'pin disable' reglock action sheet. */
-"PIN_CREATION_REGLOCK_CONFIRMATION_ACTION" = "خاموش کن";
-
-/* Message of the 'pin disable' reglock action sheet. */
-"PIN_CREATION_REGLOCK_CONFIRMATION_MESSAGE" = "برای غیرفعال کردن پین، شما باید ابتدا قفل ثبت‌نام را خاموش کنید.";
-
-/* Title of the 'pin disable' reglock action sheet. */
-"PIN_CREATION_REGLOCK_CONFIRMATION_TITLE" = "قفل ثبت نام خاموش شود؟";
-
-/* Error body indicating that the attempt to create a PIN succeeded but enabling reglock failed. */
-"PIN_CREATION_REGLOCK_ERROR_MESSAGE" = "ایجاد پین با موفقیت انجام شد، اما قفل ثبت‌نام فعال نشد. اتصال خود را بررسی کنید و دوباره امتحان کنید.";
-
-/* Error title indicating that the attempt to create a PIN succeeded but enabling reglock failed. */
-"PIN_CREATION_REGLOCK_ERROR_TITLE" = "فعال کردن قفل ثبت‌نام ناموفق بود";
-
 /* Skip action on the pin creation view */
 "PIN_CREATION_SKIP" = "غیرفعال کردن پین";
 
@@ -6265,14 +6502,11 @@
 /* If your attempted PIN is too weak, you'll see an error message. This is the text on the error dialog. */
 "PIN_CREATION_WEAK_ERROR_MESSAGE" = "پین‌ها اطلاعات ذخیره‌شده شما نزد سیگنال را رمزگذاری‌شده نگه می‌دارند تا فقط شما به آن دسترسی داشته باشید. برای حفاظت از حسابتان، پین قوی‌تری انتخاب کنید.";
 
-/* Error body indicating that the attempt to disable a PIN failed. */
-"PIN_DISABLE_ERROR_MESSAGE" = "غیرفعال کردن پین شما میسر نبود.";
-
-/* Error title indicating that the attempt to disable a PIN failed. */
-"PIN_DISABLE_ERROR_TITLE" = "غیرفعال‌سازی پین ناموفق بود";
-
 /* If the user is re-registering, they need to enter their PIN to restore all their data. In some cases, they can skip this entry and lose some data. This text is shown on a button that lets them begin to do this. */
 "PIN_ENTER_EXISTING_SKIP" = "عبور از وارد کردن پین";
+
+/* If the user is re-registering, they need to enter their PIN to restore all their data. If they don't remember their PIN, they may remember their Recovery Key which can be used instead of a PIN. */
+"PIN_ENTER_EXISTING_USE_RECOVERY_KEY" = "استفاده از رمز بازیابی";
 
 /* Error title indicating that the attempt to recreate a PIN failed. */
 "PIN_RECREATION_ERROR_TITLE" = "ایجاد پین موفق نبود";
@@ -6348,6 +6582,87 @@
 
 /* Accessibility label for button to start media playback */
 "PLAY_BUTTON_ACCESSABILITY_LABEL" = "پخش رسانه";
+
+/* Title for a toggle allowing multiple votes for a poll. */
+"POLL_ALLOW_MULTIPLE_LABEL" = "اجازه دادن به رأی‌دهی چندگانه";
+
+/* Button to view a poll after its ended */
+"POLL_BUTTON_VIEW_POLL" = "مشاهده نظرسنجی";
+
+/* Button to view poll results */
+"POLL_BUTTON_VIEW_RESULTS" = "مشاهده نتایج";
+
+/* Button to view poll votes */
+"POLL_BUTTON_VIEW_VOTES" = "مشاهده رأی‌ها";
+
+/* Toast telling user to add a question to poll. */
+"POLL_CREATE_ERROR_TOAST_NO_QUESTION" = "سؤال اضافه کنید";
+
+/* Toast telling user to add options and question to poll. */
+"POLL_CREATE_ERROR_TOAST_NO_QUESTION_OR_ENOUGH_OPTIONS" = "یک سؤال و حداقل ۲ گزینه اضافه کنید";
+
+/* Toast telling user to add more options to poll. */
+"POLL_CREATE_ERROR_TOAST_NOT_ENOUGH_OPTIONS" = "حداقل ۲ گزینه اضافه کنید";
+
+/* Title of create poll pane */
+"POLL_CREATE_TITLE" = "نظرسنجی جدید";
+
+/* Label for button to end a poll */
+"POLL_DETAILS_END_POLL" = "پایان نظرسنجی";
+
+/* Title of poll details pane */
+"POLL_DETAILS_TITLE" = "جزئیات نظرسنجی";
+
+/* Title for an action sheet confirming the user wants end a poll. */
+"POLL_END_CONFIRMATION" = "پایان نظرسنجی؟";
+
+/* Message for an action sheet confirming the user wants to end a poll. */
+"POLL_END_CONFIRMATION_MESSAGE" = "اعضای گروه، دیگر نمی‌توانند در این نظرسنجی رأی بدهند.";
+
+/* Shown when another user ends a poll. Embeds {{ another user }} and {{ poll question }}. */
+"POLL_ENDED_BY_OTHER_CHAT_LIST_UPDATE" = "%1$@ نظرسنجی را به پایان رساند: %2$@";
+
+/* Shown when the local user ends a poll. Embeds {{ poll question }}. */
+"POLL_ENDED_BY_YOU_CHAT_LIST_UPDATE" = "نظرسنجی را پایان دادید: %1$@";
+
+/* Notification that {{contact}} ended a poll with question {{poll question}} */
+"POLL_ENDED_NOTIFICATION" = "‏%1$@ نظرسنجی «%2$@» را به پایان رساند";
+
+/* Label specifying the poll is finished and these are the final results */
+"POLL_FINAL_RESULTS_LABEL" = "نتایج نهایی";
+
+/* Label specifying the message type as a poll */
+"POLL_LABEL" = "نظرسنجی";
+
+/* String to display when a poll has no votes */
+"POLL_NO_VOTES" = "بدون رأی";
+
+/* Placeholder text for an option row when creating a poll. This will have a number appended to it (Option 1, Option 2) */
+"POLL_OPTION_PLACEHOLDER_PREFIX" = "گزینه";
+
+/* Header for the poll options text boxes when making a new poll */
+"POLL_OPTIONS_LABEL" = "گزینه‌ها";
+
+/* Prefix for a poll preview */
+"POLL_PREFIX" = "نظرسنجی:";
+
+/* Header for the poll question text box when making a new poll */
+"POLL_QUESTION_LABEL" = "سوال";
+
+/* Placeholder text for poll question */
+"POLL_QUESTION_PLACEHOLDER_TEXT" = "سؤال بپرسید";
+
+/* Title of poll details pane when poll is ended */
+"POLL_RESULTS_TITLE" = "نتایج نظرسنجی";
+
+/* Label specifying the user can select more than one option */
+"POLL_SELECT_LABEL_MULTIPLE" = "یک یا چند مورد را انتخاب کنید";
+
+/* Label specifying the user can select one option */
+"POLL_SELECT_LABEL_SINGULAR" = "یک مورد را انتخاب کنید";
+
+/* Notification that {{contact}} voted in a poll with question {{poll question}} */
+"POLL_VOTED_NOTIFICATION" = "%1$@ در نظرسنجی «%2$@» رأی داد";
 
 /* Badge indicating that the user is verified. */
 "PRIVACY_IDENTITY_IS_VERIFIED_BADGE" = "تأیید شده";
@@ -6668,13 +6983,13 @@
 "REGISTER_2FA_FORGOT_PIN_ALERT_TITLE" = "به راهنمایی نیاز دارید؟";
 
 /* Alert body for a forgotten SVR (V2) PIN */
-"REGISTER_2FA_FORGOT_SVR_PIN_ALERT_MESSAGE" = "رمز شما یک کد 4+ رقمی است که می تواند عدد یا حروف باشد. اگر نمی توانید رمز خود را به یاد بیاورید، باید 7 روز صبر کنید تا بتوانید حساب خود را دوباره ثبت کنید.";
+"REGISTER_2FA_FORGOT_SVR_PIN_ALERT_MESSAGE" = "پین شما یک کد بیش از ۴ رقمی است که شما ساخته‌اید و می‌تواند عدد یا حروف باشد. اگر نمی‌توانید پین خود را به یاد بیاورید، باید ۷ روز صبر کنید تا بتوانید حساب خود را دوباره ثبت کنید. اگر پشتیبان‌گیری امن سیگنال را فعال کرده‌اید، می‌توانید با رمز بازیابی خود ادامه دهید.";
 
 /* Alert body for a forgotten SVR (V2) PIN when the user doesn't have reglock and they cannot necessarily create a new PIN */
-"REGISTER_2FA_FORGOT_SVR_PIN_WITHOUT_REGLOCK_ALERT_MESSAGE" = "پین شما یک کد بیش از ۴ رقمی است که شما ساخته‌اید و می‌تواند عدد یا حروف باشد. اگر نمی‌توانید پین خود را به یاد بیاورید، می‌توانید ثبت‌نام کنید و از حسابتان استفاده کنید، اما برخی تنظیمات ذخیره‌شده مانند اطلاعات نمایه خود را از دست خواهید داد.";
+"REGISTER_2FA_FORGOT_SVR_PIN_WITHOUT_REGLOCK_ALERT_MESSAGE" = "پین شما یک کد بیش از ۴ رقمی است که شما ساخته‌اید و می‌تواند عدد یا حروف باشد. اگر نمی‌توانید پین خود را به یاد بیاورید، می‌توانید ثبت‌نام کنید و از حسابتان استفاده کنید، اما برخی تنظیمات ذخیره‌شده مانند اطلاعات نمایه خود را از دست خواهید داد. اگر پشتیبان‌گیری امن سیگنال را فعال کرده‌اید، می‌توانید با رمز بازیابی خود ادامه دهید.";
 
 /* Alert body for a forgotten SVR (V2) PIN when the user doesn't have reglock and they can create a new PIN */
-"REGISTER_2FA_FORGOT_SVR_PIN_WITHOUT_REGLOCK_AND_CAN_CREATE_NEW_PIN_ALERT_MESSAGE" = "پین شما یک کد بیش از ۴ رقمی است که خودتان انتخاب کرده‌اید و می‌تواند عدد یا حروف باشد. اگر نمی‌توانید پین خود را به یاد بیاورید، می‌توانید یک پین جدید ایجاد کنید. می‌توانید ثبت‌نام و از حساب‌تان استفاده کنید، اما برخی تنظیمات ذخیره‌شده مانند اطلاعات نمایه خود را از دست خواهید داد.";
+"REGISTER_2FA_FORGOT_SVR_PIN_WITHOUT_REGLOCK_AND_CAN_CREATE_NEW_PIN_ALERT_MESSAGE" = "پین شما یک کد بیش از ۴ رقمی است که شما ساخته‌اید و می‌تواند عدد یا حروف باشد. اگر پین خود را به یاد نمی‌آورید، می‌توانید پین جدیدی بسازید. می‌توانید ثبت‌نام کنید و از حساب کاربری خود استفاده کنید، اما برخی تنظیمات ذخیره‌شده مانند اطلاعات نمایه‌تان را از دست می‌دهید. اگر پشتیبان‌گیری امن سیگنال را فعال کرده‌اید، می‌توانید با رمز بازیابی خود ادامه دهید.";
 
 /* Alert title explaining what happens if you forget your 'two-factor auth pin'. */
 "REGISTER_2FA_INVALID_PIN_ALERT_TITLE" = "پین نادرست است";
@@ -6686,13 +7001,10 @@
 "REGISTER_RATE_LIMITING_ALERT" = "در مدت زمانی مشخص بیش از حد مجاز امتحان کرده‌اید. لطفاً چند دقیقه صبر کنید و بعد دوباره تلاش کنید.";
 
 /* No comment provided by engineer. */
-"REGISTER_RATE_LIMITING_BODY" = "شما چندین بار امتحان کردید. لطفا قبل از امتحان مجدد، یک دقیقه صبر کنید.";
-
-/* No comment provided by engineer. */
 "REGISTER_RATE_LIMITING_ERROR" = "شما چندین بار امتحان کردید. لطفا قبل از امتحان مجدد، یک دقیقه صبر کنید.";
 
 /* Body for a sheet warning users about a missing backup. */
-"REGISTRATION_BACKUP_RESTORE_ERROR_BACKUP_NOT_FOUND_BODY" = "رمز نسخه پشتیبان واردشده صحیح است، اما هیچ نسخه پشتیبان مرتبط با آن وجود ندارد. اگر هنوز تلفن قدیمی خود را دارید، مطمئن شوید که پشتیبان‌گیری فعال است و پشتیبان‌گیری تکمیل شده است، سپس دوباره امتحان کنید.";
+"REGISTRATION_BACKUP_RESTORE_ERROR_BACKUP_NOT_FOUND_BODY" = "هیچ نسخه پشتیبانی مرتبط با این رمز بازیابی یافت نشد. لطفاً مطمئن شوید رمز درست است و دوباره امتحان کنید.";
 
 /* Title for a sheet warning users about a missing backup. */
 "REGISTRATION_BACKUP_RESTORE_ERROR_BACKUP_NOT_FOUND_TITLE" = "نسخه پشتیبان یافت نشد";
@@ -6724,11 +7036,14 @@
 /* Title for a sheet warning users about a generic backup manual restore failure. */
 "REGISTRATION_BACKUP_RESTORE_ERROR_GENERIC_TITLE" = "انتقال انجام نشد";
 
-/* Body for a sheet warning users about an incorrect backup key. */
-"REGISTRATION_BACKUP_RESTORE_ERROR_INCORRECT_KEY_BODY" = "Make sure you’ve entered the same 64-digit backup key you saved when enabling Signal backups. Backups can not be recovered without this key.";
+/* Body for a sheet warning users about an incorrect recovery key. */
+"REGISTRATION_BACKUP_RESTORE_ERROR_INCORRECT_KEY_BODY" = "ممکن است رمز بازیابی را نادرست وارد کرده باشید، یا حداقل یک نسخه پشتیبان را در دستگاه قدیمی‌تان تکمیل نکرده‌اید. \n\nمطمئن شوید که با همان شماره تلفن و رمز بازیابی در حال ثبت‌نام هستید که هنگام فعال کردن «پشتیبان‌گیری امن سیگنال» ذخیره کرده بودید، و تأیید کنید که دستگاه قدیمی‌تان پشتیبان‌گیری را تکمیل کرده است.";
 
-/* Title for a sheet warning users about an incorrect backup key. */
-"REGISTRATION_BACKUP_RESTORE_ERROR_INCORRECT_KEY_TITLE" = "رمز پشتیبان نادرست است";
+/* Body for a sheet warning users about an incorrect recovery key and having hit a rate limit on retries. */
+"REGISTRATION_BACKUP_RESTORE_ERROR_INCORRECT_KEY_RATE_LIMIT_BODY" = "به سقف تعداد تلاش‌های مجاز برای وارد کردن رمز بازیابی رسیده‌اید. برای امنیت خودتان، تعداد تلاش‌هایی که می‌توانید انجام دهید محدود است. ۱ ساعت صبر کنید و دوباره امتحان کنید.";
+
+/* Title for a sheet warning users about an incorrect recovery key. */
+"REGISTRATION_BACKUP_RESTORE_ERROR_INCORRECT_KEY_TITLE" = "نسخه پشتیبان پیدا نشد";
 
 /* Body for a sheet warning users about a network error during backup restore. */
 "REGISTRATION_BACKUP_RESTORE_ERROR_NETWORK_BODY" = "نسخه پشتیبان شما اکنون قابل بازیابی نیست. اتصال اینترنت خود را بررسی و دوباره امتحان کنید.";
@@ -6736,11 +7051,23 @@
 /* Title for a sheet warning users about a network error during backup restore. */
 "REGISTRATION_BACKUP_RESTORE_ERROR_NETWORK_TITLE" = "نسخه پشتیبان بازیابی نشد";
 
+/* Body for a sheet telling users to try restoring a backup again after a server error. */
+"REGISTRATION_BACKUP_RESTORE_ERROR_RETRYABLE_SERVER_ERROR_BODY" = "نسخه پشتیبان شما اکنون قابل بازیابی نیست. اتصال اینترنت خود را بررسی و دوباره امتحان کنید.";
+
+/* Title for a sheet telling users to try restoring a backup again after a server error. */
+"REGISTRATION_BACKUP_RESTORE_ERROR_RETRYABLE_SERVER_ERROR_TITLE" = "نسخه پشتیبان بازیابی نشد";
+
 /* Skip restore action label for backup restore error recovery. */
 "REGISTRATION_BACKUP_RESTORE_ERROR_SKIP_RESTORE_ACTION" = "رد کردن بازیابی";
 
 /* Try again action label for backup restore error recovery. */
 "REGISTRATION_BACKUP_RESTORE_ERROR_TRY_AGAIN_ACTION" = "دوباره تلاش کنید";
+
+/* Body for a sheet telling users restoring a backup unrecoverably failed. */
+"REGISTRATION_BACKUP_RESTORE_ERROR_UNRETRYABLE_SERVER_ERROR_BODY" = "خطایی هنگام بازیابی نسخه پشتیبان شما رخ داد. نسخه پشتیبان شما قابل بازیابی نیست. لطفاً برای راهنمایی با پشتیبانی تماس بگیرید.";
+
+/* Title for a sheet telling users restoring a backup unrecoverably failed. */
+"REGISTRATION_BACKUP_RESTORE_ERROR_UNRETRYABLE_SERVER_ERROR_TITLE" = "نسخه پشتیبان بازیابی نشد";
 
 /* Body for a sheet warning users about an incompatible backup version. */
 "REGISTRATION_BACKUP_RESTORE_ERROR_UNSUPPORTED_BACKUP_VERSION_BODY" = "برای بازیابی نسخه پشتیبان، مطمئن شوید که از آخرین نسخه سیگنال استفاده می‌کنید و دوباره امتحان کنید. اگر مشکل همچنان ادامه یافت، با پشتیبانی تماس بگیرید.";
@@ -6772,11 +7099,11 @@
 /* If a user is installing Signal on a new phone, they may be asked whether they want to transfer their account from their old device. This is the title on the screen that asks them this question. */
 "REGISTRATION_DEVICE_TRANSFER_CHOICE_TITLE" = "انتقال حساب و پیام‌ها";
 
-/* Description for the screen that allows users to enter their backup key. */
-"REGISTRATION_ENTER_BACKUP_KEY_DESCRIPTION" = "رمز پشتیبان شما یک کد ۶۴ رقمی است که برای بازیابی حساب و اطلاعاتتان الزامی است.";
+/* Description for the screen that allows users to enter their recovery key. */
+"REGISTRATION_ENTER_BACKUP_KEY_DESCRIPTION" = "رمز بازیابی شما یک کد ۶۴ نویسه‌ای است که برای بازیابی حساب و اطلاعاتتان الزامی است.";
 
-/* Title for the screen that allows users to enter their backup key. */
-"REGISTRATION_ENTER_BACKUP_KEY_TITLE" = "رمز پشتیبان خود را وارد کنید";
+/* Title for the screen that allows users to enter their recovery key. */
+"REGISTRATION_ENTER_BACKUP_KEY_TITLE" = "رمز بازیابی‌تان را وارد کنید";
 
 /* Placeholder text for the phone number textfield */
 "REGISTRATION_ENTERNUMBER_DEFAULT_TEXT" = "شناره را وارد کنید";
@@ -6799,20 +7126,23 @@
 /* A network error occurred during registration, and an error is shown to the user. This is the title on that error sheet. */
 "REGISTRATION_NETWORK_ERROR_TITLE" = "اتصال را بررسی کنید";
 
-/* Title of button to tap if you do not have a backup key during registration. */
-"REGISTRATION_NO_BACKUP_KEY_BUTTON_TITLE" = "رمز پشتیبان ندارید؟";
+/* Title of button to tap if you do not have a recovery key during registration. */
+"REGISTRATION_NO_BACKUP_KEY_BUTTON_TITLE" = "رمز بازیابی ندارید؟";
 
-/* Body text on a sheet with info for what to do if you don't have a backup key */
-"REGISTRATION_NO_BACKUP_KEY_SHEET_BODY" = "فایل‌های پشتیبان بدون کد بازیابی ۶۴ رقمی قابل بازیابی نیستند. اگر رمز پشتیبان خود را گم کرده‌اید، سیگنال نمی‌تواند به بازیابی نسخه پشتیبان شما کمک کند.\n\nاگر دستگاه قدیمی خود را دارید، می‌توانید رمز پشتیبان خود را در «تنظیمات > گفتگوها > پشتیبان‌های سیگنال» مشاهده کنید. سپس روی «مشاهده رمز پشتیبان» ضربه بزنید.";
+/* Body text on a sheet with info for what to do if you don't have a recovery key */
+"REGISTRATION_NO_BACKUP_KEY_SHEET_BODY" = "نسخه‌های پشتیبان بدون کد بازیابی ۶۴ نویسه‌ای قابل‌بازیابی نیستند. اگر رمز بازیابی‌تان را گم کرده‌اید، سیگنال نمی‌تواند به بازیابی نسخه پشتیبان شما کمک کند.\n\nاگر دستگاه قدیمی‌تان را دارید، می‌توانید رمز بازیابی‌تان را در «تنظیمات > گفتگوها > نسخه‌های پشتیبان» مشاهده کنید. سپس روی«مشاهده رمز بازیابی» ضربه بزنید.";
 
-/* Title for sheet with info for what to do if you don't have a backup key */
-"REGISTRATION_NO_BACKUP_KEY_SHEET_TITLE" = "رمز پشتیبان ندارید؟";
+/* Title for sheet with info for what to do if you don't have a recovery key */
+"REGISTRATION_NO_BACKUP_KEY_SHEET_TITLE" = "رمز بازیابی ندارید؟";
 
-/* Title for button on sheet for when you don't have a backup key */
+/* Title for button on sheet for when you don't have a recovery key */
 "REGISTRATION_NO_BACKUP_KEY_SKIP_RESTORE_BUTTON_TITLE" = "رد کردن و عدم بازیابی";
 
 /* During registration, users are asked to enter their phone number. This is the subtitle on that screen, which gives users some instructions. */
 "REGISTRATION_PHONE_NUMBER_SUBTITLE" = "برای شروع، شماره تلفن خود را وارد کنید.";
+
+/* During re-registration, users are asked to confirm their phone number. This is the subtitle on that screen, which gives users some instructions. */
+"REGISTRATION_PHONE_NUMBER_SUBTITLE_2" = "کد تأییدی به این شماره ارسال خواهد شد:";
 
 /* During registration, users are asked to enter their phone number. This is the title on that screen. */
 "REGISTRATION_PHONE_NUMBER_TITLE" = "شماره تلفن شما";
@@ -6868,8 +7198,23 @@
 /* Error shown if an SMS/call service provider is temporarily unable to send a verification code to the provided number. */
 "REGISTRATION_PROVIDER_FAILURE_MESSAGE_TRANSIENT" = "به‌دلیل اختلال در سرویس شرکت ارائه‌دهنده پیامک، سیگنال قادر به ارسال کد پیامکی نبود. چند ساعت بعد دوباره امتحان کنید.";
 
+/* Third step in directions for how to make a backup */
+"REGISTRATION_RESTORE_METHOD_MAKE_BACKUP_TUTORIAL_ENABLE_BACKUPS" = "نسخه‌های پشتیبان را فعال کنید و صبر کنید تا پشتیبان‌گیری تکمیل شود";
+
+/* First step in directions for how to make a backup */
+"REGISTRATION_RESTORE_METHOD_MAKE_BACKUP_TUTORIAL_OPEN_SIGNAL" = "سیگنال را در دستگاه قدیمی‌تان باز کنید";
+
+/* Second step in directions for how to make a backup */
+"REGISTRATION_RESTORE_METHOD_MAKE_BACKUP_TUTORIAL_TAP_SETTINGS" = "روی «تنظیمات > نسخه‌های پشتیبان» ضربه بزنید";
+
 /* No comment provided by engineer. */
 "REGISTRATION_RESTRICTED_MESSAGE" = "قبل از ارسال پیام نیاز دارید ثبت نام کنید.";
+
+/* Body of error notifying restore failed. */
+"REGISTRATION_SCAN_QR_CODE_FAILED_BODY" = "Failed to restore from old device. Try again.";
+
+/* Title of error notifying restore failed. */
+"REGISTRATION_SCAN_QR_CODE_FAILED_TITLE" = "بازیابی ناموفق بود";
 
 /* Title for screen containing QR code that users scan with their old phone when they want to transfer/restore their message history to a new device. */
 "REGISTRATION_SCAN_QR_CODE_TITLE" = "این کد را با تلفن قدیمی خود اسکن کنید";
@@ -6952,6 +7297,30 @@
 /* Configure reactions reset button text */
 "RESET" = "بازنشانی";
 
+/* Body for a sheet allowing users to cancel an in-progress media restore. */
+"RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_1_BODY" = "بازیابی رسانه شما تکمیل نشده است. اگر لغو را انتخاب کنید، می‌توانید با اتصال مجدد این دستگاه، دوباره بازیابی را انجام دهید.";
+
+/* Button for a sheet allowing users to cancel an in-progress media restore. */
+"RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_1_PRIMARY_BUTTON" = "ادامه بازیابی";
+
+/* Button for a sheet allowing users to cancel an in-progress media restore. */
+"RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_1_SECONDARY_BUTTON" = "لغو بازیابی";
+
+/* Title for a sheet allowing users to cancel an in-progress media restore. */
+"RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_1_TITLE" = "رسانه شما در حال بازیابی است";
+
+/* Message for a sheet allowing users to cancel an in-progress media restore. */
+"RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_2_MESSAGE" = "بازیابی رسانه شما تکمیل نشده است. اگر لغو را انتخاب کنید، می‌توانید با اتصال مجدد این دستگاه، دوباره بازیابی را انجام دهید.";
+
+/* Button for a sheet allowing users to cancel an in-progress media restore. */
+"RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_2_PRIMARY_BUTTON" = "ادامه بازیابی";
+
+/* Button for a sheet allowing users to cancel an in-progress media restore. */
+"RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_2_SECONDARY_BUTTON" = "لغو بازیابی";
+
+/* Title for a sheet allowing users to cancel an in-progress media restore. */
+"RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_2_TITLE" = "بازیابی رسانه لغو شود؟";
+
 /* Button title shown on chat list banner for restoring media from a backup when paused because the device has insufficient disk space, to see a bottom sheet with more details about next steps. */
 "RESTORING_MEDIA_BANNER_DISK_SPACE_BUTTON" = "جزئیات";
 
@@ -6963,6 +7332,9 @@
 
 /* Subtitle shown on chat list banner for restoring media from a backup when paused because the device has low battery */
 "RESTORING_MEDIA_BANNER_PAUSED_BATTERY_SUBTITLE" = "باتری دستگاه کم است";
+
+/* Subtitle shown on chat list banner for restoring media from a backup when paused because the device is in low power mode */
+"RESTORING_MEDIA_BANNER_PAUSED_LOW_POWER_MODE_SUBTITLE" = "حالت کم‌مصرف";
 
 /* Subtitle shown on chat list banner for restoring media from a backup when paused because the device has no internet connection */
 "RESTORING_MEDIA_BANNER_PAUSED_NOT_REACHABLE_SUBTITLE" = "اینترنت متصل نیست…";
@@ -7180,7 +7552,7 @@
 /* Message for action sheet when secondary device fails to sync messages due to an unspecified error. */
 "SECONDARY_LINKING_SYNCING_OTHER_ERROR_MESSAGE" = "پیام‌هایتان به‌دلیل بروز خطا منتقل نشد. با اتصال مجدد این دستگاه، دوباره امتحان کنید.";
 
-/* Button on an action sheet to open HCP on the App Store. */
+/* Button on an action sheet to open Signal on the App Store. */
 "SECONDARY_LINKING_SYNCING_UPDATE_REQUIRED_CHECK_FOR_UPDATE_BUTTON" = "بررسی به‌روزرسانی‌ها";
 
 /* Message for action sheet when the secondary device fails to sync messages due to an app update being required. */
@@ -7363,6 +7735,12 @@
 /* No comment provided by engineer. */
 "SETTINGS_ADVANCED_PINS_DISABLE_PIN_ACTION" = "غیرفعال کردن پین";
 
+/* Message shown in an action sheet when attempting to disable PIN, but Backups is enabled. */
+"SETTINGS_ADVANCED_PINS_DISABLE_PIN_ACTION_BACKUPS_DISABLE_REQUIRED" = "قبل از غیرفعال کردن پین خود، باید «نسخه‌های پشتیبان» را غیرفعال کنید.";
+
+/* Message shown in an action sheet when attempting to disable PIN, but registration lock is enabled. */
+"SETTINGS_ADVANCED_PINS_DISABLE_PIN_ACTION_REGLOCK_DISABLE_REQUIRED" = "قبل از غیرفعال کردن پین خود، باید قفل ثبت‌نام را غیرفعال کنید.";
+
 /* No comment provided by engineer. */
 "SETTINGS_ADVANCED_PINS_ENABLE_PIN_ACTION" = "فعال کردن پین";
 
@@ -7520,10 +7898,16 @@
 "SETTINGS_DELETE_DATA_BUTTON" = "پاک کردن تمام اطلاعات";
 
 /* Alert message before user confirms clearing history */
-"SETTINGS_DELETE_HISTORYLOG_CONFIRMATION" = "مطمئن هستید که می‌خواهید تمام تاریخچه (پیام‌ها، پیوست‌ها، تماس‌ها و …) را پاک کنید؟ این عمل بازگشت‌پذیر نیست.";
+"SETTINGS_DELETE_HISTORYLOG_CONFIRMATION" = "مطمئنید که می‌خواهید همه تاریخچه گفتگو (پیام‌ها، فایل‌های رسانه، تماس‌ها و غیره) را از تمام دستگاه‌هایتان حذف کنید؟ این اقدام بازگشت‌پذیر نیست.";
 
 /* Confirmation text for button which deletes all message, calling, attachments, etc. */
 "SETTINGS_DELETE_HISTORYLOG_CONFIRMATION_BUTTON" = "پاک کردن همه چیز";
+
+/* Secondary alert message before user confirms clearing history */
+"SETTINGS_DELETE_HISTORYLOG_CONFIRMATION_SECONDARY_MESSAGE" = "همه تاریخچه گفتگو برای همیشه حذف خواهد شد. این اقدام بازگشت‌پذیر نیست.";
+
+/* Secondary alert title before user confirms clearing history */
+"SETTINGS_DELETE_HISTORYLOG_CONFIRMATION_SECONDARY_TITLE" = "مطمئنید که می‌خواهید همه تاریخچه گفتگو را حذف کنید؟";
 
 /* Label for the 'disappearing messages' privacy settings. */
 "SETTINGS_DISAPPEARING_MESSAGES" = "پیام‌های ناپدید شونده";
@@ -8161,11 +8545,26 @@
 /* Action to turn off registration lock */
 "SETTINGS_REGISTRATION_LOCK_TURN_OFF" = "خاموش کن";
 
+/* Message shown in an action sheet when attempting to enable registration lock, but encountering a generic error. */
+"SETTINGS_REGISTRATION_LOCK_TURN_OFF_ERROR_GENERIC" = "غیرفعال‌سازی قفل ثبت‌نام ناموفق بود. لطفاً با پشتیبانی تماس بگیرید.";
+
+/* Message shown in an action sheet when attempting to enable registration lock, but encountering a network error. */
+"SETTINGS_REGISTRATION_LOCK_TURN_OFF_ERROR_NETWORK" = "غیرفعال‌سازی قفل ثبت‌نام ناموفق بود. اتصال اینترنت خود را بررسی و دوباره امتحان کنید.";
+
 /* Title for the alert confirming that the user wants to turn off registration lock. */
 "SETTINGS_REGISTRATION_LOCK_TURN_OFF_TITLE" = "قفل ثبت نام خاموش شود؟";
 
 /* Action to turn on registration lock */
 "SETTINGS_REGISTRATION_LOCK_TURN_ON" = "روشن کن";
+
+/* Message shown in an action sheet when attempting to enable registration lock, but encountering a generic error. */
+"SETTINGS_REGISTRATION_LOCK_TURN_ON_ERROR_GENERIC" = "فعال‌سازی قفل ثبت‌نام ناموفق بود. لطفاً با پشتیبانی تماس بگیرید.";
+
+/* Message shown in an action sheet when attempting to enable registration lock, but encountering a network error. */
+"SETTINGS_REGISTRATION_LOCK_TURN_ON_ERROR_NETWORK" = "فعال‌سازی قفل ثبت‌نام ناموفق بود. اتصال اینترنت خود را بررسی و دوباره امتحان کنید.";
+
+/* Message shown in an action sheet when attempting to enable registration lock, but the user does not have a PIN. */
+"SETTINGS_REGISTRATION_LOCK_TURN_ON_ERROR_PIN_REQUIRED" = "برای استفاده از قفل ثبت‌نام، باید پین ایجاد کنید.";
 
 /* Body for the alert confirming that the user wants to turn on registration lock. */
 "SETTINGS_REGISTRATION_LOCK_TURN_ON_MESSAGE" = "اگر شما پین سیگنال خود را هنگام ثبت‌نام دوباره فراموش کنید، حساب شما به مدت ۷ روز قفل خواهد شد و قادر به استفاده از آن نخواهید بود.";
@@ -8346,9 +8745,6 @@
 
 /* Message when trying to show a sticker that has expired and is unavailable for download */
 "STICKER_UNAVAILABLE_MESSAGE_LABEL" = "استیکر در دسترس نیست";
-
-/* Message for sheet shown when tapping a sticker that has expired and is unavailable for download */
-"STICKER_UNAVAILABLE_SHEET_MESSAGE" = "در زمان اتصال این دستگاه، این استیکر از گوشی شما انتقال داده نشد. رسانه‌ها و فایل‌های قدیمی‌تر از ۴۵ روز در زمان اتصال دستگاه، قابل همگام‌سازی نیستند.";
 
 /* Title for sheet shown when tapping a sticker that has expired and is unavailable for download */
 "STICKER_UNAVAILABLE_SHEET_TITLE" = "استیکر در دسترس نیست";
@@ -9258,9 +9654,6 @@
 
 /* Indicates how to cancel a voice message. */
 "VOICE_MESSAGE_CANCEL_INSTRUCTIONS" = "برای لغو به کناره بکشید";
-
-/* Filename for voice messages. */
-"VOICE_MESSAGE_FILE_NAME" = "signal";
 
 /* Message for the tooltip indicating the 'voice message' needs to be held to be held down to record. */
 "VOICE_MESSAGE_TOO_SHORT_TOOLTIP" = "برای ضبط کردن فشار داده و نگه دارید.";

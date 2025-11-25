@@ -225,13 +225,6 @@ public extension SDSCodableModel where Self: AnyObject {
             block: block
         )
     }
-
-    static func anyRemoveAllWithInstantiation(transaction: DBWriteTransaction) {
-        SDSCodableModelDatabaseInterfaceImpl().removeAllModelsWithInstantiation(
-            modelType: Self.self,
-            transaction: transaction
-        )
-    }
 }
 
 public extension SDSCodableModel {
@@ -246,21 +239,6 @@ public extension SDSCodableModel {
             modelType: Self.self,
             transaction: transaction,
             batchingPreference: batchingPreference,
-            block: block
-        )
-    }
-
-    /// Convenience method delegating to ``SDSCodableModelDatabaseInterface``.
-    /// See that class for details.
-    static func anyEnumerateUniqueIds(
-        transaction: DBReadTransaction,
-        batched: Bool = false,
-        block: (String, UnsafeMutablePointer<ObjCBool>) -> Void
-    ) {
-        SDSCodableModelDatabaseInterfaceImpl().enumerateModelUniqueIds(
-            modelType: Self.self,
-            transaction: transaction,
-            batched: batched,
             block: block
         )
     }

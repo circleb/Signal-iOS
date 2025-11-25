@@ -126,6 +126,7 @@ CREATE
             ,"archivedPaymentInfo" BLOB
             ,"expireTimerVersion" INTEGER
             ,"isSmsMessageRestoredFromBackup" BOOLEAN DEFAULT 0
+            ,"isPoll" BOOLEAN DEFAULT 0
         )
 ;
 
@@ -294,20 +295,6 @@ CREATE
         ON "model_OWSUserProfile"("lastFetchDate"
     ,"lastMessagingDate"
 )
-;
-
-CREATE
-    TABLE
-        IF NOT EXISTS "model_OWSDevice" (
-            "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL
-            ,"recordType" INTEGER NOT NULL
-            ,"uniqueId" TEXT NOT NULL UNIQUE
-                ON CONFLICT FAIL
-            ,"createdAt" DOUBLE NOT NULL
-            ,"deviceId" INTEGER NOT NULL
-            ,"lastSeenAt" DOUBLE NOT NULL
-            ,"name" TEXT
-        )
 ;
 
 CREATE
@@ -1248,6 +1235,13 @@ CREATE
                 ,"transitTierIncrementalMac" BLOB
                 ,"transitTierIncrementalMacChunkSize" INTEGER
                 ,"lastFullscreenViewTimestamp" INTEGER
+                ,"originalTransitCdnNumber" INTEGER
+                ,"originalTransitCdnKey" TEXT
+                ,"originalTransitUploadTimestamp" INTEGER
+                ,"originalTransitUnencryptedByteCount" INTEGER
+                ,"originalTransitDigestSHA256Ciphertext" BLOB
+                ,"originalTransitTierIncrementalMac" BLOB
+                ,"originalTransitTierIncrementalMacChunkSize" INTEGER
 )
 ;
 
@@ -2299,19 +2293,15 @@ CREATE
                 ,"maxOwnerTimestamp" INTEGER
                 ,"estimatedByteCount" INTEGER NOT NULL
                 ,"isFullsize" BOOLEAN NOT NULL
+                ,"numRetries" INTEGER NOT NULL DEFAULT 0
+                ,"minRetryTimestamp" INTEGER NOT NULL DEFAULT 0
+                ,"state" INTEGER DEFAULT 0
 )
 ;
 
 CREATE
     INDEX "index_BackupAttachmentUploadQueue_on_attachmentRowId"
         ON "BackupAttachmentUploadQueue"("attachmentRowId"
-)
-;
-
-CREATE
-    INDEX "index_BackupAttachmentUploadQueue_on_maxOwnerTimestamp_isFullsize"
-        ON "BackupAttachmentUploadQueue"("maxOwnerTimestamp"
-    ,"isFullsize"
 )
 ;
 
@@ -2391,4 +2381,224 @@ CREATE
                     LENGTH( "text" ) <= 131072
                 )
 )
+;
+
+CREATE
+    TABLE
+        IF NOT EXISTS "OWSDevice" (
+            "id" INTEGER PRIMARY KEY AUTOINCREMENT
+            ,"deviceId" INTEGER NOT NULL
+            ,"createdAt" DOUBLE NOT NULL
+            ,"lastSeenAt" DOUBLE NOT NULL
+            ,"name" TEXT
+        )
+;
+
+CREATE
+    TABLE
+        IF NOT EXISTS "Poll" (
+            "id" INTEGER PRIMARY KEY NOT NULL
+            ,"interactionId" INTEGER NOT NULL REFERENCES "model_TSInteraction"("id"
+        )
+            ON DELETE
+                CASCADE
+                    ON UPDATE
+                        CASCADE
+                        ,"isEnded" BOOLEAN
+                        ,"allowsMultiSelect" BOOLEAN
+)
+;
+
+CREATE
+    TABLE
+        IF NOT EXISTS "PollOption" (
+            "id" INTEGER PRIMARY KEY NOT NULL
+            ,"pollId" INTEGER NOT NULL REFERENCES "Poll"("id"
+        )
+            ON DELETE
+                CASCADE
+                    ON UPDATE
+                        CASCADE
+                        ,"option" TEXT
+                        ,"optionIndex" INTEGER
+)
+;
+
+CREATE
+    INDEX "index_poll_on_interactionId"
+        ON "Poll"("interactionId"
+)
+;
+
+CREATE
+    INDEX "index_polloption_on_pollId"
+        ON "PollOption"("pollId"
+)
+;
+
+CREATE
+    INDEX "index_BackupAttachmentUploadQueue_on_state_isFullsize_maxOwnerTimestamp"
+        ON "BackupAttachmentUploadQueue"("state"
+    ,"isFullsize"
+    ,"maxOwnerTimestamp"
+)
+;
+
+CREATE
+    TRIGGER __BackupAttachmentUploadQueue_au AFTER UPDATE
+            OF state
+                ON BackupAttachmentUploadQueue BEGIN DELETE
+                FROM
+                    BackupAttachmentUploadQueue
+                WHERE
+                    state = 1
+                    AND NOT EXISTS (
+                        SELECT
+                                id
+                            FROM
+                                BackupAttachmentUploadQueue
+                            WHERE
+                                state = 0
+                    )
+;
+
+END
+;
+
+CREATE
+    TABLE
+        IF NOT EXISTS "PollVote" (
+            "id" INTEGER PRIMARY KEY NOT NULL
+            ,"optionId" INTEGER NOT NULL REFERENCES "PollOption"("id"
+        )
+            ON DELETE
+                CASCADE
+                    ON UPDATE
+                        CASCADE
+                        ,"voteAuthorId" INTEGER REFERENCES "model_SignalRecipient"("id"
+)
+    ON DELETE
+        CASCADE
+            ON UPDATE
+                CASCADE
+                ,"voteCount" INTEGER
+                ,"voteState" INTEGER DEFAULT 0
+)
+;
+
+CREATE
+    UNIQUE INDEX "index_pollVote_on_voteAuthorId_and_optionId_voteCount"
+        ON "PollVote"("voteAuthorId"
+    ,"optionId"
+    ,"voteCount"
+)
+;
+
+CREATE
+    TABLE
+        IF NOT EXISTS "PreKey" (
+            "rowId" INTEGER PRIMARY KEY NOT NULL
+            ,"identity" INTEGER NOT NULL
+            ,"namespace" INTEGER NOT NULL
+            ,"keyId" INTEGER NOT NULL
+            ,"isOneTime" BOOLEAN NOT NULL
+            ,"replacedAt" DATE
+            ,"serializedRecord" BLOB
+            ,CHECK (
+                CASE
+                    "namespace" WHEN 0
+                    THEN "isOneTime" = 1 WHEN 2
+                    THEN "isOneTime" = 0
+                    ELSE TRUE
+                END
+            )
+        )
+;
+
+CREATE
+    UNIQUE INDEX "PreKey_Unique"
+        ON "PreKey"("identity"
+    ,"namespace"
+    ,"keyId"
+)
+;
+
+CREATE
+    INDEX "PreKey_Obsolete"
+        ON "PreKey"("replacedAt"
+)
+WHERE
+"replacedAt" IS NOT NULL
+;
+
+CREATE
+    INDEX "PreKey_Replaced"
+        ON "PreKey"("identity"
+    ,"namespace"
+    ,"isOneTime"
+    ,"keyId"
+)
+WHERE
+"replacedAt" IS NULL
+;
+
+CREATE
+    TABLE
+        IF NOT EXISTS "KyberPreKeyUse" (
+            "kyberRowId" INTEGER NOT NULL REFERENCES "PreKey"("rowId"
+        )
+            ON DELETE
+                CASCADE
+                    ON UPDATE
+                        CASCADE
+                        ,"signedPreKeyIdentity" INTEGER NOT NULL
+                        ,"signedPreKeyId" INTEGER NOT NULL
+                        ,"baseKey" BLOB NOT NULL
+                        ,PRIMARY KEY (
+                            "kyberRowId"
+                            ,"signedPreKeyIdentity"
+                            ,"signedPreKeyId"
+                            ,"baseKey"
+                        )
+) WITHOUT ROWID
+;
+
+CREATE
+    UNIQUE INDEX "UsernameLookupRecord_UniqueUsernames"
+        ON "UsernameLookupRecord"("username" COLLATE NOCASE
+)
+;
+
+CREATE
+    TABLE
+        IF NOT EXISTS "PinnedMessage" (
+            "id" INTEGER PRIMARY KEY NOT NULL
+            ,"interactionId" INTEGER NOT NULL UNIQUE REFERENCES "model_TSInteraction"("id"
+        )
+            ON DELETE
+                CASCADE
+                    ON UPDATE
+                        CASCADE
+                        ,"threadId" INTEGER NOT NULL REFERENCES "model_TSThread"("id"
+)
+    ON DELETE
+        CASCADE
+            ON UPDATE
+                CASCADE
+                ,"expiresAt" INTEGER
+)
+;
+
+CREATE
+    INDEX "index_PinnedMessage_on_threadId"
+        ON "PinnedMessage"("threadId"
+)
+;
+
+CREATE
+    INDEX "partial_index_PinnedMessage_on_expiresAt"
+        ON "PinnedMessage"("expiresAt"
+)
+WHERE
+"expiresAt" IS NOT NULL
 ;

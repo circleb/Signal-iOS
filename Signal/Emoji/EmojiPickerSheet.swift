@@ -6,9 +6,9 @@
 import SignalServiceKit
 import SignalUI
 
-class EmojiPickerSheet: InteractiveSheetViewController {
-    override var interactiveScrollViews: [UIScrollView] { [collectionView] }
+// MARK: - EmojiPickerSheet
 
+class EmojiPickerSheet: OWSViewController {
     let completionHandler: (EmojiWithSkinTones?) -> Void
 
     let collectionView: EmojiPickerCollectionView
@@ -41,10 +41,6 @@ class EmojiPickerSheet: InteractiveSheetViewController {
 
     private let reactionPickerConfigurationListener: ReactionPickerConfigurationListener?
 
-    override var sheetBackgroundColor: UIColor {
-        (Theme.isDarkThemeEnabled || forceDarkTheme) ? .ows_gray80 : .ows_white
-    }
-
     init(
         message: TSMessage?,
         allowReactionConfiguration: Bool = true,
@@ -56,39 +52,36 @@ class EmojiPickerSheet: InteractiveSheetViewController {
         self.forceDarkTheme = forceDarkTheme
         self.reactionPickerConfigurationListener = reactionPickerConfigurationListener
         self.completionHandler = completionHandler
-        self.collectionView = EmojiPickerCollectionView(
-            message: message,
-            forceDarkTheme: forceDarkTheme
-        )
+        self.collectionView = EmojiPickerCollectionView(message: message)
         super.init()
 
-        if !allowReactionConfiguration {
-            self.backdropColor = .clear
+        sheetPresentationController?.detents = [.medium(), .large()]
+        sheetPresentationController?.prefersGrabberVisible = true
+        sheetPresentationController?.delegate = self
+
+        if forceDarkTheme {
+            self.overrideUserInterfaceStyle = .dark
+            if #available(iOS 17.0, *) {
+                sheetPresentationController?.traitOverrides.userInterfaceStyle = .dark
+            }
         }
-
-        self.animationsShouldBeInterruptible = true
-        super.allowsExpansion = true
-    }
-
-    override func willDismissInteractively() {
-        super.willDismissInteractively()
-        completionHandler(nil)
     }
 
     // MARK: -
 
-    override public func viewDidLoad() {
+    override func viewDidLoad() {
         super.viewDidLoad()
 
-        if self.forceDarkTheme {
-            self.overrideUserInterfaceStyle = .dark
+        if #available(iOS 26, *), BuildFlags.iOS26SDKIsAvailable {
+            view.backgroundColor = nil
+        } else {
+            view.backgroundColor = .tertiarySystemBackground
         }
 
         let topStackView = UIStackView()
         topStackView.axis = .horizontal
         topStackView.isLayoutMarginsRelativeArrangement = true
         topStackView.spacing = 8
-
         if allowReactionConfiguration {
             topStackView.layoutMargins = UIEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 16)
             topStackView.addArrangedSubviews([searchBar, configureButton])
@@ -96,31 +89,42 @@ class EmojiPickerSheet: InteractiveSheetViewController {
             topStackView.addArrangedSubview(searchBar)
         }
 
-        contentView.addSubview(topStackView)
+        view.addSubview(topStackView)
+        topStackView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            topStackView.topAnchor.constraint(equalTo: view.topAnchor, constant: 23),
+            topStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
+            topStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
+        ])
 
-        topStackView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .bottom)
-
-        contentView.addSubview(collectionView)
-        collectionView.autoPinEdge(.top, to: .bottom, of: searchBar)
-        collectionView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
         collectionView.pickerDelegate = self
         collectionView.alwaysBounceVertical = true
+        view.addSubview(collectionView)
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            collectionView.topAnchor.constraint(equalTo: searchBar.bottomAnchor),
+            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
 
-        // NOTE: the toolbar is a subview of the keyboard layout view so it
-        // properly animates as the keyboard rises. making it part of the content view
-        // cancels those animations and makes it pop into place which looks bad.
-        // might be worth ripping apart at some point.
-        keyboardLayoutGuideView.addSubview(sectionToolbar)
-        sectionToolbar.autoPinEdge(.leading, to: .leading, of: contentView)
-        sectionToolbar.autoPinEdge(.trailing, to: .trailing, of: contentView)
-        sectionToolbar.autoPinEdge(.bottom, to: .bottom, of: keyboardLayoutGuideView)
-    }
+        view.addSubview(sectionToolbar)
+        sectionToolbar.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            sectionToolbar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            sectionToolbar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            sectionToolbar.bottomAnchor.constraint(equalTo: keyboardLayoutGuide.topAnchor, constant: -8),
+        ])
 
-    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
-        super.viewWillTransition(to: size, with: coordinator)
-        coordinator.animate(alongsideTransition: { _ in
-            self.collectionView.reloadData()
-        }, completion: nil)
+#if compiler(>=6.2)
+        // Obscures content underneath the emoji section toolbar to improve legibility.
+        if #available(iOS 26, *) {
+            let scrollInteraction = UIScrollEdgeElementContainerInteraction()
+            scrollInteraction.scrollView = collectionView
+            scrollInteraction.edge = .bottom
+            sectionToolbar.addInteraction(scrollInteraction)
+        }
+#endif
     }
 
     public override func viewDidLayoutSubviews() {
@@ -129,7 +133,7 @@ class EmojiPickerSheet: InteractiveSheetViewController {
         // Ensure the scrollView's layout has completed
         // as we're about to use its bounds to calculate
         // the masking view and contentOffset.
-        contentView.layoutIfNeeded()
+        view.layoutIfNeeded()
 
         // Ensure you can scroll to the last emoji without
         // them being stuck behind the toolbar.
@@ -137,7 +141,6 @@ class EmojiPickerSheet: InteractiveSheetViewController {
         let contentInset = UIEdgeInsets(top: 0, leading: 0, bottom: bottomInset, trailing: 0)
         collectionView.contentInset = contentInset
         collectionView.scrollIndicatorInsets = contentInset
-
     }
 
     @objc
@@ -149,7 +152,15 @@ class EmojiPickerSheet: InteractiveSheetViewController {
         let navController = UINavigationController(rootViewController: configVC)
         self.present(navController, animated: true)
     }
+
+    private func maximizeHeight() {
+        sheetPresentationController?.animateChanges {
+            sheetPresentationController?.selectedDetentIdentifier = .large
+        }
+    }
 }
+
+// MARK: - EmojiPickerSectionToolbarDelegate
 
 extension EmojiPickerSheet: EmojiPickerSectionToolbarDelegate {
     func emojiPickerSectionToolbar(_ sectionToolbar: EmojiPickerSectionToolbar, didSelectSection section: Int) {
@@ -184,6 +195,8 @@ extension EmojiPickerSheet: EmojiPickerSectionToolbarDelegate {
     }
 }
 
+// MARK: - EmojiPickerCollectionViewDelegate
+
 extension EmojiPickerSheet: EmojiPickerCollectionViewDelegate {
     func emojiPicker(_ emojiPicker: EmojiPickerCollectionView, didSelectEmoji emoji: EmojiWithSkinTones) {
         ImpactHapticFeedback.impactOccurred(style: .light)
@@ -203,6 +216,16 @@ extension EmojiPickerSheet: EmojiPickerCollectionViewDelegate {
         }
     }
 }
+
+// MARK: - UISheetPresentationControllerDelegate
+
+extension EmojiPickerSheet: UISheetPresentationControllerDelegate {
+    func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+        completionHandler(nil)
+    }
+}
+
+// MARK: - UISearchBarDelegate
 
 extension EmojiPickerSheet: UISearchBarDelegate {
     func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {

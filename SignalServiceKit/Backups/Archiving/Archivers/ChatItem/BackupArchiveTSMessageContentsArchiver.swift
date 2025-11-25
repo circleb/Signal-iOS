@@ -33,13 +33,33 @@ extension BackupArchive {
         }
 
         struct Text {
-            let body: MessageBody?
+            struct RestoredMessageBody: ValidatedInlineMessageBody {
+                enum OversizeText {
+                    // The exporter presumably hadn't downloaded the attachment
+                    // at export time, so all we have is a pointer.
+                    case attachmentPointer(BackupProto_FilePointer)
+                    // Any time the exporter has downloaded the oversize text
+                    // attachment, they inline the text in the backup proto.
+                    // We will unfold it back into a restored attachment stream.
+                    case inlined(String)
+                }
+
+                // This is the body we put on the message
+                let inlinedBody: MessageBody
+                fileprivate let oversizeText: OversizeText?
+
+                init(inlinedBody: MessageBody, oversizeText: OversizeText?) {
+                    self.inlinedBody = inlinedBody
+                    self.oversizeText = oversizeText
+                }
+            }
+
+            let body: RestoredMessageBody?
             let quotedMessage: TSQuotedMessage?
             let linkPreview: OWSLinkPreview?
             let isVoiceMessage: Bool
 
             fileprivate let reactions: [BackupProto_Reaction]
-            fileprivate let oversizeTextAttachment: BackupProto_FilePointer?
             fileprivate let bodyAttachments: [BackupProto_MessageAttachment]
             fileprivate let quotedMessageThumbnail: BackupProto_MessageAttachment?
             fileprivate let linkPreviewImage: BackupProto_FilePointer?
@@ -79,8 +99,7 @@ extension BackupArchive {
         struct StoryReply {
             enum ReplyType {
                 struct TextReply {
-                    let body: MessageBody
-                    fileprivate let oversizeTextAttachment: BackupProto_FilePointer?
+                    let body: Text.RestoredMessageBody
                 }
 
                 case textReply(TextReply)
@@ -88,6 +107,13 @@ extension BackupArchive {
             }
 
             let replyType: ReplyType
+            fileprivate let reactions: [BackupProto_Reaction]
+        }
+
+        struct Poll {
+            let poll: BackupsPollData
+            let question: Text.RestoredMessageBody
+
             fileprivate let reactions: [BackupProto_Reaction]
         }
 
@@ -100,6 +126,7 @@ extension BackupArchive {
         case viewOnceMessage(ViewOnceMessage)
         /// Note: only includes 1:1 story replies, not group story replies.
         case storyReply(StoryReply)
+        case poll(Poll)
     }
 }
 
@@ -119,18 +146,24 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
     private lazy var contactAttachmentArchiver = BackupArchiveContactAttachmentArchiver(
         attachmentsArchiver: attachmentsArchiver
     )
+    private let oversizeTextArchiver: BackupArchiveInlinedOversizeTextArchiver
     private let reactionArchiver: BackupArchiveReactionArchiver
+    private let pollArchiver: BackupArchivePollArchiver
 
     init(
         interactionStore: BackupArchiveInteractionStore,
         archivedPaymentStore: ArchivedPaymentStore,
         attachmentsArchiver: BackupArchiveMessageAttachmentArchiver,
-        reactionArchiver: BackupArchiveReactionArchiver
+        oversizeTextArchiver: BackupArchiveInlinedOversizeTextArchiver,
+        reactionArchiver: BackupArchiveReactionArchiver,
+        pollArchiver: BackupArchivePollArchiver
     ) {
         self.interactionStore = interactionStore
         self.archivedPaymentStore = archivedPaymentStore
         self.attachmentsArchiver = attachmentsArchiver
+        self.oversizeTextArchiver = oversizeTextArchiver
         self.reactionArchiver = reactionArchiver
+        self.pollArchiver = pollArchiver
     }
 
     // MARK: - Archiving
@@ -194,6 +227,13 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
                 messageRowId: messageRowId,
                 context: context
             )
+        } else if message.isPoll {
+            return pollArchiver.archivePoll(
+                message,
+                messageRowId: messageRowId,
+                interactionUniqueId: message.uniqueInteractionId,
+                context: context
+            )
         } else {
             return archiveStandardMessageContents(
                 message,
@@ -248,7 +288,7 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
             let paymentNotification = message.paymentNotification,
             let model = PaymentFinder.paymentModels(
                 forMcReceiptData: paymentNotification.mcReceiptData,
-                transaction: SDSDB.shimOnlyBridge(context.tx)
+                transaction: context.tx
             ).first
         else {
             return .messageFailure([.archiveFrameError(.missingPaymentInformation, uniqueInteractionId)])
@@ -309,9 +349,24 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
         if let messageBody = message.body?.nilIfEmpty {
             hasPrimaryContent = true
 
+            let oversizeTextResult = oversizeTextArchiver.archiveMessageBody(
+                text: messageBody,
+                messageRowId: messageRowId,
+                messageId: message.uniqueInteractionId,
+                context: context
+            )
+
+            let archivedBody: BackupArchive.ArchivedMessageBody
+            switch oversizeTextResult.bubbleUp(ChatItemType.self, partialErrors: &partialErrors) {
+            case .continue(let _archivedBody):
+                archivedBody = _archivedBody
+            case .bubbleUpError(let errorResult):
+                return errorResult
+            }
+
             let text: BackupProto_Text
             let textResult = archiveText(
-                MessageBody(text: messageBody, ranges: message.bodyRanges ?? .empty),
+                MessageBody(text: archivedBody.inlinedText, ranges: message.bodyRanges ?? .empty),
                 interactionUniqueId: message.uniqueInteractionId
             )
             switch textResult.bubbleUp(ChatItemType.self, partialErrors: &partialErrors) {
@@ -321,21 +376,8 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
                 return errorResult
             }
             standardMessage.text = text
-
-            // Oversize text is only ever a thing _alongside_ body text, the body
-            // text is a prefix of the oversize text.
-
-            // Returns nil if no oversize text; this is both how we check and how we archive.
-            let oversizeTextResult = attachmentsArchiver.archiveOversizeTextAttachment(
-                messageRowId: messageRowId,
-                messageId: message.uniqueInteractionId,
-                context: context
-            )
-            switch oversizeTextResult.bubbleUp(ChatItemType.self, partialErrors: &partialErrors) {
-            case .continue(let oversizeTextAttachmentProto):
-                oversizeTextAttachmentProto.map { standardMessage.longText = $0 }
-            case .bubbleUpError(let errorResult):
-                return errorResult
+            if let oversizedTextPointer = archivedBody.oversizedTextPointer {
+                standardMessage.longText = oversizedTextPointer
             }
         }
 
@@ -426,7 +468,10 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
             bodyRange.start = bodyRangeParam.start
             bodyRange.length = bodyRangeParam.length
 
-            if let mentionAci = Aci.parseFrom(aciString: bodyRangeParam.mentionAci) {
+            if let mentionAci = Aci.parseFrom(
+                serviceIdBinary: bodyRangeParam.mentionAciBinary,
+                serviceIdString: bodyRangeParam.mentionAci,
+            ) {
                 bodyRange.associatedValue = .mentionAci(
                     mentionAci.serviceIdBinary
                 )
@@ -511,14 +556,25 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
                 return errorResult
             }
 
-            quote.text = { () -> BackupProto_Text in
+            let quoteText = { () -> BackupProto_Text? in
                 var quoteText = BackupProto_Text()
-                quoteText.body = text.body
-                quoteText.bodyRanges = text.bodyRanges
-                return quoteText
+                // We do not allow oversize text in quotes; truncate if some historical bug
+                // cause quotes to contain more than the usual oversize text threshold.
+                let trimmedQuoteText = text.body.trimToUtf8ByteCount(OWSMediaUtils.kOversizeTextMessageSizeThresholdBytes)
+                // If, after trimming the quote text, we end up with an empty string,
+                // skip setting a quote text entirely
+                if let quoteTextBody = trimmedQuoteText.nilIfEmpty {
+                    quoteText.body = quoteTextBody
+                    quoteText.bodyRanges = text.bodyRanges
+                    return quoteText
+                } else {
+                    return nil
+                }
             }()
-
-            didArchiveText = true
+            if let quoteText {
+                quote.text = quoteText
+                didArchiveText = true
+            }
         }
 
         if let attachmentInfo = quotedMessage.attachmentInfo() {
@@ -542,6 +598,8 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
             quote.type = .giftBadge
         } else if quotedMessage.isTargetMessageViewOnce {
             quote.type = .viewOnce
+        } else if quotedMessage.isPoll {
+            quote.type = .poll
         } else {
             guard didArchiveText || didArchiveAttachments else {
                 // NORMAL-type quotes must have either text or attachments, lest
@@ -631,13 +689,21 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
         proto.url = url
         linkPreview.title.map { proto.title = $0 }
         linkPreview.previewDescription.map { proto.description_p = $0 }
-        BackupArchive.Timestamps.setTimestampIfValid(
-            from: linkPreview,
-            \.date?.ows_millisecondsSince1970,
-            on: &proto,
-            \.date,
-            allowZero: true
-        )
+
+        // Link preview dates could be arbitrarily old, and .ows_millisecondsSince1970
+        // crashes if date.timeIntervalSince1970 is negative.
+        if
+            let date = linkPreview.date,
+            date.timeIntervalSince1970 >= 0
+        {
+            BackupArchive.Timestamps.setTimestampIfValid(
+                from: date,
+                \.ows_millisecondsSince1970,
+                on: &proto,
+                \.date,
+                allowZero: true,
+            )
+        }
 
         // Returns nil if no link preview image; this is both how we check presence and how we archive.
         let imageResult = attachmentsArchiver.archiveLinkPreviewAttachment(
@@ -914,8 +980,23 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
                 )])
             }
 
+            let oversizeTextResult = oversizeTextArchiver.archiveMessageBody(
+                text: body,
+                messageRowId: messageRowId,
+                messageId: message.uniqueInteractionId,
+                context: context
+            )
+
+            let archivedBody: BackupArchive.ArchivedMessageBody
+            switch oversizeTextResult.bubbleUp(ChatItemType.self, partialErrors: &partialErrors) {
+            case .continue(let _archivedBody):
+                archivedBody = _archivedBody
+            case .bubbleUpError(let errorResult):
+                return errorResult
+            }
+
             let textResult = archiveText(
-                MessageBody(text: body, ranges: message.bodyRanges ?? .empty),
+                MessageBody(text: archivedBody.inlinedText, ranges: message.bodyRanges ?? .empty),
                 interactionUniqueId: interactionUniqueId
             )
             let text: BackupProto_Text
@@ -927,19 +1008,8 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
             }
             var textReply = BackupProto_DirectStoryReplyMessage.TextReply()
             textReply.text = text
-
-            // We'll only have oversize text if we also have a message body. If
-            // the following returns `nil`, we had no oversize text.
-            let oversizeTextResult = attachmentsArchiver.archiveOversizeTextAttachment(
-                messageRowId: messageRowId,
-                messageId: message.uniqueInteractionId,
-                context: context
-            )
-            switch oversizeTextResult.bubbleUp(ChatItemType.self, partialErrors: &partialErrors) {
-            case .continue(let oversizeTextAttachmentProto):
-                oversizeTextAttachmentProto.map { textReply.longText = $0 }
-            case .bubbleUpError(let errorResult):
-                return errorResult
+            if let oversizedTextPointer = archivedBody.oversizedTextPointer {
+                textReply.longText = oversizedTextPointer
             }
 
             proto.reply = .textReply(textReply)
@@ -1038,6 +1108,13 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
                 chatThread: chatThread,
                 context: context
             )
+        case .poll(let poll):
+            return restorePollMessage(
+                poll,
+                chatItemId: chatItemId,
+                chatThread: chatThread,
+                context: context
+            )
         case .updateMessage:
             return .messageFailure([.restoreFrameError(
                 .developerError(OWSAssertionError("Chat update has no contents to restore!")),
@@ -1081,13 +1158,13 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
                 message: message,
                 context: context.recipientContext
             ))
-            if let oversizeTextAttachment = text.oversizeTextAttachment {
-                downstreamObjectResults.append(attachmentsArchiver.restoreOversizeTextAttachment(
-                    oversizeTextAttachment,
-                    chatItemId: chatItemId,
+            if let oversizeText = text.body?.oversizeText {
+                downstreamObjectResults.append(oversizeTextArchiver.restoreOversizeText(
+                    oversizeText,
                     messageRowId: messageRowId,
                     message: message,
                     thread: thread,
+                    chatItemId: chatItemId,
                     context: context
                 ))
             }
@@ -1185,19 +1262,36 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
 
             switch storyReply.replyType {
             case .textReply(let textReply):
-                if let oversizeTextAttachment = textReply.oversizeTextAttachment {
-                    downstreamObjectResults.append(attachmentsArchiver.restoreOversizeTextAttachment(
-                        oversizeTextAttachment,
-                        chatItemId: chatItemId,
+                if let oversizeText = textReply.body.oversizeText {
+                    downstreamObjectResults.append(oversizeTextArchiver.restoreOversizeText(
+                        oversizeText,
                         messageRowId: messageRowId,
                         message: message,
                         thread: thread,
+                        chatItemId: chatItemId,
                         context: context
                     ))
                 }
             case .emoji:
                 break
             }
+        case .poll(let poll):
+            downstreamObjectResults.append(reactionArchiver.restoreReactions(
+                poll.reactions,
+                chatItemId: chatItemId,
+                message: message,
+                context: context.recipientContext
+            ))
+
+            downstreamObjectResults.append(
+                pollArchiver.restorePoll(
+                    poll,
+                    chatItemId: chatItemId,
+                    message: message,
+                    context: context.recipientContext
+                )
+            )
+
         case .remoteDeleteTombstone, .giftBadge:
             // Nothing downstream to restore.
             break
@@ -1381,13 +1475,6 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
             oversizeTextAttachment = nil
         }
 
-        if oversizeTextAttachment != nil && standardMessage.text.body.isEmpty {
-            return .messageFailure([.restoreFrameError(
-                .invalidProtoData(.longTextStandardMessageMissingBody),
-                chatItemId
-            )])
-        }
-
         if standardMessage.text.body.isEmpty && standardMessage.attachments.isEmpty {
             return .messageFailure([.restoreFrameError(
                 .invalidProtoData(.emptyStandardMessage),
@@ -1406,7 +1493,11 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
             isVoiceMessage = false
         }
 
-        let messageBodyResult = restoreMessageBody(text, chatItemId: chatItemId)
+        let messageBodyResult = restoreMessageBody(
+            text,
+            oversizeTextAttachment: oversizeTextAttachment,
+            chatItemId: chatItemId,
+        )
         switch messageBodyResult {
         case .success(let body):
             let contents = BackupArchive.RestoredMessageContents.text(.init(
@@ -1415,7 +1506,6 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
                 linkPreview: linkPreview,
                 isVoiceMessage: isVoiceMessage,
                 reactions: standardMessage.reactions,
-                oversizeTextAttachment: oversizeTextAttachment,
                 bodyAttachments: standardMessage.attachments,
                 quotedMessageThumbnail: quotedMessageThumbnail,
                 linkPreviewImage: linkPreviewAttachment
@@ -1433,7 +1523,6 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
                     linkPreview: linkPreview,
                     isVoiceMessage: isVoiceMessage,
                     reactions: standardMessage.reactions,
-                    oversizeTextAttachment: oversizeTextAttachment,
                     bodyAttachments: standardMessage.attachments,
                     quotedMessageThumbnail: quotedMessageThumbnail,
                     linkPreviewImage: linkPreviewAttachment
@@ -1447,16 +1536,20 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
         }
     }
 
+    typealias RestoredMessageBody = BackupArchive.RestoredMessageContents.Text.RestoredMessageBody
+
     private func restoreMessageBody(
         _ text: BackupProto_Text,
+        oversizeTextAttachment: BackupProto_FilePointer?,
         chatItemId: BackupArchive.ChatItemId
-    ) -> RestoreInteractionResult<MessageBody?> {
+    ) -> RestoreInteractionResult<RestoredMessageBody?> {
         guard text.body.isEmpty.negated else {
             return .success(nil)
         }
         return restoreMessageBody(
             text: text.body,
             bodyRangeProtos: text.bodyRanges,
+            oversizeTextAttachment: oversizeTextAttachment,
             chatItemId: chatItemId
         )
     }
@@ -1464,8 +1557,9 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
     private func restoreMessageBody(
         text: String,
         bodyRangeProtos: [BackupProto_BodyRange],
+        oversizeTextAttachment: BackupProto_FilePointer?,
         chatItemId: BackupArchive.ChatItemId
-    ) -> RestoreInteractionResult<MessageBody?> {
+    ) -> RestoreInteractionResult<RestoredMessageBody?> {
         var partialErrors = [RestoreFrameError]()
         var bodyMentions = [NSRange: Aci]()
         var bodyStyles = [NSRangedValue<MessageBodyRanges.SingleStyle>]()
@@ -1510,14 +1604,27 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
             }
         }
         let bodyRanges = MessageBodyRanges(mentions: bodyMentions, styles: bodyStyles)
-        let body = MessageBody(text: text, ranges: bodyRanges)
+
+        let restoredBody: RestoredMessageBody?
+        switch oversizeTextArchiver.restoreMessageBody(
+            text,
+            bodyRanges: bodyRanges,
+            oversizeTextAttachment: oversizeTextAttachment,
+            chatItemId: chatItemId
+        ).bubbleUp(Optional<RestoredMessageBody>.self, partialErrors: &partialErrors, ) {
+        case .continue(let component):
+            restoredBody = component
+        case .bubbleUpError(let error):
+            return error
+        }
+
         if partialErrors.isEmpty {
-            return .success(body)
+            return .success(restoredBody)
         } else {
             // We still get text, albeit without any mentions or styles, if
             // we have these failures. So count as a partial restore, not
             // complete failure.
-            return .partialRestore(body, partialErrors)
+            return .partialRestore(restoredBody, partialErrors)
         }
     }
 
@@ -1578,6 +1685,8 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
                 .restoreMessageBody(
                     text: quote.text.body,
                     bodyRangeProtos: quote.text.bodyRanges,
+                    // Quotes don't support oversize text
+                    oversizeTextAttachment: nil,
                     chatItemId: chatItemId
                 )
                 .bubbleUp(
@@ -1586,7 +1695,14 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
                 )
             {
             case .continue(let component):
-                quoteBody = component
+                // We drop oversize text for quotes, if any.
+                if component?.oversizeText != nil {
+                    partialErrors.append(.restoreFrameError(
+                        .invalidProtoData(.quotedMessageOversizeText),
+                        chatItemId
+                    ))
+                }
+                quoteBody = component?.inlinedBody
             case .bubbleUpError(let error):
                 return error
             }
@@ -1596,16 +1712,24 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
 
         let isGiftBadge: Bool
         let isTargetMessageViewOnce: Bool
+        let isPoll: Bool
         switch quote.type {
         case .UNRECOGNIZED, .unknown, .normal:
             isGiftBadge = false
             isTargetMessageViewOnce = false
+            isPoll = false
         case .viewOnce:
             isGiftBadge = false
             isTargetMessageViewOnce = true
+            isPoll = false
         case .giftBadge:
             isGiftBadge = true
             isTargetMessageViewOnce = false
+            isPoll = false
+        case .poll:
+            isGiftBadge = false
+            isTargetMessageViewOnce = false
+            isPoll = true
         }
 
         let quotedAttachmentInfo: OWSAttachmentInfo?
@@ -1653,7 +1777,8 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
             bodySource: bodySource,
             quotedAttachmentInfo: quotedAttachmentInfo,
             isGiftBadge: isGiftBadge,
-            isTargetMessageViewOnce: isTargetMessageViewOnce
+            isTargetMessageViewOnce: isTargetMessageViewOnce,
+            isPoll: isPoll
         )
 
         if partialErrors.isEmpty {
@@ -1870,10 +1995,11 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
                 nil
             }
 
-            let messageBody: MessageBody?
+            let messageBody: RestoredMessageBody?
             switch self
                 .restoreMessageBody(
                     textReply.text,
+                    oversizeTextAttachment: oversizeTextAttachment,
                     chatItemId: chatItemId
                 )
                 .bubbleUp(
@@ -1889,8 +2015,7 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
 
             if let messageBody {
                 replyType = .textReply(.init(
-                    body: messageBody,
-                    oversizeTextAttachment: oversizeTextAttachment
+                    body: messageBody
                 ))
             } else {
                 let restoreErrorType: RestoreFrameError.ErrorType
@@ -1917,6 +2042,101 @@ class BackupArchiveTSMessageContentsArchiver: BackupArchiveProtoStreamWriter {
             replyType: replyType,
             reactions: storyReply.reactions
         )))
+    }
+
+    // MARK: -
+
+    typealias BackupsPollVote = BackupsPollData.BackupsPollOption.BackupsPollVote
+    typealias BackupsPollOption = BackupsPollData.BackupsPollOption
+
+    /// Polls
+    private func restorePollMessage(
+        _ poll: BackupProto_Poll,
+        chatItemId: BackupArchive.ChatItemId,
+        chatThread: BackupArchive.ChatThread,
+        context: BackupArchive.ChatItemRestoringContext
+    ) -> RestoreInteractionResult<BackupArchive.RestoredMessageContents> {
+        var partialErrors = [RestoreFrameError]()
+
+        var options: [BackupsPollData.BackupsPollOption] = []
+        for optionProto in poll.options {
+            var votes: [BackupsPollVote] = []
+            for voteProto in optionProto.votes {
+                var voteAuthorId: SignalRecipient.RowId?
+                let recipientId = BackupArchive.RecipientId(value: voteProto.voterID)
+                switch context.recipientContext[recipientId] {
+                case .localAddress:
+                    voteAuthorId = context.recipientContext.localSignalRecipientRowId
+                case .contact:
+                    voteAuthorId = context.recipientContext.recipientDbRowId(forBackupRecipientId: recipientId)
+                default:
+                    partialErrors += [.restoreFrameError(
+                        .invalidProtoData(.pollVoteAuthorNotContact),
+                        chatItemId
+                    )]
+                }
+
+                guard let voteAuthorId else {
+                    partialErrors += [.restoreFrameError(
+                        .invalidProtoData(.recipientIdNotFound(recipientId)),
+                        chatItemId
+                    )]
+                    continue
+                }
+                votes.append(BackupsPollVote(voteAuthorId: voteAuthorId, voteCount: voteProto.voteCount))
+            }
+            options.append(BackupsPollOption(text: optionProto.option, votes: votes))
+        }
+
+        let pollData = BackupsPollData(
+            question: poll.question,
+            allowMultiple: poll.allowMultiple,
+            isEnded: poll.hasEnded_p,
+            options: options
+        )
+
+        var pollQuestion: RestoredMessageBody
+
+        switch self
+            .restoreMessageBody(
+                text: poll.question,
+                bodyRangeProtos: [],
+                oversizeTextAttachment: nil,
+                chatItemId: chatItemId
+            )
+            .bubbleUp(
+                BackupArchive.RestoredMessageContents.self,
+                partialErrors: &partialErrors
+            )
+        {
+        case .continue(let component):
+            guard let component else {
+                return .messageFailure([.restoreFrameError(
+                    .invalidProtoData(.pollQuestionEmpty),
+                    chatItemId
+                )] + partialErrors)
+            }
+            pollQuestion = component
+        case .bubbleUpError(let error):
+            return error
+        }
+
+        let poll = BackupArchive.RestoredMessageContents.Poll(
+            poll: pollData,
+            question: pollQuestion,
+            reactions: poll.reactions
+        )
+
+        if partialErrors.isEmpty {
+            return .success(
+                .poll(poll)
+            )
+        } else {
+            return .partialRestore(
+                .poll(poll),
+                partialErrors
+            )
+        }
     }
 }
 

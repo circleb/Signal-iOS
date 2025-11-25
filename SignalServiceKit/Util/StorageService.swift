@@ -342,7 +342,6 @@ public struct StorageService {
                 } else {
                     /// If we don't have a `recordIkm` yet, fall back to the
                     /// SVR-derived key.
-                    ///
                     let itemEncryptionResult = masterKey.encrypt(
                         keyType: .legacy_storageServiceRecord(identifier: item.identifier),
                         data: plaintextRecordData
@@ -696,14 +695,10 @@ public struct StorageService {
     ) async throws -> (username: String, password: String) {
         let request = OWSRequestFactory.storageAuthRequest(auth: chatServiceAuth)
 
-        let response = try await SSKEnvironment.shared.networkManagerRef
-            .asyncRequest(request, canUseWebSocket: false)
+        let response = try await SSKEnvironment.shared.networkManagerRef.asyncRequest(request)
 
-        guard let json = response.responseBodyJson else {
+        guard let parser = response.responseBodyParamParser else {
             throw OWSAssertionError("Missing or invalid JSON.")
-        }
-        guard let parser = ParamParser(responseObject: json) else {
-            throw OWSAssertionError("Missing or invalid response.")
         }
 
         let username: String = try parser.required(key: "username")

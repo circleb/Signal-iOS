@@ -101,12 +101,12 @@ class RegistrationPhoneNumberViewController: OWSViewController {
     // MARK: Internal state
 
     private var state: RegistrationPhoneNumberViewState.RegistrationMode {
-        didSet { render() }
+        didSet { configureUI() }
     }
     private weak var presenter: RegistrationPhoneNumberPresenter?
 
     private var now = Date() {
-        didSet { render() }
+        didSet { configureUI() }
     }
     private var nowTimer: Timer?
 
@@ -117,7 +117,7 @@ class RegistrationPhoneNumberViewController: OWSViewController {
     }
 
     private var localValidationError: RegistrationPhoneNumberViewState.ValidationError? {
-        didSet { render() }
+        didSet { configureUI() }
     }
 
     private var validationError: RegistrationPhoneNumberViewState.ValidationError? {
@@ -151,26 +151,30 @@ class RegistrationPhoneNumberViewController: OWSViewController {
         }
     }
 
-    // MARK: Rendering
+    private func explanationText() -> String {
+        if canChangePhoneNumber {
+            return OWSLocalizedString(
+                "REGISTRATION_PHONE_NUMBER_SUBTITLE",
+                comment: "During registration, users are asked to enter their phone number. This is the subtitle on that screen, which gives users some instructions."
+            )
+        }
+        return OWSLocalizedString(
+            "REGISTRATION_PHONE_NUMBER_SUBTITLE_2",
+            comment: "During re-registration, users are asked to confirm their phone number. This is the subtitle on that screen, which gives users some instructions."
+        )
+    }
+
+    // MARK: UI
 
     private lazy var contextButton: ContextMenuButton = {
         let result = ContextMenuButton(empty: ())
+        result.setImage(Theme.iconImage(.buttonMore), for: .normal)
+        if #unavailable(iOS 26) {
+            result.tintColor = .Signal.accent
+        }
         result.autoSetDimensions(to: .square(40))
         return result
     }()
-
-    private lazy var contextBarButton = UIBarButtonItem(
-        customView: contextButton,
-        accessibilityIdentifier: "registration.verificationCode.contextButton"
-    )
-
-    private lazy var nextBarButton = UIBarButtonItem(
-        title: CommonStrings.nextButton,
-        style: .done,
-        target: self,
-        action: #selector(didTapNext),
-        accessibilityIdentifier: "registration.phonenumber.nextButton"
-    )
 
     private lazy var titleLabel: UILabel = {
         let result = UILabel.titleLabelForRegistration(text: OWSLocalizedString(
@@ -182,18 +186,12 @@ class RegistrationPhoneNumberViewController: OWSViewController {
     }()
 
     private lazy var explanationLabel: UILabel = {
-        let result = UILabel.explanationLabelForRegistration(text: OWSLocalizedString(
-            "REGISTRATION_PHONE_NUMBER_SUBTITLE",
-            comment: "During registration, users are asked to enter their phone number. This is the subtitle on that screen, which gives users some instructions."
-        ))
+        let result = UILabel.explanationLabelForRegistration(text: explanationText())
         result.accessibilityIdentifier = "registration.phonenumber.explanationLabel"
         return result
     }()
 
     private let phoneNumberInput: RegistrationPhoneNumberInputView
-
-    private var phoneStrokeNormal: UIView?
-    private var phoneStrokeError: UIView?
 
     private lazy var ssoIndicatorLabel: UILabel = {
         let result = UILabel()
@@ -210,26 +208,56 @@ class RegistrationPhoneNumberViewController: OWSViewController {
         let result = UILabel()
         result.textColor = .ows_accentRed
         result.numberOfLines = 0
-        result.font = UIFont.dynamicTypeSubheadlineClamped
+        result.font = .dynamicTypeSubheadlineClamped
         result.accessibilityIdentifier = "registration.phonenumber.validationWarningLabel"
         return result
     }()
 
-    private lazy var cancelButton: UIButton = {
-        var config = UIButton.Configuration.plain()
-        config.contentInsets = .init(margin: 14)
-        config.title = CommonStrings.cancelButton
-        config.titleTextAttributesTransformer = .defaultFont(.dynamicTypeHeadline.semibold())
-        return UIButton(configuration: config, primaryAction: UIAction { [weak self] _ in
+    private lazy var cancelButton = UIButton(
+        configuration: .mediumSecondary(title: CommonStrings.cancelButton),
+        primaryAction: UIAction { [weak self] _ in
             self?.phoneNumberInput.resignFirstResponder()
             self?.presenter?.cancelChosenRestoreMethod()
-        })
-    }()
+        }
+    )
 
     public override func viewDidLoad() {
         super.viewDidLoad()
 
-        initialRender()
+        view.backgroundColor = .Signal.background
+
+        navigationItem.leftBarButtonItem = UIBarButtonItem(
+            customView: contextButton,
+            accessibilityIdentifier: "registration.verificationCode.contextButton"
+        )
+        navigationItem.rightBarButtonItem = {
+            let barButtonItem = UIBarButtonItem(
+                title: CommonStrings.nextButton,
+                style: .done,
+                target: self,
+                action: #selector(didTapNext),
+                accessibilityIdentifier: "registration.phonenumber.nextButton"
+            )
+            barButtonItem.tintColor = .Signal.accent
+            return barButtonItem
+        }()
+
+        let stackView = addStaticContentStackView(
+            arrangedSubviews: [
+                titleLabel,
+                explanationLabel,
+                phoneNumberInput,
+                ssoIndicatorLabel,
+                validationWarningLabel,
+                .vStretchingSpacer(),
+                cancelButton.enclosedInVerticalStackView(isFullWidthButton: false),
+            ],
+            shouldAvoidKeyboard: true
+        )
+        stackView.setCustomSpacing(24, after: explanationLabel)
+        stackView.setCustomSpacing(8, after: ssoIndicatorLabel)
+
+        configureUI()
 
         // We only need this timer if the user has been rate limited, but it's simpler to always
         // start it.
@@ -264,42 +292,7 @@ class RegistrationPhoneNumberViewController: OWSViewController {
         }
     }
 
-    public override func themeDidChange() {
-        super.themeDidChange()
-        render()
-    }
-
-    private func initialRender() {
-        let stackView = UIStackView()
-
-        stackView.axis = .vertical
-        view.addSubview(stackView)
-        stackView.autoPinEdgesToSuperviewMargins()
-
-        stackView.addArrangedSubview(titleLabel)
-        stackView.setCustomSpacing(12, after: titleLabel)
-
-        stackView.addArrangedSubview(explanationLabel)
-        stackView.setCustomSpacing(24, after: explanationLabel)
-
-        stackView.addArrangedSubview(phoneNumberInput)
-        stackView.setCustomSpacing(11, after: phoneNumberInput)
-
-        stackView.addArrangedSubview(ssoIndicatorLabel)
-        stackView.setCustomSpacing(8, after: ssoIndicatorLabel)
-
-        stackView.addArrangedSubview(validationWarningLabel)
-
-        stackView.addArrangedSubview(UIView.vStretchingSpacer())
-
-        self.view.addSubview(cancelButton)
-        cancelButton.autoHCenterInSuperview()
-        cancelButton.autoPinEdge(.bottom, to: .bottom, of: keyboardLayoutGuideViewSafeArea, withOffset: -24)
-
-        render()
-    }
-
-    private func render() {
+    private func configureUI() {
         var actions: [UIAction] = [
             UIAction(
                 title: OWSLocalizedString(
@@ -308,7 +301,7 @@ class RegistrationPhoneNumberViewController: OWSViewController {
                 ),
                 handler: { [weak self] _ in
                     guard let self else { return }
-                    let vc = ProxySettingsViewController(validationMethod: .restGetRegistrationSession)
+                    let vc = ProxySettingsViewController()
                     self.presentFormSheet(OWSNavigationController(rootViewController: vc), animated: true)
                 }
             )
@@ -341,10 +334,6 @@ class RegistrationPhoneNumberViewController: OWSViewController {
             ))
         }
         contextButton.setActions(actions: actions)
-        navigationItem.leftBarButtonItem = contextBarButton
-
-        contextButton.setImage(Theme.iconImage(.buttonMore), for: .normal)
-        contextButton.tintColor = Theme.accentBlueColor
 
         let now = Date()
 
@@ -361,10 +350,11 @@ class RegistrationPhoneNumberViewController: OWSViewController {
             }
         }()
 
-        navigationItem.rightBarButtonItem = canSubmit(isBlockedByValidationError: isBlockedByValidationError) ? nextBarButton : nil
+        navigationItem.rightBarButtonItem?.isEnabled = canSubmit(isBlockedByValidationError: isBlockedByValidationError)
 
         phoneNumberInput.isEnabled = canChangePhoneNumber
-        phoneNumberInput.render()
+
+        explanationLabel.text = explanationText()
 
         // We always render the warning label but sometimes invisibly. This avoids UI jumpiness.
         if isBlockedByValidationError, let validationError {
@@ -391,19 +381,6 @@ class RegistrationPhoneNumberViewController: OWSViewController {
         case let .invalidE164(error):
             showInvalidPhoneNumberAlertIfNecessary(for: .invalidE164(error.invalidE164))
         }
-
-        view.backgroundColor = Theme.backgroundColor
-        nextBarButton.tintColor = Theme.accentBlueColor
-        titleLabel.textColor = .colorForRegistrationTitleLabel
-        explanationLabel.textColor = .colorForRegistrationExplanationLabel
-
-        // In some cases, the safe area insets will change unexpectedly after presenting a view
-        // controller. This causes layout jumpiness.
-        //
-        // After several of us investigated, we believe it to be an iOS bug with Dynamic Island
-        // devices, but we aren't sure. In any case, forcing a relayout fixes the bug and seems to
-        // keep the safe area insets from changing.
-        view.layoutSubviews()
     }
 
     private enum InvalidNumberError: Equatable {
@@ -458,6 +435,11 @@ class RegistrationPhoneNumberViewController: OWSViewController {
         }
         localValidationError = nil
 
+        guard canChangePhoneNumber else {
+            presenter?.goToNextStep(withE164: e164)
+            return
+        }
+
         presentActionSheet(.forRegistrationVerificationConfirmation(
             mode: .sms,
             e164: e164.stringValue,
@@ -476,7 +458,7 @@ extension RegistrationPhoneNumberViewController: RegistrationPhoneNumberInputVie
     }
 
     func didChange() {
-        render()
+        configureUI()
     }
 
     func didPressReturn() {

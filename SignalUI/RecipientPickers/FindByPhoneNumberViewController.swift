@@ -35,7 +35,7 @@ public class FindByPhoneNumberViewController: OWSTableViewController2 {
 
     private var titleAttributes: [NSAttributedString.Key: Any] {
         [
-            .font: UIFont.dynamicTypeBodyClamped.semibold(),
+            .font: UIFont.dynamicTypeHeadlineClamped,
             .foregroundColor: Theme.primaryTextColor,
         ]
     }
@@ -273,8 +273,7 @@ extension FindByPhoneNumberViewController: CountryCodeViewControllerDelegate {
     }
 
     private func didTapCountryRow() {
-        let countryCodeController = CountryCodeViewController()
-        countryCodeController.countryCodeDelegate = self
+        let countryCodeController = CountryCodeViewController(delegate: self)
         presentFormSheet(OWSNavigationController(rootViewController: countryCodeController), animated: true)
     }
 

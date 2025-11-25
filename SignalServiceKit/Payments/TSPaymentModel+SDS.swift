@@ -26,7 +26,7 @@ public struct PaymentModelRecord: SDSRecord {
 
     // This defines all of the columns used in the table
     // where this model (and any subclasses) are persisted.
-    public let recordType: SDSRecordType
+    public let recordType: SDSRecordType?
     public let uniqueId: String
 
     // Properties
@@ -39,9 +39,9 @@ public struct PaymentModelRecord: SDSRecord {
     public let memoMessage: String?
     public let mobileCoin: Data?
     public let paymentAmount: Data?
-    public let paymentFailure: TSPaymentFailure
-    public let paymentState: TSPaymentState
-    public let paymentType: TSPaymentType
+    public let paymentFailure: TSPaymentFailure?
+    public let paymentState: TSPaymentState?
+    public let paymentType: TSPaymentType?
     public let requestUuidString: String?
     public let interactionUniqueId: String?
 
@@ -87,7 +87,7 @@ public extension PaymentModelRecord {
 
     init(row: Row) {
         id = row[0]
-        recordType = row[1]
+        recordType = row[1].flatMap { SDSRecordType(rawValue: $0) }
         uniqueId = row[2]
         addressUuidString = row[3]
         createdTimestamp = row[4]
@@ -98,9 +98,9 @@ public extension PaymentModelRecord {
         memoMessage = row[9]
         mobileCoin = row[10]
         paymentAmount = row[11]
-        paymentFailure = row[12]
-        paymentState = row[13]
-        paymentType = row[14]
+        paymentFailure = row[12].flatMap { TSPaymentFailure(rawValue: $0) }
+        paymentState = row[13].flatMap { TSPaymentState(rawValue: $0) }
+        paymentType = row[14].flatMap { TSPaymentType(rawValue: $0) }
         requestUuidString = row[15]
         interactionUniqueId = row[16]
     }
@@ -125,11 +125,10 @@ extension TSPaymentModel {
     // the corresponding model class.
     class func fromRecord(_ record: PaymentModelRecord) throws -> TSPaymentModel {
 
-        guard let recordId = record.id else {
-            throw SDSError.invalidValue()
-        }
+        guard let recordId = record.id else { throw SDSError.missingRequiredField(fieldName: "id") }
+        guard let recordType = record.recordType else { throw SDSError.missingRequiredField(fieldName: "recordType") }
 
-        switch record.recordType {
+        switch recordType {
         case .paymentModel:
 
             let uniqueId: String = record.uniqueId
@@ -145,9 +144,15 @@ extension TSPaymentModel {
             let mobileCoin: MobileCoinPayment? = try SDSDeserialization.optionalUnarchive(mobileCoinSerialized, name: "mobileCoin")
             let paymentAmountSerialized: Data? = record.paymentAmount
             let paymentAmount: TSPaymentAmount? = try SDSDeserialization.optionalUnarchive(paymentAmountSerialized, name: "paymentAmount")
-            let paymentFailure: TSPaymentFailure = record.paymentFailure
-            let paymentState: TSPaymentState = record.paymentState
-            let paymentType: TSPaymentType = record.paymentType
+            guard let paymentFailure: TSPaymentFailure = record.paymentFailure else {
+               throw SDSError.missingRequiredField()
+            }
+            guard let paymentState: TSPaymentState = record.paymentState else {
+               throw SDSError.missingRequiredField()
+            }
+            guard let paymentType: TSPaymentType = record.paymentType else {
+               throw SDSError.missingRequiredField()
+            }
             let requestUuidString: String? = record.requestUuidString
 
             return TSPaymentModel(grdbId: recordId,
@@ -168,7 +173,7 @@ extension TSPaymentModel {
                                   requestUuidString: requestUuidString)
 
         default:
-            owsFailDebug("Unexpected record type: \(record.recordType)")
+            owsFailDebug("Unexpected record type: \(recordType)")
             throw SDSError.invalidValue()
         }
     }
@@ -281,9 +286,9 @@ extension TSPaymentModelSerializer {
     static var memoMessageColumn: SDSColumnMetadata { SDSColumnMetadata(columnName: "memoMessage", columnType: .unicodeString, isOptional: true) }
     static var mobileCoinColumn: SDSColumnMetadata { SDSColumnMetadata(columnName: "mobileCoin", columnType: .blob, isOptional: true) }
     static var paymentAmountColumn: SDSColumnMetadata { SDSColumnMetadata(columnName: "paymentAmount", columnType: .blob, isOptional: true) }
-    static var paymentFailureColumn: SDSColumnMetadata { SDSColumnMetadata(columnName: "paymentFailure", columnType: .int) }
-    static var paymentStateColumn: SDSColumnMetadata { SDSColumnMetadata(columnName: "paymentState", columnType: .int) }
-    static var paymentTypeColumn: SDSColumnMetadata { SDSColumnMetadata(columnName: "paymentType", columnType: .int) }
+    static var paymentFailureColumn: SDSColumnMetadata { SDSColumnMetadata(columnName: "paymentFailure", columnType: .int, isOptional: true) }
+    static var paymentStateColumn: SDSColumnMetadata { SDSColumnMetadata(columnName: "paymentState", columnType: .int, isOptional: true) }
+    static var paymentTypeColumn: SDSColumnMetadata { SDSColumnMetadata(columnName: "paymentType", columnType: .int, isOptional: true) }
     static var requestUuidStringColumn: SDSColumnMetadata { SDSColumnMetadata(columnName: "requestUuidString", columnType: .unicodeString, isOptional: true) }
     static var interactionUniqueIdColumn: SDSColumnMetadata { SDSColumnMetadata(columnName: "interactionUniqueId", columnType: .unicodeString, isOptional: true) }
 
@@ -512,44 +517,6 @@ public extension TSPaymentModel {
                             })
     }
 
-    // Traverses all records' unique ids.
-    // Records are not visited in any particular order.
-    class func anyEnumerateUniqueIds(
-        transaction: DBReadTransaction,
-        block: (String, UnsafeMutablePointer<ObjCBool>) -> Void
-    ) {
-        anyEnumerateUniqueIds(transaction: transaction, batched: false, block: block)
-    }
-
-    // Traverses all records' unique ids.
-    // Records are not visited in any particular order.
-    class func anyEnumerateUniqueIds(
-        transaction: DBReadTransaction,
-        batched: Bool = false,
-        block: (String, UnsafeMutablePointer<ObjCBool>) -> Void
-    ) {
-        let batchSize = batched ? Batching.kDefaultBatchSize : 0
-        anyEnumerateUniqueIds(transaction: transaction, batchSize: batchSize, block: block)
-    }
-
-    // Traverses all records' unique ids.
-    // Records are not visited in any particular order.
-    //
-    // If batchSize > 0, the enumeration is performed in autoreleased batches.
-    class func anyEnumerateUniqueIds(
-        transaction: DBReadTransaction,
-        batchSize: UInt,
-        block: (String, UnsafeMutablePointer<ObjCBool>) -> Void
-    ) {
-        grdbEnumerateUniqueIds(transaction: transaction,
-                                sql: """
-                SELECT \(paymentModelColumn: .uniqueId)
-                FROM \(PaymentModelRecord.databaseTableName)
-            """,
-            batchSize: batchSize,
-            block: block)
-    }
-
     // Does not order the results.
     class func anyFetchAll(transaction: DBReadTransaction) -> [TSPaymentModel] {
         var result = [TSPaymentModel]()
@@ -559,52 +526,8 @@ public extension TSPaymentModel {
         return result
     }
 
-    // Does not order the results.
-    class func anyAllUniqueIds(transaction: DBReadTransaction) -> [String] {
-        var result = [String]()
-        anyEnumerateUniqueIds(transaction: transaction) { (uniqueId, _) in
-            result.append(uniqueId)
-        }
-        return result
-    }
-
     class func anyCount(transaction: DBReadTransaction) -> UInt {
         return PaymentModelRecord.ows_fetchCount(transaction.database)
-    }
-
-    class func anyRemoveAllWithInstantiation(transaction: DBWriteTransaction) {
-        // To avoid mutationDuringEnumerationException, we need to remove the
-        // instances outside the enumeration.
-        let uniqueIds = anyAllUniqueIds(transaction: transaction)
-
-        for uniqueId in uniqueIds {
-            autoreleasepool {
-                guard let instance = anyFetch(uniqueId: uniqueId, transaction: transaction) else {
-                    owsFailDebug("Missing instance.")
-                    return
-                }
-                instance.anyRemove(transaction: transaction)
-            }
-        }
-    }
-
-    class func anyExists(
-        uniqueId: String,
-        transaction: DBReadTransaction
-    ) -> Bool {
-        assert(!uniqueId.isEmpty)
-
-        let sql = "SELECT EXISTS ( SELECT 1 FROM \(PaymentModelRecord.databaseTableName) WHERE \(paymentModelColumn: .uniqueId) = ? )"
-        let arguments: StatementArguments = [uniqueId]
-        do {
-            return try Bool.fetchOne(transaction.database, sql: sql, arguments: arguments) ?? false
-        } catch {
-            DatabaseCorruptionState.flagDatabaseReadCorruptionIfNecessary(
-                userDefaults: CurrentAppContext().appUserDefaults(),
-                error: error
-            )
-            owsFail("Missing instance.")
-        }
     }
 }
 
@@ -676,9 +599,9 @@ class TSPaymentModelSerializer: SDSSerializer {
         let memoMessage: String? = model.memoMessage
         let mobileCoin: Data? = optionalArchive(model.mobileCoin)
         let paymentAmount: Data? = optionalArchive(model.paymentAmount)
-        let paymentFailure: TSPaymentFailure = model.paymentFailure
-        let paymentState: TSPaymentState = model.paymentState
-        let paymentType: TSPaymentType = model.paymentType
+        let paymentFailure: TSPaymentFailure? = model.paymentFailure
+        let paymentState: TSPaymentState? = model.paymentState
+        let paymentType: TSPaymentType? = model.paymentType
         let requestUuidString: String? = model.requestUuidString
         let interactionUniqueId: String? = model.interactionUniqueId
 

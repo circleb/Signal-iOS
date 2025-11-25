@@ -4,7 +4,6 @@
 //
 
 public import SignalServiceKit
-import YYImage
 
 public enum LinkPreviewImageState: Equatable {
     case none
@@ -56,7 +55,7 @@ public protocol LinkPreviewState: AnyObject {
 
 // MARK: -
 
-extension LinkPreviewState {
+public extension LinkPreviewState {
     var hasLoadedImageOrBlurHash: Bool {
         switch imageState {
         case .loaded:
@@ -206,8 +205,8 @@ public class LinkPreviewDraft: LinkPreviewState {
             owsFailDebug("Missing imageData.")
             return .zero
         }
-        let imageMetadata = imageData.imageMetadata(withPath: nil, mimeType: nil)
-        guard imageMetadata.isValid else {
+        let imageMetadata = DataImageSource(imageData).imageMetadata()
+        guard let imageMetadata else {
             owsFailDebug("Invalid image.")
             return .zero
         }
@@ -322,7 +321,7 @@ public class LinkPreviewSent: LinkPreviewState {
             DispatchQueue.global().async {
                 switch attachmentStream.contentType {
                 case .animatedImage:
-                    guard let image = try? attachmentStream.decryptedYYImage() else {
+                    guard let image = try? attachmentStream.decryptedSDAnimatedImage() else {
                         owsFailDebug("Could not load image")
                         return
                     }

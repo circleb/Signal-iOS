@@ -96,6 +96,8 @@ public class BackupArchiveCallLinkRecipientArchiver: BackupArchiveProtoStreamWri
                         allowZero: true
                     )
 
+                    owsAssertDebug(record.revoked != true, "call links should be deleted, not revoked")
+
                     let recipientId = context.assignRecipientId(to: callLinkAppId)
                     Self.writeFrameToStream(
                         stream,
@@ -162,14 +164,21 @@ public class BackupArchiveCallLinkRecipientArchiver: BackupArchiveProtoStreamWri
             restrictions = .unknown
         }
 
+        let hasAnyState: Bool = (
+            !callLinkProto.name.isEmpty
+            || restrictions != .unknown
+            || callLinkProto.expirationMs != 0
+        )
+
         do {
             let record = try callLinkStore.insertFromBackup(
                 rootKey: rootKey,
                 adminPasskey: adminKey,
-                name: callLinkProto.name,
-                restrictions: restrictions,
-                expiration: callLinkProto.expirationSec,
-                isUpcoming: true, // will be set false later if we process a corresponding ad hoc call frame
+                name: hasAnyState ? callLinkProto.name.nilIfEmpty : nil,
+                restrictions: hasAnyState ? restrictions : nil,
+                revoked: hasAnyState ? false : nil,
+                expiration: hasAnyState ? Int64(callLinkProto.expirationMs / 1000) : nil,
+                isUpcoming: hasAnyState ? (adminKey != nil) : nil,
                 tx: context.tx
             )
             let callLinkRecordId = CallLinkRecordId(record)
@@ -189,11 +198,5 @@ fileprivate extension CallLinkRecord {
             return UInt64(expiration) * 1000
         }
         return nil
-    }
-}
-
-fileprivate extension BackupProto_CallLink {
-    var expirationSec: UInt64 {
-        self.expirationMs / 1000
     }
 }

@@ -8,49 +8,42 @@ import XCTest
 
 @testable import SignalServiceKit
 
-class BackupKeyReminderMegaphoneTests: XCTestCase {
-    private var db: InMemoryDB!
-    private var backupSettingsStore = BackupSettingsStore()
-
-    override func setUp() {
-        super.setUp()
-        db = InMemoryDB()
-    }
+class RecoveryKeyReminderMegaphoneTests: XCTestCase {
+    private let backupSettingsStore: BackupSettingsStore = BackupSettingsStore()
+    private let db: DB = InMemoryDB()
+    private let tsAccountManager: TSAccountManager = MockTSAccountManager()
 
     private func checkPreconditions(tx: DBReadTransaction) -> Bool {
-        let remoteConfig = RemoteConfig(clockSkew: 0, valueFlags: [
-            "ios.allowBackups": "true"
-        ])
-
-        return ExperienceUpgradeManifest.checkPreconditionsForBackupKeyReminder(
-            remoteConfig: remoteConfig,
+        return ExperienceUpgradeManifest.checkPreconditionsForRecoveryKeyReminder(
+            backupSettingsStore: backupSettingsStore,
+            tsAccountManager: tsAccountManager,
             transaction: tx
         )
     }
 
-    func testPreconditionsForBackupKeyMegaphone_backupsDisabled() throws {
+    func testPreconditionsForRecoveryKeyMegaphone_backupsDisabled() throws {
         db.write { tx in
             backupSettingsStore.setBackupPlan(.disabled, tx: tx)
         }
 
-        let shouldShowBackupKeyReminder = db.read { tx in
+        let shouldShowRecoveryKeyReminder = db.read { tx in
             checkPreconditions(tx: tx)
         }
-        XCTAssertFalse(shouldShowBackupKeyReminder, "Don't show reminder if backups is not enabled")
+        XCTAssertFalse(shouldShowRecoveryKeyReminder, "Don't show reminder if backups is not enabled")
     }
 
-    func testPreconditionsForBackupKeyMegaphone_neverDoneBackup() throws {
+    func testPreconditionsForRecoveryKeyMegaphone_neverDoneBackup() throws {
         db.write { tx in
             backupSettingsStore.setBackupPlan(.free, tx: tx)
         }
 
-        let shouldShowBackupKeyReminder = db.read { tx in
+        let shouldShowRecoveryKeyReminder = db.read { tx in
             checkPreconditions(tx: tx)
         }
-        XCTAssertFalse(shouldShowBackupKeyReminder, "Don't show reminder if user has never done a backup")
+        XCTAssertFalse(shouldShowRecoveryKeyReminder, "Don't show reminder if user has never done a backup")
     }
 
-    func testPreconditionsForBackupKeyMegaphone_backupsTooNew() throws {
+    func testPreconditionsForRecoveryKeyMegaphone_backupsTooNew() throws {
         db.write { tx in
             backupSettingsStore.setBackupPlan(.free, tx: tx)
         }
@@ -59,13 +52,13 @@ class BackupKeyReminderMegaphoneTests: XCTestCase {
             backupSettingsStore.setLastBackupDate(Date(), tx: tx)
         }
 
-        let shouldShowBackupKeyReminder = db.read { tx in
+        let shouldShowRecoveryKeyReminder = db.read { tx in
             checkPreconditions(tx: tx)
         }
-        XCTAssertFalse(shouldShowBackupKeyReminder, "Don't show reminder if user just registered for backups")
+        XCTAssertFalse(shouldShowRecoveryKeyReminder, "Don't show reminder if user just registered for backups")
     }
 
-    func testPreconditionsForBackupKeyMegaphone_firstReminder() throws {
+    func testPreconditionsForRecoveryKeyMegaphone_firstReminder() throws {
         db.write { tx in
             backupSettingsStore.setBackupPlan(.free, tx: tx)
         }
@@ -75,13 +68,13 @@ class BackupKeyReminderMegaphoneTests: XCTestCase {
             backupSettingsStore.setLastBackupDate(fifteenDaysAgo, tx: tx)
         }
 
-        let shouldShowBackupKeyReminder = db.read { tx in
+        let shouldShowRecoveryKeyReminder = db.read { tx in
             checkPreconditions(tx: tx)
         }
-        XCTAssertTrue(shouldShowBackupKeyReminder, "Should show reminder if user registered long enough ago and hasn't seen a backup key reminder yet")
+        XCTAssertTrue(shouldShowRecoveryKeyReminder, "Should show reminder if user registered long enough ago and hasn't seen a recovery key reminder yet")
     }
 
-    func testPreconditionsForBackupKeyMegaphone_alreadySeenFirstReminder() throws {
+    func testPreconditionsForRecoveryKeyMegaphone_alreadySeenFirstReminder() throws {
         db.write { tx in
             backupSettingsStore.setBackupPlan(.free, tx: tx)
         }
@@ -92,16 +85,16 @@ class BackupKeyReminderMegaphoneTests: XCTestCase {
         }
 
         db.write { tx in
-            backupSettingsStore.setLastBackupKeyReminderDate(Date(), tx: tx)
+            backupSettingsStore.setLastRecoveryKeyReminderDate(Date(), tx: tx)
         }
 
-        let shouldShowBackupKeyReminder = db.read { tx in
+        let shouldShowRecoveryKeyReminder = db.read { tx in
             checkPreconditions(tx: tx)
         }
-        XCTAssertFalse(shouldShowBackupKeyReminder, "Don't show reminder if user has seen a backup key reminder recently")
+        XCTAssertFalse(shouldShowRecoveryKeyReminder, "Don't show reminder if user has seen a recovery key reminder recently")
     }
 
-    func testPreconditionsForBackupKeyMegaphone_longEnoughAfterFirstReminder() throws {
+    func testPreconditionsForRecoveryKeyMegaphone_longEnoughAfterFirstReminder() throws {
         db.write { tx in
             backupSettingsStore.setBackupPlan(.free, tx: tx)
         }
@@ -113,12 +106,24 @@ class BackupKeyReminderMegaphoneTests: XCTestCase {
         }
 
         db.write { tx in
-            backupSettingsStore.setLastBackupKeyReminderDate(moreThanSixMonthsAgo, tx: tx)
+            backupSettingsStore.setLastRecoveryKeyReminderDate(moreThanSixMonthsAgo, tx: tx)
         }
 
-        let shouldShowBackupKeyReminder = db.read { tx in
+        let shouldShowRecoveryKeyReminder = db.read { tx in
             checkPreconditions(tx: tx)
         }
-        XCTAssertTrue(shouldShowBackupKeyReminder, "Should show reminder if user registered long enough ago and hasn't seen a reminder in awhile")
+        XCTAssertTrue(shouldShowRecoveryKeyReminder, "Should show reminder if user registered long enough ago and hasn't seen a reminder in awhile")
+    }
+}
+
+// MARK: -
+
+private extension BackupSettingsStore {
+    func lastBackupDate(tx: DBReadTransaction) -> Date? {
+        return lastBackupDetails(tx: tx)?.date
+    }
+
+    func setLastBackupDate(_ date: Date, tx: DBWriteTransaction) {
+        setLastBackupDetails(date: date, backupFileSizeBytes: 1, backupMediaSizeBytes: 1, tx: tx)
     }
 }

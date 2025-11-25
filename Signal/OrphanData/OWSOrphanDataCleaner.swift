@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import GRDB
 import SignalServiceKit
 import SignalUI
 
@@ -309,32 +310,36 @@ enum OWSOrphanDataCleaner {
             return nil
         }
 
-        guard isMainAppAndActive else {
-            return nil
-        }
-
-        var allReactionIds: Set<String> = []
-        var allMentionIds: Set<String> = []
         var orphanInteractionIds: Set<String> = []
-        var allMessageReactionIds: Set<String> = []
-        var allMessageMentionIds: Set<String> = []
+        var orphanReactionIds: Set<String> = []
+        var orphanMentionIds: Set<String> = []
         var activeStickerFilePaths: Set<String> = []
         var hasOrphanedPacksOrStickers = false
         databaseStorage.read { transaction in
-            let threadIds: Set<String> = Set(TSThread.anyAllUniqueIds(transaction: transaction))
+            let threadIds: Set<String> = Set(ThreadFinder().fetchUniqueIds(tx: transaction))
 
             var allInteractionIds: Set<String> = []
-            TSInteraction.anyEnumerate(transaction: transaction, batched: true) { interaction, stop in
-                guard isMainAppAndActive else {
-                    shouldAbort = true
-                    stop.pointee = true
-                    return
+            do {
+                let fetchCursor = try Row.fetchCursor(
+                    transaction.database,
+                    sql: "SELECT \(interactionColumn: .threadUniqueId), \(interactionColumn: .uniqueId) FROM \(InteractionRecord.databaseTableName)",
+                )
+                while let row = try fetchCursor.next() {
+                    let threadUniqueId = row[0] as String
+                    let uniqueId = row[1] as String
+                    guard isMainAppAndActive else {
+                        shouldAbort = true
+                        return
+                    }
+                    if threadUniqueId.isEmpty || !threadIds.contains(threadUniqueId) {
+                        orphanInteractionIds.insert(uniqueId)
+                    }
+                    allInteractionIds.insert(uniqueId)
                 }
-                if interaction.uniqueThreadId.isEmpty || !threadIds.contains(interaction.uniqueThreadId) {
-                    orphanInteractionIds.insert(interaction.uniqueId)
-                }
-
-                allInteractionIds.insert(interaction.uniqueId)
+            } catch {
+                owsFailDebug("Couldn't enumerate TSInteractions: \(error.grdbErrorForLogging)")
+                shouldAbort = true
+                return
             }
 
             if shouldAbort {
@@ -347,9 +352,8 @@ enum OWSOrphanDataCleaner {
                     stop.pointee = true
                     return
                 }
-                allReactionIds.insert(reaction.uniqueId)
-                if allInteractionIds.contains(reaction.uniqueMessageId) {
-                    allMessageReactionIds.insert(reaction.uniqueId)
+                if !allInteractionIds.contains(reaction.uniqueMessageId) {
+                    orphanReactionIds.insert(reaction.uniqueId)
                 }
             }
 
@@ -363,9 +367,8 @@ enum OWSOrphanDataCleaner {
                     stop.pointee = true
                     return
                 }
-                allMentionIds.insert(mention.uniqueId)
-                if allInteractionIds.contains(mention.uniqueMessageId) {
-                    allMessageMentionIds.insert(mention.uniqueId)
+                if !allInteractionIds.contains(mention.uniqueMessageId) {
+                    orphanMentionIds.insert(mention.uniqueId)
                 }
             }
 
@@ -385,16 +388,6 @@ enum OWSOrphanDataCleaner {
         orphanFilePaths.subtract(profileAvatarFilePaths)
         orphanFilePaths.subtract(groupAvatarFilePaths)
         orphanFilePaths.subtract(activeStickerFilePaths)
-
-        var orphanReactionIds = allReactionIds
-        orphanReactionIds.subtract(allMessageReactionIds)
-        var missingReactionIds = allMessageReactionIds
-        missingReactionIds.subtract(allReactionIds)
-
-        var orphanMentionIds = allMentionIds
-        orphanMentionIds.subtract(allMessageMentionIds)
-        var missingMentionIds = allMessageMentionIds
-        missingMentionIds.subtract(allMentionIds)
 
         var orphanFileAndDirectoryPaths: Set<String> = []
         orphanFileAndDirectoryPaths.formUnion(voiceMessageDraftOrphanedPaths)

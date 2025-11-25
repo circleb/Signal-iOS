@@ -3,9 +3,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+import CoreImage
 import Foundation
-import libwebp
-import YYImage
+import SDWebImageWebPCoder
 
 public class AttachmentThumbnailServiceImpl: AttachmentThumbnailService {
 
@@ -49,8 +49,8 @@ public class AttachmentThumbnailServiceImpl: AttachmentThumbnailService {
 
         let thumbnailImage: UIImage?
         if attachmentStream.mimeType == MimeType.imageWebp.rawValue {
-            thumbnailImage = try? attachmentStream
-                .decryptedRawData()
+            let imageSource = (try? attachmentStream.decryptedRawData()).map(DataImageSource.init(_:))
+            thumbnailImage = imageSource?
                 .stillForWebpData()?
                 .resized(maxDimensionPoints: quality.thumbnailDimensionPoints())
         } else {
@@ -59,7 +59,7 @@ public class AttachmentThumbnailServiceImpl: AttachmentThumbnailService {
                     at: AttachmentStream.absoluteAttachmentFileURL(
                         relativeFilePath: attachmentStream.localRelativeFilePath
                     ),
-                    encryptionKey: attachmentStream.attachment.encryptionKey,
+                    attachmentKey: AttachmentKey(combinedKey: attachmentStream.attachment.encryptionKey),
                     plaintextLength: attachmentStream.unencryptedByteCount,
                     mimeType: attachmentStream.mimeType
                 )
@@ -75,36 +75,66 @@ public class AttachmentThumbnailServiceImpl: AttachmentThumbnailService {
     }
 
     public func backupThumbnailData(image: UIImage) throws -> Data {
-        var image = image
-        if image.pixelSize.largerAxis > AttachmentThumbnailQuality.backupThumbnailDimensionPixels {
-            guard let resized = image.resized(maxDimensionPoints: AttachmentThumbnailQuality.backupThumbnail.thumbnailDimensionPoints()) else {
-                throw OWSAssertionError("Unable to resize image")
-            }
-            image = resized
+        let initialMaxFileSize = UInt32(CGFloat(AttachmentThumbnailQuality.backupThumbnailMaxSizeBytes) * 0.8)
+        return try backupThumbnailData(
+            image: image,
+            targetMaxFileSize: initialMaxFileSize,
+            targetMaxPixelSize: AttachmentThumbnailQuality.backupThumbnailDimensionPixels
+        )
+    }
+
+    private func backupThumbnailData(
+        image: UIImage,
+        targetMaxFileSize: UInt32,
+        targetMaxPixelSize: CGFloat
+    ) throws -> Data {
+        let targetSize: CGSize
+        if image.pixelSize.largerAxis > targetMaxPixelSize {
+            let scaleRatio = targetMaxPixelSize / image.pixelSize.largerAxis
+            targetSize = CGSize(
+                width: image.size.width * scaleRatio,
+                height: image.size.height * scaleRatio
+            )
+        } else {
+            targetSize = image.size
         }
 
-        func generateWebpData(quality: Double) throws -> Data {
-            guard let encoder = YYImageEncoder(type: .webP) else {
-                throw OWSAssertionError("Unable to create thumbnail encoder")
-            }
-            encoder.quality = quality
-            encoder.add(image, duration: 0)
-            guard let imageData = encoder.encode() else {
-                throw OWSAssertionError("Unable to generate webp data")
-            }
-            return imageData
+        guard let data = SDImageWebPCoder.shared.encodedData(
+            with: image,
+            format: .webP,
+            options: [
+                .encodeWebPMethod: 6,
+                .encodeMaxFileSize: targetMaxFileSize,
+                .encodeMaxPixelSize: targetSize
+            ]
+        ) else {
+            throw OWSAssertionError("Unable to generate webp")
         }
-
-        // Initially try 0.4 quality. Then scale down until we hit size limits.
-        let qualities: [Double] = [0.4, 0.2, 0.05, 0]
-        let imageData = try qualities
-            .lazy
-            .map(generateWebpData(quality:))
-            .first(where: { $0.count < AttachmentThumbnailQuality.backupThumbnailMaxSizeBytes })
-        guard let imageData else {
-            throw OWSAssertionError("Unable to generate thumbnail below size limit!")
+        if data.count > AttachmentThumbnailQuality.backupThumbnailMaxSizeBytes {
+            let nextTargetMaxPixelSize = targetMaxPixelSize * 0.5
+            let nextTargetMaxFileSize = UInt32(Double(targetMaxFileSize) * 0.25)
+            if
+                nextTargetMaxFileSize < AttachmentThumbnailQuality.backupThumbnailMinSizeBytes &&
+                nextTargetMaxPixelSize < AttachmentThumbnailQuality.backupThumbnailMinPixelSize
+            {
+                throw OWSAssertionError("Generated thumbnail too large")
+            } else if nextTargetMaxFileSize < AttachmentThumbnailQuality.backupThumbnailMinSizeBytes {
+                // If the next decrement of the file size is below the min size,
+                // start to scale down the pixel size of the image
+                return try backupThumbnailData(
+                    image: image,
+                    targetMaxFileSize: targetMaxFileSize,
+                    targetMaxPixelSize: nextTargetMaxPixelSize
+                )
+            } else {
+                return try backupThumbnailData(
+                    image: image,
+                    targetMaxFileSize: nextTargetMaxFileSize,
+                    targetMaxPixelSize: targetMaxPixelSize
+                )
+            }
         }
-        return imageData
+        return data
     }
 
     private enum ThumbnailSpec {
@@ -159,7 +189,7 @@ public class AttachmentThumbnailServiceImpl: AttachmentThumbnailService {
             do {
                 return try UIImage.fromEncryptedFile(
                     at: cacheUrl,
-                    encryptionKey: attachmentStream.attachment.encryptionKey,
+                    attachmentKey: AttachmentKey(combinedKey: attachmentStream.attachment.encryptionKey),
                     // thumbnails have no special padding;
                     // therefore no plaintext length needed.
                     plaintextLength: nil,
@@ -218,7 +248,7 @@ public class AttachmentThumbnailServiceImpl: AttachmentThumbnailService {
             // so we can trim the custom padding at read time.
             let (encryptedImageData, _) = try Cryptography.encrypt(
                 imageData,
-                encryptionKey: attachmentStream.attachment.encryptionKey
+                attachmentKey: AttachmentKey(combinedKey: attachmentStream.attachment.encryptionKey),
             )
 
             try encryptedImageData.write(to: cacheUrl, options: .atomic)

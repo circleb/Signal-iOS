@@ -124,6 +124,8 @@ extension UIColor.Signal {
 
     public static var accent: UIColor { ultramarine }
 
+    public static var link: UIColor { ultramarine }
+
     // MARK: Label
 
     public static var label: UIColor {
@@ -217,6 +219,16 @@ extension UIColor.Signal {
 
     public static var secondaryUltramarineBackground: UIColor {
         UIColor(rgbHex: 0xC7DDFB)
+    }
+
+    public static var backdrop: UIColor {
+        UIColor { traitCollection in
+            if traitCollection.userInterfaceStyle == .dark {
+                UIColor(white: 0, alpha: 0.48)
+            } else {
+                UIColor(white: 0, alpha: 0.2)
+            }
+        }
     }
 
     // MARK: Grouped Background
@@ -366,6 +378,8 @@ extension Color.Signal {
     }
 
     public static var accent: Color { ultramarine }
+
+    public static var link: Color { ultramarine }
 
     // MARK: Label
 

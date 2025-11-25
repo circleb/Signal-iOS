@@ -26,55 +26,86 @@ class AdvancedPinSettingsTableViewController: OWSTableViewController2 {
 
     func updateTableContents() {
         let contents = OWSTableContents()
-
         let pinsSection = OWSTableSection()
 
-        let (hasMasterKey, hasBackedUpMasterKey) = context.db.read { tx in
+        let (
+            isPinEnabled,
+            isReglockV2Enabled,
+            isBackupsEnabled,
+        ) = context.db.read { tx in
+            let ows2FAManager = SSKEnvironment.shared.ows2FAManagerRef
+            let backupSettingsStore = BackupSettingsStore()
+
+            let isBackupsEnabled: Bool
+            switch backupSettingsStore.backupPlan(tx: tx) {
+            case .disabled:
+                isBackupsEnabled = false
+            case .disabling, .free, .paid, .paidExpiringSoon, .paidAsTester:
+                isBackupsEnabled = true
+            }
+
             return (
-                context.svr.hasMasterKey(transaction: tx),
-                context.svr.hasBackedUpMasterKey(transaction: tx)
+                ows2FAManager.isPinEnabled(tx: tx),
+                ows2FAManager.isRegistrationLockV2Enabled(transaction: tx),
+                isBackupsEnabled,
             )
         }
 
-        pinsSection.add(OWSTableItem.actionItem(
-            withText: (hasMasterKey && !hasBackedUpMasterKey)
-                ? OWSLocalizedString("SETTINGS_ADVANCED_PINS_ENABLE_PIN_ACTION",
+        pinsSection.add(OWSTableItem.item(
+            name: isPinEnabled
+                ? OWSLocalizedString("SETTINGS_ADVANCED_PINS_DISABLE_PIN_ACTION",
                                     comment: "")
-                : OWSLocalizedString("SETTINGS_ADVANCED_PINS_DISABLE_PIN_ACTION",
-                                    comment: ""),
+                : OWSLocalizedString("SETTINGS_ADVANCED_PINS_ENABLE_PIN_ACTION",
+                                     comment: ""),
             textColor: Theme.accentBlueColor,
-            accessibilityIdentifier: "advancedPinSettings.disable",
             actionBlock: { [weak self] in
-                self?.enableOrDisablePin()
+                self?.enableOrDisablePin(
+                    isPinEnabled: isPinEnabled,
+                    isReglockV2Enabled: isReglockV2Enabled,
+                    isBackupsEnabled: isBackupsEnabled,
+                )
         }))
         contents.add(pinsSection)
 
         self.contents = contents
     }
 
-    private func enableOrDisablePin() {
-        let (hasMasterKey, hasBackedUpMasterKey) = context.db.read { tx in
-            return (
-                context.svr.hasMasterKey(transaction: tx),
-                context.svr.hasBackedUpMasterKey(transaction: tx)
-            )
-        }
-        if hasMasterKey && !hasBackedUpMasterKey {
-            enablePin()
-        } else {
+    private func enableOrDisablePin(
+        isPinEnabled: Bool,
+        isReglockV2Enabled: Bool,
+        isBackupsEnabled: Bool,
+    ) {
+        if isPinEnabled {
             if SSKEnvironment.shared.paymentsHelperRef.arePaymentsEnabled,
                !PaymentsSettingsViewController.hasReviewedPassphraseWithSneakyTransaction() {
                 showReviewPassphraseAlertUI()
+            } else if isReglockV2Enabled {
+                OWSActionSheets.showActionSheet(
+                    message: OWSLocalizedString(
+                        "SETTINGS_ADVANCED_PINS_DISABLE_PIN_ACTION_REGLOCK_DISABLE_REQUIRED",
+                        comment: "Message shown in an action sheet when attempting to disable PIN, but registration lock is enabled."
+                    ),
+                    fromViewController: self
+                )
+            } else if isBackupsEnabled {
+                OWSActionSheets.showActionSheet(
+                    message: OWSLocalizedString(
+                        "SETTINGS_ADVANCED_PINS_DISABLE_PIN_ACTION_BACKUPS_DISABLE_REQUIRED",
+                        comment: "Message shown in an action sheet when attempting to disable PIN, but Backups is enabled."
+                    ),
+                    fromViewController: self
+                )
             } else {
-                disablePin()
+                disablePinWithConfirmation()
             }
+        } else {
+            showCreatePin()
         }
     }
 
-    private func enablePin() {
+    private func showCreatePin() {
         let viewController = PinSetupViewController(
             mode: .creating,
-            hideNavigationBar: false,
             completionHandler: { [weak self] _, _ in
                 guard let self = self else { return }
                 self.navigationController?.popToViewController(self, animated: true)
@@ -84,15 +115,42 @@ class AdvancedPinSettingsTableViewController: OWSTableViewController2 {
         navigationController?.pushViewController(viewController, animated: true)
     }
 
-    private func disablePin() {
-        Task {
-            do {
-                _ = try await PinSetupViewController.disablePinWithConfirmation(fromViewController: self)
+    private func disablePinWithConfirmation() {
+        let accountEntropyPoolManager = DependenciesBridge.shared.accountEntropyPoolManager
+        let db = DependenciesBridge.shared.db
+        let ows2FAManager = SSKEnvironment.shared.ows2FAManagerRef
+
+        OWSActionSheets.showConfirmationAlert(
+            title: OWSLocalizedString(
+                "PIN_CREATION_DISABLE_CONFIRMATION_TITLE",
+                comment: "Title of the 'pin disable' action sheet."
+            ),
+            message: OWSLocalizedString(
+                "PIN_CREATION_DISABLE_CONFIRMATION_MESSAGE",
+                comment: "Message of the 'pin disable' action sheet."
+            ),
+            proceedTitle: OWSLocalizedString(
+                "PIN_CREATION_DISABLE_CONFIRMATION_ACTION",
+                comment: "Action of the 'pin disable' action sheet."
+            ),
+            proceedStyle: .destructive,
+            proceedAction: { _ in
+                db.write { tx in
+                    Logger.warn("Rotating AEP: disabling PIN!")
+
+                    accountEntropyPoolManager.setAccountEntropyPool(
+                        newAccountEntropyPool: AccountEntropyPool(),
+                        disablePIN: true,
+                        tx: tx
+                    )
+
+                    ows2FAManager.markDisabled(transaction: tx)
+                }
+
                 self.updateTableContents()
-            } catch {
-                owsFailDebug("Error: \(error)")
-            }
-        }
+            },
+            fromViewController: self,
+        )
     }
 
     private func showReviewPassphraseAlertUI() {
@@ -103,10 +161,13 @@ class AdvancedPinSettingsTableViewController: OWSTableViewController2 {
                                                 message: OWSLocalizedString("SETTINGS_PAYMENTS_RECORD_PASSPHRASE_DISABLE_PIN_DESCRIPTION",
                                                                            comment: "Description for the 'record payments passphrase to disable pin' UI in the app settings."))
 
-        actionSheet.addAction(ActionSheetAction(title: OWSLocalizedString("SETTINGS_PAYMENTS_RECORD_PASSPHRASE_DISABLE_PIN_RECORD_PASSPHRASE",
-                                                                         comment: "Label for the 'record recovery passphrase' button in the 'record payments passphrase to disable pin' UI in the app settings."),
-                                                accessibilityIdentifier: "payments.settings.disable-pin.record-passphrase",
-                                                style: .default) { [weak self] _ in
+        actionSheet.addAction(ActionSheetAction(
+            title: OWSLocalizedString(
+                "SETTINGS_PAYMENTS_RECORD_PASSPHRASE_DISABLE_PIN_RECORD_PASSPHRASE",
+                comment: "Label for the 'record recovery passphrase' button in the 'record payments passphrase to disable pin' UI in the app settings."
+            ),
+            style: .default
+        ) { [weak self] _ in
             self?.showRecordPaymentsPassphraseUI()
         })
         actionSheet.addAction(OWSActionSheets.cancelAction)

@@ -87,40 +87,34 @@ extension UIImage {
         return newImage
     }
 
-    public func withGaussianBlurPromise(radius: CGFloat, resizeToMaxPixelDimension: CGFloat) -> Promise<UIImage> {
-        return firstly {
-            cgImageWithGaussianBlurPromise(radius: radius, resizeToMaxPixelDimension: resizeToMaxPixelDimension)
-        }.map(on: DispatchQueue.sharedUserInteractive) {
-            UIImage(cgImage: $0)
-        }
+    #if compiler(>=6.2)
+    @concurrent
+    #endif
+    public func withGaussianBlurAsync(radius: CGFloat, resizeToMaxPixelDimension: CGFloat) async throws -> UIImage {
+        AssertNotOnMainThread()
+        return UIImage(cgImage: try _cgImageWithGaussianBlur(radius: radius, resizeToMaxPixelDimension: resizeToMaxPixelDimension))
     }
 
-    public func cgImageWithGaussianBlurPromise(radius: CGFloat,
-                                               resizeToMaxPixelDimension: CGFloat) -> Promise<CGImage> {
-        return firstly(on: DispatchQueue.sharedUserInteractive) {
-            try self.cgImageWithGaussianBlur(radius: radius,
-                                             resizeToMaxPixelDimension: resizeToMaxPixelDimension)
-        }
+    #if compiler(>=6.2)
+    @concurrent
+    #endif
+    public func cgImageWithGaussianBlurAsync(radius: CGFloat, resizeToMaxPixelDimension: CGFloat) async throws -> CGImage {
+        AssertNotOnMainThread()
+        return try self._cgImageWithGaussianBlur(radius: radius, resizeToMaxPixelDimension: resizeToMaxPixelDimension)
     }
 
-    public func withGaussianBlur(radius: CGFloat, resizeToMaxPixelDimension: CGFloat) throws -> UIImage {
-        UIImage(cgImage: try cgImageWithGaussianBlur(radius: radius,
-                                                     resizeToMaxPixelDimension: resizeToMaxPixelDimension))
-    }
-
-    public func cgImageWithGaussianBlur(radius: CGFloat,
-                                        resizeToMaxPixelDimension: CGFloat) throws -> CGImage {
+    private func _cgImageWithGaussianBlur(radius: CGFloat, resizeToMaxPixelDimension: CGFloat) throws -> CGImage {
         guard let resizedImage = self.resized(maxDimensionPixels: resizeToMaxPixelDimension) else {
             throw OWSAssertionError("Failed to downsize image for blur")
         }
-        return try resizedImage.cgImageWithGaussianBlur(radius: radius)
+        return try resizedImage._cgImageWithGaussianBlur(radius: radius)
     }
 
     public func withGaussianBlur(radius: CGFloat, tintColor: UIColor? = nil) throws -> UIImage {
-        UIImage(cgImage: try cgImageWithGaussianBlur(radius: radius, tintColor: tintColor))
+        UIImage(cgImage: try _cgImageWithGaussianBlur(radius: radius, tintColor: tintColor))
     }
 
-    public func cgImageWithGaussianBlur(radius: CGFloat, tintColor: UIColor? = nil) throws -> CGImage {
+    private func _cgImageWithGaussianBlur(radius: CGFloat, tintColor: UIColor? = nil) throws -> CGImage {
         guard let clampFilter = CIFilter(name: "CIAffineClamp") else {
             throw OWSAssertionError("Failed to create blur filter")
         }
@@ -227,6 +221,30 @@ extension UIImage {
         return UIImage(cgImage: outputCGImage)
     }
 
+    public func withBadge(
+        color: UIColor,
+        badgeSize: CGSize = .square(8.5),
+    ) -> UIImage {
+        let newSize = CGSize(
+            width: size.width + (badgeSize.width / 2.0),
+            height: size.height + (badgeSize.height / 2.0),
+        )
+
+        let renderer = UIGraphicsImageRenderer(size: newSize)
+        return renderer.image { context in
+            // Draw the image
+            draw(at: .zero)
+
+            // Draw the badge in the top-right corner, over the image
+            let badgeOrigin = CGPoint(x: size.width - badgeSize.width, y: 0)
+            let badgeRect = CGRect(origin: badgeOrigin, size: badgeSize)
+            let badgePath = UIBezierPath(ovalIn: badgeRect)
+            color.setFill()
+            badgePath.fill()
+        }
+        .withRenderingMode(.alwaysOriginal)
+    }
+
     var withNativeScale: UIImage {
         let scale = UIScreen.main.scale
         if self.scale == scale {
@@ -272,8 +290,8 @@ extension UIImage {
     }
 
     public static func validJpegData(fromAvatarData avatarData: Data) -> Data? {
-        let imageMetadata = avatarData.imageMetadata(withPath: nil, mimeType: nil)
-        guard imageMetadata.isValid else {
+        let imageMetadata = DataImageSource(avatarData).imageMetadata()
+        guard let imageMetadata else {
             return nil
         }
 

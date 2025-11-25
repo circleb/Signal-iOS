@@ -14,11 +14,11 @@ public final class ThreadUtil {
 
     // A serial queue that ensures that messages are sent in the
     // same order in which they are enqueued.
-    public static var enqueueSendQueue: DispatchQueue { .sharedUserInitiated }
+    public static var enqueueSendQueue = SerialTaskQueue()
 
     public static func enqueueSendAsyncWrite(_ block: @escaping (DBWriteTransaction) -> Void) {
-        enqueueSendQueue.async {
-            SSKEnvironment.shared.databaseStorageRef.write { transaction in
+        enqueueSendQueue.enqueue {
+            await SSKEnvironment.shared.databaseStorageRef.awaitableWrite { transaction in
                 block(transaction)
             }
         }
@@ -70,21 +70,24 @@ public extension ThreadUtil {
             return builder.build(transaction: tx)
         }
 
-        Self.enqueueSendQueue.async {
+        Self.enqueueSendQueue.enqueue {
             guard
-                let sendableContactShareDraft = try? DependenciesBridge.shared.contactShareManager
+                let sendableContactShareDraft = try? await DependenciesBridge.shared.contactShareManager
                     .validateAndPrepare(draft: contactShareDraft)
             else {
                 owsFailDebug("Failed to build contact share")
                 return
             }
 
+            // stickers don't have bodies
+            owsPrecondition(message.body == nil)
             let unpreparedMessage = UnpreparedOutgoingMessage.forMessage(
                 message,
+                body: nil,
                 contactShareDraft: sendableContactShareDraft
             )
 
-            SSKEnvironment.shared.databaseStorageRef.write { transaction in
+            await SSKEnvironment.shared.databaseStorageRef.awaitableWrite { transaction in
                 guard let preparedMessage = try? unpreparedMessage.prepare(tx: transaction) else {
                     owsFailDebug("Unable to build message for sending!")
                     return
@@ -117,7 +120,7 @@ public extension ThreadUtil {
             return builder.build(transaction: tx)
         }
 
-        Self.enqueueSendQueue.async {
+        Self.enqueueSendQueue.enqueue {
             let stickerDraft: MessageStickerDraft? = SSKEnvironment.shared.databaseStorageRef.read { tx in
                 guard let stickerMetadata = StickerManager.installedStickerMetadata(stickerInfo: stickerInfo, transaction: tx) else {
                     owsFailDebug("Could not find sticker file.")
@@ -143,14 +146,14 @@ public extension ThreadUtil {
 
             let stickerDataSource: MessageStickerDataSource
             do {
-                stickerDataSource = try DependenciesBridge.shared.messageStickerManager.buildDataSource(
+                stickerDataSource = try await DependenciesBridge.shared.messageStickerManager.buildDataSource(
                     fromDraft: stickerDraft
                 )
             } catch {
                 owsFailDebug("Failed to build sticker!")
                 return
             }
-            SSKEnvironment.shared.databaseStorageRef.write { tx in
+            await SSKEnvironment.shared.databaseStorageRef.awaitableWrite { tx in
                 self.enqueueMessage(message, stickerDataSource: stickerDataSource, thread: thread, tx: tx)
             }
         }
@@ -179,17 +182,17 @@ public extension ThreadUtil {
             emoji: stickerMetadata.firstEmoji
         )
 
-        Self.enqueueSendQueue.async {
+        Self.enqueueSendQueue.enqueue {
             let stickerDataSource: MessageStickerDataSource
             do {
-                stickerDataSource = try DependenciesBridge.shared.messageStickerManager.buildDataSource(
+                stickerDataSource = try await DependenciesBridge.shared.messageStickerManager.buildDataSource(
                     fromDraft: stickerDraft
                 )
             } catch {
                 owsFailDebug("Failed to build sticker!")
                 return
             }
-            SSKEnvironment.shared.databaseStorageRef.write { tx in
+            await SSKEnvironment.shared.databaseStorageRef.awaitableWrite { tx in
                 self.enqueueMessage(message, stickerDataSource: stickerDataSource, thread: thread, tx: tx)
             }
         }
@@ -205,8 +208,12 @@ public extension ThreadUtil {
     ) {
         AssertNotOnMainThread()
 
+        // stickers don't have bodies
+        owsPrecondition(message.body == nil)
+
         let unpreparedMessage = UnpreparedOutgoingMessage.forMessage(
             message,
+            body: nil,
             messageStickerDraft: stickerDataSource
         )
         let preparedMessage: PreparedOutgoingMessage
@@ -326,6 +333,57 @@ extension ThreadUtil {
     }
 }
 
+// MARK: - Polls
+
+public extension ThreadUtil {
+
+    class func enqueueMessage(
+        withPoll poll: CreatePollMessage,
+        thread: TSThread
+    ) {
+        AssertIsOnMainThread()
+        guard poll.question.count <= OWSPoll.Constants.maxCharacterLength
+                && poll.question.trimmedIfNeeded(maxByteCount: OWSMediaUtils.kOversizeTextMessageSizeThresholdBytes) == nil
+        else {
+            owsFailDebug("Poll question too large")
+            return
+        }
+
+        let validatedPollQuestion = SSKEnvironment.shared.databaseStorageRef.write { tx in DependenciesBridge.shared.attachmentContentValidator.truncatedMessageBodyForInlining(
+            MessageBody(text: poll.question, ranges: .empty),
+            tx: tx)
+        }
+
+        let builder = TSOutgoingMessageBuilder.outgoingMessageBuilder(thread: thread, messageBody: validatedPollQuestion)
+        let message: TSOutgoingMessage = SSKEnvironment.shared.databaseStorageRef.read { tx in
+            applyDisappearingMessagesConfiguration(to: builder, tx: tx)
+            return builder.build(transaction: tx)
+        }
+
+        let unpreparedMessage = UnpreparedOutgoingMessage.forMessage(
+            message,
+            body: nil,
+            poll: poll
+        )
+
+        Self.enqueueSendQueue.enqueue {
+            await SSKEnvironment.shared.databaseStorageRef.awaitableWrite { transaction in
+                guard let preparedMessage = try? unpreparedMessage.prepare(tx: transaction) else {
+                    owsFailDebug("Unable to build message for sending!")
+                    return
+                }
+                SSKEnvironment.shared.messageSenderJobQueueRef.add(message: preparedMessage, transaction: transaction)
+                if
+                    let messageForIntent = preparedMessage.messageForIntentDonation(tx: transaction),
+                    let thread = messageForIntent.thread(tx: transaction)
+                {
+                    thread.donateSendMessageIntent(for: messageForIntent, transaction: transaction)
+                }
+            }
+        }
+    }
+}
+
 // MARK: - Sharing Suggestions
 
 extension TSThread {
@@ -431,8 +489,8 @@ extension TSThread {
             donationMetadata?.recipientCount = recipientAddresses(with: transaction).count
 
             if let message {
-                let mentionedAddresses = MentionFinder.mentionedAddresses(for: message, transaction: transaction)
-                donationMetadata?.mentionsCurrentUser = mentionedAddresses.contains(localIdentifiers.aciAddress)
+                let mentionedAcis = MentionFinder.mentionedAcis(for: message, tx: transaction)
+                donationMetadata?.mentionsCurrentUser = mentionedAcis.contains(localIdentifiers.aci)
                 donationMetadata?.isReplyToCurrentUser = message.quotedMessage?.authorAddress == localIdentifiers.aciAddress
             }
         }

@@ -7,35 +7,32 @@ public class AttachmentManagerImpl: AttachmentManager {
 
     private let attachmentDownloadManager: AttachmentDownloadManager
     private let attachmentStore: AttachmentStore
-    private let backupAttachmentUploadQueueRunner: BackupAttachmentUploadQueueRunner
     private let backupAttachmentUploadScheduler: BackupAttachmentUploadScheduler
     private let dateProvider: DateProvider
     private let orphanedAttachmentCleaner: OrphanedAttachmentCleaner
     private let orphanedAttachmentStore: OrphanedAttachmentStore
-    private let orphanedBackupAttachmentManager: OrphanedBackupAttachmentManager
+    private let orphanedBackupAttachmentScheduler: OrphanedBackupAttachmentScheduler
     private let remoteConfigManager: RemoteConfigManager
     private let stickerManager: Shims.StickerManager
 
     public init(
         attachmentDownloadManager: AttachmentDownloadManager,
         attachmentStore: AttachmentStore,
-        backupAttachmentUploadQueueRunner: BackupAttachmentUploadQueueRunner,
         backupAttachmentUploadScheduler: BackupAttachmentUploadScheduler,
         dateProvider: @escaping DateProvider,
         orphanedAttachmentCleaner: OrphanedAttachmentCleaner,
         orphanedAttachmentStore: OrphanedAttachmentStore,
-        orphanedBackupAttachmentManager: OrphanedBackupAttachmentManager,
+        orphanedBackupAttachmentScheduler: OrphanedBackupAttachmentScheduler,
         remoteConfigManager: RemoteConfigManager,
         stickerManager: Shims.StickerManager
     ) {
         self.attachmentDownloadManager = attachmentDownloadManager
         self.attachmentStore = attachmentStore
-        self.backupAttachmentUploadQueueRunner = backupAttachmentUploadQueueRunner
         self.backupAttachmentUploadScheduler = backupAttachmentUploadScheduler
         self.dateProvider = dateProvider
         self.orphanedAttachmentCleaner = orphanedAttachmentCleaner
         self.orphanedAttachmentStore = orphanedAttachmentStore
-        self.orphanedBackupAttachmentManager = orphanedBackupAttachmentManager
+        self.orphanedBackupAttachmentScheduler = orphanedBackupAttachmentScheduler
         self.remoteConfigManager = remoteConfigManager
         self.stickerManager = stickerManager
     }
@@ -71,6 +68,7 @@ public class AttachmentManagerImpl: AttachmentManager {
     public func createAttachmentPointers(
         from backupProtos: [OwnedAttachmentBackupPointerProto],
         uploadEra: String,
+        attachmentByteCounter: BackupArchiveAttachmentByteCounter,
         tx: DBWriteTransaction
     ) -> [OwnedAttachmentBackupPointerProto.CreationError] {
         let results = createAttachments(
@@ -84,6 +82,7 @@ public class AttachmentManagerImpl: AttachmentManager {
                     owner: $1,
                     sourceOrder: $2,
                     uploadEra: uploadEra,
+                    attachmentByteCounter: attachmentByteCounter,
                     tx: $3
                 )
             },
@@ -121,9 +120,34 @@ public class AttachmentManagerImpl: AttachmentManager {
             },
             tx: tx
         )
+
         // When we create the attachment streams we schedule a backup of the
         // new attachments. Kick the tires so that upload starts happening now.
-        backupAttachmentUploadQueueRunner.backUpAllAttachmentsAfterTxCommits(tx: tx)
+        tx.addSyncCompletion {
+            NotificationCenter.default.post(name: .startBackupAttachmentUploadQueue, object: nil)
+        }
+    }
+
+    public func updateAttachmentWithOversizeTextFromBackup(
+        attachmentId: Attachment.IDType,
+        pendingAttachment: PendingAttachment,
+        tx: DBWriteTransaction
+    ) throws {
+        guard let attachment = attachmentStore.fetch(id: attachmentId, tx: tx) else {
+            // The attachment got deleted? Should be impossible but ultimately fine.
+            return
+        }
+
+        if attachment.asStream() != nil {
+            // Its already a stream? Should be impossible but ultimately fine.
+            return
+        }
+
+        try _updateAttachmentWithOversizeTextFromBackup(
+            attachment: attachment,
+            pendingAttachment: pendingAttachment,
+            tx: tx
+        )
     }
 
     // MARK: Quoted Replies
@@ -306,7 +330,7 @@ public class AttachmentManagerImpl: AttachmentManager {
             blurHash: proto.blurHash,
             mimeType: mimeType,
             encryptionKey: transitTierInfo.encryptionKey,
-            transitTierInfo: transitTierInfo
+            latestTransitTierInfo: transitTierInfo
         )
         let sourceMediaSizePixels: CGSize?
         if
@@ -343,7 +367,7 @@ public class AttachmentManagerImpl: AttachmentManager {
         )
 
         if let mediaName = attachmentParams.mediaName {
-            orphanedBackupAttachmentManager.didCreateOrUpdateAttachment(
+            orphanedBackupAttachmentScheduler.didCreateOrUpdateAttachment(
                 withMediaName: mediaName,
                 tx: tx
             )
@@ -410,6 +434,7 @@ public class AttachmentManagerImpl: AttachmentManager {
         // Nil if no order is to be applied.
         sourceOrder: UInt32?,
         uploadEra: String,
+        attachmentByteCounter: BackupArchiveAttachmentByteCounter,
         tx: DBWriteTransaction
     ) -> Result<Void, OwnedAttachmentBackupPointerProto.CreationError> {
         let proto = ownedProto.proto
@@ -445,10 +470,10 @@ public class AttachmentManagerImpl: AttachmentManager {
             proto.hasIncrementalMac,
             proto.hasIncrementalMacChunkSize
         {
-            incrementalMacInfo = Attachment.IncrementalMacInfo(
-                mac: proto.incrementalMac,
-                chunkSize: proto.incrementalMacChunkSize
-            )
+            // Incremental mac is unsupported on iOS;
+            // when we add support and can validate at
+            // download time, we should pull it off the proto.
+            incrementalMacInfo = nil
         } else {
             incrementalMacInfo = nil
         }
@@ -482,7 +507,7 @@ public class AttachmentManagerImpl: AttachmentManager {
                     blurHash: proto.blurHash.nilIfEmpty,
                     mimeType: mimeType,
                     encryptionKey: encryptionKey,
-                    transitTierInfo: transitTierInfo,
+                    latestTransitTierInfo: transitTierInfo,
                     sha256ContentHash: sha256ContentHash,
                     mediaName: Attachment.mediaName(
                         sha256ContentHash: sha256ContentHash,
@@ -511,7 +536,7 @@ public class AttachmentManagerImpl: AttachmentManager {
                         blurHash: proto.blurHash.nilIfEmpty,
                         mimeType: mimeType,
                         encryptionKey: encryptionKey,
-                        transitTierInfo: transitTierInfo,
+                        latestTransitTierInfo: transitTierInfo,
                         sha256ContentHash: nil,
                         mediaName: nil,
                         mediaTierInfo: nil,
@@ -553,14 +578,21 @@ public class AttachmentManagerImpl: AttachmentManager {
         }
 
         do {
-            try attachmentStore.insert(
+            let attachmentRowId = try attachmentStore.insert(
                 attachmentParams,
                 reference: referenceParams,
                 tx: tx
             )
 
+            if let sourceUnencryptedByteCount {
+                attachmentByteCounter.addToByteCount(
+                    attachmentID: attachmentRowId,
+                    byteCount: Cryptography.estimatedMediaTierCDNSize(unencryptedSize: UInt64(safeCast: sourceUnencryptedByteCount)) ?? UInt64(UInt32.max),
+                )
+            }
+
             if let mediaName = attachmentParams.mediaName {
-                orphanedBackupAttachmentManager.didCreateOrUpdateAttachment(
+                orphanedBackupAttachmentScheduler.didCreateOrUpdateAttachment(
                     withMediaName: mediaName,
                     tx: tx
                 )
@@ -670,7 +702,7 @@ public class AttachmentManagerImpl: AttachmentManager {
             // infer a MIME type from the file extension.
             if
                 let sourceFilename,
-                let fileExtension = sourceFilename.fileExtension?.lowercased().nilIfEmpty,
+                let fileExtension = (sourceFilename as NSString).pathExtension.lowercased().nilIfEmpty,
                 let inferredMimeType = MimeTypeUtil.mimeTypeForFileExtension(fileExtension)?.nilIfEmpty
             {
                 Logger.warn("Missing attachment content type! Inferred MIME type: \(inferredMimeType)")
@@ -786,7 +818,7 @@ public class AttachmentManagerImpl: AttachmentManager {
                     orphanedAttachmentCleaner.releasePendingAttachment(withId: pendingAttachment.orphanRecordId, tx: tx)
                 }
                 if let mediaName = attachmentParams.mediaName {
-                    orphanedBackupAttachmentManager.didCreateOrUpdateAttachment(
+                    orphanedBackupAttachmentScheduler.didCreateOrUpdateAttachment(
                         withMediaName: mediaName,
                         tx: tx
                     )
@@ -814,12 +846,13 @@ public class AttachmentManagerImpl: AttachmentManager {
                         pendingAttachmentEncryptionKey: pendingAttachment.encryptionKey,
                         pendingAttachmentMimeType: pendingAttachment.mimeType,
                         pendingAttachmentOrphanRecordId: hasOrphanRecord ? pendingAttachment.orphanRecordId : nil,
-                        pendingAttachmentTransitTierInfo: attachmentParams.transitTierInfo,
+                        pendingAttachmentLatestTransitTierInfo: attachmentParams.latestTransitTierInfo,
+                        pendingAttachmentOriginalTransitTierInfo: attachmentParams.originalTransitTierInfo,
                         attachmentStore: attachmentStore,
                         orphanedAttachmentCleaner: orphanedAttachmentCleaner,
                         orphanedAttachmentStore: orphanedAttachmentStore,
                         backupAttachmentUploadScheduler: backupAttachmentUploadScheduler,
-                        orphanedBackupAttachmentManager: orphanedBackupAttachmentManager,
+                        orphanedBackupAttachmentScheduler: orphanedBackupAttachmentScheduler,
                         tx: tx
                     )
                 } else {
@@ -835,6 +868,96 @@ public class AttachmentManagerImpl: AttachmentManager {
                     tx: tx
                 )
                 return
+            }
+        }
+    }
+
+    private func _updateAttachmentWithOversizeTextFromBackup(
+        attachment: Attachment,
+        pendingAttachment: PendingAttachment,
+        tx: DBWriteTransaction
+    ) throws {
+        let mediaName = Attachment.mediaName(
+            sha256ContentHash: pendingAttachment.sha256ContentHash,
+            encryptionKey: pendingAttachment.encryptionKey
+        )
+        let streamInfo = Attachment.StreamInfo(
+            sha256ContentHash: pendingAttachment.sha256ContentHash,
+            mediaName: mediaName,
+            encryptedByteCount: pendingAttachment.encryptedByteCount,
+            unencryptedByteCount: pendingAttachment.unencryptedByteCount,
+            contentType: pendingAttachment.validatedContentType,
+            digestSHA256Ciphertext: pendingAttachment.digestSHA256Ciphertext,
+            localRelativeFilePath: pendingAttachment.localRelativeFilePath
+        )
+
+        do {
+            guard self.orphanedAttachmentStore.orphanAttachmentExists(with: pendingAttachment.orphanRecordId, tx: tx) else {
+                throw OWSAssertionError("Attachment file deleted before creation")
+            }
+
+            // Update the placeholder attachment we previously created with the stream info
+            try self.attachmentStore.updateAttachmentAsDownloaded(
+                // Not technically true but close enough.
+                from: .mediaTierFullsize,
+                priority: .backupRestore,
+                id: attachment.id,
+                validatedMimeType: pendingAttachment.mimeType,
+                streamInfo: streamInfo,
+                // This is used for "last viewed" state which isn't used
+                // for oversize text so it doesn't really matter but give
+                // a real date anyway.
+                timestamp: dateProvider().ows_millisecondsSince1970,
+                tx: tx
+            )
+            // Make sure to clear out the pending attachment from the orphan table so it isn't deleted!
+            self.orphanedAttachmentCleaner.releasePendingAttachment(withId: pendingAttachment.orphanRecordId, tx: tx)
+
+            // Normally, after we create a stream, we schedule it for media tier upload, remove any
+            // media tier deletion jobs, etc. But we don't back up oversize text to media tier (since
+            // we inline it) so we don't need to do any of that.
+
+        } catch let error as AttachmentInsertError {
+            let existingAttachmentId: Attachment.IDType
+            switch error {
+            case .duplicatePlaintextHash(let id):
+                existingAttachmentId = id
+            case .duplicateMediaName(let id):
+                owsFailDebug("How did we match mediaName when using a random encryption key?")
+                existingAttachmentId = id
+            }
+
+            // Already have an attachment with the same plaintext hash or media name!
+            // Move all existing references to that copy, instead.
+            // Doing so should delete the original attachment pointer.
+            // This happens if we have two instances of the same oversized text
+            // in the backup (e.g. some long text message was forwarded)
+
+            // Just hold all refs in memory; there shouldn't in practice be
+            // so many pointers to the same attachment.
+            var references = [AttachmentReference]()
+            try self.attachmentStore.enumerateAllReferences(
+                toAttachmentId: attachment.id,
+                tx: tx
+            ) { reference, _ in
+                references.append(reference)
+            }
+            try references.forEach { reference in
+                try self.attachmentStore.removeOwner(
+                    reference: reference,
+                    tx: tx
+                )
+                let newOwnerParams = AttachmentReference.ConstructionParams(
+                    owner: reference.owner.forReassignmentWithContentType(pendingAttachment.validatedContentType.raw),
+                    sourceFilename: reference.sourceFilename,
+                    sourceUnencryptedByteCount: reference.sourceUnencryptedByteCount,
+                    sourceMediaSizePixels: reference.sourceMediaSizePixels
+                )
+                try self.attachmentStore.addOwner(
+                    newOwnerParams,
+                    for: existingAttachmentId,
+                    tx: tx
+                )
             }
         }
     }
@@ -855,12 +978,13 @@ public class AttachmentManagerImpl: AttachmentManager {
         pendingAttachmentEncryptionKey: Data,
         pendingAttachmentMimeType: String,
         pendingAttachmentOrphanRecordId: OrphanedAttachmentRecord.IDType?,
-        pendingAttachmentTransitTierInfo: Attachment.TransitTierInfo?,
+        pendingAttachmentLatestTransitTierInfo: Attachment.TransitTierInfo?,
+        pendingAttachmentOriginalTransitTierInfo: Attachment.TransitTierInfo?,
         attachmentStore: AttachmentStore,
         orphanedAttachmentCleaner: OrphanedAttachmentCleaner,
         orphanedAttachmentStore: OrphanedAttachmentStore,
         backupAttachmentUploadScheduler: BackupAttachmentUploadScheduler,
-        orphanedBackupAttachmentManager: OrphanedBackupAttachmentManager,
+        orphanedBackupAttachmentScheduler: OrphanedBackupAttachmentScheduler,
         tx: DBWriteTransaction
     ) throws -> Attachment.IDType {
         let existingAttachmentId: Attachment.IDType
@@ -902,7 +1026,7 @@ public class AttachmentManagerImpl: AttachmentManager {
 
             // Orphan the existing remote upload, both fullsize and thumbnail.
             // We're using a new encryption key now which means a new mediaName.
-            try orphanedBackupAttachmentManager.orphanExistingMediaTierUploads(
+            try orphanedBackupAttachmentScheduler.orphanExistingMediaTierUploads(
                 of: existingAttachment,
                 tx: tx
             )
@@ -923,19 +1047,49 @@ public class AttachmentManagerImpl: AttachmentManager {
 
         // Transit tier info has its own key independent of the local file encryption key;
         // we should just keep whichever upload we think is newer.
-        let transitTierInfo: Attachment.TransitTierInfo?
+        let latestTransitTierInfo: Attachment.TransitTierInfo?
         if
-            let existingTransitTierInfo = existingAttachment.transitTierInfo,
-            let pendingAttachmentTransitTierInfo
+            let existingTransitTierInfo = existingAttachment.latestTransitTierInfo,
+            let pendingAttachmentLatestTransitTierInfo
         {
-            if existingTransitTierInfo.uploadTimestamp > pendingAttachmentTransitTierInfo.uploadTimestamp {
-                transitTierInfo = existingTransitTierInfo
+            if existingTransitTierInfo.uploadTimestamp > pendingAttachmentLatestTransitTierInfo.uploadTimestamp {
+                latestTransitTierInfo = existingTransitTierInfo
             } else {
-                transitTierInfo = pendingAttachmentTransitTierInfo
+                latestTransitTierInfo = pendingAttachmentLatestTransitTierInfo
             }
         } else {
             // Take whichever one we've got.
-            transitTierInfo = existingAttachment.transitTierInfo ?? pendingAttachmentTransitTierInfo
+            latestTransitTierInfo = existingAttachment.latestTransitTierInfo ?? pendingAttachmentLatestTransitTierInfo
+        }
+
+        // Original transit tier info must match the top level encryption key and digest.
+        // We will take any candidate transit tier info that meets those requirements.
+        var originalTransitTierInfo: Attachment.TransitTierInfo?
+        let candidateOriginalTransitTierInfos = [
+            existingAttachment.latestTransitTierInfo,
+            existingAttachment.originalTransitTierInfo,
+            pendingAttachmentLatestTransitTierInfo,
+            pendingAttachmentOriginalTransitTierInfo,
+        ].compacted()
+        for candidateOriginalTransitTierInfo in candidateOriginalTransitTierInfos {
+            guard candidateOriginalTransitTierInfo.encryptionKey == pendingAttachmentEncryptionKey else {
+                continue
+            }
+            switch candidateOriginalTransitTierInfo.integrityCheck {
+            case .sha256ContentHash:
+                // Can't verify the digest (and iv) match, so we can't use this one.
+                continue
+            case .digestSHA256Ciphertext(let infoDigest):
+                if
+                    infoDigest == pendingAttachmentStreamInfo.digestSHA256Ciphertext,
+                    originalTransitTierInfo == nil
+                        || originalTransitTierInfo!.uploadTimestamp
+                            < candidateOriginalTransitTierInfo.uploadTimestamp
+                {
+                    originalTransitTierInfo = candidateOriginalTransitTierInfo
+                }
+            }
+
         }
 
         // Set the stream info on the existing attachment, if needed.
@@ -944,7 +1098,8 @@ public class AttachmentManagerImpl: AttachmentManager {
             into: existingAttachment,
             encryptionKey: pendingAttachmentEncryptionKey,
             validatedMimeType: pendingAttachmentMimeType,
-            transitTierInfo: transitTierInfo,
+            latestTransitTierInfo: latestTransitTierInfo,
+            originalTransitTierInfo: originalTransitTierInfo,
             mediaTierInfo: mediaTierInfo,
             thumbnailMediaTierInfo: thumbnailMediaTierInfo,
             tx: tx
@@ -961,7 +1116,7 @@ public class AttachmentManagerImpl: AttachmentManager {
         // Make sure to clear out any orphaning jobs for the newly assigned
         // mediaName, in case it collides with an attachment that was
         // deleted recently.
-        orphanedBackupAttachmentManager.didCreateOrUpdateAttachment(
+        orphanedBackupAttachmentScheduler.didCreateOrUpdateAttachment(
             withMediaName: pendingAttachmentStreamInfo.mediaName,
             tx: tx
         )
@@ -1083,7 +1238,9 @@ public class AttachmentManagerImpl: AttachmentManager {
             )
             // When we create the attachment stream we schedule a backup of the
             // new attachment. Kick the tires so that upload starts happening now.
-            backupAttachmentUploadQueueRunner.backUpAllAttachmentsAfterTxCommits(tx: tx)
+            tx.addSyncCompletion {
+                NotificationCenter.default.post(name: .startBackupAttachmentUploadQueue, object: nil)
+            }
         case .originalAttachment(let originalAttachmentSource):
             guard let originalAttachment = attachmentStore.fetch(id: originalAttachmentSource.id, tx: tx) else {
                 // The original has been deleted.
@@ -1147,7 +1304,7 @@ public class AttachmentManagerImpl: AttachmentManager {
             )
 
             if let mediaName = attachmentParams.mediaName {
-                orphanedBackupAttachmentManager.didCreateOrUpdateAttachment(
+                orphanedBackupAttachmentScheduler.didCreateOrUpdateAttachment(
                     withMediaName: mediaName,
                     tx: tx
                 )
@@ -1191,6 +1348,6 @@ public class _AttachmentManagerImpl_StickerManagerWrapper: _AttachmentManagerImp
     public init() {}
 
     public func fetchInstalledSticker(packId: Data, stickerId: UInt32, tx: DBReadTransaction) -> InstalledSticker? {
-        return StickerManager.fetchInstalledSticker(packId: packId, stickerId: stickerId, transaction: SDSDB.shimOnlyBridge(tx))
+        return StickerManager.fetchInstalledSticker(packId: packId, stickerId: stickerId, transaction: tx)
     }
 }

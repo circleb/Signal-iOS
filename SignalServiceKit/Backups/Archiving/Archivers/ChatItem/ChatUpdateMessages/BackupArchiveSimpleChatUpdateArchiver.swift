@@ -74,7 +74,8 @@ final class BackupArchiveSimpleChatUpdateArchiver {
                 .profileUpdate,
                 .threadMerge,
                 .sessionSwitchover,
-                .learnedProfileName:
+                .learnedProfileName,
+                .typeEndPoll:
             // Non-simple chat update types
             return .completeFailure(.fatalArchiveError(
                 .developerError(OWSAssertionError("Unexpected info message type: \(infoMessage.messageType)"))
@@ -347,7 +348,13 @@ final class BackupArchiveSimpleChatUpdateArchiver {
             guard let verificationRecipient = context.recipientContext[chatItem.authorRecipientId] else {
                 return invalidProtoData(.recipientIdNotFound(chatItem.authorRecipientId))
             }
-            guard case .contact(let contactAddress) = verificationRecipient else {
+            let contactAddress: BackupArchive.InteropAddress
+            switch verificationRecipient {
+            case .contact(let _contactAddress):
+                contactAddress = _contactAddress.asInteropAddress()
+            case .localAddress:
+                contactAddress = context.recipientContext.localIdentifiers.aciAddress
+            case .releaseNotesChannel, .callLink, .distributionList, .group:
                 return invalidProtoData(.verificationStateChangeNotFromContact)
             }
 
@@ -356,7 +363,7 @@ final class BackupArchiveSimpleChatUpdateArchiver {
                 timestamp: chatItem.dateSent,
                 // We'll use the author of this chat item as the user whose
                 // identity key changed.
-                address: contactAddress.asInteropAddress(),
+                address: contactAddress,
                 // We'll fudge and conservatively say that the identity was not
                 // previously verified since we don't have it tracked in the
                 // backup and it only affects the action shown for the message.
@@ -366,7 +373,13 @@ final class BackupArchiveSimpleChatUpdateArchiver {
             guard let verificationRecipient = context.recipientContext[chatItem.authorRecipientId] else {
                 return invalidProtoData(.recipientIdNotFound(chatItem.authorRecipientId))
             }
-            guard case .contact(let contactAddress) = verificationRecipient else {
+            let contactAddress: BackupArchive.InteropAddress
+            switch verificationRecipient {
+            case .contact(let _contactAddress):
+                contactAddress = _contactAddress.asInteropAddress()
+            case .localAddress:
+                contactAddress = context.recipientContext.localIdentifiers.aciAddress
+            case .releaseNotesChannel, .callLink, .distributionList, .group:
                 return invalidProtoData(.verificationStateChangeNotFromContact)
             }
 
@@ -381,7 +394,7 @@ final class BackupArchiveSimpleChatUpdateArchiver {
                 timestamp: chatItem.dateSent,
                 // We'll use the author of this chat item as the user whose
                 // verification state changed.
-                recipientAddress: contactAddress.asInteropAddress(),
+                recipientAddress: contactAddress,
                 verificationState: verificationState,
                 // We don't know which device this update originated on, so
                 // we'll pretend it was the local. This only affects the way the
@@ -408,7 +421,6 @@ final class BackupArchiveSimpleChatUpdateArchiver {
             ))
         case .releaseChannelDonationRequest:
             // TODO: [Backups] Add support (and a test case!) for this once we've implemented the Release Notes channel.
-            logger.warn("Encountered not-yet-supported release-channel-donation-request update")
             return .success(())
         case .endSession:
             guard let senderRecipient = context.recipientContext[chatItem.authorRecipientId] else {
@@ -530,12 +542,6 @@ final class BackupArchiveSimpleChatUpdateArchiver {
             simpleChatUpdateInteraction = .simpleInfoMessage(.acceptedMessageRequest)
         }
 
-        guard let directionalDetails = chatItem.directionalDetails else {
-            return .unrecognizedEnum(BackupArchive.UnrecognizedEnumError(
-                enumType: BackupProto_ChatItem.OneOf_DirectionalDetails.self
-            ))
-        }
-
         switch simpleChatUpdateInteraction {
         case .simpleInfoMessage(let infoMessageType):
             let infoMessage = TSInfoMessage(
@@ -548,7 +554,6 @@ final class BackupArchiveSimpleChatUpdateArchiver {
                     infoMessage,
                     in: chatThread,
                     chatId: chatItem.typedChatId,
-                    directionalDetails: directionalDetails,
                     context: context
                 )
             } catch let error {
@@ -560,7 +565,6 @@ final class BackupArchiveSimpleChatUpdateArchiver {
                     infoMessage,
                     in: chatThread,
                     chatId: chatItem.typedChatId,
-                    directionalDetails: directionalDetails,
                     context: context
                 )
             } catch let error {
@@ -572,7 +576,6 @@ final class BackupArchiveSimpleChatUpdateArchiver {
                     errorMessage,
                     in: chatThread,
                     chatId: chatItem.typedChatId,
-                    directionalDetails: directionalDetails,
                     context: context
                 )
             } catch let error {

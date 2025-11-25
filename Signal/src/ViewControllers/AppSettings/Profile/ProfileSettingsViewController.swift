@@ -111,10 +111,15 @@ class ProfileSettingsViewController: OWSTableViewController2 {
 
         defaultSeparatorInsetLeading = Self.cellHInnerMargin + 24 + OWSTableItem.iconSpacing
 
-        let localProfile = SSKEnvironment.shared.databaseStorageRef.read(block: SSKEnvironment.shared.profileManagerRef.localUserProfile(tx:))!
+        let databaseStorage = SSKEnvironment.shared.databaseStorageRef
+        let profileManager = SSKEnvironment.shared.profileManagerRef
+        let localProfile: OWSUserProfile
+        (localProfile, displayBadgesOnProfile) = databaseStorage.read { tx in (
+            profileManager.localUserProfile(tx: tx)!,
+            DonationSubscriptionManager.displayBadgesOnProfile(transaction: tx),
+        )}
 
         allBadges = localProfile.badges
-        displayBadgesOnProfile = DonationSubscriptionManager.displayBadgesOnProfile
         let visibleBadgeIds = localProfile.visibleBadges.map { $0.badgeId }
         profileValues = ProfileValues(
             givenName: .init(oldValue: localProfile.filteredGivenName, changedValue: .noChange),
@@ -387,7 +392,7 @@ class ProfileSettingsViewController: OWSTableViewController2 {
                     self.currentUsernameLinkTooltip = UsernameLinkTooltipView(
                         fromView: self.view,
                         referenceView: cell,
-                        hInsetFromReferenceView: self.cellPillFrame(view: cell).x + 16,
+                        hInsetFromReferenceView: cell.contentView.bounds.x + 16,
                         onDismiss: { [weak self] in
                             self?.hideUsernameLinkTooltip(
                                 permanently: true,
@@ -780,7 +785,7 @@ class ProfileSettingsViewController: OWSTableViewController2 {
         let changeButton = UIButton(type: .custom)
 
         changeButton.setTitle(OWSLocalizedString("CHANGE_AVATAR_BUTTON_LABEL", comment: "Button label to allow user to change avatar"), for: .normal)
-        changeButton.titleLabel?.font = .dynamicTypeBody2.semibold()
+        changeButton.titleLabel?.font = .dynamicTypeSubheadline.semibold()
         changeButton.ows_contentEdgeInsets = UIEdgeInsets(hMargin: 16, vMargin: 6)
         changeButton.layer.cornerRadius = 16
 

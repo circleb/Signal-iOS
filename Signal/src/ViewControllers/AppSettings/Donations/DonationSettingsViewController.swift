@@ -71,14 +71,14 @@ class DonationSettingsViewController: OWSTableViewController2 {
 
     private static var canDonateInAnyWay: Bool {
         DonationUtilities.canDonateInAnyWay(
-            localNumber: DependenciesBridge.shared.tsAccountManager.localIdentifiersWithMaybeSneakyTransaction?.phoneNumber
+            tsAccountManager: DependenciesBridge.shared.tsAccountManager,
         )
     }
 
     private static var canSendGiftBadges: Bool {
         DonationUtilities.canDonate(
             inMode: .gift,
-            localNumber: DependenciesBridge.shared.tsAccountManager.localIdentifiersWithMaybeSneakyTransaction?.phoneNumber
+            tsAccountManager: DependenciesBridge.shared.tsAccountManager,
         )
     }
 
@@ -223,7 +223,7 @@ class DonationSettingsViewController: OWSTableViewController2 {
         }
     }
 
-    private func loadProfileBadgeLookup(donationConfiguration: DonationSubscriptionManager.DonationConfiguration?) async -> ProfileBadgeLookup {
+    private func loadProfileBadgeLookup(donationConfiguration: DonationSubscriptionConfiguration?) async -> ProfileBadgeLookup {
         if let donationConfiguration {
             let result = ProfileBadgeLookup(
                 boostBadge: donationConfiguration.boost.badge,
@@ -292,8 +292,6 @@ class DonationSettingsViewController: OWSTableViewController2 {
         OWSTableSection(items: [.init(customCellBlock: { [weak self] in
             let cell = OWSTableItem.newCell()
             guard let self = self else { return cell }
-            cell.layoutMargins = OWSTableViewController2.cellOuterInsets(in: self.view)
-            cell.contentView.layoutMargins = .zero
 
             let heroStack = DonationHeroView(avatarView: self.avatarView)
             heroStack.delegate = self
@@ -301,20 +299,19 @@ class DonationSettingsViewController: OWSTableViewController2 {
                 "DONATION_SCREEN_DONATE_BUTTON",
                 comment: "On the donation settings screen, tapping this button will take the user to a screen where they can donate."
             )
-            let button = OWSButton(title: buttonTitle) { [weak self] in
-                if Self.canDonateInAnyWay {
-                    self?.showDonateViewController(preferredDonateMode: .oneTime)
-                } else {
-                    DonationViewsUtil.openDonateWebsite()
+            let button = UIButton(
+                configuration: .largePrimary(title: buttonTitle),
+                primaryAction: UIAction { [weak self] _ in
+                    if Self.canDonateInAnyWay {
+                        self?.showDonateViewController(preferredDonateMode: .oneTime)
+                    } else {
+                        DonationViewsUtil.openDonateWebsite()
+                    }
                 }
-            }
-            button.dimsWhenHighlighted = true
-            button.layer.cornerRadius = 8
-            button.backgroundColor = .ows_accentBlue
-            button.titleLabel?.font = UIFont.dynamicTypeBody.semibold()
+            )
             heroStack.addArrangedSubview(button)
-            button.autoSetDimension(.height, toSize: 48)
-            button.autoPinWidthToSuperviewMargins()
+            button.translatesAutoresizingMaskIntoConstraints = false
+            button.widthAnchor.constraint(equalTo: heroStack.layoutMarginsGuide.widthAnchor).isActive = true
 
             cell.contentView.addSubview(heroStack)
             heroStack.autoPinEdgesToSuperviewMargins(with: UIEdgeInsets(hMargin: 0, vMargin: 6))
@@ -325,7 +322,7 @@ class DonationSettingsViewController: OWSTableViewController2 {
 
     private func loadingSection() -> OWSTableSection {
         let section = OWSTableSection()
-        section.add(AppSettingsViewsUtil.loadingTableItem(cellOuterInsets: cellOuterInsets))
+        section.add(AppSettingsViewsUtil.loadingTableItem())
         section.hasBackground = false
         return section
     }
@@ -422,7 +419,7 @@ class DonationSettingsViewController: OWSTableViewController2 {
                     comment: "Title for the 'Donor FAQ' button on the donation screen"
                 ),
                 actionBlock: { [weak self] in
-                    let vc = SFSafariViewController(url: SupportConstants.donorFAQURL)
+                    let vc = SFSafariViewController(url: URL.Support.Donations.donorFAQ)
                     self?.present(vc, animated: true, completion: nil)
                 }
             ))

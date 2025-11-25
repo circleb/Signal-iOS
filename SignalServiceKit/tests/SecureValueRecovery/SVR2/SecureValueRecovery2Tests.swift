@@ -15,7 +15,6 @@ class SecureValueRecovery2Tests: XCTestCase {
 
     private var credentialStorage: SVRAuthCredentialStorageMock!
 
-    private var mockAccountAttributesUpdater: MockAccountAttributesUpdater!
     private var mock2FAManager: SVR2.TestMocks.OWS2FAManager!
     private var accountKeyStore: AccountKeyStore!
     private var localStorage: SVRLocalStorageImpl!
@@ -29,7 +28,9 @@ class SecureValueRecovery2Tests: XCTestCase {
         self.credentialStorage = SVRAuthCredentialStorageMock()
 
         mock2FAManager = SVR2.TestMocks.OWS2FAManager()
-        accountKeyStore = AccountKeyStore()
+        accountKeyStore = AccountKeyStore(
+            backupSettingsStore: BackupSettingsStore(),
+        )
         localStorage = SVRLocalStorageImpl()
 
         let mockConnection = MockSgxWebsocketConnection<SVR2WebsocketConfigurator>()
@@ -37,12 +38,10 @@ class SecureValueRecovery2Tests: XCTestCase {
         self.mockConnection = mockConnection
         mockConnectionFactory = MockSgxWebsocketConnectionFactory()
 
-        mockAccountAttributesUpdater = .init()
         mockTSAccountManager = .init()
         mockTSConstants = TSConstantsMock()
 
         self.svr = SecureValueRecovery2Impl(
-            accountAttributesUpdater: mockAccountAttributesUpdater,
             appContext: SVR2.Mocks.AppContext(),
             appReadiness: AppReadinessMock(),
             appVersion: MockAppVerion(),
@@ -54,7 +53,6 @@ class SecureValueRecovery2Tests: XCTestCase {
             scheduler: DispatchQueue(label: ""),
             storageServiceManager: FakeStorageServiceManager(),
             svrLocalStorage: localStorage,
-            syncManager: OWSMockSyncManager(),
             tsAccountManager: mockTSAccountManager,
             tsConstants: mockTSConstants,
             twoFAManager: mock2FAManager

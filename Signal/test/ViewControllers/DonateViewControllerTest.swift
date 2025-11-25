@@ -144,7 +144,6 @@ final class DonateViewControllerTest: SignalBaseTest {
                 "currency": isPaymentProcessing ? "EUR" : "USD",
                 "amount": 12,
                 "endOfCurrentPeriod": TimeInterval(1234),
-                "billingCycleAnchor": TimeInterval(5678),
                 "active": true,
                 "cancelAtPeriodEnd": false,
                 "status": "active",
@@ -244,7 +243,8 @@ final class DonateViewControllerTest: SignalBaseTest {
                 chargeFailureCodeIfPaymentFailed: nil,
                 badge: MonthlyFixtures.badgeOne,
                 amount: FiatMoney(currencyCode: "EUR", value: 5),
-                paymentMethod: .sepa
+                paymentMethod: .sepa,
+                now: Date(),
             )
         }()
 
@@ -265,7 +265,8 @@ final class DonateViewControllerTest: SignalBaseTest {
                 chargeFailureCodeIfPaymentFailed: nil,
                 badge: OneTimeFixtures.badge,
                 amount: FiatMoney(currencyCode: "EUR", value: 100),
-                paymentMethod: .sepa
+                paymentMethod: .sepa,
+                now: Date(),
             ),
             recurringSubscriptionReceiptCredentialRequestError: recurringError,
             pendingIDEALOneTimeDonation: nil,

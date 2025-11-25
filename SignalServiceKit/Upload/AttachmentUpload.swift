@@ -128,6 +128,14 @@ public struct AttachmentUpload {
             case .uploaded(let updatedBytesAlreadUploaded):
                 attempt.logger.info("Endpoint reported \(updatedBytesAlreadUploaded)/\(attempt.encryptedDataLength) uploaded.")
                 bytesAlreadyUploaded = updatedBytesAlreadUploaded
+                if bytesAlreadyUploaded == totalDataLength {
+                    attempt.logger.info("Complete upload reported by endpoint.")
+                    progress?.incrementCompletedUnitCount(by: UInt64(totalDataLength))
+                    return
+                } else if bytesAlreadyUploaded > totalDataLength {
+                    attempt.logger.warn("Endpoint reported upload size larger than local size. Marking as failed")
+                    throw Upload.Error.uploadFailure(recovery: .restart(.afterBackoff))
+                }
             case .restart:
                 attempt.logger.warn("Error with fetching progress. Restart upload.")
                 throw Upload.Error.uploadFailure(recovery: .restart(.afterBackoff))
@@ -169,9 +177,9 @@ public struct AttachmentUpload {
             try await attempt.endpoint.performUpload(
                 startPoint: bytesAlreadyUploaded,
                 attempt: attempt,
-                progress: progress
+                progress: internalProgress
             )
-            attempt.logger.warn("Attachment uploaded successfully. \(bytesAlreadyUploaded) -> \(internalProgress.completedUnitCount) (\(downloadTimeLogString(internalProgress.completedUnitCount))")
+            attempt.logger.info("Attachment uploaded successfully. \(bytesAlreadyUploaded) -> \(internalProgress.completedUnitCount) (\(downloadTimeLogString(internalProgress.completedUnitCount))")
         } catch {
             if let statusCode = error.httpStatusCode {
                 attempt.logger.warn("Encountered error during upload. (code=\(statusCode)")
@@ -184,6 +192,11 @@ public struct AttachmentUpload {
             var latestUploadProgressBytes: UInt32 = UInt32(truncatingIfNeeded: internalProgress.completedUnitCount)
             var uploadReportedRemoteProgress = false
             switch error {
+            case .partialUpload(let bytesUploaded):
+                attempt.logger.info("Endpoint successfully uploaded chunk of \(bytesUploaded) bytes.")
+                uploadReportedRemoteProgress = true
+                latestUploadProgressBytes += bytesUploaded
+                failureMode = .resume(.immediately)
             case .uploadFailure(let retryMode):
                 // if a failure mode was passed back
                 failureMode = retryMode
@@ -213,13 +226,16 @@ public struct AttachmentUpload {
                 }
             case .networkError:
                 failureMode = .resume(.afterBackoff)
+            case .missingFile:
+                attempt.logger.error("Missing attachment file!")
+                failureMode = .noMoreRetries
             case .invalidUploadURL, .unsupportedEndpoint, .unexpectedResponseStatusCode, .unknown:
                 // These errors are unrecoverable, so restart the upload in hopes of correcting the issue.
                 failureMode = .restart(.afterBackoff)
             }
 
             if uploadReportedRemoteProgress {
-                attempt.logger.warn("Upload reported making progress: \(bytesAlreadyUploaded) -> \(latestUploadProgressBytes) (\(downloadTimeLogString(UInt64(latestUploadProgressBytes))))")
+                attempt.logger.info("Upload reported making progress: \(bytesAlreadyUploaded) -> \(latestUploadProgressBytes) (\(downloadTimeLogString(UInt64(latestUploadProgressBytes))))")
             }
 
             switch failureMode {

@@ -25,6 +25,17 @@ public struct DebugLogDumper {
         )
     }
 
+    public func challengeReceivedRecently() -> Bool {
+        guard let db else {
+            return false
+        }
+
+        let challengeFloorDate = Date().addingTimeInterval(.day * -3)
+        return db.read { tx in
+            SupportKeyValueStore().lastChallengeWithinTimeframe(transaction: tx, lastChallengeFloor: challengeFloorDate)
+        }
+    }
+
     fileprivate func dump() {
         appVersion.dumpToLog()
         if let db {
@@ -39,7 +50,7 @@ public struct DebugLogDumper {
                     }
                 }
                 if DebugFlags.internalLogging {
-                    KeyValueStore.logCollectionStatistics(tx: tx)
+                    NewKeyValueStore.logCollectionStatistics(tx: tx)
                 }
             }
         }
@@ -85,13 +96,13 @@ enum DebugLogs {
                         "DEBUG_LOG_ALERT_OPTION_EMAIL",
                         comment: "Label for the 'email debug log' option of the debug log alert."
                     ),
-                    accessibilityIdentifier: "DebugLogs.send_email",
                     style: .default,
                     handler: { _ in
                         Task {
                             await ComposeSupportEmailOperation.sendEmailWithDefaultErrorHandling(
                                 supportFilter: supportFilter,
-                                logUrl: url
+                                logUrl: url,
+                                hasRecentChallenge: dumper.challengeReceivedRecently()
                             )
                         }
                         submitLogsCompletion()
@@ -103,10 +114,10 @@ enum DebugLogs {
                     "DEBUG_LOG_ALERT_OPTION_COPY_LINK",
                     comment: "Label for the 'copy link' option of the debug log alert."
                 ),
-                accessibilityIdentifier: "DebugLogs.copy_link",
                 style: .default,
                 handler: { _ in
                     UIPasteboard.general.string = url.absoluteString
+                    presentingViewController.presentToast(text: CommonStrings.copiedToClipboardToast)
                     submitLogsCompletion()
                 }
             ))
@@ -115,7 +126,6 @@ enum DebugLogs {
                     "DEBUG_LOG_ALERT_OPTION_SHARE",
                     comment: "Label for the 'Share' option of the debug log alert."
                 ),
-                accessibilityIdentifier: "DebugLogs.share",
                 style: .default,
                 handler: { _ in
                     AttachmentSharing.showShareUI(
@@ -127,7 +137,6 @@ enum DebugLogs {
             ))
             alert.addAction(ActionSheetAction(
                 title: CommonStrings.cancelButton,
-                accessibilityIdentifier: "OWSActionSheets.cancel",
                 style: .cancel,
                 handler: { _ in submitLogsCompletion() }
             ))
@@ -253,7 +262,7 @@ enum DebugLogs {
 
         // Phase 4: Zip up the log files.
         let zipDirUrl = URL(fileURLWithPath: zipDirPath)
-        let zipFileUrl = URL(fileURLWithPath: zipDirPath.appendingFileExtension("zip"))
+        let zipFileUrl = URL(fileURLWithPath: (zipDirPath as NSString).appendingPathExtension("zip")!)
         let fileCoordinator = NSFileCoordinator()
         var zipError: NSError?
         fileCoordinator.coordinate(readingItemAt: zipDirUrl, options: [.forUploading], error: &zipError) { temporaryFileUrl in
@@ -301,7 +310,6 @@ enum DebugLogs {
                     "DEBUG_LOG_ALERT_OPTION_EXPORT_LOG_ARCHIVE",
                     comment: "Label for the 'Export Logs' fallback option for the alert when debug log uploading fails."
                 ),
-                accessibilityIdentifier: "export_log_archive"
             ) { _ in
                 AttachmentSharing.showShareUI(
                     for: URL(fileURLWithPath: logArchiveOrDirectoryPath),
@@ -313,7 +321,7 @@ enum DebugLogs {
             })
         }
 
-        alert.addAction(.init(title: CommonStrings.okButton, accessibilityIdentifier: "ok") { _ in
+        alert.addAction(.init(title: CommonStrings.okButton) { _ in
             if let logArchiveOrDirectoryPath {
                 deleteArchive(logArchiveOrDirectoryPath)
             }
@@ -346,25 +354,22 @@ private enum DebugLogUploader {
     private static func getUploadParameters(fileUrl: URL) async throws -> UploadParameters {
         let url = URL(string: "https://debuglogs.org/")!
         let response = try await buildOWSURLSession().performRequest(url.absoluteString, method: .get, ignoreAppExpiry: true)
-        guard let responseObject = response.responseBodyJson else {
+        guard let params = response.responseBodyParamParser else {
             throw OWSAssertionError("Invalid response.")
-        }
-        guard let params = ParamParser(responseObject: responseObject) else {
-            throw OWSAssertionError("Invalid response: \(String(describing: responseObject))")
         }
         let uploadUrl: String = try params.required(key: "url")
         let fieldMap: [String: String] = try params.required(key: "fields")
         guard !fieldMap.isEmpty else {
-            throw OWSAssertionError("Invalid response: \(String(describing: responseObject))")
+            throw OWSAssertionError("Empty fieldMap!")
         }
         for (key, value) in fieldMap {
             guard nil != key.nilIfEmpty,
                   nil != value.nilIfEmpty else {
-                      throw OWSAssertionError("Invalid response: \(String(describing: responseObject))")
+                      throw OWSAssertionError("Empty key or value in fieldMap!")
                   }
         }
         guard let rawUploadKey = fieldMap["key"]?.nilIfEmpty else {
-            throw OWSAssertionError("Invalid response: \(String(describing: responseObject))")
+            throw OWSAssertionError("Missing rawUploadKey!")
         }
         guard let fileExtension = (fileUrl.lastPathComponent as NSString).pathExtension.nilIfEmpty else {
             throw OWSAssertionError("Invalid fileUrl: \(fileUrl)")

@@ -7,8 +7,6 @@ import Foundation
 public import LibSignalClient
 
 public enum MessageSenderError: Error, IsRetryableProvider, UserErrorDescriptionProvider {
-    case prekeyRateLimit
-    case missingDevice
     case blockedContactRecipient
     case threadMissing
 
@@ -19,7 +17,7 @@ public enum MessageSenderError: Error, IsRetryableProvider, UserErrorDescription
                 "ERROR_DESCRIPTION_MESSAGE_SEND_FAILED_DUE_TO_BLOCK_LIST",
                 comment: "Error message indicating that message send failed due to block list"
             )
-        case .prekeyRateLimit, .missingDevice, .threadMissing:
+        case .threadMissing:
             return OWSLocalizedString(
                 "MESSAGE_STATUS_SEND_FAILED",
                 comment: "Label indicating that a message failed to send."
@@ -31,12 +29,6 @@ public enum MessageSenderError: Error, IsRetryableProvider, UserErrorDescription
 
     public var isRetryableProvider: Bool {
         switch self {
-        case .prekeyRateLimit:
-            // TODO: Retry with backoff.
-            // TODO: Can we honor a retry delay hint from the response?
-            return true
-        case .missingDevice:
-            return true
         case .blockedContactRecipient:
             return false
         case .threadMissing:
@@ -48,22 +40,11 @@ public enum MessageSenderError: Error, IsRetryableProvider, UserErrorDescription
 // MARK: -
 
 extension Error {
-    public var shouldBeIgnoredForNonContactThreads: Bool {
-        self is MessageSenderNoSuchSignalRecipientError
-    }
-}
-
-// MARK: -
-
-extension Error {
     public var isFatalError: Bool {
         switch self {
         case is MessageSenderNoSessionForTransientMessageError:
             return true
         case is UntrustedIdentityError:
-            return true
-        case is SignalServiceRateLimitedError:
-            // Avoid exacerbating the rate limiting.
             return true
         case is MessageDeletedBeforeSentError:
             return true
@@ -231,31 +212,6 @@ public class InvalidKeySignatureError: CustomNSError, IsRetryableProvider, UserE
 
 // MARK: -
 
-class SignalServiceRateLimitedError: CustomNSError, IsRetryableProvider, UserErrorDescriptionProvider {
-    // NSError bridging: the domain of the error.
-    public static let errorDomain = OWSError.errorDomain
-
-    // NSError bridging: the error code within the given domain.
-    public var errorUserInfo: [String: Any] {
-        [NSLocalizedDescriptionKey: self.localizedDescription]
-    }
-
-    public var localizedDescription: String {
-        OWSLocalizedString(
-            "FAILED_SENDING_BECAUSE_RATE_LIMIT",
-            comment: "action sheet header when re-sending message which failed because of too many attempts"
-        )
-    }
-
-    // NSError bridging: the error code within the given domain.
-    public var errorCode: Int { OWSErrorCode.signalServiceRateLimited.rawValue }
-
-    // We're already rate-limited. No need to exacerbate the problem.
-    public var isRetryableProvider: Bool { false }
-}
-
-// MARK: -
-
 public class SpamChallengeRequiredError: CustomNSError, IsRetryableProvider, UserErrorDescriptionProvider {
     // NSError bridging: the domain of the error.
     public static let errorDomain = OWSError.errorDomain
@@ -323,67 +279,6 @@ class OWSUnretryableMessageSenderError: Error, IsRetryableProvider {
     }
 
     // MARK: - IsRetryableProvider
-
-    public var isRetryableProvider: Bool { false }
-}
-
-// MARK: -
-
-public class AppExpiredError: CustomNSError, IsRetryableProvider, UserErrorDescriptionProvider {
-    public static var asNSError: NSError {
-        AppExpiredError() as Error as NSError
-    }
-
-    // NSError bridging: the domain of the error.
-    public static let errorDomain = OWSError.errorDomain
-
-    // NSError bridging: the error code within the given domain.
-    public static var errorCode: Int { OWSErrorCode.appExpired.rawValue }
-
-    // NSError bridging: the error code within the given domain.
-    public var errorUserInfo: [String: Any] {
-        [NSLocalizedDescriptionKey: self.localizedDescription]
-    }
-
-    public var localizedDescription: String {
-        OWSLocalizedString("ERROR_SENDING_EXPIRED",
-                          comment: "Error indicating a send failure due to an expired application.")
-    }
-
-    // NSError bridging: the error code within the given domain.
-    public var errorCode: Int { Self.errorCode }
-
-    public var isRetryableProvider: Bool { false }
-}
-
-// MARK: -
-
-public class AppDeregisteredError: CustomNSError, IsRetryableProvider, UserErrorDescriptionProvider {
-    public static var asNSError: NSError {
-        AppDeregisteredError() as Error as NSError
-    }
-
-    // NSError bridging: the domain of the error.
-    public static let errorDomain = OWSError.errorDomain
-
-    // NSError bridging: the error code within the given domain.
-    public static var errorCode: Int { OWSErrorCode.appDeregistered.rawValue }
-
-    // NSError bridging: the error code within the given domain.
-    public var errorUserInfo: [String: Any] {
-        [NSLocalizedDescriptionKey: self.localizedDescription]
-    }
-
-    public var localizedDescription: String {
-        DependenciesBridge.shared.tsAccountManager.registrationStateWithMaybeSneakyTransaction.isPrimaryDevice ?? true
-            ? OWSLocalizedString("ERROR_SENDING_DEREGISTERED",
-                                comment: "Error indicating a send failure due to a deregistered application.")
-            : OWSLocalizedString("ERROR_SENDING_DELINKED",
-                                comment: "Error indicating a send failure due to a delinked application.")
-    }
-
-    // NSError bridging: the error code within the given domain.
-    public var errorCode: Int { Self.errorCode }
 
     public var isRetryableProvider: Bool { false }
 }

@@ -32,7 +32,7 @@ class AppSettingsViewController: OWSTableViewController2 {
         }
 
         title = OWSLocalizedString("SETTINGS_NAV_BAR_TITLE", comment: "Title for settings activity")
-        navigationItem.leftBarButtonItem = .doneButton(dismissingFrom: self)
+        navigationItem.rightBarButtonItem = .doneButton(dismissingFrom: self)
 
         defaultSeparatorInsetLeading = Self.cellHInnerMargin + 24 + OWSTableItem.iconSpacing
 
@@ -127,10 +127,17 @@ class AppSettingsViewController: OWSTableViewController2 {
     }
 
     func updateTableContents() {
-        let isPrimaryDevice = DependenciesBridge.shared.db.read { tx in
-            return DependenciesBridge.shared.tsAccountManager
-                .registrationState(tx: tx)
-                .isPrimaryDevice == true
+        let backupSettingsStore = BackupSettingsStore()
+        let db = DependenciesBridge.shared.db
+        let tsAccountManager = DependenciesBridge.shared.tsAccountManager
+        let (
+            isPrimaryDevice,
+            haveBackupsEverBeenEnabled
+        ): (Bool, Bool) = db.read { tx in
+            return (
+                tsAccountManager.registrationState(tx: tx).isPrimaryDevice ?? false,
+                backupSettingsStore.haveBackupsEverBeenEnabled(tx: tx)
+            )
         }
 
         let contents = OWSTableContents()
@@ -241,32 +248,40 @@ class AppSettingsViewController: OWSTableViewController2 {
                 self?.navigationController?.pushViewController(vc, animated: true)
             }
         ))
-        if
-            isPrimaryDevice,
-            RemoteConfig.current.allowBackupSettings
-        {
+
+        let shouldShowBackupSettings: Bool = {
+            guard isPrimaryDevice else {
+                return false
+            }
+
+            if haveBackupsEverBeenEnabled {
+                return true
+            } else if RemoteConfig.current.backupSettingsKillSwitch {
+                return false
+            }
+
+            return true
+        }()
+        if shouldShowBackupSettings {
             section2.add(.disclosureItem(
                 icon: .backup,
                 withText: OWSLocalizedString(
                     "SETTINGS_BACKUPS",
                     comment: "Label for the 'backups' section of app settings."
                 ),
+                addBetaLabel: true,
                 actionBlock: { [weak self] in
-                    guard let self else { return }
+                    guard
+                        let self,
+                        let navigationController
+                    else { return }
 
-                    let backupSettingsStore = BackupSettingsStore()
-                    let db = DependenciesBridge.shared.db
-
-                    let haveBackupsEverBeenEnabled = db.read { tx in
-                        backupSettingsStore.haveBackupsEverBeenEnabled(tx: tx)
-                    }
-
-                    if haveBackupsEverBeenEnabled {
-                        let vc = BackupSettingsViewController(onLoadAction: .none)
-                        navigationController?.pushViewController(vc, animated: true)
-                    } else {
-                        BackupOnboardingCoordinator().present(fromViewController: self)
-                    }
+                    navigationController.pushViewController(
+                        BackupOnboardingCoordinator().prepareForPresentation(
+                            inNavController: navigationController
+                        ),
+                        animated: true
+                    )
                 }
             ))
         }
@@ -317,7 +332,7 @@ class AppSettingsViewController: OWSTableViewController2 {
                     if unreadPaymentsCount > 0 {
                         let unreadLabel = UILabel()
                         unreadLabel.text = OWSFormat.formatUInt(min(9, unreadPaymentsCount))
-                        unreadLabel.font = .dynamicTypeBody2Clamped
+                        unreadLabel.font = .dynamicTypeSubheadlineClamped
                         unreadLabel.textColor = .ows_white
 
                         let unreadBadge = OWSLayerView.circleView()
@@ -376,8 +391,8 @@ class AppSettingsViewController: OWSTableViewController2 {
             internalSection.add(.disclosureItem(
                 icon: .settingsAdvanced,
                 withText: "Internal",
-                actionBlock: { [weak self, appReadiness] in
-                    let vc = InternalSettingsViewController(appReadiness: appReadiness)
+                actionBlock: { [weak self] in
+                    let vc = InternalSettingsViewController()
                     self?.navigationController?.pushViewController(vc, animated: true)
                 }
             ))

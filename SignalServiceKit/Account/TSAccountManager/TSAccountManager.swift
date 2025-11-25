@@ -8,7 +8,7 @@ public import LibSignalClient
 
 public protocol TSAccountManager {
 
-    func warmCaches()
+    func warmCaches(tx: DBReadTransaction)
 
     // MARK: - Local Identifiers
 
@@ -38,11 +38,7 @@ public protocol TSAccountManager {
 
     // MARK: - RegistrationIds
 
-    func getOrGenerateAciRegistrationId(tx: DBWriteTransaction) -> UInt32
-    func getOrGeneratePniRegistrationId(tx: DBWriteTransaction) -> UInt32
-    func wipeRegistrationIdsFromFailedProvisioning(tx: DBWriteTransaction)
-
-    /// Set the PNI registration ID.
+    /// Set the registration ID.
     ///
     /// This exists as a separate, external setter because we might _learn_ about a
     /// PNI registration ID from PNI events from other devices, already having been
@@ -50,10 +46,13 @@ public protocol TSAccountManager {
     ///
     /// There are no side effects to this setter; the caller is expected to handle those
     /// and have this setter just persist state.
-    func setPniRegistrationId(
+    func setRegistrationId(
         _ newRegistrationId: UInt32,
+        for identity: OWSIdentity,
         tx: DBWriteTransaction
     )
+    func getRegistrationId(for identity: OWSIdentity, tx: DBReadTransaction) -> UInt32?
+    func clearRegistrationIds(tx: DBWriteTransaction)
 
     // MARK: - Manual Message Fetch
 
@@ -64,6 +63,10 @@ public protocol TSAccountManager {
 
     func phoneNumberDiscoverability(tx: DBReadTransaction) -> PhoneNumberDiscoverability?
     func lastSetIsDiscoverableByPhoneNumber(tx: DBReadTransaction) -> Date
+}
+
+public struct NotRegisteredError: Error, IsRetryableProvider {
+    public let isRetryableProvider: Bool = false
 }
 
 /// It's *possible* (but implausible) that the local user's "device ID"

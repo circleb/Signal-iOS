@@ -296,7 +296,13 @@ class ParsedClass:
         #       force_optional and property_order.
         record_properties = []
         for property in base_properties:
-            property.force_optional = False
+            # Treat all enum properties as forced-optional, so that during
+            # deserialization we can survive unexpected raw values.
+            #
+            # Except the special-cased ones.
+            force_optional = property.type_info().is_enum
+            force_optional = force_optional and property.name not in ["mentionNotificationMode", "storyViewMode"]
+            property.force_optional = force_optional
             record_properties.append(property)
         for property in subclass_properties:
             # We must "force" subclass properties to be optional
@@ -479,13 +485,7 @@ class TypeInfo:
             # Do nothing; we don't need to unpack this non-optional.
             pass
 
-        if value_name == "conversationColorName":
-            value_statement = "let %s: %s = ConversationColorName(rawValue: %s)" % (
-                value_name,
-                "ConversationColorName",
-                value_expr,
-            )
-        elif value_name == "mentionNotificationMode":
+        if value_name == "mentionNotificationMode":
             value_statement = (
                 "let %s: %s = TSThreadMentionNotificationMode(rawValue: %s) ?? .default"
                 % (
@@ -1181,7 +1181,7 @@ public struct %s: SDSRecord {
 
     // This defines all of the columns used in the table
     // where this model (and any subclasses) are persisted.
-    public let recordType: SDSRecordType
+    public let recordType: SDSRecordType?
     public let uniqueId: String
 
 """ % (
@@ -1310,9 +1310,32 @@ public extension %s {
         )
 
         for index, property in enumerate(persisted_properties):
-            swift_body += """
+            type_info = property.type_info()
+            property_name = property.column_name()
+            swift_type = type_info.swift_type()
+
+            did_force_optional = property.name not in ["mentionNotificationMode", "storyViewMode"]
+            did_force_optional = did_force_optional and type_info.is_enum
+
+            if property_name == "recordType":
+                # recordType is an enum, but its property info here doesn't
+                # reflect that, so special-case it.
+                swift_body += """
+        %s = row[%s].flatMap { SDSRecordType(rawValue: $0) }""" % (
+                property_name,
+                index,
+            )
+            elif did_force_optional:
+                swift_body += """
+        %s = row[%s].flatMap { %s(rawValue: $0) }""" % (
+                property_name,
+                index,
+                swift_type,
+            )
+            else:
+                swift_body += """
         %s = row[%s]""" % (
-                property.column_name(),
+                property_name,
                 index,
             )
 
@@ -1353,11 +1376,10 @@ extension %s {
         )
         swift_body += """
 
-        guard let recordId = record.id else {
-            throw SDSError.invalidValue()
-        }
+        guard let recordId = record.id else { throw SDSError.missingRequiredField(fieldName: "id") }
+        guard let recordType = record.recordType else { throw SDSError.missingRequiredField(fieldName: "recordType") }
 
-        switch record.recordType {
+        switch recordType {
 """
 
         deserialize_classes = all_descendents_of_class(clazz) + [clazz]
@@ -1393,9 +1415,10 @@ extension %s {
                 value_name = "%s" % property.name
 
                 if property.name not in ("uniqueId",):
-                    did_force_optional = (
-                        property.name not in base_property_names
-                    ) and (not property.is_optional)
+                    did_force_optional = property.name not in ["mentionNotificationMode", "storyViewMode"]
+                    did_force_optional = did_force_optional and property.name not in base_property_names
+                    did_force_optional = did_force_optional and not property.is_optional
+                    did_force_optional = did_force_optional or property.type_info().is_enum
                     for statement in property.deserialize_record_invocation(
                         value_name, did_force_optional
                     ):
@@ -1602,7 +1625,7 @@ extension %s {
             #       that this deserialization code expects.
 
         swift_body += """        default:
-            owsFailDebug("Unexpected record type: \\(record.recordType)")
+            owsFailDebug("Unexpected record type: \\(recordType)")
             throw SDSError.invalidValue()
 """
         swift_body += """        }
@@ -1713,9 +1736,10 @@ extension %(class_name)s: DeepCopyable {
             for property in deserialize_properties:
                 value_name = "%s" % property.name
 
-                did_force_optional = (property.name not in base_property_names) and (
-                    not property.is_optional
-                )
+                did_force_optional = property.name not in ["mentionNotificationMode", "storyViewMode"]
+                did_force_optional = did_force_optional and property.name not in base_property_names
+                did_force_optional = did_force_optional and not property.is_optional
+                did_force_optional = did_force_optional or property.type_info().is_enum
                 for statement in property.deep_copy_record_invocation(
                     value_name, did_force_optional
                 ):
@@ -1766,21 +1790,27 @@ extension %sRecord {
             remove_prefix_from_class_name(clazz.name)
         )
 
-        def write_grdb_column_metadata(property):
-            # column_name = property.swift_identifier()
-            column_name = property.column_name()
+        def write_grdb_column_metadata(metadata):
             return """                %s,
             """ % (
-                str(column_name)
+                str(metadata)
             )
 
         for property in sds_properties:
-            if property.name != "id":
-                swift_body += write_grdb_column_metadata(property)
+            column_name = property.column_name()
 
-        if len(record_properties) > 0:
-            for property in record_properties:
-                swift_body += write_grdb_column_metadata(property)
+            if column_name == "recordType" or property.type_info().is_enum:
+                swift_body += write_grdb_column_metadata("%s?.rawValue" % (column_name))
+            elif property.name != "id":
+                swift_body += write_grdb_column_metadata(column_name)
+
+        for property in record_properties:
+            column_name = property.column_name()
+
+            if property.type_info().is_enum:
+                swift_body += write_grdb_column_metadata("%s?.rawValue" % (column_name))
+            else:
+                swift_body += write_grdb_column_metadata(column_name)
 
         swift_body += """
         ]
@@ -2152,64 +2182,12 @@ public extension %(class_name)s {
             (str(clazz.name),) * 4
         )
 
-        swift_body += '''
-    // Traverses all records' unique ids.
-    // Records are not visited in any particular order.
-    class func anyEnumerateUniqueIds(
-        transaction: DBReadTransaction,
-        block: (String, UnsafeMutablePointer<ObjCBool>) -> Void
-    ) {
-        anyEnumerateUniqueIds(transaction: transaction, batched: false, block: block)
-    }
-
-    // Traverses all records' unique ids.
-    // Records are not visited in any particular order.
-    class func anyEnumerateUniqueIds(
-        transaction: DBReadTransaction,
-        batched: Bool = false,
-        block: (String, UnsafeMutablePointer<ObjCBool>) -> Void
-    ) {
-        let batchSize = batched ? Batching.kDefaultBatchSize : 0
-        anyEnumerateUniqueIds(transaction: transaction, batchSize: batchSize, block: block)
-    }
-
-    // Traverses all records' unique ids.
-    // Records are not visited in any particular order.
-    //
-    // If batchSize > 0, the enumeration is performed in autoreleased batches.
-    class func anyEnumerateUniqueIds(
-        transaction: DBReadTransaction,
-        batchSize: UInt,
-        block: (String, UnsafeMutablePointer<ObjCBool>) -> Void
-    ) {
-        grdbEnumerateUniqueIds(transaction: transaction,
-                                sql: """
-                SELECT \\(%sColumn: .uniqueId)
-                FROM \\(%s.databaseTableName)
-            """,
-            batchSize: batchSize,
-            block: block)
-    }
-''' % (
-            record_identifier(clazz.name),
-            record_name,
-        )
-
         swift_body += """
     // Does not order the results.
     class func anyFetchAll(transaction: DBReadTransaction) -> [%s] {
         var result = [%s]()
         anyEnumerate(transaction: transaction) { (model, _) in
             result.append(model)
-        }
-        return result
-    }
-
-    // Does not order the results.
-    class func anyAllUniqueIds(transaction: DBReadTransaction) -> [String] {
-        var result = [String]()
-        anyEnumerateUniqueIds(transaction: transaction) { (uniqueId, _) in
-            result.append(uniqueId)
         }
         return result
     }
@@ -2223,56 +2201,9 @@ public extension %(class_name)s {
     class func anyCount(transaction: DBReadTransaction) -> UInt {
         return %s.ows_fetchCount(transaction.database)
     }
-""" % (
-            record_name,
-        )
-
-        # ---- Remove All ----
-
-        if has_remove_methods:
-            swift_body += """
-    class func anyRemoveAllWithInstantiation(transaction: DBWriteTransaction) {
-        // To avoid mutationDuringEnumerationException, we need to remove the
-        // instances outside the enumeration.
-        let uniqueIds = anyAllUniqueIds(transaction: transaction)
-
-        for uniqueId in uniqueIds {
-            autoreleasepool {
-                guard let instance = anyFetch(uniqueId: uniqueId, transaction: transaction) else {
-                    owsFailDebug("Missing instance.")
-                    return
-                }
-                instance.anyRemove(transaction: transaction)
-            }
-        }
-    }
-"""
-
-        # ---- Exists ----
-
-        swift_body += """
-    class func anyExists(
-        uniqueId: String,
-        transaction: DBReadTransaction
-    ) -> Bool {
-        assert(!uniqueId.isEmpty)
-
-        let sql = "SELECT EXISTS ( SELECT 1 FROM \\(%s.databaseTableName) WHERE \\(%sColumn: .uniqueId) = ? )"
-        let arguments: StatementArguments = [uniqueId]
-        do {
-            return try Bool.fetchOne(transaction.database, sql: sql, arguments: arguments) ?? false
-        } catch {
-            DatabaseCorruptionState.flagDatabaseReadCorruptionIfNecessary(
-                userDefaults: CurrentAppContext().appUserDefaults(),
-                error: error
-            )
-            owsFail("Missing instance.")
-        }
-    }
 }
 """ % (
             record_name,
-            record_identifier(clazz.name),
         )
 
         # ---- Fetch ----

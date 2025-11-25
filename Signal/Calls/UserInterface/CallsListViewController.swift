@@ -13,7 +13,6 @@ import SignalServiceKit
 private protocol CallCellDelegate: AnyObject {
     func joinCall(from viewModel: CallsListViewController.CallViewModel)
     func returnToCall(from viewModel: CallsListViewController.CallViewModel)
-    func showCallInfo(from viewModel: CallsListViewController.CallViewModel)
 }
 
 // MARK: - CallsListViewController
@@ -112,20 +111,33 @@ class CallsListViewController: OWSViewController, HomeTabViewController, CallSer
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        navigationItem.titleView = filterPicker
+        view.backgroundColor = .Signal.background
+
         updateBarButtonItems()
         OWSTableViewController2.removeBackButtonText(viewController: self)
 
-        view.addSubview(tableView)
-        tableView.autoPinEdgesToSuperviewEdges()
+        if #available(iOS 26, *), BuildFlags.iOS26SDKIsAvailable {
+            toolbarDeleteButton.image = UIImage(resource: .trash)
+            self.toolbarItems = [.flexibleSpace(), toolbarDeleteButton]
+        }
+
         tableView.delegate = self
         tableView.allowsSelectionDuringEditing = true
         tableView.allowsMultipleSelectionDuringEditing = true
         tableView.separatorStyle = .none
         tableView.contentInset = .zero
+        tableView.backgroundColor = .Signal.background
         tableView.register(CreateCallLinkCell.self, forCellReuseIdentifier: Self.createCallLinkReuseIdentifier)
         tableView.register(CallCell.self, forCellReuseIdentifier: Self.callCellReuseIdentifier)
         tableView.dataSource = dataSource
+        view.addSubview(tableView)
+        tableView.autoPinHeight(toHeightOf: view)
+        tableViewHorizontalEdgeConstraints = [
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            view.trailingAnchor.constraint(equalTo: tableView.trailingAnchor),
+        ]
+        NSLayoutConstraint.activate(tableViewHorizontalEdgeConstraints)
+        updateTableViewPaddingIfNeeded()
 
         view.addSubview(emptyStateMessageView)
         emptyStateMessageView.autoCenterInSuperview()
@@ -133,8 +145,6 @@ class CallsListViewController: OWSViewController, HomeTabViewController, CallSer
         view.addSubview(noSearchResultsView)
         noSearchResultsView.autoPinWidthToSuperviewMargins()
         noSearchResultsView.autoPinEdge(toSuperviewMargin: .top, withInset: 80)
-
-        applyTheme()
 
         initializeLoadedViewModels()
         attachSelfAsObservers()
@@ -155,13 +165,12 @@ class CallsListViewController: OWSViewController, HomeTabViewController, CallSer
         isPeekingEnabled = false
     }
 
-    override func themeDidChange() {
-        super.themeDidChange()
-        applyTheme()
-        reloadAllRows()
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        updateTableViewPaddingIfNeeded()
     }
 
-    private func updateBarButtonItems() {
+    func updateBarButtonItems() {
         if tableView.isEditing {
             navigationItem.leftBarButtonItem = cancelMultiselectButton()
             navigationItem.rightBarButtonItem = deleteAllCallsButton()
@@ -169,11 +178,12 @@ class CallsListViewController: OWSViewController, HomeTabViewController, CallSer
             navigationItem.leftBarButtonItem = profileBarButtonItem()
             navigationItem.rightBarButtonItem = newCallButton()
         }
-    }
 
-    private func applyTheme() {
-        view.backgroundColor = Theme.backdropColor
-        tableView.backgroundColor = Theme.backgroundColor
+        if splitViewController?.isCollapsed == false {
+            navigationItem.titleView = sidebarFilterPickerContainer
+        } else {
+            navigationItem.titleView = filterPicker
+        }
     }
 
     // MARK: Profile button
@@ -181,7 +191,7 @@ class CallsListViewController: OWSViewController, HomeTabViewController, CallSer
     private func profileBarButtonItem() -> UIBarButtonItem {
         createSettingsBarButtonItem(
             databaseStorage: SSKEnvironment.shared.databaseStorageRef,
-            buildActions: { settingsAction -> [UIAction] in
+            buildActions: { settingsAction -> [UIMenuElement] in
                 return [
                     UIAction(
                         title: Strings.selectCallsButtonTitle,
@@ -229,6 +239,12 @@ class CallsListViewController: OWSViewController, HomeTabViewController, CallSer
     )
 
     private func showToolbar() {
+        if #available(iOS 26, *), BuildFlags.iOS26SDKIsAvailable {
+            navigationController?.setToolbarHidden(false, animated: true)
+            (tabBarController as? HomeTabBarController)?.setTabBarHidden(true)
+            return
+        }
+
         guard
             // Don't create a new toolbar if we already have one
             multiselectToolbarContainer == nil,
@@ -341,6 +357,12 @@ class CallsListViewController: OWSViewController, HomeTabViewController, CallSer
     }
 
     private func hideToolbar() {
+        if #available(iOS 26, *), BuildFlags.iOS26SDKIsAvailable {
+            self.navigationController?.setToolbarHidden(true, animated: true)
+            (self.tabBarController as? HomeTabBarController)?.setTabBarHidden(false)
+            return
+        }
+
         guard let multiselectToolbarContainer else { return }
         UIView.animate(withDuration: 0.25) {
             multiselectToolbarContainer.alpha = 0
@@ -439,8 +461,31 @@ class CallsListViewController: OWSViewController, HomeTabViewController, CallSer
             Strings.filterPickerOptionMissed
         ])
         segmentedControl.selectedSegmentIndex = 0
-        segmentedControl.addTarget(self, action: #selector(filterChanged), for: .valueChanged)
+        segmentedControl.addTarget(self, action: #selector(filterChangedFromPrimary), for: .valueChanged)
         return segmentedControl
+    }()
+
+    // Having a UISegmentedControl as a titleView a split view sidebar on iOS 26
+    // looks too large and is cut off at the top. But putting it in a container
+    // doesn't look as good when not in a sidebar.
+    private lazy var sidebarFilterPicker: UISegmentedControl = {
+        let segmentedControl = UISegmentedControl(items: [
+            Strings.filterPickerOptionAll,
+            Strings.filterPickerOptionMissed
+        ])
+        segmentedControl.selectedSegmentIndex = 0
+        segmentedControl.addTarget(self, action: #selector(filterChangedFromSidebar), for: .valueChanged)
+        return segmentedControl
+    }()
+
+    private lazy var sidebarFilterPickerContainer: UIView = {
+        let container = UIView()
+        container.addSubview(sidebarFilterPicker)
+        sidebarFilterPicker.autoPinWidthToSuperview()
+        // idk why but it's gotta baaarely shift to align with the profile pic
+        sidebarFilterPicker.autoAlignAxis(.horizontal, toSameAxisOf: container, withOffset: -2/3)
+        sidebarFilterPicker.autoPinHeightToSuperview(relation: .lessThanOrEqual)
+        return container
     }()
 
     // MARK: Search bar
@@ -456,6 +501,17 @@ class CallsListViewController: OWSViewController, HomeTabViewController, CallSer
     }
 
     @objc
+    private func filterChangedFromPrimary() {
+        sidebarFilterPicker.selectedSegmentIndex = filterPicker.selectedSegmentIndex
+        filterChanged()
+    }
+
+    @objc
+    private func filterChangedFromSidebar() {
+        filterPicker.selectedSegmentIndex = sidebarFilterPicker.selectedSegmentIndex
+        filterChanged()
+    }
+
     private func filterChanged() {
         reinitializeLoadedViewModels(debounceInterval: 0, animated: true)
         updateMultiselectToolbarButtons()
@@ -849,7 +905,7 @@ class CallsListViewController: OWSViewController, HomeTabViewController, CallSer
                     forCallRecords: callRecords,
                     upcomingCallLinkRowId: nil,
                     deps: capturedDeps,
-                    tx: SDSDB.shimOnlyBridge(tx)
+                    tx: tx
                 )
             },
             callViewModelForUpcomingCallLink: { callLinkRowId, tx in
@@ -857,13 +913,13 @@ class CallsListViewController: OWSViewController, HomeTabViewController, CallSer
                     forCallRecords: [],
                     upcomingCallLinkRowId: callLinkRowId,
                     deps: capturedDeps,
-                    tx: SDSDB.shimOnlyBridge(tx)
+                    tx: tx
                 )
             },
             fetchCallRecordBlock: { callRecordId, tx -> CallRecord? in
                 return capturedDeps.callRecordStore.fetch(
                     callRecordId: callRecordId,
-                    tx: SDSDB.shimOnlyBridge(tx)
+                    tx: tx
                 ).unwrapped
             },
             shouldFetchUpcomingCallLinks: !onlyLoadMissedCalls && onlyMatchThreadRowIds == nil
@@ -1348,6 +1404,17 @@ class CallsListViewController: OWSViewController, HomeTabViewController, CallSer
                     return CallStrings.callLink
                 }
             }
+
+            var symbol: SignalSymbol {
+                switch self {
+                case .outgoing:
+                        .arrowUpRight
+                case .incoming, .missed:
+                        .arrowDownLeft
+                case .callLink:
+                        .link
+                }
+            }
         }
 
         enum Medium {
@@ -1415,6 +1482,32 @@ class CallsListViewController: OWSViewController, HomeTabViewController, CallSer
 
     let tableView = UITableView(frame: .zero, style: .plain)
 
+    /// Set to `true` when call list is displayed in split view controller's "sidebar" on iOS 26 and later.
+    /// Setting this to `true` would add an extra padding on both sides of the table view.
+    /// This value is also passed down to table view cells that make their own layout choices based on the value.
+    private var useSidebarCallListCellAppearance = false {
+        didSet {
+            guard oldValue != useSidebarCallListCellAppearance else { return }
+            tableViewHorizontalEdgeConstraints.forEach {
+                $0.constant = useSidebarCallListCellAppearance ? 18 : 0
+            }
+            tableView.reloadData()
+        }
+    }
+    private var tableViewHorizontalEdgeConstraints: [NSLayoutConstraint] = []
+
+    /// iOS 26+: checks if this VC is displayed in the collapsed split view controller and updates `useSidebarCallListCellAppearance` accordingly.
+    /// Does nothing on prior iOS versions.
+    private func updateTableViewPaddingIfNeeded() {
+        guard #available(iOS 26, *) else { return }
+
+        if let splitViewController = splitViewController, !splitViewController.isCollapsed {
+            useSidebarCallListCellAppearance = true
+        } else {
+            useSidebarCallListCellAppearance = false
+        }
+    }
+
     private static let createCallLinkReuseIdentifier = "createCallLink"
     private static let callCellReuseIdentifier = "callCell"
 
@@ -1427,35 +1520,36 @@ class CallsListViewController: OWSViewController, HomeTabViewController, CallSer
     private func buildTableViewCell(tableView: UITableView, indexPath: IndexPath) -> UITableViewCell? {
         switch Section(rawValue: indexPath.section) {
         case .createCallLink:
-            if let createCallLinkCell = tableView.dequeueReusableCell(
+            guard let createCallLinkCell = tableView.dequeueReusableCell(
                 withIdentifier: Self.createCallLinkReuseIdentifier,
                 for: indexPath
-            ) as? CreateCallLinkCell {
-                return createCallLinkCell
-            }
-            return nil
+            ) as? CreateCallLinkCell else { return nil }
+
+            createCallLinkCell.useSidebarAppearance = useSidebarCallListCellAppearance
+            return createCallLinkCell
+
         case .existingCalls:
-            guard
-                let callCell = tableView.dequeueReusableCell(
-                    withIdentifier: Self.callCellReuseIdentifier
-                ) as? CallCell
-            else {
-                return nil
-            }
+            guard let callCell = tableView.dequeueReusableCell(
+                withIdentifier: Self.callCellReuseIdentifier,
+                for: indexPath
+            ) as? CallCell else { return nil }
+
+            callCell.useSidebarAppearance = useSidebarCallListCellAppearance
             // These loads should be sufficiently fast that doing them here,
             // synchronously, is fine.
-            self.loadMoreCallsIfNecessary(indexToBeDisplayed: indexPath.row)
+            loadMoreCallsIfNecessary(indexToBeDisplayed: indexPath.row)
             if let viewModel = viewModelLoader.viewModel(at: indexPath.row, sneakyTransactionDb: deps.db) {
                 callCell.delegate = self
                 callCell.viewModel = viewModel
 
-                self.peekIfActive(viewModel)
+                peekIfActive(viewModel)
 
                 return callCell
             }
             owsFailDebug("Missing cached view model – how did this happen?")
             /// Return an empty table cell, rather than a ``CallCell`` that's
             /// gonna be incorrectly configured.
+
         case .none:
             break
         }
@@ -1535,8 +1629,8 @@ class CallsListViewController: OWSViewController, HomeTabViewController, CallSer
                 format: Strings.searchNoResultsFoundLabelFormat,
                 arguments: [searchTerm]
             )
-            noSearchResultsView.layer.opacity = 1
-            emptyStateMessageView.layer.opacity = 0
+            noSearchResultsView.alpha = 1
+            emptyStateMessageView.alpha = 0
         case (true, _):
             emptyStateMessageView.attributedText = NSAttributedString.composed(of: {
                 switch currentFilterMode {
@@ -1556,12 +1650,12 @@ class CallsListViewController: OWSViewController, HomeTabViewController, CallSer
             .styled(
                 with: .font(.dynamicTypeSubheadline.semibold())
             )
-            noSearchResultsView.layer.opacity = 0
-            emptyStateMessageView.layer.opacity = 1
+            noSearchResultsView.alpha = 0
+            emptyStateMessageView.alpha = 1
         case (_, _):
             // Hide empty state message
-            noSearchResultsView.layer.opacity = 0
-            emptyStateMessageView.layer.opacity = 0
+            noSearchResultsView.alpha = 0
+            emptyStateMessageView.alpha = 0
         }
     }
 }
@@ -1659,7 +1753,7 @@ extension CallsListViewController: UITableViewDelegate {
             guard let viewModel = viewModelWithSneakyTransaction(at: indexPath) else {
                 return
             }
-            startCall(from: viewModel)
+            showCallInfo(from: viewModel)
         }
     }
 
@@ -1714,7 +1808,7 @@ extension CallsListViewController: UITableViewDelegate {
             return nil
         }
 
-        let goToChatAction = makeContextualAction(
+        let goToChatAction = ContextualActionBuilder.makeContextualAction(
             style: .normal,
             color: .ows_accentBlue,
             image: "arrow-square-upright-fill",
@@ -1736,7 +1830,7 @@ extension CallsListViewController: UITableViewDelegate {
 
         let modelReferences = viewModelLoader.modelReferences(at: indexPath.row)
 
-        let deleteAction = makeContextualAction(
+        let deleteAction = ContextualActionBuilder.makeContextualAction(
             style: .destructive,
             color: .ows_accentRed,
             image: "trash-fill",
@@ -1746,33 +1840,6 @@ extension CallsListViewController: UITableViewDelegate {
         }
 
         return .init(actions: [deleteAction])
-    }
-
-    private func makeContextualAction(
-        style: UIContextualAction.Style,
-        color: UIColor,
-        image: String,
-        title: String,
-        action: @escaping () -> Void
-    ) -> UIContextualAction {
-        let action = UIContextualAction(
-            style: style,
-            title: nil
-        ) { _, _, completion in
-            action()
-            completion(true)
-        }
-        action.backgroundColor = color
-        action.image = UIImage(named: image)?.withTitle(
-            title,
-            font: .dynamicTypeFootnote.medium(),
-            color: .ows_white,
-            maxTitleWidth: 68,
-            minimumScaleFactor: CGFloat(8) / CGFloat(13),
-            spacing: 4
-        )?.withRenderingMode(.alwaysTemplate)
-
-        return action
     }
 
     private func longPressActions(forRowAt indexPath: IndexPath) -> [UIAction]? {
@@ -2200,10 +2267,6 @@ extension CallsListViewController: DatabaseChangeDelegate {
 
 private extension CallsListViewController {
     class CallCell: UITableViewCell {
-        private static var verticalMargin: CGFloat = 11
-        private static var horizontalMargin: CGFloat = 20
-        private static var joinButtonMargin: CGFloat = 18
-
         weak var delegate: CallCellDelegate?
 
         var viewModel: CallViewModel? {
@@ -2212,43 +2275,69 @@ private extension CallsListViewController {
             }
         }
 
+        /// If set to `true` background in `selected` state would have rounded corners.
+        var useSidebarAppearance = false
+
         // MARK: Subviews
 
         private lazy var avatarView = ConversationAvatarView(
-            sizeClass: .thirtySix,
+            sizeClass: .fortyFour,
             localUserDisplayMode: .asUser
         )
 
         private lazy var titleLabel: UILabel = {
             let label = UILabel()
             label.font = .dynamicTypeHeadline
+            label.textColor = .Signal.label
             return label
         }()
 
-        private lazy var subtitleLabel = UILabel()
+        private lazy var subtitleLabel: UILabel = {
+            let label = UILabel()
+            label.textColor = .Signal.secondaryLabel
+            return label
+        }()
 
         private lazy var timestampLabel: UILabel = {
             let label = UILabel()
-            label.font = .dynamicTypeBody2
+            label.font = .dynamicTypeSubheadline
+            label.textColor = .Signal.secondaryLabel
             return label
         }()
 
-        private lazy var detailsButton: OWSButton = {
-            let button = OWSButton { [weak self] in
-                self?.detailsTapped()
+        private func makeStartCallButton(viewModel: CallViewModel) -> UIButton {
+            var config = UIButton.Configuration.gray()
+            config.cornerStyle = .capsule
+            config.background.backgroundInsets = .init(margin: 2)
+            config.baseBackgroundColor = UIColor.Signal.tertiaryFill
+            config.baseForegroundColor = UIColor.Signal.label
+
+            let icon: ThemeIcon = switch viewModel.medium {
+            case .audio:
+                .buttonVoiceCall
+            case .video, .link:
+                .buttonVideoCall
             }
-            // The info icon is the button's own image and should be `horizontalMargin` from the edge
-            button.ows_contentEdgeInsets.trailing = Self.horizontalMargin
-            button.ows_contentEdgeInsets.leading = 8
-            // The join button is a separate subview and should be `joinButtonMargin` from the edge
-            button.layoutMargins.trailing = Self.joinButtonMargin
-            return button
-        }()
 
-        private var joinPill: UIView?
+            config.image = Theme.iconImage(icon)
 
-        private func makeJoinPill() -> UIView? {
-            guard let viewModel else { return nil }
+            return UIButton(
+                configuration: config,
+                primaryAction: UIAction { [weak self] _ in
+                    self?.detailsTapped(viewModel: viewModel)
+                }
+            )
+        }
+
+        private func makeJoinButton(viewModel: CallViewModel) -> UIButton {
+            var config = UIButton.Configuration.borderedProminent()
+            if #available(iOS 26, *), BuildFlags.iOS26SDKIsAvailable {
+    #if compiler(>=6.2)
+                config = UIButton.Configuration.prominentGlass()
+    #endif
+            } else {
+                config.cornerStyle = .capsule
+            }
 
             let icon: UIImage
             switch viewModel.medium {
@@ -2265,36 +2354,34 @@ private extension CallsListViewController {
             case .participating:
                 text = Strings.returnToCallButtonTitle
             case .inactive:
-                return nil
+                text = ""
             }
 
-            let button = OWSRoundedButton()
-            let font = UIFont.dynamicTypeBody2.bold()
-            let title = NSAttributedString.composed(of: [
-                NSAttributedString.with(
-                    image: icon,
-                    font: .dynamicTypeCallout,
-                    centerVerticallyRelativeTo: font,
-                    heightReference: .pointSize
-                ),
-                " ",
-                text,
-            ]).styled(
-                with: .font(font),
-                .color(.ows_white)
+            config.title = text
+            config.titleTextAttributesTransformer = .defaultFont(.dynamicTypeSubheadline.bold())
+            config.image = icon
+            config.imagePadding = 4
+
+            let button = UIButton(
+                configuration: config,
+                primaryAction: UIAction { [weak self] _ in
+                    self?.detailsTapped(viewModel: viewModel)
+                }
             )
-            button.setAttributedTitle(title, for: .normal)
-            button.backgroundColor = .ows_accentGreen
-            button.ows_contentEdgeInsets = .init(hMargin: 12, vMargin: 4)
-            button.setCompressionResistanceHigh()
-            button.isUserInteractionEnabled = false
+            button.tintColor = UIColor.Signal.green
             return button
         }
 
         // MARK: Init
 
+        private let trailingHStack = UIStackView()
+        private var trailingButton: UIButton?
+
         override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
             super.init(style: style, reuseIdentifier: reuseIdentifier)
+
+            tintColor = .Signal.accent
+            automaticallyUpdatesBackgroundConfiguration = false
 
             let bodyVStack = UIStackView(arrangedSubviews: [
                 titleLabel,
@@ -2310,12 +2397,10 @@ private extension CallsListViewController {
             leadingHStack.axis = .horizontal
             leadingHStack.spacing = 12
 
-            let trailingHStack = UIStackView(arrangedSubviews: [
-                timestampLabel,
-                detailsButton,
-            ])
+            trailingHStack.addArrangedSubview(timestampLabel)
             trailingHStack.axis = .horizontal
-            trailingHStack.spacing = 0
+            trailingHStack.spacing = 12
+            trailingHStack.alignment = .center
 
             let outerHStack = UIStackView(arrangedSubviews: [
                 leadingHStack,
@@ -2325,24 +2410,9 @@ private extension CallsListViewController {
             outerHStack.axis = .horizontal
             outerHStack.spacing = 4
 
-            // The details button should take up the entire trailing space,
-            // top to bottom, so the content should have zero margins.
-            contentView.preservesSuperviewLayoutMargins = false
-            contentView.layoutMargins = .zero
-
-            leadingHStack.preservesSuperviewLayoutMargins = false
-            leadingHStack.isLayoutMarginsRelativeArrangement = true
-            leadingHStack.layoutMargins = .init(
-                top: Self.verticalMargin,
-                leading: Self.horizontalMargin,
-                bottom: Self.verticalMargin,
-                trailing: 0
-            )
-
             contentView.addSubview(outerHStack)
-            outerHStack.autoPinEdgesToSuperviewMargins()
-
-            tintColor = .ows_accentBlue
+            outerHStack.autoPinWidthToSuperviewMargins()
+            outerHStack.autoPinHeightToSuperview(withMargin: 14)
         }
 
         required init?(coder: NSCoder) {
@@ -2402,8 +2472,6 @@ private extension CallsListViewController {
         // MARK: Updates
 
         private func updateContents() {
-            applyTheme()
-
             guard let viewModel else {
                 return owsFailDebug("Missing view model")
             }
@@ -2426,89 +2494,59 @@ private extension CallsListViewController {
                     return String(format: Strings.coalescedCallsTitleFormat, viewModel.title, "\(viewModel.callRecords.count)")
                 }
             }()
-            self.titleLabel.text = titleText
+            titleLabel.text = titleText
 
             switch viewModel.direction {
             case .incoming, .outgoing, .callLink:
-                titleLabel.textColor = Theme.primaryTextColor
+                titleLabel.textColor = .Signal.label
             case .missed:
-                titleLabel.textColor = .ows_accentRed
+                titleLabel.textColor = .Signal.red
             }
 
-            self.subtitleLabel.attributedText = {
-                let icon: ThemeIcon
-                switch viewModel.medium {
-                case .audio:
-                    icon = .phone16
-                case .video:
-                    icon = .video16
-                case .link:
-                    icon = .link16
-                }
+            self.subtitleLabel.attributedText = .composed(of: [
+                viewModel.direction.symbol.attributedString(for: .subheadline),
+                " ",
+                viewModel.direction.label,
+            ]).styled(with: .font(.dynamicTypeSubheadline))
 
-                return .composed(of: [
-                    NSAttributedString.with(
-                        image: Theme.iconImage(icon),
-                        font: .dynamicTypeCallout,
-                        centerVerticallyRelativeTo: .dynamicTypeBody2,
-                        heightReference: .pointSize
-                    ),
-                    " ",
-                    viewModel.direction.label,
-                ]).styled(with: .font(.dynamicTypeBody2))
-            }()
-
-            self.joinPill?.removeFromSuperview()
-
-            switch viewModel.state {
+            let button = switch viewModel.state {
             case .active, .participating:
-                // Join button
-                detailsButton.setImage(imageName: nil)
-                detailsButton.tintColor = .ows_white
-
-                if let joinPill = makeJoinPill() {
-                    self.joinPill = joinPill
-                    detailsButton.addSubview(joinPill)
-                    joinPill.autoVCenterInSuperview()
-                    joinPill.autoPinWidthToSuperviewMargins()
-                }
+                makeJoinButton(viewModel: viewModel)
             case .inactive:
-                // Info button
-                detailsButton.setImage(imageName: "info")
-                detailsButton.tintColor = Theme.primaryIconColor
+                makeStartCallButton(viewModel: viewModel)
             }
+            trailingButton?.removeFromSuperview()
+            trailingButton = button
+            trailingHStack.addArrangedSubview(button)
 
             updateDisplayedDateAndScheduleRefresh()
         }
 
-        private func applyTheme() {
-            backgroundColor = Theme.backgroundColor
-            selectedBackgroundView?.backgroundColor = Theme.tableCell2SelectedBackgroundColor
-            multipleSelectionBackgroundView?.backgroundColor = Theme.tableCell2MultiSelectedBackgroundColor
-
-            titleLabel.textColor = Theme.primaryTextColor
-            subtitleLabel.textColor = Theme.snippetColor
-            timestampLabel.textColor = Theme.snippetColor
+        override func updateConfiguration(using state: UICellConfigurationState) {
+            var configuration = UIBackgroundConfiguration.clear()
+            if state.isSelected || state.isHighlighted {
+                configuration.backgroundColor = Theme.tableCell2SelectedBackgroundColor
+                if useSidebarAppearance {
+                    configuration.cornerRadius = 36
+                }
+            } else {
+                configuration.backgroundColor = .Signal.background
+            }
+            backgroundConfiguration = configuration
         }
 
         // MARK: Actions
 
-        private func detailsTapped() {
-            guard let viewModel else {
-                return owsFailDebug("Missing view model")
-            }
-
+        private func detailsTapped(viewModel: CallViewModel) {
             guard let delegate else {
                 return owsFailDebug("Missing delegate")
             }
 
             switch viewModel.state {
-            case .active:
+            case .active, .inactive:
                 delegate.joinCall(from: viewModel)
             case .participating:
                 delegate.returnToCall(from: viewModel)
-            case .inactive:
-                delegate.showCallInfo(from: viewModel)
             }
         }
     }
@@ -2516,6 +2554,9 @@ private extension CallsListViewController {
 
 private extension CallsListViewController {
     class CreateCallLinkCell: UITableViewCell {
+        /// If set to `true` background in `selected` state would have rounded corners.
+        var useSidebarAppearance = false
+
         private enum Constants {
             static let iconDimension: CGFloat = 24
             static let spacing: CGFloat = 18
@@ -2525,7 +2566,7 @@ private extension CallsListViewController {
 
         private lazy var iconView: UIImageView = {
             let imageView = UIImageView(image: UIImage(named: "link"))
-            imageView.tintColor = Theme.primaryIconColor
+            imageView.tintColor = .Signal.label
             imageView.autoSetDimensions(to: CGSize(square: Constants.iconDimension))
             return imageView
         }()
@@ -2533,7 +2574,7 @@ private extension CallsListViewController {
         private lazy var label: UILabel = {
             let label = UILabel()
             label.font = .dynamicTypeHeadline
-            label.textColor = Theme.primaryTextColor
+            label.textColor = .Signal.label
             label.numberOfLines = 3
             label.lineBreakMode = .byTruncatingTail
             label.text = OWSLocalizedString(
@@ -2545,6 +2586,8 @@ private extension CallsListViewController {
 
         override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
             super.init(style: style, reuseIdentifier: reuseIdentifier)
+
+            automaticallyUpdatesBackgroundConfiguration = false
 
             let stackView = UIStackView(arrangedSubviews: [iconView, label])
             stackView.axis = .horizontal
@@ -2559,9 +2602,17 @@ private extension CallsListViewController {
             fatalError("init(coder:) has not been implemented")
         }
 
-        override func prepareForReuse() {
-            iconView.tintColor = Theme.primaryIconColor
-            label.textColor = Theme.primaryTextColor
+        override func updateConfiguration(using state: UICellConfigurationState) {
+            var configuration = UIBackgroundConfiguration.clear()
+            if state.isSelected || state.isHighlighted {
+                configuration.backgroundColor = Theme.tableCell2SelectedBackgroundColor
+                if useSidebarAppearance {
+                    configuration.cornerRadius = 36
+                }
+            } else {
+                configuration.backgroundColor = .Signal.background
+            }
+            backgroundConfiguration = configuration
         }
     }
 }

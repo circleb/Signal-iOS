@@ -21,7 +21,6 @@ public class TSErrorMessageBuilder: TSMessageBuilder {
             timestamp: nil,
             receivedAtTimestamp: nil,
             messageBody: nil,
-            bodyRanges: nil,
             editState: .none,
             expiresInSeconds: nil,
             expireTimerVersion: nil,
@@ -37,7 +36,8 @@ public class TSErrorMessageBuilder: TSMessageBuilder {
             contactShare: nil,
             linkPreview: nil,
             messageSticker: nil,
-            giftBadge: nil
+            giftBadge: nil,
+            isPoll: false
         )
     }
 

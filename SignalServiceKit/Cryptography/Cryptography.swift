@@ -8,8 +8,6 @@ import Foundation
 import System
 
 public enum Cryptography {
-    // SHA-256
-
     /// Generates the SHA256 digest for a file.
     public static func computeSHA256DigestOfFile(at url: URL) throws -> Data {
         let file = try LocalFileHandle(url: url)
@@ -28,37 +26,57 @@ public enum Cryptography {
 
 // MARK: - Attachments
 
+public struct AttachmentKey {
+    let combinedKey: Data
+
+    init(combinedKey: Data) throws {
+        guard combinedKey.count == Self.encryptionKeyLength + Self.authenticationKeyLength else {
+            throw OWSGenericError("attachment key is the wrong length: \(combinedKey.count)")
+        }
+        self.combinedKey = combinedKey
+    }
+
+    var encryptionKey: Data { self.combinedKey.prefix(Self.encryptionKeyLength) }
+    var authenticationKey: Data { self.combinedKey.dropFirst(Self.encryptionKeyLength) }
+
+    static let encryptionKeyLength = 32
+    static let authenticationKeyLength = 32
+
+    static func generate() -> Self {
+        return try! Self(combinedKey: Randomness.generateRandomBytes(UInt(Self.encryptionKeyLength + Self.authenticationKeyLength)))
+    }
+}
+
 /// Metadata output from a local encryption operation of a plaintext input.
 public struct EncryptionMetadata {
-    public let key: Data
+    let key: AttachmentKey
     public let digest: Data
-    public let length: Int
-    public let plaintextLength: Int
+    public let encryptedLength: UInt64
+    public let plaintextLength: UInt64
 
-    public init(
-        key: Data,
+    init(
+        key: AttachmentKey,
         digest: Data,
-        length: Int,
-        plaintextLength: Int
+        encryptedLength: UInt64,
+        plaintextLength: UInt64,
     ) {
         self.key = key
         self.digest = digest
-        self.length = length
+        self.encryptedLength = encryptedLength
         self.plaintextLength = plaintextLength
     }
 }
 
 /// Metadata needed to decrypt encrypted input.
 public struct DecryptionMetadata {
-    public let key: Data
+    let key: AttachmentKey
     public let integrityCheck: AttachmentIntegrityCheck?
-    public let plaintextLength: Int?
+    public let plaintextLength: UInt64?
 
-    public init(
-        key: Data,
+    init(
+        key: AttachmentKey,
         integrityCheck: AttachmentIntegrityCheck? = nil,
-        length: Int? = nil,
-        plaintextLength: Int? = nil
+        plaintextLength: UInt64? = nil,
     ) {
         self.key = key
         self.integrityCheck = integrityCheck
@@ -73,47 +91,30 @@ public protocol EncryptedFileHandle {
 
     /// Length, in bytes, of the decrypted plaintext.
     /// Comes from the sender; otherwise we don't know where content ends and custom padding begins.
-    var plaintextLength: UInt32 { get }
+    var plaintextLength: UInt64 { get }
 
     /// Gets the position of the file pointer within the virtual plaintext file.
-    func offset() -> UInt32
+    func offset() -> UInt64
 
     /// Moves the file pointer to the specified offset within the virtual plaintext file.
-    func seek(toOffset: UInt32) throws
+    func seek(toOffset: UInt64) throws
 
     /// Reads plaintext data synchronously, starting at the current offset, up to the specified number of bytes.
     /// Returns empty data when the end of file is reached.
-    func read(upToCount: UInt32) throws -> Data
+    func read(upToCount: Int) throws -> Data
 }
 
 public extension Cryptography {
     enum Constants {
-        static let hmac256KeyLength = 32
         static let hmac256OutputLength = 32
         static let aescbcIVLength = 16
-        static let aesKeySize = 32
         static let aescbcBlockLength = 16
-        static var concatenatedEncryptionKeyLength: Int { aesKeySize + hmac256KeyLength }
         /// Optimize reads/writes by reading this many bytes at once; best balance of performance/memory use from testing in practice.
         static let diskPageSize = 8192
     }
 
-    static func paddedSize(unpaddedSize: UInt) -> UInt {
-        // In order to obsfucate attachment size on the wire, we round up
-        // attachement plaintext bytes to the nearest power of 1.05. This
-        // number was selected as it provides a good balance between number
-        // of buckets and wasted bytes on the wire.
-        return UInt(max(541, floor(pow(1.05, ceil(log(Double(unpaddedSize)) / log(1.05))))))
-    }
-
-    private static func aesPaddedSize(unpaddedSize: UInt32) -> UInt32 {
-        // AES output is always in blocks of size 16 bytes.
-        // If the input is not a multiple of 16, it fills the remainder
-        // with padding (the value of which is the number of remainder bytes).
-        // If the input is exactly a multiple of 16, the output contains one
-        // more 16 byte block made entirely of padding.
-        let numBlocks = unpaddedSize / 16
-        return (numBlocks + 1) * 16
+    static func paddedSize(unpaddedSize: UInt64) -> UInt64? {
+        return PaddingBucket.forUnpaddedPlaintextSize(unpaddedSize)?.plaintextSize
     }
 
     /// Given an unencrypted, unpadded byte count, returns the *estimated* byte count of the final padded, encrypted blob
@@ -123,12 +124,12 @@ public extension Cryptography {
     /// client does the upload, but:
     /// 1. It may be a different client uploading with a differing padding scheme (or a bug with its padding scheme)
     /// 2. Our padding scheme may change between when this is checked and when we upload(ed).
-    static func estimatedMediaTierCDNSize(unencryptedSize: UInt32) -> UInt32 {
-        let ivLength = UInt32(Constants.aescbcIVLength)
-        let hmacLength = UInt32(Constants.hmac256OutputLength)
-        let innerSize = estimatedTransitTierCDNSize(unencryptedSize: unencryptedSize)
-        let outerSize = ivLength + aesPaddedSize(unpaddedSize: innerSize) + hmacLength
-        return outerSize
+    static func estimatedMediaTierCDNSize(unencryptedSize: UInt64) -> UInt64? {
+        let transitTierSize = estimatedTransitTierCDNSize(unencryptedSize: unencryptedSize)
+        guard let transitTierSize else {
+            return nil
+        }
+        return PaddingBucket.addingEncryptionOverhead(to: transitTierSize)
     }
 
     /// Given an unencrypted, unpadded byte count, returns the *estimated* byte count of the final padded, encrypted blob
@@ -138,17 +139,8 @@ public extension Cryptography {
     /// client does the upload, but:
     /// 1. It may be a different client uploading with a differing padding scheme (or a bug with its padding scheme)
     /// 2. Our padding scheme may change between when this is checked and when we upload(ed).
-    static func estimatedTransitTierCDNSize(unencryptedSize: UInt32) -> UInt32 {
-        let paddedSize = UInt32(Self.paddedSize(unpaddedSize: UInt(unencryptedSize)))
-        let ivLength = UInt32(Constants.aescbcIVLength)
-        let hmacLength = UInt32(Constants.hmac256OutputLength)
-        return ivLength + aesPaddedSize(unpaddedSize: paddedSize) + hmacLength
-    }
-
-    static func randomAttachmentEncryptionKey() -> Data {
-        // The metadata "key" is actually a concatentation of the
-        // encryption key and the hmac key.
-        return Randomness.generateRandomBytes(UInt(Constants.concatenatedEncryptionKeyLength))
+    static func estimatedTransitTierCDNSize(unencryptedSize: UInt64) -> UInt64? {
+        return PaddingBucket.forUnpaddedPlaintextSize(unencryptedSize)?.encryptedSize
     }
 
     /// Encrypt an input file to a provided output file location.
@@ -157,17 +149,17 @@ public extension Cryptography {
     ///
     /// - parameter unencryptedUrl: The file to encrypt.
     /// - parameter encryptedUrl: Where to write the encrypted output file.
-    /// - parameter encryptionKey: The key to encrypt with; the AES key and the hmac key concatenated together.
-    ///     (The same format as ``EncryptionMetadata/key``). A random key will be generated if none is provided.
-    static func encryptFile(
+    /// - parameter attachmentKey: The key for encryption and authentication. A
+    /// random key will be generated if none is provided.
+    internal static func encryptFile(
         at unencryptedUrl: URL,
         output encryptedUrl: URL,
-        encryptionKey inputKey: Data? = nil
+        attachmentKey inputKey: AttachmentKey? = nil
     ) throws -> EncryptionMetadata {
         return try _encryptFile(
             at: unencryptedUrl,
             output: encryptedUrl,
-            encryptionKey: inputKey,
+            attachmentKey: inputKey,
             applyExtraPadding: false
         )
     }
@@ -178,31 +170,27 @@ public extension Cryptography {
     ///
     /// - parameter unencryptedUrl: The file to encrypt.
     /// - parameter encryptedUrl: Where to write the encrypted output file.
-    /// - parameter encryptionKey: The key to encrypt with; the AES key and the hmac key concatenated together.
-    ///     (The same format as ``EncryptionMetadata/key``). A random key will be generated if none is provided.
-    static func encryptAttachment(
+    /// - parameter attachmentKey: The key for encryption and authentication. A
+    /// random key will be generated if none is provided.
+    internal static func encryptAttachment(
         at unencryptedUrl: URL,
         output encryptedUrl: URL,
-        encryptionKey inputKey: Data? = nil
+        attachmentKey inputKey: AttachmentKey? = nil
     ) throws -> EncryptionMetadata {
         return try _encryptFile(
             at: unencryptedUrl,
             output: encryptedUrl,
-            encryptionKey: inputKey,
+            attachmentKey: inputKey,
             applyExtraPadding: true
         )
     }
 
-    static func _encryptFile(
+    private static func _encryptFile(
         at unencryptedUrl: URL,
         output encryptedUrl: URL,
-        encryptionKey inputKey: Data?,
+        attachmentKey inputKey: AttachmentKey?,
         applyExtraPadding: Bool
     ) throws -> EncryptionMetadata {
-        if let inputKey, inputKey.count != Constants.concatenatedEncryptionKeyLength {
-            throw OWSAssertionError("Invalid encryption key length")
-        }
-
         guard FileManager.default.fileExists(atPath: unencryptedUrl.path) else {
             throw OWSAssertionError("Missing attachment file.")
         }
@@ -218,19 +206,17 @@ public extension Cryptography {
         }
         let outputFile = try FileHandle(forWritingTo: encryptedUrl)
 
-        let inputKey = inputKey ?? randomAttachmentEncryptionKey()
-        let encryptionKey = inputKey.prefix(Constants.aesKeySize)
-        let hmacKey = inputKey.suffix(Constants.hmac256KeyLength)
+        let inputKey = inputKey ?? .generate()
 
         return try _encryptAttachment(
             enumerateInputInBlocks: { closure in
                 var buffer = Data(count: Constants.diskPageSize)
-                var totalBytesRead: UInt = 0
+                var totalBytesRead: UInt64 = 0
                 var bytesRead: Int
                 repeat {
                     bytesRead = try inputFile.read(into: &buffer)
                     if bytesRead > 0 {
-                        totalBytesRead += UInt(bytesRead)
+                        totalBytesRead += UInt64(bytesRead)
                         try closure(buffer.prefix(bytesRead))
                     }
                 } while bytesRead > 0
@@ -239,8 +225,7 @@ public extension Cryptography {
             output: { outputBlock in
                 outputFile.write(outputBlock)
             },
-            encryptionKey: encryptionKey,
-            hmacKey: hmacKey,
+            attachmentKey: inputKey,
             applyExtraPadding: applyExtraPadding
         )
     }
@@ -251,14 +236,14 @@ public extension Cryptography {
     /// to the plaintext prior to encryption.
     ///
     /// - parameter encryptedFileHandle: The encrypted file handle to read from.
-    /// - parameter encryptionKey: The key to encrypt with; the AES key and the hmac key concatenated together.
-    ///     (The same format as ``EncryptionMetadata/key``). A random key will be generated if none is provided.
+    /// - parameter attachmentKey: The key for encryption and authentication. A
+    /// random key will be generated if none is provided.
     /// - parameter encryptedOutputUrl: Where to write the reencrypted output.
     /// - parameter applyExtraPadding: If true, extra zero padding will be applied to ensure bucketing of file sizes,
     ///     in addition to standard PKCS7 padding. If false, only standard PKCS7 padding is applied.
-    static func reencryptFileHandle(
+    internal static func reencryptFileHandle(
         at encryptedFileHandle: EncryptedFileHandle,
-        encryptionKey inputKey: Data?,
+        attachmentKey inputKey: AttachmentKey?,
         encryptedOutputUrl outputFileURL: URL,
         applyExtraPadding: Bool
     ) throws -> EncryptionMetadata {
@@ -271,19 +256,17 @@ public extension Cryptography {
         }
         let outputFileHandle = try FileHandle(forWritingTo: outputFileURL)
 
-        let inputKey = inputKey ?? randomAttachmentEncryptionKey()
-        let encryptionKey = inputKey.prefix(Constants.aesKeySize)
-        let hmacKey = inputKey.suffix(Constants.hmac256KeyLength)
+        let inputKey = inputKey ?? .generate()
 
         return try _encryptAttachment(
             enumerateInputInBlocks: { closure in
-                var totalBytesRead: UInt = 0
+                var totalBytesRead: UInt64 = 0
                 var bytesRead: Int
                 repeat {
-                    let data = try encryptedFileHandle.read(upToCount: UInt32(Constants.diskPageSize))
+                    let data = try encryptedFileHandle.read(upToCount: Constants.diskPageSize)
                     bytesRead = data.count
                     if bytesRead > 0 {
-                        totalBytesRead += UInt(bytesRead)
+                        totalBytesRead += UInt64(bytesRead)
                         try closure(data)
                     }
                 } while bytesRead > 0
@@ -292,8 +275,7 @@ public extension Cryptography {
             output: { outputBlock in
                 outputFileHandle.write(outputBlock)
             },
-            encryptionKey: encryptionKey,
-            hmacKey: hmacKey,
+            attachmentKey: inputKey,
             applyExtraPadding: applyExtraPadding
         )
     }
@@ -301,39 +283,32 @@ public extension Cryptography {
     /// Encrypt input data in memory, producing the encrypted output data.
     ///
     /// - parameter input: The data to encrypt.
-    /// - parameter encryptionKey: The key to encrypt with; the AES key and the hmac key concatenated together.
-    ///     (The same format as ``EncryptionMetadata/key``). A random key will be generated if none is provided.
+    /// - parameter attachmentKey: The key for encryption and authentication. A
+    /// random key will be generated if none is provided.
     /// - parameter iv: the iv to use. If nil, a random iv is generated. If provided, but be of length ``Cryptography/aescbcIVLength``.
     /// - parameter applyExtraPadding: If true, extra zero padding will be applied to ensure bucketing of file sizes,
     ///     in addition to standard PKCS7 padding. If false, only standard PKCS7 padding is applied.
     ///
     /// - returns: The encrypted padded data prefixed with the random iv and postfixed with the hmac.
-    static func encrypt(
+    internal static func encrypt(
         _ input: Data,
-        encryptionKey inputKey: Data? = nil,
+        attachmentKey inputKey: AttachmentKey? = nil,
         iv: Data? = nil,
         applyExtraPadding: Bool = false
     ) throws -> (Data, EncryptionMetadata) {
-        if let inputKey, inputKey.count != Constants.concatenatedEncryptionKeyLength {
-            throw OWSAssertionError("Invalid encryption key length")
-        }
-
-        let inputKey = inputKey ?? randomAttachmentEncryptionKey()
-        let encryptionKey = inputKey.prefix(Constants.aesKeySize)
-        let hmacKey = inputKey.suffix(Constants.hmac256KeyLength)
+        let inputKey = inputKey ?? .generate()
 
         var outputData = Data()
         let encryptionMetadata = try _encryptAttachment(
             enumerateInputInBlocks: { closure in
-                // Just run the whole input at once; its already in memory.
+                // Just run the whole input at once; it's already in memory.
                 try closure(input)
-                return UInt(input.count)
+                return UInt64(input.count)
             },
             output: { outputBlock in
                 outputData.append(outputBlock)
             },
-            encryptionKey: encryptionKey,
-            hmacKey: hmacKey,
+            attachmentKey: inputKey,
             iv: iv,
             applyExtraPadding: applyExtraPadding
         )
@@ -346,24 +321,22 @@ public extension Cryptography {
     /// input one at a time (size up to the caller) until the entire input has been provided, and then return the
     /// byte length of the plaintext input.
     /// - parameter output: Called by this method with each chunk of output ciphertext data.
-    /// - parameter encryptionKey: The key used for encryption. Must be of byte length ``Cryptography/aesKeySize``.
-    /// - parameter hmacKey: The key used for hmac. Must be of byte length ``Cryptography/hmac256KeyLength``.
+    /// - parameter attachmentKey: The key used for encryption and authentication.
     /// - parameter iv: the iv to use. If nil, a random iv is generated. If provided, but be of length ``Cryptography/aescbcIVLength``.
     /// - parameter applyExtraPadding: If true, additional padding is applied _before_ pkcs7 padding to obfuscate
     /// the size of the encrypted file. If false, only standard pkcs7 padding is used.
     private static func _encryptAttachment(
         // Run the closure on blocks of the input until complete and then return input plaintext length.
-        enumerateInputInBlocks: ((Data) throws -> Void) throws -> UInt,
+        enumerateInputInBlocks: ((Data) throws -> Void) throws -> UInt64,
         output: @escaping (Data) -> Void,
-        encryptionKey: Data,
-        hmacKey: Data,
+        attachmentKey: AttachmentKey,
         iv inputIV: Data? = nil,
         applyExtraPadding: Bool
     ) throws -> EncryptionMetadata {
 
-        var totalOutputOffset: Int = 0
+        var totalOutputLength: UInt64 = 0
         let output: (Data) -> Void = { outputData in
-            totalOutputOffset += outputData.count
+            totalOutputLength += UInt64(outputData.count)
             output(outputData)
         }
 
@@ -377,13 +350,13 @@ public extension Cryptography {
             iv = Randomness.generateRandomBytes(UInt(Constants.aescbcIVLength))
         }
 
-        var hmac = HMAC<SHA256>(key: .init(data: hmacKey))
+        var hmac = HMAC<SHA256>(key: SymmetricKey(data: attachmentKey.authenticationKey))
         var sha256 = SHA256()
         let cipherContext = try CipherContext(
             operation: .encrypt,
             algorithm: .aes,
             options: .pkcs7Padding,
-            key: encryptionKey,
+            key: attachmentKey.encryptionKey,
             iv: iv
         )
 
@@ -393,7 +366,7 @@ public extension Cryptography {
         sha256.update(data: iv)
         output(iv)
 
-        let unpaddedPlaintextLength: UInt
+        let unpaddedPlaintextLength: UInt64
 
         // Encrypt the file by enumerating blocks. We want to keep our
         // memory footprint as small as possible during encryption.
@@ -407,15 +380,17 @@ public extension Cryptography {
             }
 
             // Add zero padding to the plaintext attachment data if necessary.
-            let paddedPlaintextLength = paddedSize(unpaddedSize: unpaddedPlaintextLength)
-            if applyExtraPadding, paddedPlaintextLength > unpaddedPlaintextLength {
-                let ciphertextBlock = try cipherContext.update(
-                    Data(repeating: 0, count: Int(paddedPlaintextLength - unpaddedPlaintextLength))
-                )
+            if applyExtraPadding {
+                let paddedPlaintextLength = paddedSize(unpaddedSize: unpaddedPlaintextLength)!
+                if paddedPlaintextLength > unpaddedPlaintextLength {
+                    let ciphertextBlock = try cipherContext.update(
+                        Data(repeating: 0, count: Int(paddedPlaintextLength - unpaddedPlaintextLength))
+                    )
 
-                hmac.update(data: ciphertextBlock)
-                sha256.update(data: ciphertextBlock)
-                output(ciphertextBlock)
+                    hmac.update(data: ciphertextBlock)
+                    sha256.update(data: ciphertextBlock)
+                    output(ciphertextBlock)
+                }
             }
 
             // Finalize the encryption and write out the last block.
@@ -446,14 +421,14 @@ public extension Cryptography {
         let digest = Data(sha256.finalize())
 
         return EncryptionMetadata(
-            key: encryptionKey + hmacKey,
+            key: attachmentKey,
             digest: digest,
-            length: totalOutputOffset,
-            plaintextLength: Int(unpaddedPlaintextLength)
+            encryptedLength: totalOutputLength,
+            plaintextLength: unpaddedPlaintextLength,
         )
     }
 
-    static func decryptAttachment(
+    internal static func decryptAttachment(
         at encryptedUrl: URL,
         metadata: DecryptionMetadata,
         output unencryptedUrl: URL
@@ -465,7 +440,7 @@ public extension Cryptography {
         try decryptFile(at: encryptedUrl, metadata: metadata, output: unencryptedUrl)
     }
 
-    static func decryptAttachment(
+    internal static func decryptAttachment(
         at encryptedUrl: URL,
         metadata: DecryptionMetadata
     ) throws -> Data {
@@ -476,7 +451,7 @@ public extension Cryptography {
         return try decryptFile(at: encryptedUrl, metadata: metadata)
     }
 
-    static func validateAttachment(
+    internal static func validateAttachment(
         at encryptedUrl: URL,
         metadata: DecryptionMetadata
     ) -> Bool {
@@ -488,30 +463,30 @@ public extension Cryptography {
         return validateFile(at: encryptedUrl, metadata: metadata)
     }
 
-    static func encryptedAttachmentFileHandle(
+    internal static func encryptedAttachmentFileHandle(
         at encryptedUrl: URL,
-        plaintextLength: UInt32,
-        encryptionKey: Data
+        plaintextLength: UInt64,
+        attachmentKey: AttachmentKey,
     ) throws -> EncryptedFileHandle {
         return try EncryptedFileHandleImpl(
             encryptedUrl: encryptedUrl,
             paddingDecryptionStrategy: .customPadding(plaintextLength: plaintextLength),
-            encryptionKey: encryptionKey
+            attachmentKey: attachmentKey,
         )
     }
 
-    static func encryptedFileHandle(
+    internal static func encryptedFileHandle(
         at encryptedUrl: URL,
-        encryptionKey: Data
+        attachmentKey: AttachmentKey,
     ) throws -> EncryptedFileHandle {
         return try EncryptedFileHandleImpl(
             encryptedUrl: encryptedUrl,
             paddingDecryptionStrategy: .pkcs7Only,
-            encryptionKey: encryptionKey
+            attachmentKey: attachmentKey,
         )
     }
 
-    static func decryptFile(
+    internal static func decryptFile(
         at encryptedUrl: URL,
         metadata: DecryptionMetadata,
         output unencryptedUrl: URL
@@ -530,7 +505,7 @@ public extension Cryptography {
                 at: encryptedUrl,
                 metadata: metadata,
                 // Most efficient to write one page size at a time.
-                outputBlockSize: UInt32(Constants.diskPageSize)
+                outputBlockSize: Constants.diskPageSize,
             ) { plaintextDataBlock in
                 outputFile.write(plaintextDataBlock)
             }
@@ -548,7 +523,7 @@ public extension Cryptography {
     }
 
     /// Decrypt a file to an output file without validating the hmac or digest (even if the digest is provided in `metadata`).
-    static func decryptFileWithoutValidating(
+    internal static func decryptFileWithoutValidating(
         at encryptedUrl: URL,
         metadata: DecryptionMetadata,
         output unencryptedUrl: URL
@@ -568,7 +543,7 @@ public extension Cryptography {
                 metadata: metadata,
                 validateHmacAndIntegrityCheck: false,
                 // Most efficient to write one page size at a time.
-                outputBlockSize: UInt32(Constants.diskPageSize)
+                outputBlockSize: Constants.diskPageSize,
             ) { plaintextDataBlock in
                 outputFile.write(plaintextDataBlock)
             }
@@ -581,7 +556,7 @@ public extension Cryptography {
         }
     }
 
-    static func decryptFile(
+    internal static func decryptFile(
         at encryptedUrl: URL,
         metadata: DecryptionMetadata
     ) throws -> Data {
@@ -598,7 +573,7 @@ public extension Cryptography {
     }
 
     /// Decrypt a file to a in memory data without validating the hmac or digest (even if the digest is provided in `metadata`).
-    static func decryptFileWithoutValidating(
+    internal static func decryptFileWithoutValidating(
         at encryptedUrl: URL,
         metadata: DecryptionMetadata
     ) throws -> Data {
@@ -615,7 +590,7 @@ public extension Cryptography {
         return plaintext
     }
 
-    static func validateFile(
+    internal static func validateFile(
         at encryptedUrl: URL,
         metadata: DecryptionMetadata
     ) -> Bool {
@@ -633,16 +608,16 @@ public extension Cryptography {
     ///     will be validated against the integrityCheck in the provided metadata.
     /// - parameter outputBlockSize: Maximum number of bytes that will be read into memory at once
     ///     and emitted in a single call to `output`. If nil, the length of the file is the limit. Defaults to 16kb.
-    static func decryptFile(
+    internal static func decryptFile(
         at encryptedUrl: URL,
         metadata: DecryptionMetadata,
         validateHmacAndIntegrityCheck: Bool = true,
-        outputBlockSize: UInt32? = 1024 * 16,
+        outputBlockSize: Int? = 1024 * 16,
         output: (_ plaintextDataBlock: Data) -> Void
     ) throws {
         let paddingStrategy: PaddingDecryptionStrategy
         if let plaintextLength = metadata.plaintextLength {
-            paddingStrategy = .customPadding(plaintextLength: UInt32(plaintextLength))
+            paddingStrategy = .customPadding(plaintextLength: plaintextLength)
         } else {
             paddingStrategy = .pkcs7Only
         }
@@ -650,7 +625,7 @@ public extension Cryptography {
         let inputFile = try EncryptedFileHandleImpl(
             encryptedUrl: encryptedUrl,
             paddingDecryptionStrategy: paddingStrategy,
-            encryptionKey: metadata.key
+            attachmentKey: metadata.key,
         )
 
         var hmac: HMAC<SHA256>?
@@ -659,9 +634,9 @@ public extension Cryptography {
         if validateHmacAndIntegrityCheck {
             // The metadata "key" is actually a concatentation of the
             // encryption key and the hmac key.
-            let hmacKey = metadata.key.suffix(Constants.hmac256KeyLength)
+            let hmacKey = metadata.key.authenticationKey
 
-            hmac = HMAC<SHA256>(key: .init(data: hmacKey))
+            hmac = HMAC<SHA256>(key: SymmetricKey(data: hmacKey))
             switch metadata.integrityCheck {
             case nil:
                 break
@@ -685,10 +660,10 @@ public extension Cryptography {
         var gotEmptyBlock = false
         repeat {
             let plaintextDataBlock = try inputFile.readInternal(
-                upToCount: outputBlockSize ?? inputFile.plaintextLength
-            ) { ciphertext, ciphertextLength in
-                hmac?.update(data: ciphertext.prefix(ciphertextLength))
-                ciphertextSha256?.update(data: ciphertext.prefix(ciphertextLength))
+                upToCount: outputBlockSize ?? Int(inputFile.plaintextLength)
+            ) { ciphertext in
+                hmac?.update(data: ciphertext)
+                ciphertextSha256?.update(data: ciphertext)
             }
             if plaintextDataBlock.isEmpty {
                 gotEmptyBlock = true
@@ -712,7 +687,7 @@ public extension Cryptography {
 
         if validateHmacAndIntegrityCheck, var hmac {
             // Add the last padding bytes to the hmac/digest.
-            var remainingPaddingLength = Constants.aescbcIVLength + inputFile.ciphertextLength - inputFile.file.offsetInFile
+            var remainingPaddingLength = UInt64(Constants.aescbcIVLength) + inputFile.ciphertextLength - inputFile.file.offsetInFile
             while remainingPaddingLength > 0 {
                 let lengthToRead = min(remainingPaddingLength, 1024 * 16)
                 let paddingCiphertext = try inputFile.file.readData(ofLength: Int(lengthToRead))
@@ -768,7 +743,7 @@ public extension Cryptography {
         ///
         /// The sender necessarily provided the plaintext length before pkcs7; the presence of
         /// this value is what tells us to expect the additional padding and tells us where it is.
-        case customPadding(plaintextLength: UInt32)
+        case customPadding(plaintextLength: UInt64)
 
         /// The file uses standard PKCS7 padding _only_.
         ///
@@ -792,13 +767,12 @@ public extension Cryptography {
         /// We truncate everything after this length in the final output.
         /// Either the sender gives this to us directly, or we assume only pkcs7 padding
         /// is used and compute this length using that assumption.
-        private let _plaintextLength: Int
-        public var plaintextLength: UInt32 { UInt32(_plaintextLength) }
+        fileprivate let plaintextLength: UInt64
 
         /// Excluding iv and hmac, including padding
-        fileprivate let ciphertextLength: Int
+        fileprivate let ciphertextLength: UInt64
 
-        private var virtualOffset: Int = 0
+        private var virtualOffset: UInt64 = 0
 
         private var cipherContext: CipherContext
         /// Buffers the output of the cipherContext if the last read requested fewer bytes than the cipherContext output.
@@ -811,24 +785,23 @@ public extension Cryptography {
         init(
             encryptedUrl: URL,
             paddingDecryptionStrategy: PaddingDecryptionStrategy,
-            encryptionKey: Data
+            attachmentKey: AttachmentKey,
         ) throws {
             guard FileManager.default.fileExists(atPath: encryptedUrl.path) else {
                 throw OWSAssertionError("Missing attachment file.")
             }
 
-            guard encryptionKey.count == (Constants.aesKeySize + Constants.hmac256KeyLength) else {
-                throw OWSAssertionError("Encryption key shorter than combined key length")
-            }
-
             self.file = try LocalFileHandle(url: encryptedUrl)
 
-            let cryptoOverheadLength = Constants.aescbcIVLength + Constants.hmac256OutputLength
+            let cryptoOverheadLength = UInt64(Constants.aescbcIVLength + Constants.hmac256OutputLength)
+            guard file.fileLength >= cryptoOverheadLength + UInt64(Constants.aescbcBlockLength) else {
+                throw OWSAssertionError("Shorter than IV + Block + HMAC")
+            }
             self.ciphertextLength = file.fileLength - cryptoOverheadLength
 
             // The metadata "key" is actually a concatentation of the
             // encryption key and the hmac key.
-            self.encryptionKey = encryptionKey.prefix(Constants.aesKeySize)
+            self.encryptionKey = attachmentKey.encryptionKey
 
             // This first N bytes of the encrypted file are the IV
             self.iv = try file.readData(ofLength: Constants.aescbcIVLength)
@@ -842,17 +815,17 @@ public extension Cryptography {
             case .customPadding(let plaintextLength):
                 // The sender gave us the expected length; easy option.
                 // We truncate everything after this length in the final output.
-                self._plaintextLength = Int(plaintextLength)
+                self.plaintextLength = plaintextLength
             case .pkcs7Only:
                 // We want to read the last two blocks before the hmac so we can
                 // determine the pkcs7 padding length.
                 let prePaddingBlockOffset = file.fileLength
                     // Not the hmac
-                    - Constants.hmac256OutputLength
+                    - UInt64(Constants.hmac256OutputLength)
                     // Start of the previous block which has the pkcs7 padding
-                    - Constants.aescbcBlockLength
+                    - UInt64(Constants.aescbcBlockLength)
                     // Start of the block before that which has its iv
-                    - Constants.aescbcBlockLength
+                    - UInt64(Constants.aescbcBlockLength)
                 try file.seek(toFileOffset: prePaddingBlockOffset)
 
                 // Read the preceding block, use it as the IV.
@@ -876,17 +849,20 @@ public extension Cryptography {
                 paddingBlockPlaintext.append(try paddingCipherContext.finalize())
 
                 // Grab the last byte of the last ciphertext block; this is the pkcs7
-                // padding (which needs to be XORd with the equivalent byte in the iv.
-                var paddingByte = paddingBlockPlaintext[paddingBlockPlaintext.count - 1]
+                // padding (which needs to be XORd with the equivalent byte in the iv).
+                var paddingByte = paddingBlockPlaintext.last!
                 // Bitwise XOR it with the previous block's last byte
-                paddingByte = paddingByte ^ paddingBlockIV[paddingBlockIV.count - 1]
+                paddingByte = paddingByte ^ paddingBlockIV.last!
                 // Each byte of padding is itself the length of the padding.
                 let paddingLength = paddingByte
 
-                self._plaintextLength = ciphertextLength - Int(paddingLength)
+                guard paddingLength <= Constants.aescbcBlockLength else {
+                    throw OWSAssertionError("Decrypted padding is malformed")
+                }
+                self.plaintextLength = ciphertextLength - UInt64(safeCast: paddingLength)
 
                 // Move the file handle to the start of the encrypted data (after IV)
-                try file.seek(toFileOffset: Constants.aescbcIVLength)
+                try file.seek(toFileOffset: UInt64(Constants.aescbcIVLength))
             }
 
             // We should be just after the iv at this point.
@@ -903,13 +879,12 @@ public extension Cryptography {
 
         // MARK: - API
 
-        func offset() -> UInt32 {
-            return UInt32(virtualOffset)
+        func offset() -> UInt64 {
+            return virtualOffset
         }
 
-        func seek(toOffset: UInt32) throws {
-            let toOffset = Int(toOffset)
-            guard toOffset <= _plaintextLength else {
+        func seek(toOffset: UInt64) throws {
+            guard toOffset <= plaintextLength else {
                 throw OWSAssertionError("Seeking past end of file")
             }
             // No need to modify the bytes in the buffer; just mark them as stale.
@@ -918,12 +893,12 @@ public extension Cryptography {
             // The offset in the encrypted file rounds down to the start of the block.
             // Add 1 because the first block in the encrypted file is the iv which isn't
             // represented in the virtual plaintext's address space.
-            var (desiredBlock, desiredOffsetInBlock) = toOffset.quotientAndRemainder(dividingBy: Constants.aescbcBlockLength)
+            var (desiredBlock, desiredOffsetInBlock) = toOffset.quotientAndRemainder(dividingBy: UInt64(Constants.aescbcBlockLength))
             desiredBlock += 1
 
             // The preceding block serves as the iv for decryption.
             let ivBlock = desiredBlock - 1
-            let ivOffset = ivBlock * Constants.aescbcBlockLength
+            let ivOffset = ivBlock * UInt64(Constants.aescbcBlockLength)
             try file.seek(toFileOffset: ivOffset)
             let iv = try file.readData(ofLength: Constants.aescbcBlockLength)
 
@@ -948,50 +923,52 @@ public extension Cryptography {
             // the first 2, puts the rest into plaintextBuffer, and increments virtualOffset by 2.
             self.virtualOffset = toOffset - desiredOffsetInBlock
             if desiredOffsetInBlock > 0 {
-                _ = try self.read(upToCount: UInt32(desiredOffsetInBlock))
+                _ = try self.read(upToCount: Int(desiredOffsetInBlock))
             }
         }
 
-        func read(upToCount: UInt32) throws -> Data {
+        func read(upToCount: Int) throws -> Data {
             return try readInternal(upToCount: upToCount)
         }
 
         fileprivate func readInternal(
-            upToCount requestedByteCount: UInt32,
+            upToCount requestedByteCount: Int,
             // We run this on every block of ciphertext we read.
-            ciphertextHandler: ((_ ciphertext: Data, _ ciphertextLength: Int) throws -> Void)? = nil
+            ciphertextHandler: ((_ ciphertext: Data) throws -> Void)? = nil
         ) throws -> Data {
-            guard requestedByteCount < Int.max else {
-                throw OWSAssertionError("Requesting too much data at once")
-            }
+            let remainingByteCount = plaintextLength.subtractingReportingOverflow(virtualOffset)
 
             // To callers, "virtualOffset" is the offset and "plaintextLength" is the file
             // length (because we pretend this is the decrypted file). If a caller asks
             // for more bytes after what should be the end, give them back empty bytes.
-            guard virtualOffset < plaintextLength else {
+            if remainingByteCount.overflow {
                 return Data()
             }
 
             // Don't try and read past the end of the file.
-            let totalBytesInOutput = min(Int(requestedByteCount), _plaintextLength - virtualOffset)
+            var totalBytesInOutput = requestedByteCount
+            if remainingByteCount.partialValue < totalBytesInOutput {
+                totalBytesInOutput = Int(remainingByteCount.partialValue)
+            }
 
             // Allocate memory up front.
-            var outputBuffer = Data(repeating: 0, count: totalBytesInOutput)
+            var outputBuffer = Data(count: totalBytesInOutput)
 
             // Start tracking how many bytes we have written.
             var bytesWrittenToOutput = 0
-            defer { self.virtualOffset += bytesWrittenToOutput }
+            defer { self.virtualOffset += UInt64(bytesWrittenToOutput) }
 
             // If we have data in the plaintext buffer, use that first.
             if numBytesInPlaintextBuffer > 0 {
                 let numBytesToReadOffPlaintextBuffer = min(totalBytesInOutput, numBytesInPlaintextBuffer)
-                outputBuffer[0..<numBytesToReadOffPlaintextBuffer] = plaintextBuffer[0..<numBytesToReadOffPlaintextBuffer]
-                // Shift the remaining bytes forward in the buffer so they start at 0
-                if numBytesToReadOffPlaintextBuffer < numBytesInPlaintextBuffer {
-                    plaintextBuffer[0..<(numBytesInPlaintextBuffer - numBytesToReadOffPlaintextBuffer)] =
-                        plaintextBuffer[numBytesToReadOffPlaintextBuffer..<numBytesInPlaintextBuffer]
+                let outputBufferRange = outputBuffer.indices.prefix(numBytesToReadOffPlaintextBuffer)
+                outputBuffer[outputBufferRange] = self.plaintextBuffer.prefix(numBytesToReadOffPlaintextBuffer)
+                // Shift the remaining bytes forward in the buffer so they start at startIndex
+                if numBytesToReadOffPlaintextBuffer < self.numBytesInPlaintextBuffer {
+                    let plaintextBufferRange = self.plaintextBuffer.indices.prefix(numBytesInPlaintextBuffer - numBytesToReadOffPlaintextBuffer)
+                    self.plaintextBuffer[plaintextBufferRange] = self.plaintextBuffer.prefix(numBytesInPlaintextBuffer).dropFirst(numBytesToReadOffPlaintextBuffer)
                 }
-                numBytesInPlaintextBuffer -= numBytesToReadOffPlaintextBuffer
+                self.numBytesInPlaintextBuffer -= numBytesToReadOffPlaintextBuffer
                 bytesWrittenToOutput += numBytesToReadOffPlaintextBuffer
             }
 
@@ -1010,7 +987,7 @@ public extension Cryptography {
                 // Read at most the page size; no point in reading more.
                 result = min(result, Constants.diskPageSize)
                 // But never read past the end of the file.
-                result = min(result, Constants.aescbcIVLength + ciphertextLength - file.offsetInFile)
+                result = min(result, Int(exactly: UInt64(Constants.aescbcIVLength) + ciphertextLength - file.offsetInFile) ?? .max)
                 return result
             }
             var numCiphertextBytesToRead = computeNumCiphertextBytesToRead()
@@ -1028,9 +1005,7 @@ public extension Cryptography {
                     // If we are at the end of the file, we want to finalize.
                     expectedPlaintextLength = try cipherContext.outputLengthForFinalize()
                 } else {
-                    expectedPlaintextLength = try cipherContext.outputLength(
-                        forUpdateWithInputLength: numCiphertextBytesToRead
-                    )
+                    expectedPlaintextLength = try cipherContext.outputLength(forUpdateWithInputLength: numCiphertextBytesToRead)
                 }
 
                 // We need to reference either `outputBuffer` or a tmp buffer, depending
@@ -1069,28 +1044,27 @@ public extension Cryptography {
                         return try cipherContext.finalize(
                             output: &$0,
                             offsetInOutput: $1,
-                            outputLength: expectedPlaintextLength
+                            outputLength: expectedPlaintextLength,
                         )
                     }
                 } else {
                     // Otherwise we aren't at the end of the file, read and update.
                     let ciphertextLength = try file.read(
-                        into: &ciphertextBuffer,
-                        maxLength: numCiphertextBytesToRead
+                        into: &ciphertextBuffer[..<(ciphertextBuffer.startIndex + numCiphertextBytesToRead)],
                     )
                     if ciphertextLength < numCiphertextBytesToRead {
                         // We are careful to not request bytes past the end of the file;
                         // if we read fewer bytes than requested it must be an error.
                         throw OWSAssertionError("Failed to read file")
                     }
-                    try ciphertextHandler?(ciphertextBuffer, ciphertextLength)
+                    try ciphertextHandler?(ciphertextBuffer.prefix(ciphertextLength))
                     actualPlaintextLength = try writeToBuffer {
                         return try cipherContext.update(
                             input: ciphertextBuffer,
                             inputLength: ciphertextLength,
                             output: &$0,
                             offsetInOutput: $1,
-                            outputLength: expectedPlaintextLength
+                            outputLength: expectedPlaintextLength,
                         )
                     }
                 }
@@ -1102,12 +1076,12 @@ public extension Cryptography {
                     let numBytesToCopyToPlaintextBuffer = actualPlaintextLength - numBytesToCopyToOutput
                     _ = try writeToBuffer { tmpBuffer, _ in
                         // Copy bytes to the output buffer up to what we need.
-                        outputBuffer[bytesWrittenToOutput..<(bytesWrittenToOutput + numBytesToCopyToOutput)] =
-                            tmpBuffer[0..<numBytesToCopyToOutput]
+                        let outputBufferRange = outputBuffer.indices.dropFirst(bytesWrittenToOutput).prefix(numBytesToCopyToOutput)
+                        outputBuffer[outputBufferRange] = tmpBuffer.prefix(numBytesToCopyToOutput)
                         // Copy the rest into the plaintext buffer.
                         if numBytesToCopyToPlaintextBuffer > 0 {
-                            self.plaintextBuffer[0..<numBytesToCopyToPlaintextBuffer] =
-                                tmpBuffer[numBytesToCopyToOutput..<actualPlaintextLength]
+                            let plaintextBufferRange = self.plaintextBuffer.indices.prefix(numBytesToCopyToPlaintextBuffer)
+                            self.plaintextBuffer[plaintextBufferRange] = tmpBuffer.dropFirst(numBytesToCopyToOutput).prefix(numBytesToCopyToPlaintextBuffer)
                         }
                         self.numBytesInPlaintextBuffer += numBytesToCopyToPlaintextBuffer
                         return 0 /* return value irrelevant */
@@ -1129,19 +1103,20 @@ public extension Cryptography {
 // MARK: - Direct file access
 
 /// A convenience wrapper around a read-only file.
-private class LocalFileHandle {
+private struct LocalFileHandle: ~Copyable {
     private let fileDescriptor: FileDescriptor
     /// Determined at open time and assumed to be fixed.
-    let fileLength: Int
+    let fileLength: UInt64
     /// The current offset from the start of the file measured in bytes. Measured with `lseek`.
-    var offsetInFile: Int { Int((try? fileDescriptor.seek(offset: 0, from: .current)) ?? 0) }
+    var offsetInFile: UInt64 { UInt64((try? fileDescriptor.seek(offset: 0, from: .current)) ?? 0) }
 
     init(url: URL) throws {
         guard let filePath = FilePath(url) else {
             throw OWSAssertionError("Provided url \(url) is not a file path")
         }
         guard
-            let fileLength = try url.resourceValues(forKeys: [.fileSizeKey]).fileSize
+            let fileSize = try url.resourceValues(forKeys: [.fileSizeKey]).fileSize,
+            let fileLength = UInt64(exactly: fileSize)
         else {
             throw OWSAssertionError("Unable to read file length")
         }
@@ -1152,17 +1127,12 @@ private class LocalFileHandle {
     /// Read up to a number bytes into the provided buffer.
     ///
     /// - parameter buffer: Output is written into here.
-    /// - parameter maxLength: Maximum number of bytes to read into `buffer`.
-    ///     If nil, the length of the buffer is used.
-    ///     Warning: Using a value greater than buffer length will get capped by buffer length.
     ///
     /// - returns: The actual number of bytes read. Zero indicates the end of the file has been reached.
     ///
     /// - throws: if an error occurs
-    func read(into buffer: inout Data, maxLength: Int? = nil) throws -> Int {
-        try buffer.withUnsafeMutableBytes {
-            try fileDescriptor.read(into: UnsafeMutableRawBufferPointer(rebasing: $0.prefix(maxLength ?? $0.count)))
-        }
+    func read(into buffer: inout Data) throws -> Int {
+        try buffer.withUnsafeMutableBytes { try fileDescriptor.read(into: $0) }
     }
 
     /// Convenience wrapper around ``read(into:maxLength:)`` that returns the output
@@ -1180,8 +1150,11 @@ private class LocalFileHandle {
     }
 
     /// Seek to a desired offset in the file, defined relative to the beginning of the file.
-    func seek(toFileOffset desiredOffset: Int) throws {
-        try fileDescriptor.seek(offset: Int64(desiredOffset), from: .start)
+    func seek(toFileOffset desiredOffset: UInt64) throws {
+        guard let actualOffset = Int64(exactly: desiredOffset) else {
+            throw OWSGenericError("Can't seek beyond Int64.max")
+        }
+        try fileDescriptor.seek(offset: actualOffset, from: .start)
     }
 
     deinit {

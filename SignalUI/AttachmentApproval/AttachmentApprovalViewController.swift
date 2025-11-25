@@ -3,11 +3,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import Foundation
 import AVFoundation
+import CoreServices
+import Foundation
+public import LibSignalClient
 import MediaPlayer
 import Photos
-import CoreServices
 public import SignalServiceKit
 
 public protocol AttachmentApprovalViewControllerDelegate: AnyObject {
@@ -37,7 +38,7 @@ public protocol AttachmentApprovalViewControllerDataSource: AnyObject {
 
     var attachmentApprovalRecipientNames: [String] { get }
 
-    func attachmentApprovalMentionableAddresses(tx: DBReadTransaction) -> [SignalServiceAddress]
+    func attachmentApprovalMentionableAcis(tx: DBReadTransaction) -> [Aci]
 
     func attachmentApprovalMentionCacheInvalidationKey() -> String
 }
@@ -74,7 +75,7 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
         if
             attachmentApprovalItemCollection.attachmentApprovalItems.count == 1,
             let firstItem = attachmentApprovalItemCollection.attachmentApprovalItems.first,
-            firstItem.attachment.isValidImage || firstItem.attachment.isValidVideo,
+            firstItem.attachment.dataSource.isValidImage || firstItem.attachment.dataSource.isValidVideo,
             !receivedOptions.contains(.disallowViewOnce)
         {
             options.insert(.canToggleViewOnce)
@@ -82,7 +83,7 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
 
         if
             ImageQualityLevel.maximumForCurrentAppContext == .high,
-            attachmentApprovalItemCollection.attachmentApprovalItems.contains(where: { $0.attachment.isValidImage }) {
+            attachmentApprovalItemCollection.attachmentApprovalItems.contains(where: { $0.attachment.dataSource.isValidImage }) {
             options.insert(.canChangeQualityLevel)
         }
 
@@ -118,7 +119,12 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
     private var observerToken: NSObjectProtocol?
 
     private var observingKeyboardNotifications = false
-    private var keyboardHeight: CGFloat = 0
+    private var keyboardHeight: CGFloat = 0 {
+        didSet {
+            guard let iOS15BottomToolviewVerticalPositionConstraint else { return }
+            iOS15BottomToolviewVerticalPositionConstraint.constant = -max(view.safeAreaInsets.bottom, keyboardHeight)
+        }
+    }
 
     public init(options: AttachmentApprovalViewControllerOptions, attachmentApprovalItems: [AttachmentApprovalItem]) {
         assert(attachmentApprovalItems.count > 0)
@@ -173,9 +179,10 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
             options.insert(.disallowViewOnce)
         }
         let vc = AttachmentApprovalViewController(options: options, attachmentApprovalItems: attachmentApprovalItems)
+        // The data source needs to be set before the message body because it is needed to hydrate mentions.
+        vc.approvalDataSource = approvalDataSource
         vc.setMessageBody(initialMessageBody, txProvider: DependenciesBridge.shared.db.readTxProvider)
         vc.approvalDelegate = approvalDelegate
-        vc.approvalDataSource = approvalDataSource
         vc.stickerSheetDelegate = stickerSheetDelegate
         let navController = OWSNavigationController(rootViewController: vc)
         navController.setNavigationBarHidden(true, animated: false)
@@ -195,14 +202,9 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
     private lazy var topBar = AttachmentApprovalTopBar(options: options)
 
     private let bottomToolView = AttachmentApprovalToolbar()
-    private var bottomToolViewBottomConstraint: NSLayoutConstraint?
 
-    private lazy var inputAccessoryPlaceholder: InputAccessoryViewPlaceholder = {
-        let placeholder = InputAccessoryViewPlaceholder()
-        placeholder.delegate = self
-        placeholder.referenceView = view
-        return placeholder
-    }()
+    // Manually adjust position of the bottom toolbar on iOS 15 because `keyboardLayoutGuide` is buggy.
+    private var iOS15BottomToolviewVerticalPositionConstraint: NSLayoutConstraint?
 
     lazy var contentDimmerView: UIView = {
         let dimmerView = UIView()
@@ -226,6 +228,8 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
 
     public override func viewDidLoad() {
         super.viewDidLoad()
+
+        self.definesPresentationContext = true
 
         view.backgroundColor = .black
 
@@ -270,8 +274,20 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
             bottomToolView.layoutIfNeeded()
         }
         view.addSubview(bottomToolView)
-        bottomToolView.autoPinWidthToSuperview()
-        bottomToolViewBottomConstraint = bottomToolView.autoPinEdge(toSuperviewEdge: .bottom)
+        bottomToolView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            bottomToolView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            bottomToolView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+        ])
+        if #unavailable(iOS 16) {
+            let constraint = bottomToolView.contentLayoutGuide.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -view.safeAreaInsets.bottom)
+            constraint.isActive = true
+            iOS15BottomToolviewVerticalPositionConstraint = constraint
+        } else {
+            NSLayoutConstraint.activate([
+                bottomToolView.contentLayoutGuide.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor)
+            ])
+        }
 
         OWSTableViewController2.removeBackButtonText(viewController: self)
     }
@@ -307,6 +323,9 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
     public override func viewSafeAreaInsetsDidChange() {
         super.viewSafeAreaInsetsDidChange()
 
+        if let iOS15BottomToolviewVerticalPositionConstraint {
+            iOS15BottomToolviewVerticalPositionConstraint.constant = -max(view.safeAreaInsets.bottom, keyboardHeight)
+        }
         if let currentPageViewController {
             updateContentLayoutMargins(for: currentPageViewController)
         }
@@ -352,18 +371,6 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
     }
 
     // MARK: - Input Accessory
-
-    public override var canBecomeFirstResponder: Bool {
-        return true
-    }
-
-    public override var inputAccessoryView: UIView? {
-        return inputAccessoryPlaceholder
-    }
-
-    public override var textInputContextIdentifier: String? {
-        return approvalDataSource?.attachmentApprovalTextInputContextIdentifier
-    }
 
     private func updateControlsVisibility(animated: Bool, completion: ((Bool) -> Void)? = nil) {
         let alpha: CGFloat = shouldHideControls ? 0 : 1
@@ -641,118 +648,100 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
         return attachmentApprovalItemCollection.attachmentApprovalItems
     }
 
-    func outputAttachmentsPromise() -> Promise<[SignalAttachment]> {
-        var promises = [Promise<SignalAttachment>]()
+    private func prepareAttachments() async throws -> [SignalAttachment] {
+        let outputQualityLevel = self.outputQualityLevel
+        var results = [SignalAttachment]()
         for attachmentApprovalItem in attachmentApprovalItems {
-            let outputQualityLevel = self.outputQualityLevel
-            promises.append(outputAttachmentPromise(for: attachmentApprovalItem).map(on: DispatchQueue.global()) { attachment in
-                attachment.preparedForOutput(qualityLevel: outputQualityLevel)
-            })
+            results.append(
+                try await self
+                    .prepareAttachment(attachmentApprovalItem: attachmentApprovalItem)
+                    .preparedForOutput(qualityLevel: outputQualityLevel)
+            )
         }
-        return Promise.when(fulfilled: promises)
+        return results
     }
 
-    // For any attachments edited with an editor, returns a
-    // new SignalAttachment that reflects those changes.  Otherwise,
-    // returns the original attachment.
-    //
-    // If any errors occurs in the export process, we fail over to
-    // sending the original attachment.  This seems better than trying
-    // to involve the user in resolving the issue.
-    func outputAttachmentPromise(for attachmentApprovalItem: AttachmentApprovalItem) -> Promise<SignalAttachment> {
+    /// Returns a new SignalAttachment that reflects changes made in the editor.
+    private func prepareAttachment(attachmentApprovalItem: AttachmentApprovalItem) async throws -> SignalAttachment {
         if let imageEditorModel = attachmentApprovalItem.imageEditorModel, imageEditorModel.isDirty() {
-            return editedAttachmentPromise(imageEditorModel: imageEditorModel,
-                                           attachmentApprovalItem: attachmentApprovalItem)
+            return try await self.prepareImageAttachment(
+                attachmentApprovalItem: attachmentApprovalItem,
+                imageEditorModel: imageEditorModel,
+            )
         }
         if let videoEditorModel = attachmentApprovalItem.videoEditorModel, videoEditorModel.needsRender {
-            return .wrapAsync {
-                try await self.renderAttachment(videoEditorModel: videoEditorModel, attachmentApprovalItem: attachmentApprovalItem)
-            }
+            return try await self.prepareVideoAttachment(
+                attachmentApprovalItem: attachmentApprovalItem,
+                videoEditorModel: videoEditorModel,
+            )
         }
         // No editor applies. Use original, un-edited attachment.
-        return Promise.value(attachmentApprovalItem.attachment)
+        return attachmentApprovalItem.attachment
     }
 
-    // For any attachments edited with the image editor, returns a
-    // new SignalAttachment that reflects those changes.
-    //
-    // If any errors occurs in the export process, we fail over to
-    // sending the original attachment.  This seems better than trying
-    // to involve the user in resolving the issue.
-    func editedAttachmentPromise(imageEditorModel: ImageEditorModel,
-                                 attachmentApprovalItem: AttachmentApprovalItem) -> Promise<SignalAttachment> {
+    #if compiler(>=6.2)
+    @concurrent
+    #endif
+    private nonisolated func prepareImageAttachment(
+        attachmentApprovalItem: AttachmentApprovalItem,
+        imageEditorModel: ImageEditorModel,
+    ) async throws -> SignalAttachment {
         assert(imageEditorModel.isDirty())
-        return DispatchQueue.main.async(.promise) { () -> UIImage in
-            guard let dstImage = imageEditorModel.renderOutput() else {
-                throw OWSAssertionError("Could not render for output.")
-            }
-            return dstImage
-        }.map(on: DispatchQueue.global()) { (dstImage: UIImage) -> SignalAttachment in
-            var dataType = UTType.image
-            guard let dstData: Data = {
-                let isLossy: Bool = attachmentApprovalItem.attachment.mimeType.caseInsensitiveCompare(MimeType.imageJpeg.rawValue) == .orderedSame
-                if isLossy {
-                    dataType = .jpeg
-                    return dstImage.jpegData(compressionQuality: 0.9)
-                } else {
-                    dataType = .png
-                    return dstImage.pngData()
-                }
-                }() else {
-                    owsFailDebug("Could not export for output.")
-                    return attachmentApprovalItem.attachment
-            }
-            guard let dataSource = DataSourceValue(dstData, utiType: dataType.identifier) else {
-                owsFailDebug("Could not prepare data source for output.")
-                return attachmentApprovalItem.attachment
-            }
 
-            // Rewrite the filename's extension to reflect the output file format.
-            var filename: String? = attachmentApprovalItem.attachment.sourceFilename
-            if let sourceFilename = attachmentApprovalItem.attachment.sourceFilename {
-                if let fileExtension: String = MimeTypeUtil.fileExtensionForUtiType(dataType.identifier) {
-                    filename = (sourceFilename as NSString).deletingPathExtension.appendingFileExtension(fileExtension)
-                }
-            }
-            dataSource.sourceFilename = filename
+        guard let dstImage = await imageEditorModel.renderOutput() else {
+            throw OWSAssertionError("Could not render for output.")
+        }
 
-            let dstAttachment = SignalAttachment.attachment(dataSource: dataSource, dataUTI: dataType.identifier)
-            if let attachmentError = dstAttachment.error {
-                owsFailDebug("Could not prepare attachment for output: \(attachmentError).")
-                return attachmentApprovalItem.attachment
+        var dataType = UTType.image
+        guard let dstData: Data = {
+            let isLossy: Bool = attachmentApprovalItem.attachment.mimeType.caseInsensitiveCompare(MimeType.imageJpeg.rawValue) == .orderedSame
+            if isLossy {
+                dataType = .jpeg
+                return dstImage.jpegData(compressionQuality: 0.9)
+            } else {
+                dataType = .png
+                return dstImage.pngData()
             }
-            return dstAttachment
+        }() else {
+            throw OWSAssertionError("Could not export for output.")
         }
-    }
+        guard let dataSource = DataSourceValue(dstData, utiType: dataType.identifier) else {
+            throw OWSAssertionError("Could not prepare data source for output.")
+        }
 
-    // For any attachments edited with the video editor, returns a
-    // new SignalAttachment that reflects those changes.
-    //
-    // If any errors occurs in the export process, we fail over to
-    // sending the original attachment.  This seems better than trying
-    // to involve the user in resolving the issue.
-    func renderAttachment(videoEditorModel: VideoEditorModel, attachmentApprovalItem: AttachmentApprovalItem) async throws -> SignalAttachment {
-        assert(videoEditorModel.needsRender)
-        let result = try await videoEditorModel.ensureCurrentRender().render()
-        let filePath = try result.consumeResultPath()
-        guard let fileExtension = filePath.fileExtension else {
-            throw OWSAssertionError("Missing fileExtension.")
-        }
-        guard let dataUTI = MimeTypeUtil.utiTypeForFileExtension(fileExtension) else {
-            throw OWSAssertionError("Missing dataUTI.")
-        }
-        let dataSource = try DataSourcePath(filePath: filePath, shouldDeleteOnDeallocation: true)
         // Rewrite the filename's extension to reflect the output file format.
-        var filename: String? = attachmentApprovalItem.attachment.sourceFilename
-        if let sourceFilename = attachmentApprovalItem.attachment.sourceFilename {
-            filename = (sourceFilename as NSString).deletingPathExtension.appendingFileExtension(fileExtension)
+        var filename: String? = attachmentApprovalItem.attachment.dataSource.sourceFilename?.filterFilename()
+        if let sourceFilename = attachmentApprovalItem.attachment.dataSource.sourceFilename?.filterFilename() {
+            if let fileExtension: String = MimeTypeUtil.fileExtensionForUtiType(dataType.identifier) {
+                let sourceFilenameWithoutExtension = (sourceFilename as NSString).deletingPathExtension
+                filename = (sourceFilenameWithoutExtension as NSString).appendingPathExtension(fileExtension) ?? sourceFilenameWithoutExtension
+            }
         }
         dataSource.sourceFilename = filename
 
-        let dstAttachment = SignalAttachment.attachment(dataSource: dataSource, dataUTI: dataUTI)
-        if let attachmentError = dstAttachment.error {
-            throw OWSAssertionError("Could not prepare attachment for output: \(attachmentError).")
+        return try SignalAttachment.imageAttachment(dataSource: dataSource, dataUTI: dataType.identifier)
+    }
+
+    private func prepareVideoAttachment(
+        attachmentApprovalItem: AttachmentApprovalItem,
+        videoEditorModel: VideoEditorModel,
+    ) async throws -> SignalAttachment {
+        assert(videoEditorModel.needsRender)
+        let fileUrl = try await videoEditorModel.render()
+        let fileExtension = fileUrl.pathExtension
+        guard let dataUTI = MimeTypeUtil.utiTypeForFileExtension(fileExtension) else {
+            throw OWSAssertionError("Missing dataUTI.")
         }
+        let dataSource = try DataSourcePath(fileUrl: fileUrl, shouldDeleteOnDeallocation: true)
+        // Rewrite the filename's extension to reflect the output file format.
+        var filename: String? = attachmentApprovalItem.attachment.dataSource.sourceFilename?.filterFilename()
+        if let sourceFilename = attachmentApprovalItem.attachment.dataSource.sourceFilename?.filterFilename() {
+            let sourceFilenameWithoutExtension = (sourceFilename as NSString).deletingPathExtension
+            filename = (sourceFilenameWithoutExtension as NSString).appendingPathExtension(fileExtension) ?? sourceFilenameWithoutExtension
+        }
+        dataSource.sourceFilename = filename
+
+        let dstAttachment = try SignalAttachment.videoAttachment(dataSource: dataSource, dataUTI: dataUTI)
         dstAttachment.isViewOnceAttachment = attachmentApprovalItem.attachment.isViewOnceAttachment
         return dstAttachment
     }
@@ -863,39 +852,37 @@ extension AttachmentApprovalViewController {
     private func didTapSend() {
         // Generate the attachments once, so that any changes we
         // make below are reflected afterwards.
-        ModalActivityIndicatorViewController.present(fromViewController: self, canCancel: false) { modalVC in
-            self.outputAttachmentsPromise()
-                .done(on: DispatchQueue.main) { attachments in
-                    AssertIsOnMainThread()
-                    modalVC.dismiss {
-                        AssertIsOnMainThread()
-
-                        if self.options.contains(.canToggleViewOnce), self.isViewOnceEnabled {
-                            for attachment in attachments {
-                                attachment.isViewOnceAttachment = true
-                            }
-                            assert(attachments.count <= 1)
+        ModalActivityIndicatorViewController.present(fromViewController: self, canCancel: false, asyncBlock: { modalVC in
+            do {
+                let attachments = try await self.prepareAttachments()
+                modalVC.dismiss {
+                    if self.options.contains(.canToggleViewOnce), self.isViewOnceEnabled {
+                        for attachment in attachments {
+                            attachment.isViewOnceAttachment = true
                         }
-
-                        self.approvalDelegate?.attachmentApproval(self, didApproveAttachments: attachments, messageBody: self.attachmentTextToolbar.messageBodyForSending)
+                        assert(attachments.count <= 1)
                     }
-                }.catch { error in
-                    AssertIsOnMainThread()
-                    owsFailDebug("Error: \(error)")
 
-                    modalVC.dismiss {
-                        let actionSheet = ActionSheetController(
-                            title: CommonStrings.errorAlertTitle,
-                            message: OWSLocalizedString(
-                                "ATTACHMENT_APPROVAL_FAILED_TO_EXPORT",
-                                comment: "Error that outgoing attachments could not be exported."),
-                            theme: .translucentDark)
-                        actionSheet.addAction(ActionSheetAction(title: CommonStrings.okButton, style: .default))
-
-                        self.present(actionSheet, animated: true)
-                    }
+                    self.approvalDelegate?.attachmentApproval(self, didApproveAttachments: attachments, messageBody: self.attachmentTextToolbar.messageBodyForSending)
                 }
-        }
+            } catch {
+                owsFailDebug("Error: \(error)")
+
+                modalVC.dismiss {
+                    let actionSheet = ActionSheetController(
+                        title: CommonStrings.errorAlertTitle,
+                        message: (
+                            (error as? SignalAttachmentError)?.localizedDescription
+                            ?? OWSLocalizedString("ATTACHMENT_APPROVAL_FAILED_TO_EXPORT", comment: "Error that outgoing attachments could not be exported.")
+                        ),
+                    )
+                    actionSheet.overrideUserInterfaceStyle = .dark
+                    actionSheet.addAction(ActionSheetAction(title: CommonStrings.okButton, style: .default))
+
+                    self.present(actionSheet, animated: true)
+                }
+            }
+        })
     }
 
     @objc
@@ -1049,7 +1036,8 @@ extension AttachmentApprovalViewController {
     private func didTapMediaQuality() {
         AssertIsOnMainThread()
 
-        let actionSheet = ActionSheetController(theme: .translucentDark)
+        let actionSheet = ActionSheetController()
+        actionSheet.overrideUserInterfaceStyle = .dark
         actionSheet.isCancelable = true
 
         let tsAccountManager = DependenciesBridge.shared.tsAccountManager
@@ -1286,8 +1274,8 @@ extension AttachmentApprovalViewController: BodyRangesTextViewDelegate {
         return bottomToolView.attachmentTextToolbar
     }
 
-    public func textViewMentionPickerPossibleAddresses(_ textView: BodyRangesTextView, tx: DBReadTransaction) -> [SignalServiceAddress] {
-        return approvalDataSource?.attachmentApprovalMentionableAddresses(tx: tx) ?? []
+    public func textViewMentionPickerPossibleAcis(_ textView: BodyRangesTextView, tx: DBReadTransaction) -> [Aci] {
+        return approvalDataSource?.attachmentApprovalMentionableAcis(tx: tx) ?? []
     }
 
     public func textViewDisplayConfiguration(_ textView: BodyRangesTextView) -> HydratedMessageBody.DisplayConfiguration {
@@ -1396,50 +1384,6 @@ extension AttachmentApprovalViewController: ApprovalRailCellViewDelegate {
     }
 }
 
-extension AttachmentApprovalViewController: InputAccessoryViewPlaceholderDelegate {
-
-    public func inputAccessoryPlaceholderKeyboardIsPresenting(animationDuration: TimeInterval, animationCurve: UIView.AnimationCurve) {
-        handleKeyboardStateChange(animationDuration: animationDuration, animationCurve: animationCurve)
-    }
-
-    public func inputAccessoryPlaceholderKeyboardDidPresent() {
-        updateBottomToolViewPosition()
-    }
-
-    public func inputAccessoryPlaceholderKeyboardIsDismissing(animationDuration: TimeInterval, animationCurve: UIView.AnimationCurve) {
-        handleKeyboardStateChange(animationDuration: animationDuration, animationCurve: animationCurve)
-    }
-
-    public func inputAccessoryPlaceholderKeyboardDidDismiss() {
-        updateBottomToolViewPosition()
-    }
-
-    public func inputAccessoryPlaceholderKeyboardIsDismissingInteractively() {
-        updateBottomToolViewPosition()
-    }
-
-    func handleKeyboardStateChange(animationDuration: TimeInterval, animationCurve: UIView.AnimationCurve) {
-        guard animationDuration > 0 else { return updateBottomToolViewPosition() }
-
-        UIView.animate(
-            withDuration: animationDuration,
-            delay: 0,
-            options: animationCurve.asAnimationOptions,
-            animations: { [self] in
-                self.updateBottomToolViewPosition()
-            }
-        )
-    }
-
-    func updateBottomToolViewPosition() {
-        bottomToolViewBottomConstraint?.constant = -inputAccessoryPlaceholder.keyboardOverlap
-
-        // We always want to apply the new bottom bar position immediately,
-        // as this only happens during animations (interactive or otherwise)
-        bottomToolView.superview?.layoutIfNeeded()
-    }
-}
-
 // MARK: -
 
 private enum SaveableAsset {
@@ -1449,6 +1393,7 @@ private enum SaveableAsset {
 }
 
 private extension SaveableAsset {
+    @MainActor
     init(attachmentApprovalItem: AttachmentApprovalItem) throws {
         if let imageEditorModel = attachmentApprovalItem.imageEditorModel {
             try self.init(imageEditorModel: imageEditorModel)
@@ -1457,6 +1402,7 @@ private extension SaveableAsset {
         }
     }
 
+    @MainActor
     private init(imageEditorModel: ImageEditorModel) throws {
         guard let image = imageEditorModel.renderOutput() else {
             throw OWSAssertionError("failed to render image")
@@ -1466,14 +1412,14 @@ private extension SaveableAsset {
     }
 
     private init(attachment: SignalAttachment) throws {
-        if attachment.isValidImage {
-            guard let imageUrl = attachment.dataUrl else {
+        if attachment.dataSource.isValidImage {
+            guard let imageUrl = attachment.dataSource.dataUrl else {
                 throw OWSAssertionError("imageUrl was unexpectedly nil")
             }
 
             self = .imageUrl(imageUrl)
-        } else if attachment.isValidVideo {
-            guard let videoUrl = attachment.dataUrl else {
+        } else if attachment.dataSource.isValidVideo {
+            guard let videoUrl = attachment.dataSource.dataUrl else {
                 throw OWSAssertionError("videoUrl was unexpectedly nil")
             }
 

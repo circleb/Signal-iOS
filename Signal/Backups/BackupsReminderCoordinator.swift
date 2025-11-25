@@ -44,30 +44,41 @@ class BackupsReminderCoordinator {
         ObjectRetainer.retainObject(self, forLifetimeOf: navController)
 
         navController.viewControllers = [
-            RegistrationEnterAccountEntropyPoolViewController(presenter: self, aepValidationPolicy: .acceptOnly(aep)),
+            RegistrationEnterAccountEntropyPoolViewController(
+                state: RegistrationEnterAccountEntropyPoolState(
+                    canShowBackButton: true,
+                    canShowNoKeyHelpButton: true
+                ),
+                presenter: self,
+                aepValidationPolicy: .acceptOnly(aep)
+            ),
         ]
 
         fromViewController.present(navController, animated: true)
     }
 
-    private func showRecordBackupKey(backupKeyReminderNavController: UINavigationController, aep: AccountEntropyPool) {
+    private func showRecordRecoveryKey(
+        backupKeyReminderNavController: UINavigationController,
+        localDeviceAuthSuccess: LocalDeviceAuthentication.AuthSuccess,
+        aep: AccountEntropyPool
+    ) {
         backupKeyReminderNavController.pushViewController(
             BackupRecordKeyViewController(
-                aep: aep,
-                isOnboardingFlow: true,
-                onCompletion: { [weak self] _ in
-                    self?.showConfirmBackupKey(backupKeyReminderNavController: backupKeyReminderNavController, aep: aep)
+                aepMode: .current(aep, localDeviceAuthSuccess),
+                options: [.showContinueButton],
+                onContinuePressed: { [weak self] _ in
+                    self?.showConfirmRecoveryKey(backupKeyReminderNavController: backupKeyReminderNavController, aep: aep)
                 },
             ),
             animated: true
         )
     }
 
-    private func showConfirmBackupKey(backupKeyReminderNavController: UINavigationController, aep: AccountEntropyPool) {
+    private func showConfirmRecoveryKey(backupKeyReminderNavController: UINavigationController, aep: AccountEntropyPool) {
         backupKeyReminderNavController.pushViewController(
-            BackupOnboardingConfirmKeyViewController(
+            BackupConfirmKeyViewController(
                 aep: aep,
-                onContinue: { [weak self] in
+                onContinue: { [weak self] _ in
                     self?.dismissHandler(false)
                     backupKeyReminderNavController.dismiss(animated: true)
                 },
@@ -92,15 +103,17 @@ extension BackupsReminderCoordinator: RegistrationEnterAccountEntropyPoolPresent
 
     func forgotKeyAction() {
         Task { @MainActor in
-            guard await LocalDeviceAuthentication().performBiometricAuth() else {
-                return
-            }
             guard
+                let authSuccess = await LocalDeviceAuthentication().performBiometricAuth(),
                 let backupKeyReminderNavController = backupKeyReminderNavController,
                 let aep = db.read(block: { accountKeyStore.getAccountEntropyPool(tx: $0) })
             else { return }
 
-            showRecordBackupKey(backupKeyReminderNavController: backupKeyReminderNavController, aep: aep)
+            showRecordRecoveryKey(
+                backupKeyReminderNavController: backupKeyReminderNavController,
+                localDeviceAuthSuccess: authSuccess,
+                aep: aep
+            )
         }
     }
 }

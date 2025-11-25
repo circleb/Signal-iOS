@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import LibSignalClient
 import SignalServiceKit
 import SignalUI
 import UIKit
@@ -14,16 +15,16 @@ protocol StoryReplySheet: OWSViewController, StoryReplyInputToolbarDelegate, Mes
     var storyMessage: StoryMessage { get }
     var thread: TSThread? { get }
 
-    var reactionPickerBackdrop: UIView? { get set }
-    var reactionPicker: MessageReactionPicker? { get set }
-
     func didSendMessage()
 }
 
 // MARK: - Sending
 
 extension StoryReplySheet {
-    func tryToSendMessage(_ builder: TSOutgoingMessageBuilder) {
+    func tryToSendMessage(
+        _ builder: TSOutgoingMessageBuilder,
+        messageBody: ValidatedMessageBody?,
+    ) {
         guard let thread = thread else {
             return owsFailDebug("Unexpectedly missing thread")
         }
@@ -32,7 +33,7 @@ extension StoryReplySheet {
         guard !isThreadBlocked else {
             BlockListUIUtils.showUnblockThreadActionSheet(thread, from: self) { [weak self] isBlocked in
                 guard !isBlocked else { return }
-                self?.tryToSendMessage(builder)
+                self?.tryToSendMessage(builder, messageBody: messageBody)
             }
             return
         }
@@ -46,9 +47,10 @@ extension StoryReplySheet {
         guard !SafetyNumberConfirmationSheet.presentIfNecessary(
             addresses: thread.recipientAddressesWithSneakyTransaction,
             confirmationText: SafetyNumberStrings.confirmSendButton,
+            forceDarkTheme: true,
             completion: { [weak self] didConfirmIdentity in
                 guard didConfirmIdentity else { return }
-                self?.tryToSendMessage(builder)
+                self?.tryToSendMessage(builder, messageBody: messageBody)
             }
         ) else { return }
 
@@ -70,7 +72,10 @@ extension StoryReplySheet {
                 builder.expireTimerVersion = NSNumber(value: dmConfig.timerVersion)
             }
 
-            let unpreparedMessage = UnpreparedOutgoingMessage.forMessage(builder.build(transaction: transaction))
+            let unpreparedMessage = UnpreparedOutgoingMessage.forMessage(
+                builder.build(transaction: transaction),
+                body: messageBody
+            )
             guard let preparedMessage = try? unpreparedMessage.prepare(tx: transaction) else {
                 owsFailDebug("Failed to prepare message")
                 return
@@ -108,7 +113,7 @@ extension StoryReplySheet {
             storyReactionEmoji: reaction
         )
 
-        tryToSendMessage(builder)
+        tryToSendMessage(builder, messageBody: nil)
 
         ReactionFlybyAnimation(reaction: reaction).present(from: self)
     }
@@ -118,14 +123,10 @@ extension StoryReplySheet {
 
 extension StoryReplySheet {
     func didSelectReaction(reaction: String, isRemoving: Bool, inPosition position: Int) {
-        dismissReactionPicker()
-
         tryToSendReaction(reaction)
     }
 
     func didSelectAnyEmoji() {
-        dismissReactionPicker()
-
         // nil is intentional, the message is for showing other reactions already
         // on the message, which we don't wanna do for stories.
         let sheet = EmojiPickerSheet(message: nil, forceDarkTheme: true) { [weak self] selectedEmoji in
@@ -139,13 +140,20 @@ extension StoryReplySheet {
 // MARK: - StoryReplyInputToolbarDelegate
 
 extension StoryReplySheet {
-    func storyReplyInputToolbarDidTapSend(_ storyReplyInputToolbar: StoryReplyInputToolbar) {
-        guard let messageBody = storyReplyInputToolbar.messageBodyForSending, !messageBody.text.isEmpty else {
-            return owsFailDebug("Unexpectedly missing message body")
+    @MainActor
+    func storyReplyInputToolbarDidTapSend(_ storyReplyInputToolbar: StoryReplyInputToolbar) async throws {
+        guard
+            let originalMessageBody = storyReplyInputToolbar.messageBodyForSending,
+            !originalMessageBody.text.isEmpty
+        else {
+            throw OWSAssertionError("Unexpectedly missing message body")
         }
 
+        let messageBody = try await DependenciesBridge.shared.attachmentContentValidator
+            .prepareOversizeTextIfNeeded(originalMessageBody)
+
         guard let thread = thread else {
-            return owsFailDebug("Unexpectedly missing thread")
+            throw OWSAssertionError("Unexpectedly missing thread")
         }
         owsAssertDebug(
             !storyMessage.authorAddress.isSystemStoryAddress,
@@ -154,25 +162,20 @@ extension StoryReplySheet {
 
         let builder: TSOutgoingMessageBuilder = .withDefaultValues(
             thread: thread,
-            messageBody: messageBody.text,
-            bodyRanges: messageBody.ranges,
+            messageBody: messageBody,
             storyAuthorAci: storyMessage.authorAci,
             storyTimestamp: storyMessage.timestamp
         )
 
-        tryToSendMessage(builder)
-    }
-
-    func storyReplyInputToolbarDidTapReact(_ storyReplyInputToolbar: StoryReplyInputToolbar) {
-        presentReactionPicker()
+        tryToSendMessage(builder, messageBody: messageBody)
     }
 
     func storyReplyInputToolbarDidBeginEditing(_ storyReplyInputToolbar: StoryReplyInputToolbar) {}
     func storyReplyInputToolbarHeightDidChange(_ storyReplyInputToolbar: StoryReplyInputToolbar) {}
 
-    func storyReplyInputToolbarMentionPickerPossibleAddresses(_ storyReplyInputToolbar: StoryReplyInputToolbar, tx: DBReadTransaction) -> [SignalServiceAddress] {
+    func storyReplyInputToolbarMentionPickerPossibleAcis(_ storyReplyInputToolbar: StoryReplyInputToolbar, tx: DBReadTransaction) -> [Aci] {
         guard let thread = thread, thread.isGroupThread else { return [] }
-        return thread.recipientAddresses(with: SDSDB.shimOnlyBridge(tx))
+        return thread.recipientAddresses(with: tx).compactMap(\.aci)
     }
 
     func storyReplyInputToolbarMentionCacheInvalidationKey() -> String {
@@ -185,48 +188,5 @@ extension StoryReplySheet {
 
     func storyReplyInputToolbarMentionPickerReferenceView(_ storyReplyInputToolbar: StoryReplyInputToolbar) -> UIView? {
         bottomBar
-    }
-}
-
-// MARK: - Reaction Picker
-
-extension StoryReplySheet {
-    func presentReactionPicker() {
-        guard self.reactionPicker == nil else { return }
-
-        let backdrop = OWSButton { [weak self] in
-            self?.dismissReactionPicker()
-        }
-        backdrop.backgroundColor = .ows_blackAlpha40
-        view.addSubview(backdrop)
-        backdrop.autoPinEdgesToSuperviewEdges()
-        backdrop.alpha = 0
-        self.reactionPickerBackdrop = backdrop
-
-        let reactionPicker = MessageReactionPicker(selectedEmoji: nil, delegate: self, forceDarkTheme: true)
-
-        view.addSubview(reactionPicker)
-        reactionPicker.autoPinEdge(.bottom, to: .top, of: inputToolbar, withOffset: -15)
-        reactionPicker.autoPinEdge(toSuperviewEdge: .trailing, withInset: 12)
-
-        reactionPicker.playPresentationAnimation(duration: 0.2)
-
-        UIView.animate(withDuration: 0.2) { backdrop.alpha = 1 }
-
-        self.reactionPicker = reactionPicker
-    }
-
-    func dismissReactionPicker() {
-        UIView.animate(withDuration: 0.2) {
-            self.reactionPickerBackdrop?.alpha = 0
-        } completion: { _ in
-            self.reactionPickerBackdrop?.removeFromSuperview()
-            self.reactionPickerBackdrop = nil
-        }
-
-        reactionPicker?.playDismissalAnimation(duration: 0.2) {
-            self.reactionPicker?.removeFromSuperview()
-            self.reactionPicker = nil
-        }
     }
 }

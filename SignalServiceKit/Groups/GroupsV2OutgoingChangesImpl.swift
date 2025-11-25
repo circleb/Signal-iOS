@@ -6,56 +6,44 @@
 import Foundation
 public import LibSignalClient
 
-// Represents a proposed set of changes to a group.
-//
-// There are up to three group revisions involved:
-//
-// * "old" (e.g. oldGroupModel): the group model before the changes were made.
-// * "modified" (e.g. modifiedGroupModel): the group model after the changes were made.
-// * "current" (e.g. currentGroupModel): the group model at the time we apply the changes.
-//
-// Example:
-//
-// * User edits a group at "old" revision N.
-// * Client diff against a "modified" group model and determines that the title changed
-//   and captures that in this instance.
-// * We try to update the group on the service, computing a GroupChange proto against
-//   the latest known revision N.
-// * Another client has made (possibly conflicting) changes. Group is now at revision
-//   N+1 on service.
-// * We try again, computing a new GroupChange proto against revision N+1.
-//
-// This class serves two roles:
-//
-// * To capture the user intent (i.e. the difference between "old" and "modified").
-// * To try to generate a "change" proto that applies that intent to the latest group state.
-//
-// The latter can be non-trivial:
-//
-// * If we try to add a new member and another user beats us to it, we'll throw
-//   GroupsV2Error.redundantChange when computing a GroupChange proto.
-// * If we add (alice and bob) but another user adds (alice) first, we'll just add (bob).
+/// Represents a proposed set of changes to a group.
+///
+/// When modifying groups, we capture the intended CHANGES to the group
+/// state. If a user updates the description, we'll capture that they want
+/// to update the description.
+///
+/// These updates are originally "based" on the latest known group
+/// state/revision. However, when we try to apply them, we may run into a
+/// conflict on the service. In this case, we fetch the latest group state,
+/// and then we "rebase" our changes on top of that state.
+///
+/// We perform conflict resolution as part of this process. This type is
+/// responsible for conflict resolution. For example, if we are trying to
+/// add Alice and Bob, and if another user adds Alice before we do, we'll
+/// only add Bob. If our change turns into a no-op (e.g., both Alice and Bob
+/// are added by somebody else), we'll return nil; callers should interpret
+/// this as a successful outcome.
 public class GroupsV2OutgoingChanges {
 
     public let groupSecretParams: GroupSecretParams
 
     // MARK: -
 
-    // These properties capture the original intent of the local user.
-    //
-    // NOTE: These properties generally _DO NOT_ capture the new state of the group;
-    // they capture only "changed" aspects of group state.
-    //
-    // NOTE: Even if set, these properties _DO NOT_ necessarily translate into
-    // "change actions"; we only need to build change actions if _current_ group
-    // state differs from the "changed" group state.  Our client might race with
-    // similar changes made by other group members/clients.  We can & must skip
-    // redundant changes.
+    /// These properties capture the original intent of the local user.
+    ///
+    /// NOTE: These properties generally _DO NOT_ capture the new state of the
+    /// group; they capture only "changed" aspects of group state.
+    ///
+    /// NOTE: Even if set, these properties _DO NOT_ necessarily translate into
+    /// "change actions"; we only need to build change actions if _current_
+    /// group state differs from the "changed" group state. Our client might
+    /// race with similar changes made by other group members/clients. We must
+    /// skip redundant changes.
 
-    // Non-nil if changed. Should not be able to be set to an empty string.
+    /// Non-nil if changed. Should not be able to be set to an empty string.
     private var newTitle: String?
 
-    // Non-nil if changed. Empty string is allowed.
+    /// Non-nil if changed. Empty string is allowed.
     private var newDescriptionText: String?
 
     public private(set) var newAvatarData: Data?
@@ -63,12 +51,11 @@ public class GroupsV2OutgoingChanges {
     private var shouldUpdateAvatar = false
 
     public private(set) var membersToAdd = [ServiceId]()
-    // Full, pending profile key or pending request members to remove.
+    /// Full, pending profile key or pending request members to remove.
     private var membersToRemove = [ServiceId]()
     private var membersToChangeRole = [Aci: TSGroupMemberRole]()
-    private var invalidInvitesToRemove = [Data: InvalidInvite]()
 
-    // These access properties should only be set if the value is changing.
+    /// These access properties should only be set if the value is changing.
     private var accessForMembers: GroupV2Access?
     private var accessForAttributes: GroupV2Access?
     private var accessForAddFromInviteLink: GroupV2Access?
@@ -85,14 +72,14 @@ public class GroupsV2OutgoingChanges {
     private var shouldLeaveGroupDeclineInvite = false
     private var shouldRevokeInvalidInvites = false
 
-    // Non-nil if the value changed.
+    /// Non-nil if the value changed.
     private var isAnnouncementsOnly: Bool?
 
     private var shouldUpdateLocalProfileKey = false
 
     private var newLinkMode: GroupsV2LinkMode?
 
-    // Non-nil if dm state changed.
+    /// Non-nil if dm state changed.
     private var newDisappearingMessageToken: DisappearingMessageToken?
 
     public init(groupSecretParams: GroupSecretParams) {
@@ -147,11 +134,6 @@ public class GroupsV2OutgoingChanges {
     public func setShouldLeaveGroupDeclineInvite() {
         owsAssertDebug(!shouldLeaveGroupDeclineInvite)
         shouldLeaveGroupDeclineInvite = true
-    }
-
-    public func removeInvalidInvite(invalidInvite: InvalidInvite) {
-        owsAssertDebug(invalidInvitesToRemove[invalidInvite.userId] == nil)
-        invalidInvitesToRemove[invalidInvite.userId] = invalidInvite
     }
 
     public func setAccessForMembers(_ value: GroupV2Access) {
@@ -209,16 +191,15 @@ public class GroupsV2OutgoingChanges {
 
     // MARK: - Change Protos
 
-    // Given the "current" group state, build a change proto that
-    // reflects the elements of the "original intent" that are still
-    // necessary to perform.
-    //
-    // See comments on buildGroupChangeProto() below.
+    /// Given the current group state, build a change proto that reflects the
+    /// elements of the "original intent" that are still necessary to perform.
+    ///
+    /// See comments on buildGroupChangeProto() below.
     public func buildGroupChangeProto(
         currentGroupModel: TSGroupModelV2,
         currentDisappearingMessageToken: DisappearingMessageToken,
         forceRefreshProfileKeyCredentials: Bool
-    ) async throws -> GroupsV2BuiltGroupChange {
+    ) async throws -> GroupsV2BuiltGroupChange? {
         let groupId = try self.groupSecretParams.getPublicParams().getGroupIdentifier()
         guard groupId.serialize() == currentGroupModel.groupId else {
             throw OWSAssertionError("Mismatched groupId.")
@@ -247,50 +228,42 @@ public class GroupsV2OutgoingChanges {
         )
     }
 
-    // Given the "current" group state, build a change proto that
-    // reflects the elements of the "original intent" that are still
-    // necessary to perform.
-    //
-    // This method builds the actual set of actions _that are still necessary_.
-    // Conflicts can occur due to races. This is where we make a best effort to
-    // resolve conflicts.
-    //
-    // Conflict resolution guidelines:
-    //
-    // * “Orthogonal” changes are resolved by simply retrying.
-    //   * If you're trying to change the avatar and someone
-    //     else changes the title, there is no conflict.
-    // * Many conflicts can be resolved by “last writer wins”.
-    //   * E.g. changes to group name or avatar.
-    // * We skip identical changes.
-    //   * If you want to add Alice but Carol has already
-    //     added Alice, we treat this as redundant.
-    // * "Overlapping" changes are not conflicts.
-    //   * If you want to add (Alice and Bob) but Carol has already
-    //     added Alice, we convert your intent to just adding Bob.
-    // * We skip similar changes when they have similar intent.
-    //   * If you try to add Alice but Bob has already invited
-    //     Alice, we treat these as redundant. The intent - to get
-    //     Alice into the group - is the same.
-    // * We skip similar changes when they differ in details.
-    //   * If you try to add Alice as admin and Bob has already
-    //     added Alice as a normal member, we treat these as
-    //     redundant.  We could convert your intent into
-    //     changing Alice's role, but that can confuse the user.
-    // * We treat "obsolete" changes as an unresolvable conflict.
-    //   * If you try to change Alice's role to admin and Bob has
-    //     already kicked out Alice, we throw
-    //     GroupsV2Error.conflictingChange.
-    //
-    // Essentially, our strategy is to "apply any changes that
-    // still make sense".  If no changes do, we throw
-    // GroupsV2Error.redundantChange.
+    /// Given the current group state, build a change proto that reflects the
+    /// elements of the "original intent" that are still necessary to perform.
+    ///
+    /// This method builds the actual set of actions _that are still necessary_.
+    /// Conflicts can occur due to races. This is where we make a best effort to
+    /// resolve conflicts.
+    ///
+    /// Conflict resolution guidelines:
+    ///
+    /// * “Orthogonal” changes are resolved by simply retrying.
+    ///   * If you're trying to change the avatar and someone else changes the
+    ///   title, there is no conflict.
+    /// * Many conflicts can be resolved by “last writer wins”.
+    ///   * E.g. changes to group name or avatar.
+    /// * We skip identical changes.
+    ///   * If you want to add Alice but Carol has already added Alice, we treat
+    ///   this as redundant.
+    /// * "Overlapping" changes are not conflicts.
+    ///   * If you want to add (Alice and Bob) but Carol has already added
+    ///   Alice, we convert your intent to just adding Bob.
+    /// * We skip similar changes when they differ in details.
+    ///   * If you try to add Alice as admin and Bob has already added Alice as
+    ///   a normal member, we treat these as redundant. We could convert your
+    ///   intent into changing Alice's role, but that can confuse the user.
+    /// * We treat "obsolete" changes as an unresolvable conflict.
+    ///   * If you try to change Alice's role to admin and Bob has already
+    ///   kicked out Alice, we throw GroupsV2Error.conflictingChange.
+    ///
+    /// Essentially, our strategy is to "apply any changes that still make
+    /// sense". If no changes do, we return nil.
     private func buildGroupChangeProto(
         currentGroupModel: TSGroupModelV2,
         currentDisappearingMessageToken: DisappearingMessageToken,
         localIdentifiers: LocalIdentifiers,
         profileKeyCredentials: [Aci: ExpiringProfileKeyCredential],
-    ) throws -> GroupsV2BuiltGroupChange {
+    ) throws -> GroupsV2BuiltGroupChange? {
         let groupV2Params = try currentGroupModel.groupV2Params()
 
         var actionsBuilder = GroupsProtoGroupChangeActions.builder()
@@ -301,11 +274,8 @@ public class GroupsV2OutgoingChanges {
         let newRevision = oldRevision + 1
         actionsBuilder.setRevision(newRevision)
 
-        // Track member counts that are updated to reflect each
-        // new action.
+        // Track member counts that are updated to reflect each new action.
         let currentGroupMembership = currentGroupModel.groupMembership
-        var fullMembers = Set(currentGroupMembership.fullMembers.compactMap { $0.serviceId as? Aci })
-        var fullMemberAdmins = Set(currentGroupMembership.fullMemberAdministrators.compactMap { $0.serviceId as? Aci })
 
         var groupUpdateMessageBehavior: GroupUpdateMessageBehavior = .sendUpdateToOtherGroupMembers
 
@@ -394,7 +364,9 @@ public class GroupsV2OutgoingChanges {
         var membersToUnban = [Aci]()
 
         if !membersToAdd.isEmpty {
-            var fullOrInvitedMembers = Set(currentGroupModel.groupMembership.fullOrInvitedMembers.compactMap { $0.serviceId })
+            let fullOrInvitedMemberAddresses = currentGroupMembership.fullMembers.union(currentGroupMembership.invitedMembers)
+            var fullOrInvitedMembers = Set(fullOrInvitedMemberAddresses.compactMap { $0.serviceId })
+
             for serviceId in membersToAdd {
                 if currentGroupMembership.isFullMember(serviceId) {
                     // Another user has already added this member. They may have been added
@@ -409,7 +381,6 @@ public class GroupsV2OutgoingChanges {
                     membersToUnban.append(aci)
 
                     fullOrInvitedMembers.insert(aci)
-                    fullMembers.insert(aci)
                 } else if let aci = serviceId as? Aci, let profileKeyCredential = profileKeyCredentials[aci] {
                     var actionBuilder = GroupsProtoGroupChangeActionsAddMemberAction.builder()
                     actionBuilder.setAdded(try GroupsV2Protos.buildMemberProto(
@@ -422,7 +393,6 @@ public class GroupsV2OutgoingChanges {
                     membersToUnban.append(aci)
 
                     fullOrInvitedMembers.insert(aci)
-                    fullMembers.insert(aci)
                 } else if currentGroupMembership.isInvitedMember(serviceId) {
                     // Another user has already invited this member. They may have been added
                     // with a different role. We don't treat that as a conflict.
@@ -455,11 +425,6 @@ public class GroupsV2OutgoingChanges {
                 actionsBuilder.addDeleteMembers(actionBuilder.buildInfallibly())
                 didChange = true
                 membersToBan.append(aci)
-
-                fullMembers.remove(aci)
-                if currentGroupMembership.isFullMemberAndAdministrator(aci) {
-                    fullMemberAdmins.remove(aci)
-                }
             } else if currentGroupMembership.isInvitedMember(serviceId) {
                 var actionBuilder = GroupsProtoGroupChangeActionsDeletePendingMemberAction.builder()
                 let userId = try groupV2Params.userId(for: serviceId)
@@ -476,8 +441,7 @@ public class GroupsV2OutgoingChanges {
                 membersToBan.append(aci)
             } else {
                 // Another user has already removed this member or revoked their
-                // invitation.
-                // Redundant change, not a conflict.
+                // invitation. Redundant change, not a conflict.
                 continue
             }
         }
@@ -541,19 +505,6 @@ public class GroupsV2OutgoingChanges {
                 actionsBuilder.addDeletePendingMembers(actionBuilder.buildInfallibly())
                 didChange = true
             }
-        } else {
-            for invalidInvite in invalidInvitesToRemove.values {
-                guard currentGroupMembership.hasInvalidInvite(forUserId: invalidInvite.userId) else {
-                    // Another user has already removed this invite.
-                    // We don't treat that as a conflict.
-                    continue
-                }
-
-                var actionBuilder = GroupsProtoGroupChangeActionsDeletePendingMemberAction.builder()
-                actionBuilder.setDeletedUserID(invalidInvite.userId)
-                actionsBuilder.addDeletePendingMembers(actionBuilder.buildInfallibly())
-                didChange = true
-            }
         }
 
         for (aci, newRole) in self.membersToChangeRole {
@@ -573,12 +524,6 @@ public class GroupsV2OutgoingChanges {
             actionBuilder.setRole(newRole.asProtoRole)
             actionsBuilder.addModifyMemberRoles(actionBuilder.buildInfallibly())
             didChange = true
-
-            if currentRole == .administrator {
-                fullMemberAdmins.remove(aci)
-            } else if newRole == .administrator {
-                fullMemberAdmins.insert(aci)
-            }
         }
 
         let currentAccess = currentGroupModel.access
@@ -672,30 +617,18 @@ public class GroupsV2OutgoingChanges {
 
             if promotedLocalAci {
                 didChange = true
-                fullMembers.insert(localAci)
             }
         }
 
         if self.shouldLeaveGroupDeclineInvite {
-            let canLeaveGroup = GroupManager.canLocalUserLeaveGroupWithoutChoosingNewAdmin(
-                localAci: localAci,
-                fullMembers: fullMembers,
-                admins: fullMemberAdmins
-            )
-            guard canLeaveGroup else {
-                // This could happen if the last two admins leave at the same time
-                // and race.
-                throw GroupsV2Error.cannotBuildGroupChangeProto_lastAdminCantLeaveGroup
-            }
-
             // Check that we are still invited or in group.
             if let invitedAtServiceId = currentGroupMembership.localUserInvitedAtServiceId(
                 localIdentifiers: localIdentifiers
             ) {
                 if invitedAtServiceId == localIdentifiers.pni {
-                    // If we are declining an invite to our PNI, we should not
-                    // send group update messages. Messages cannot come from our
-                    // PNI, so we would be leaking our ACI.
+                    // If we are declining an invite to our PNI, we should not send group
+                    // update messages. Messages cannot come from our PNI, so we would be
+                    // leaking our ACI.
                     groupUpdateMessageBehavior = .sendNothing
                 }
 
@@ -754,7 +687,7 @@ public class GroupsV2OutgoingChanges {
         // MARK: - Change action insertion point
 
         guard didChange else {
-            throw GroupsV2Error.redundantChange
+            return nil
         }
 
         Logger.info("Updating group.")

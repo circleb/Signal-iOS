@@ -87,8 +87,8 @@ class LinkedDevicesViewModel: ObservableObject {
             try? await Task.sleep(nanoseconds: NSEC_PER_SEC)
             withAnimation {
                 self.displayableDevices = [
-                    .init(device: .previewItem(id: DeviceId(validating: 1)!), displayName: "iPad"),
-                    .init(device: .previewItem(id: DeviceId(validating: 2)!), displayName: "macOS"),
+                    .init(device: .previewItem(id: DeviceId(validating: 1)!, name: "iPad")),
+                    .init(device: .previewItem(id: DeviceId(validating: 2)!, name: "macOS")),
                 ]
             }
             self.isLoading = false
@@ -115,21 +115,10 @@ class LinkedDevicesViewModel: ObservableObject {
     }
 
     private func updateDeviceList() {
-        var displayableDevices = SSKEnvironment.shared.databaseStorageRef.read { transaction -> [DisplayableDevice] in
-            let justDevices = OWSDevice.anyFetchAll(transaction: transaction).filter {
-                !$0.isPrimaryDevice
-            }
-
-            let identityManager = DependenciesBridge.shared.identityManager
-            return justDevices.map { device -> DisplayableDevice in
-                return .init(
-                    device: device,
-                    displayName: device.displayName(
-                        identityManager: identityManager,
-                        tx: transaction
-                    )
-                )
-            }
+        var displayableDevices = db.read { transaction -> [DisplayableDevice] in
+            return deviceStore.fetchAll(tx: transaction)
+                .filter { $0.isLinkedDevice }
+                .map { DisplayableDevice(device: $0) }
         }
 
         if let deviceIdToIgnore {
@@ -209,34 +198,20 @@ class LinkedDevicesViewModel: ObservableObject {
     func renameDevice(
         _ displayableDevice: DisplayableDevice,
         to newName: String
-    ) async throws {
-        let identityKeyPair = db.read { tx in
-            identityManager.identityKeyPair(for: .aci, tx: tx)
-        }
-
-        guard let identityKeyPair else {
-            throw DeviceRenameError.encryptionFailed
-        }
-
-        let encryptedName = try DeviceNames.encryptDeviceName(
-            plaintext: newName,
-            identityKeyPair: identityKeyPair.keyPair
-        ).base64EncodedString()
-
+    ) async throws(OWSDeviceRenameError) {
         try await deviceService.renameDevice(
             device: displayableDevice.device,
-            toEncryptedName: encryptedName
+            newName: newName,
         )
     }
 
     // MARK: DisplayableDevice
 
     struct DisplayableDevice: Hashable, Identifiable {
-        var id: Int { device.deviceId }
-
         let device: OWSDevice
-        let displayName: String
 
+        var id: Int { device.deviceId }
+        var displayName: String { device.displayName }
         var createdAt: Date { device.createdAt }
 
         static func == (lhs: DisplayableDevice, rhs: DisplayableDevice) -> Bool {
@@ -291,18 +266,17 @@ extension LinkedDevicesViewModel: LinkDeviceViewControllerDelegate {
         }
 
         // Don't wait for the view pop to start the linking process
-        let linkAndSyncProgressModal = LinkAndSyncProgressModal()
+        let linkAndSyncProgressModal = BackupProgressModal(style: .linkAndSync)
         linkDeviceViewController.popToLinkedDeviceList { [weak self] in
             self?.present.send(.activityIndicator(linkAndSyncProgressModal))
         }
 
-        let progress = OWSProgress.createSink { progress in
-            await MainActor.run {
-                linkAndSyncProgressModal.viewModel.updateProgress(progress: progress)
-            }
-        }
-
         let linkNSyncTask = Task { @MainActor in
+            let progress = await OWSSequentialProgress<PrimaryLinkNSyncProgressPhase>.createSink { progress in
+                await MainActor.run {
+                    linkAndSyncProgressModal.viewModel.updatePrimaryLinkingProgress(progress: progress)
+                }
+            }
             do {
                 try await DependenciesBridge.shared.linkAndSyncManager.waitForLinkingAndUploadBackup(
                     ephemeralBackupKey: linkNSyncData.ephemeralBackupKey,
@@ -337,7 +311,7 @@ extension LinkedDevicesViewModel: LinkDeviceViewControllerDelegate {
             self.newDeviceExpectation = .linkAndSync
             await self.refreshDevices()
         }
-        linkAndSyncProgressModal.linkNSyncTask = linkNSyncTask
+        linkAndSyncProgressModal.backupTask = linkNSyncTask
     }
 
     fileprivate func expectMoreDevices() {
@@ -363,22 +337,18 @@ extension LinkedDevicesViewModel: LinkDeviceViewControllerDelegate {
         let deviceLinkTimestamp = Date()
         let notificationDelay = TimeInterval.random(in: .hour...(.hour * 3))
         db.write { tx in
-            do {
-                try deviceStore.setMostRecentlyLinkedDeviceDetails(
-                    linkedTime: deviceLinkTimestamp,
-                    notificationDelay: notificationDelay,
-                    tx: tx
-                )
-            } catch {
-                owsFailDebug("Unable to set linked device details: \(error)")
-            }
+            deviceStore.setMostRecentlyLinkedDeviceDetails(
+                linkedTime: deviceLinkTimestamp,
+                notificationDelay: notificationDelay,
+                tx: tx
+            )
         }
         SSKEnvironment.shared.notificationPresenterRef.scheduleNotifyForNewLinkedDevice(deviceLinkTimestamp: deviceLinkTimestamp)
     }
 
     private func clearDeliveredNewLinkedDevicesNotificationsAndMegaphone() {
         let details = db.read { tx in
-            try? deviceStore.mostRecentlyLinkedDeviceDetails(tx: tx)
+            deviceStore.mostRecentlyLinkedDeviceDetails(tx: tx)
         }
 
         // Only clear them if the delivery time for the notification and
@@ -389,7 +359,7 @@ extension LinkedDevicesViewModel: LinkDeviceViewControllerDelegate {
                 deviceStore.clearMostRecentlyLinkedDeviceDetails(tx: tx)
                 ExperienceUpgradeManager.clearExperienceUpgrade(
                     .newLinkedDeviceNotification,
-                    transaction: SDSDB.shimOnlyBridge(tx)
+                    transaction: tx
                 )
             }
         }
@@ -677,7 +647,7 @@ class LinkedDevicesHostingController: HostingContainer<LinkedDevicesView> {
             })
         }
         actionSheet.addAction(.init(title: CommonStrings.learnMore) { _ in
-            UIApplication.shared.open(URL(string: "https://support.signal.org/hc/articles/360007320551")!)
+            CurrentAppContext().open(URL.Support.linkedDevices, completion: nil)
         })
         actionSheet.addAction(ActionSheetAction(title: CommonStrings.continueButton, style: .cancel))
 
@@ -746,7 +716,6 @@ class LinkedDevicesHostingController: HostingContainer<LinkedDevicesView> {
                     "UNLINK_ACTION",
                     comment: "button title for unlinking a device"
                 ),
-                accessibilityIdentifier: "confirm_unlink_device",
                 style: .destructive,
                 handler: { [weak viewModel] _ in
                     viewModel?.unlinkDevice(displayableDevice.device)
@@ -811,17 +780,8 @@ struct LinkedDevicesView: View {
                             "LINK_NEW_DEVICE_TITLE",
                             comment: "Navigation title when scanning QR code to add new device."
                         ))
-                        .padding(.vertical, 14)
-                        .padding(.horizontal, 16)
-                        .frame(maxWidth: .infinity)
                     }
-                    .font(.headline)
-                    .buttonStyle(.borderless)
-                    .foregroundStyle(isEditing ? Color.Signal.tertiaryLabel : .white)
-                    .background(
-                        isEditing ? Color.Signal.tertiaryFill : Color.Signal.ultramarine,
-                        in: .rect(cornerRadius: 12)
-                    )
+                    .buttonStyle(Registration.UI.LargePrimaryButtonStyle())
                     .disabled(isEditing)
                 }
                 .padding(.horizontal, 8)

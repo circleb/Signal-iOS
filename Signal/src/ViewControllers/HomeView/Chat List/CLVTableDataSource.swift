@@ -25,6 +25,9 @@ class CLVTableDataSource: NSObject {
 
     var renderState: CLVRenderState = .empty
 
+    /// Used to let  chat list cells know when they should use rounded corners for background in `selected` state,
+    var useSideBarChatListCellAppearance: Bool = false
+
     /// While table view selection is changing, i.e., between
     /// `tableView(_:willSelectRowAt:)` and `tableView(_:didSelectRowAt:)`,
     /// records the identifier of the newly selected thread, or `nil` if
@@ -96,7 +99,7 @@ class CLVTableDataSource: NSObject {
         tableView.delegate = self
         tableView.dataSource = self
         tableView.separatorStyle = .none
-        tableView.separatorColor = Theme.cellSeparatorColor
+        tableView.separatorColor = Theme.tableView2SeparatorColor
         tableView.register(ChatListCell.self)
         tableView.register(ArchivedConversationsCell.self)
         tableView.register(ChatListFilterFooterCell.self)
@@ -296,14 +299,13 @@ extension CLVTableDataSource: UITableViewDelegate {
         guard let title = renderState.sections[section].title else { return UIView() }
 
         let container = UIView()
-        container.backgroundColor = Theme.backgroundColor
         container.layoutMargins = UIEdgeInsets(top: 14, leading: 16, bottom: 8, trailing: 16)
 
         let label = UILabel()
         container.addSubview(label)
         label.autoPinEdgesToSuperviewMargins()
-        label.font = UIFont.dynamicTypeBody.semibold()
-        label.textColor = Theme.primaryTextColor
+        label.font = UIFont.dynamicTypeHeadline
+        label.textColor = .Signal.label
         label.text = title
 
         return container
@@ -315,10 +317,10 @@ extension CLVTableDataSource: UITableViewDelegate {
 
     public func tableView(_ tableView: UITableView, willSelectRowAt indexPath: IndexPath) -> IndexPath? {
         switch renderState.sections[indexPath.section].type {
-        case .reminders, .backupDownloadProgressView, .inboxFilterFooter:
+        case .reminders, .inboxFilterFooter:
             return nil
 
-        case .archiveButton:
+        case .backupDownloadProgressView, .archiveButton:
             return indexPath
 
         case .pinned, .unpinned:
@@ -359,9 +361,13 @@ extension CLVTableDataSource: UITableViewDelegate {
         let sectionType = renderState.sections[indexPath.section].type
 
         switch sectionType {
-        case .reminders, .backupDownloadProgressView, .inboxFilterFooter:
+        case .reminders, .inboxFilterFooter:
             owsFailDebug("Unexpected selection in section \(sectionType)")
             tableView.deselectRow(at: indexPath, animated: false)
+
+        case .backupDownloadProgressView:
+            tableView.deselectRow(at: indexPath, animated: false)
+            viewController.handleBackupDownloadProgressViewTapped()
 
         case .pinned, .unpinned:
             guard let threadUniqueId = renderState.threadUniqueId(forIndexPath: indexPath) else {
@@ -552,7 +558,7 @@ extension CLVTableDataSource: UITableViewDataSource {
 
         switch section.type {
         case .reminders:
-            cell = viewController.reminderViewCell
+            cell = viewController.viewState.reminderViews.reminderViewCell
         case .backupDownloadProgressView:
             cell = viewController.viewState.backupDownloadProgressView.backupDownloadProgressViewCell
         case .pinned, .unpinned:
@@ -606,6 +612,7 @@ extension CLVTableDataSource: UITableViewDataSource {
         }
 
         cell.configure(cellContentToken: contentToken, spoilerAnimationManager: viewState.spoilerAnimationManager)
+        cell.useSidebarAppearance = useSideBarChatListCellAppearance
 
         if isConversationActive(threadUniqueId: contentToken.thread.uniqueId) {
             tableView.selectRow(at: indexPath, animated: false, scrollPosition: .none)

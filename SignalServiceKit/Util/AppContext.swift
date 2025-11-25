@@ -84,9 +84,6 @@ public protocol AppContext {
 
     var appLaunchTime: Date { get }
 
-    /// Will be updated every time the app is foregrounded.
-    var appForegroundTime: Date { get }
-
     func appDocumentDirectoryPath() -> String
 
     func appSharedDataDirectoryPath() -> String
@@ -100,13 +97,6 @@ public protocol AppContext {
     var shouldProcessIncomingMessages: Bool { get }
     var hasUI: Bool { get }
     var debugLogsDirPath: String { get }
-
-    /// WARNING: Resets all persisted app data. (main app only).
-    ///
-    /// App becomes unuseable. As of time of writing, the only option
-    /// after doing this is to terminate the app and relaunch.
-    @MainActor
-    func resetAppDataAndExit() -> Never
 }
 
 public final class AppContextObjCBridge: NSObject {

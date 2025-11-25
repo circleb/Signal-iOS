@@ -4,54 +4,28 @@
 //
 
 import SignalServiceKit
-public import SignalUI
+import SignalUI
 
-public class DonationReadMoreSheetViewController: InteractiveSheetViewController {
-    let contentScrollView = UIScrollView()
-    let stackView = UIStackView()
-    public override var interactiveScrollViews: [UIScrollView] { [contentScrollView] }
-    public override var sheetBackgroundColor: UIColor { Theme.tableView2PresentedBackgroundColor }
+class DonationReadMoreSheetViewController: StackSheetViewController {
+    override var stackViewInsets: UIEdgeInsets {
+        UIEdgeInsets(hMargin: 24, vMargin: 24)
+    }
+    override var sheetBackgroundColor: UIColor { UIColor.Signal.groupedBackground }
 
-    override public func viewDidLoad() {
-        self.animationsShouldBeInterruptible = true
-
+    override func viewDidLoad() {
         super.viewDidLoad()
 
-        minimizedHeight = 600
-        super.allowsExpansion = true
-
-        contentView.addSubview(contentScrollView)
-
-        stackView.axis = .vertical
-        stackView.layoutMargins = UIEdgeInsets(hMargin: 24, vMargin: 24)
         stackView.spacing = 32
-        stackView.isLayoutMarginsRelativeArrangement = true
-        contentScrollView.addSubview(stackView)
-        stackView.autoPinHeightToSuperview()
-        // Pin to the scroll view's viewport, not to its scrollable area
-        stackView.autoPinWidth(toWidthOf: contentScrollView)
 
-        contentScrollView.autoPinEdgesToSuperviewEdges()
-        contentScrollView.alwaysBounceVertical = true
-
-        buildContents()
-    }
-
-    private func buildContents() {
         let image = UIImage(named: "sustainer-heart")
         let imageView = UIImageView(image: image)
         imageView.contentMode = .scaleAspectFit
         stackView.addArrangedSubview(imageView)
 
-        let titleLabel = UILabel()
-        titleLabel.textAlignment = .center
-        titleLabel.font = UIFont.dynamicTypeTitle2.semibold()
-        titleLabel.text = OWSLocalizedString(
+        let titleLabel = UILabel.title2Label(text: OWSLocalizedString(
             "DONATION_READ_MORE_SCREEN_TITLE",
             comment: "There is a screen where users can read more about their donation to Signal. This is the title of that screen."
-        )
-        titleLabel.numberOfLines = 0
-        titleLabel.lineBreakMode = .byWordWrapping
+        ))
         stackView.addArrangedSubview(titleLabel)
 
         let paragraphs: [String] = [

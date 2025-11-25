@@ -27,7 +27,6 @@ extension ConversationSettingsViewController {
     // MARK: - Table
 
     func updateTableContents(shouldReload: Bool = true) {
-
         let contents = OWSTableContents()
 
         let isNoteToSelf = thread.isNoteToSelf
@@ -42,7 +41,6 @@ extension ConversationSettingsViewController {
         let firstSection = callDetailsSection ?? mainSection
 
         let header = buildMainHeader()
-        lastContentWidth = view.width
         firstSection.customHeaderView = header
 
         // Main section.
@@ -86,7 +84,18 @@ extension ConversationSettingsViewController {
         emptySection.customFooterHeight = 24
         contents.add(emptySection)
 
-        setContents(contents, shouldReload: shouldReload)
+        let setContents = {
+            self.setContents(contents, shouldReload: shouldReload)
+        }
+
+        if shouldReload {
+            // This DispatchQueue.main.async remedies an issue (worsened on iOS 26)
+            // where the contents of custom cells would grow from the corner during
+            // transition animations.
+            DispatchQueue.main.async(setContents)
+        } else {
+            setContents()
+        }
     }
 
     // MARK: Calls section
@@ -268,6 +277,8 @@ extension ConversationSettingsViewController {
                     let overlayView = UIView()
                     overlayView.isUserInteractionEnabled = false
                     overlayView.backgroundColor = .ows_blackAlpha05
+                    overlayView.layer.cornerRadius = imageView.layer.cornerRadius
+                    overlayView.clipsToBounds = true
                     button.addSubview(overlayView)
                     overlayView.autoPinEdgesToSuperviewEdges()
                 }
@@ -830,10 +841,11 @@ extension ConversationSettingsViewController {
 
         let itemTitle = OWSLocalizedString("CONVERSATION_SETTINGS_MEMBER_REQUESTS_AND_INVITES",
                                           comment: "Label for 'member requests & invites' action in conversation settings view.")
+        let invitedOrRequestingCount = groupModelV2.groupMembership.invitedMembers.count + groupModelV2.groupMembership.requestingMembers.count
         section.add(OWSTableItem.disclosureItem(
             icon: .groupInfoRequestAndInvites,
             withText: itemTitle,
-            accessoryText: OWSFormat.formatInt(groupModelV2.groupMembership.invitedOrRequestMembers.count),
+            accessoryText: OWSFormat.formatInt(invitedOrRequestingCount),
             actionBlock: { [weak self] in
                 self?.showMemberRequestsAndInvitesView()
             })

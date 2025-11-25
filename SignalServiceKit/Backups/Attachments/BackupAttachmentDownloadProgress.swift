@@ -45,25 +45,23 @@ public protocol BackupAttachmentDownloadProgress: AnyObject {
 
     /// Create an OWSProgressSink for a single attachment to be downloaded.
     /// Should be called prior to downloading any backup attachment.
-    func willBeginDownloadingAttachment(
-        withId id: Attachment.IDType,
-        isThumbnail: Bool,
+    func willBeginDownloadingFullsizeAttachment(
+        withId id: Attachment.IDType
     ) async -> OWSProgressSink
 
     /// Stopgap to inform that an attachment finished downloading.
     /// There are a couple edge cases (e.g. we already have a stream) that result in downloads
     /// finishing without reporting any progress updates. This method ensures we always mark
     /// attachments as finished in all cases.
-    func didFinishDownloadOfAttachment(
+    func didFinishDownloadOfFullsizeAttachment(
         withId id: Attachment.IDType,
-        isThumbnail: Bool,
         byteCount: UInt64
     ) async
 
     /// Called when there are no more enqueued downloads.
     /// As a final stopgap, in case we missed some bytes and counting got out of sync,
     /// this should fully advance the downloaded byte count to the total byte count.
-    func didEmptyDownloadQueue() async
+    func didEmptyFullsizeDownloadQueue() async
 }
 
 public actor BackupAttachmentDownloadProgressImpl: BackupAttachmentDownloadProgress {
@@ -95,8 +93,8 @@ public actor BackupAttachmentDownloadProgressImpl: BackupAttachmentDownloadProgr
         let finishedByteCount: UInt64
         (pendingByteCount, finishedByteCount) = db.read { tx -> (UInt64, UInt64) in
             return (
-                (try? backupAttachmentDownloadStore.computeEstimatedRemainingByteCount(tx: tx)) ?? 0,
-                (try? backupAttachmentDownloadStore.computeEstimatedFinishedByteCount(tx: tx)) ?? 0
+                (try? backupAttachmentDownloadStore.computeEstimatedRemainingFullsizeByteCount(tx: tx)) ?? 0,
+                (try? backupAttachmentDownloadStore.computeEstimatedFinishedFullsizeByteCount(tx: tx)) ?? 0
             )
         }
         let totalByteCount = pendingByteCount + finishedByteCount
@@ -105,7 +103,6 @@ public actor BackupAttachmentDownloadProgressImpl: BackupAttachmentDownloadProgr
             updateObservers(OWSProgress(
                 completedUnitCount: totalByteCount,
                 totalUnitCount: totalByteCount,
-                sourceProgresses: [:]
             ))
             return
         }
@@ -113,6 +110,8 @@ public actor BackupAttachmentDownloadProgressImpl: BackupAttachmentDownloadProgr
         if totalByteCount == 0 {
             return
         }
+
+        didEmptyFullsizeQueue = false
 
         let sink = OWSProgress.createSink({ [weak self] progress in
             await self?.updateObservers(progress)
@@ -128,13 +127,12 @@ public actor BackupAttachmentDownloadProgressImpl: BackupAttachmentDownloadProgr
 
     /// Create an OWSProgressSink for a single attachment to be downloaded.
     /// Should be called prior to downloading any backup attachment.
-    public func willBeginDownloadingAttachment(
-        withId id: Attachment.IDType,
-        isThumbnail: Bool,
+    public func willBeginDownloadingFullsizeAttachment(
+        withId id: Attachment.IDType
     ) async -> OWSProgressSink {
         let sink = OWSProgress.createSink { [weak self] progress in
             Task { await self?.didUpdateProgressForActiveDownload(
-                id: .init(atachmentId: id, isThumbnail: isThumbnail),
+                id: .init(atachmentId: id),
                 completedByteCount: progress.completedUnitCount,
                 totalByteCount: progress.totalUnitCount
             )
@@ -143,22 +141,20 @@ public actor BackupAttachmentDownloadProgressImpl: BackupAttachmentDownloadProgr
         return sink
     }
 
-    public func didFinishDownloadOfAttachment(
+    public func didFinishDownloadOfFullsizeAttachment(
         withId id: Attachment.IDType,
-        isThumbnail: Bool,
         byteCount: UInt64
     ) {
         didUpdateProgressForActiveDownload(
-            id: .init(atachmentId: id, isThumbnail: isThumbnail),
+            id: .init(atachmentId: id),
             completedByteCount: byteCount,
             totalByteCount: byteCount
         )
     }
 
-    public func didEmptyDownloadQueue() async {
-        activeDownloadByteCounts.keys.forEach {
-            recentlyCompletedDownloads.set(key: $0, value: ())
-        }
+    public func didEmptyFullsizeDownloadQueue() async {
+        didEmptyFullsizeQueue = true
+
         activeDownloadByteCounts = [:]
         if let source {
             if source.totalUnitCount > 0, source.totalUnitCount > source.completedUnitCount {
@@ -175,6 +171,7 @@ public actor BackupAttachmentDownloadProgressImpl: BackupAttachmentDownloadProgr
     private nonisolated let dateProvider: DateProvider
     private nonisolated let db: DB
     private nonisolated let remoteConfigProvider: RemoteConfigProvider
+    private var didEmptyFullsizeQueue: Bool = false
 
     init(
         appContext: AppContext,
@@ -220,8 +217,8 @@ public actor BackupAttachmentDownloadProgressImpl: BackupAttachmentDownloadProgr
         let finishedByteCount: UInt64
         (pendingByteCount, finishedByteCount) = db.read { tx -> (UInt64, UInt64) in
             return (
-                (try? backupAttachmentDownloadStore.computeEstimatedRemainingByteCount(tx: tx)) ?? 0,
-                (try? backupAttachmentDownloadStore.computeEstimatedFinishedByteCount(tx: tx)) ?? 0
+                (try? backupAttachmentDownloadStore.computeEstimatedRemainingFullsizeByteCount(tx: tx)) ?? 0,
+                (try? backupAttachmentDownloadStore.computeEstimatedFinishedFullsizeByteCount(tx: tx)) ?? 0
             )
         }
         let totalByteCount = pendingByteCount + finishedByteCount
@@ -229,7 +226,6 @@ public actor BackupAttachmentDownloadProgressImpl: BackupAttachmentDownloadProgr
             updateObservers(OWSProgress(
                 completedUnitCount: finishedByteCount,
                 totalUnitCount: totalByteCount,
-                sourceProgresses: [:]
             ))
         }
     }
@@ -246,28 +242,17 @@ public actor BackupAttachmentDownloadProgressImpl: BackupAttachmentDownloadProgr
 
     private struct DownloadId: Equatable, Hashable {
         let atachmentId: Attachment.IDType
-        let isThumbnail: Bool
     }
 
     /// Currently active downloads for which we update progress byte-by-byte.
     private var activeDownloadByteCounts = [DownloadId: UInt64]()
-    /// There is a race between receiving the final OWSProgress update for a given attachment
-    /// and being told the attachment finished downloading by BackupAttachmentDownloadManager.
-    /// To resolve this race, track recently completed downloads so we know not to double count.
-    /// There could be tens of thousands of attachments, so to minimize memory usage only keep
-    /// an LRUCache. In practice that will catch all races. Even if it doesn't, the downside
-    /// is we misreport progress until we hit 100%, big whoop.
-    private var recentlyCompletedDownloads = LRUCache<DownloadId, Void>(maxSize: 100)
 
     private func didUpdateProgressForActiveDownload(
         id: DownloadId,
         completedByteCount: UInt64,
         totalByteCount: UInt64
     ) {
-        guard
-            totalByteCount != 0,
-            recentlyCompletedDownloads.get(key: id) == nil
-        else {
+        guard totalByteCount != 0 else {
             return
         }
         let prevByteCount = activeDownloadByteCounts[id] ?? 0
@@ -278,9 +263,7 @@ public actor BackupAttachmentDownloadProgressImpl: BackupAttachmentDownloadProgr
                 self.source?.incrementCompletedUnitCount(by: diff)
             }
         }
-        if completedByteCount >= totalByteCount {
-            recentlyCompletedDownloads.set(key: id, value: ())
-        } else {
+        if completedByteCount < totalByteCount {
             activeDownloadByteCounts[id] = completedByteCount
         }
     }
@@ -326,22 +309,20 @@ open class BackupAttachmentDownloadProgressMock: BackupAttachmentDownloadProgres
         // Do nothing
     }
 
-    open func willBeginDownloadingAttachment(
-        withId id: Attachment.IDType,
-        isThumbnail: Bool
+    open func willBeginDownloadingFullsizeAttachment(
+        withId id: Attachment.IDType
     ) async -> any OWSProgressSink {
         return OWSProgress.createSink({ _ in })
     }
 
-    open func didFinishDownloadOfAttachment(
+    open func didFinishDownloadOfFullsizeAttachment(
         withId id: Attachment.IDType,
-        isThumbnail: Bool,
         byteCount: UInt64
     ) async {
         // Do nothing
     }
 
-    open func didEmptyDownloadQueue() async {
+    open func didEmptyFullsizeDownloadQueue() async {
         // Do nothing
     }
 }

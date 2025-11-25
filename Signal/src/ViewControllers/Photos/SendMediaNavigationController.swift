@@ -3,10 +3,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+import LibSignalClient
 import Photos
+import PhotosUI
 import SignalServiceKit
 import SignalUI
-import PhotosUI
 
 protocol SendMediaNavDelegate: AnyObject {
 
@@ -29,7 +30,7 @@ protocol SendMediaNavDataSource: AnyObject {
 
     var sendMediaNavRecipientNames: [String] { get }
 
-    func sendMediaNavMentionableAddresses(tx: DBReadTransaction) -> [SignalServiceAddress]
+    func sendMediaNavMentionableAcis(tx: DBReadTransaction) -> [Aci]
 
     func sendMediaNavMentionCacheInvalidationKey() -> String
 }
@@ -235,7 +236,8 @@ class SendMediaNavigationController: OWSNavigationController {
         if attachmentDrafts.count == 0 {
             self.sendMediaNavDelegate?.sendMediaNavDidCancel(self)
         } else {
-            let alert = ActionSheetController(title: nil, message: nil, theme: .translucentDark)
+            let alert = ActionSheetController()
+            alert.overrideUserInterfaceStyle = .dark
 
             let confirmAbandonText = OWSLocalizedString("SEND_MEDIA_CONFIRM_ABANDON_ALBUM",
                                                        comment: "alert action, confirming the user wants to exit the media flow and abandon any photos they've taken")
@@ -337,7 +339,8 @@ extension SendMediaNavigationController: PhotoCaptureViewControllerDelegate {
                                         comment: "In-app camera: message for the prompt to turn off multi-mode that will cause previously taken photos to be discarded.")
         let buttonTitle = OWSLocalizedString("SEND_MEDIA_TURN_OFF_MM_BUTTON",
                                             comment: "In-app camera: confirmation button in the prompt to turn off multi-mode.")
-        let actionSheet = ActionSheetController(title: title, message: message, theme: .translucentDark)
+        let actionSheet = ActionSheetController(title: title, message: message)
+        actionSheet.overrideUserInterfaceStyle = .dark
         actionSheet.addAction(ActionSheetAction(title: buttonTitle, style: .destructive) { _ in
             self.attachmentDrafts.removeAll()
             completion(true)
@@ -524,25 +527,15 @@ extension SendMediaNavigationController {
                 modal.dismissIfNotCanceled(completionIfNotCanceled: {
                     do {
                         let attachmentApprovalItems = try result.get()
-                        for item in attachmentApprovalItems {
-                            switch item.attachment.error {
-                            case nil:
-                                continue
-                            case .fileSizeTooLarge:
-                                OWSActionSheets.showActionSheet(
-                                    title: OWSLocalizedString(
-                                        "ATTACHMENT_ERROR_FILE_SIZE_TOO_LARGE",
-                                        comment: "Attachment error message for attachments whose data exceed file size limits"
-                                    )
-                                )
-                                return
-                            default:
-                                OWSActionSheets.showActionSheet(title: OWSLocalizedString("IMAGE_PICKER_FAILED_TO_PROCESS_ATTACHMENTS", comment: "alert title"))
-                                return
-                            }
-                        }
                         self.showApprovalViewController(attachmentApprovalItems: attachmentApprovalItems)
                         picker?.dismiss(animated: true)
+                    } catch SignalAttachmentError.fileSizeTooLarge {
+                        OWSActionSheets.showActionSheet(
+                            title: OWSLocalizedString(
+                                "ATTACHMENT_ERROR_FILE_SIZE_TOO_LARGE",
+                                comment: "Attachment error message for attachments whose data exceed file size limits"
+                            )
+                        )
                     } catch {
                         Logger.warn("failed to prepare attachments. error: \(error)")
                         OWSActionSheets.showActionSheet(title: OWSLocalizedString("IMAGE_PICKER_FAILED_TO_PROCESS_ATTACHMENTS", comment: "alert title"))
@@ -617,8 +610,8 @@ extension SendMediaNavigationController: AttachmentApprovalViewControllerDataSou
         sendMediaNavDataSource?.sendMediaNavRecipientNames ?? []
     }
 
-    func attachmentApprovalMentionableAddresses(tx: DBReadTransaction) -> [SignalServiceAddress] {
-        sendMediaNavDataSource?.sendMediaNavMentionableAddresses(tx: tx) ?? []
+    func attachmentApprovalMentionableAcis(tx: DBReadTransaction) -> [Aci] {
+        sendMediaNavDataSource?.sendMediaNavMentionableAcis(tx: tx) ?? []
     }
 
     func attachmentApprovalMentionCacheInvalidationKey() -> String {

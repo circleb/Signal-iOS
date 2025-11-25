@@ -11,7 +11,9 @@ public class CVAccessibilityCustomAction: UIAccessibilityCustomAction {
 }
 
 extension ConversationViewController: UIGestureRecognizerDelegate {
-    func createGestureRecognizers() {
+    func configureGestureRecognizersIfNeeded() {
+        guard !collectionViewGestureRecongnizersConfigured else { return }
+
         collectionViewTapGestureRecognizer.setTapDelegate(self)
         collectionViewTapGestureRecognizer.delegate = self
         collectionView.addGestureRecognizer(collectionViewTapGestureRecognizer)
@@ -25,12 +27,10 @@ extension ConversationViewController: UIGestureRecognizerDelegate {
         collectionViewContextMenuGestureRecognizer.delegate = self
         collectionView.addGestureRecognizer(collectionViewContextMenuGestureRecognizer)
 
-        let collectionViewContextMenuSecondaryClickRecognizer = UITapGestureRecognizer()
         collectionViewContextMenuSecondaryClickRecognizer.addTarget(self, action: #selector(handleSecondaryClickGesture))
         collectionViewContextMenuSecondaryClickRecognizer.buttonMaskRequired = [.secondary]
         collectionViewContextMenuSecondaryClickRecognizer.delegate = self
         collectionView.addGestureRecognizer(collectionViewContextMenuSecondaryClickRecognizer)
-        self.collectionViewContextMenuSecondaryClickRecognizer = collectionViewContextMenuSecondaryClickRecognizer
 
         collectionViewPanGestureRecognizer.addTarget(self, action: #selector(handlePanGesture))
         collectionViewPanGestureRecognizer.delegate = self
@@ -48,6 +48,8 @@ extension ConversationViewController: UIGestureRecognizerDelegate {
         if let interactivePopGestureRecognizer = navigationController?.interactivePopGestureRecognizer {
             collectionViewPanGestureRecognizer.require(toFail: interactivePopGestureRecognizer)
         }
+
+        collectionViewGestureRecongnizersConfigured = true
     }
 
     // TODO: Revisit
@@ -82,6 +84,18 @@ extension ConversationViewController: UIGestureRecognizerDelegate {
     }
 
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+#if compiler(>=6.2)
+        if
+            #available(iOS 26, *),
+            otherGestureRecognizer == navigationController?.interactiveContentPopGestureRecognizer,
+            let panGestureRecognizer = gestureRecognizer as? UIPanGestureRecognizer,
+            self.findPanHandler(sender: panGestureRecognizer) == nil
+        {
+            // Allow content pop gesture if there is no pan handler
+            return true
+        }
+#endif
+
         // Support standard long press recognizing for body text cases, and context menu long press recognizing for everything else
         let currentIsLongPressOrTap = (gestureRecognizer == collectionViewLongPressGestureRecognizer || gestureRecognizer == collectionViewContextMenuGestureRecognizer || gestureRecognizer == collectionViewTapGestureRecognizer)
         let otherIsLongPressOrTap = (otherGestureRecognizer == collectionViewLongPressGestureRecognizer || otherGestureRecognizer == collectionViewContextMenuGestureRecognizer || otherGestureRecognizer == collectionViewTapGestureRecognizer)
@@ -294,7 +308,9 @@ public struct CVLongPressHandler {
         case quotedReply
         case systemMessage
         case paymentMessage
+        case poll
         case bodyText(item: CVTextLabel.Item)
+        case associatedSubcomponent
     }
     let gestureLocation: GestureLocation
 
@@ -338,8 +354,21 @@ public struct CVLongPressHandler {
             delegate.didLongPressSystemMessage(cell, itemViewModel: itemViewModel)
         case .paymentMessage:
             delegate.didLongPressPaymentMessage(cell, itemViewModel: itemViewModel, shouldAllowReply: shouldAllowReply)
+        case .poll:
+            delegate.didLongPressPoll(cell, itemViewModel: itemViewModel, shouldAllowReply: shouldAllowReply)
         case .bodyText:
             break
+        case .associatedSubcomponent:
+            // Bottom buttons, labels, and footers are considered separate subcomponents,
+            // but may be associated with another subcomponent type.
+            if let message = itemViewModel.interaction as? TSMessage, message.isPoll {
+                delegate.didLongPressPoll(cell, itemViewModel: itemViewModel, shouldAllowReply: shouldAllowReply)
+                return
+            }
+            // Default
+            delegate.didLongPressTextViewItem(cell,
+                                              itemViewModel: itemViewModel,
+                                              shouldAllowReply: shouldAllowReply)
         }
     }
 

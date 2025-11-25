@@ -35,7 +35,7 @@ class ReceiptSenderTest: XCTestCase {
         e164ReceiptSet.insert(timestamp: 5678, messageUniqueId: "00000000-0000-4000-8000-000000000BBB")
 
         mockDb.write { tx in
-            recipientDatabaseTable.insertRecipient(SignalRecipient(aci: aci, pni: nil, phoneNumber: e164), transaction: tx)
+            _ = try! SignalRecipient.insertRecord(aci: aci, phoneNumber: e164, tx: tx)
             receiptSender._storeReceiptSet(aciReceiptSet, receiptType: .delivery, identifier: aci.serviceIdUppercaseString, tx: tx)
             receiptSender._storeReceiptSet(e164ReceiptSet, receiptType: .delivery, identifier: e164.stringValue, tx: tx)
         }

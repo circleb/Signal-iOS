@@ -101,8 +101,7 @@ extension ConversationViewController: MessageActionsDelegate {
                         owsFailDebug("Could not load thumnail.")
                         return
                     }
-                    guard let inputToolbar,
-                          inputToolbar.shouldShowEditUI else { return }
+                    guard let inputToolbar, inputToolbar.isEditingMessage else { return }
                     inputToolbar.editThumbnail = image
                 }
             }
@@ -210,9 +209,7 @@ extension ConversationViewController: MessageActionsDelegate {
     func messageActionsForwardItem(_ itemViewModel: CVItemViewModelImpl) {
         AssertIsOnMainThread()
 
-        ForwardMessageViewController.present(forItemViewModels: [itemViewModel],
-                                             from: self,
-                                             delegate: self)
+        ForwardMessageViewController.present(forItemViewModel: itemViewModel, from: self, delegate: self)
     }
 
     func messageActionsStartedSelect(initialItem itemViewModel: CVItemViewModelImpl) {
@@ -277,5 +274,15 @@ extension ConversationViewController: MessageActionsDelegate {
 
         let paymentsDetailViewController = PaymentsDetailViewController(paymentItem: paymentHistoryItem)
         navigationController?.pushViewController(paymentsDetailViewController, animated: true)
+    }
+
+    func messageActionsEndPoll(_ itemViewModel: CVItemViewModelImpl) {
+        if let groupThread = self.thread as? TSGroupThread, let poll = itemViewModel.componentState.poll?.state.poll {
+            do {
+                try DependenciesBridge.shared.pollMessageManager.sendPollTerminateMessage(poll: poll, thread: groupThread)
+            } catch {
+                Logger.error("Failed to end poll: \(error)")
+            }
+        }
     }
 }

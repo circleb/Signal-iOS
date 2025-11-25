@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import GRDB
 public import LibSignalClient
 
 public protocol RecipientMerger {
@@ -61,7 +62,7 @@ public protocol RecipientMerger {
     /// We learned an ACI is unregistered, so we might need to split the E164/PNI.
     func splitUnregisteredRecipientIfNeeded(
         localIdentifiers: LocalIdentifiers,
-        unregisteredRecipient: SignalRecipient,
+        unregisteredRecipient: inout SignalRecipient,
         tx: DBWriteTransaction
     )
 }
@@ -326,8 +327,8 @@ class RecipientMergerImpl: RecipientMerger {
         tx: DBWriteTransaction
     ) {
         guard
-            let aciRecipient = recipientDatabaseTable.fetchRecipient(serviceId: aci, transaction: tx),
-            let pniRecipient = recipientDatabaseTable.fetchRecipient(serviceId: pni, transaction: tx),
+            var aciRecipient = recipientDatabaseTable.fetchRecipient(serviceId: aci, transaction: tx),
+            var pniRecipient = recipientDatabaseTable.fetchRecipient(serviceId: pni, transaction: tx),
             pniRecipient.aciString == nil
         else {
             owsFail("Can't apply PNI signature merge with precondition violations")
@@ -346,12 +347,15 @@ class RecipientMergerImpl: RecipientMerger {
             insertSessionSwitchoverIfNeeded: false,
             isLocalMerge: false,
             tx: tx
-        ) {
+        ) { _ in
             aciRecipient.phoneNumber = pniRecipient.phoneNumber
             aciRecipient.pni = pniRecipient.pni
             pniRecipient.phoneNumber = nil
             pniRecipient.pni = nil
-            return aciRecipient
+            return (
+                mergedRecipient: aciRecipient,
+                otherUpdatedRecipients: [pniRecipient],
+            )
         }
     }
 
@@ -388,7 +392,7 @@ class RecipientMergerImpl: RecipientMerger {
 
     func splitUnregisteredRecipientIfNeeded(
         localIdentifiers: LocalIdentifiers,
-        unregisteredRecipient: SignalRecipient,
+        unregisteredRecipient: inout SignalRecipient,
         tx: DBWriteTransaction
     ) {
         // We can't split if they're registered or lacking an ACI.
@@ -409,13 +413,15 @@ class RecipientMergerImpl: RecipientMerger {
             insertSessionSwitchoverIfNeeded: true,
             isLocalMerge: false,
             tx: tx
-        ) {
-            let splitRecipient = SignalRecipient.buildEmptyRecipient(unregisteredAt: NSDate.ows_millisecondTimeStamp())
+        ) { tx in
+            var splitRecipient = failIfThrowsDatabaseError { () throws(GRDB.DatabaseError) in
+                return try SignalRecipient.insertRecord(unregisteredAtTimestamp: Date.ows_millisecondTimestamp(), tx: tx)
+            }
             splitRecipient.phoneNumber = unregisteredRecipient.phoneNumber
             splitRecipient.pni = unregisteredRecipient.pni
             unregisteredRecipient.phoneNumber = nil
             unregisteredRecipient.pni = nil
-            return splitRecipient
+            return (mergedRecipient: splitRecipient, otherUpdatedRecipients: [unregisteredRecipient])
         }
     }
 
@@ -490,15 +496,29 @@ class RecipientMergerImpl: RecipientMerger {
             insertSessionSwitchoverIfNeeded: true,
             isLocalMerge: isLocalRecipient,
             tx: tx
-        ) {
-            let existingRecipient = _mergeHighTrust(
+        ) { tx in
+            let mergeResult = _mergeHighTrust(
                 aci: aci,
                 phoneNumber: phoneNumber,
                 aciRecipient: aciRecipient,
                 phoneNumberRecipient: phoneNumberRecipient,
                 tx: tx
             )
-            return existingRecipient ?? SignalRecipient(aci: aci, pni: alreadyKnownPni, phoneNumber: phoneNumber)
+            return (
+                mergedRecipient: mergeResult.mergedRecipient ?? {
+                    var mergedRecipient = failIfThrowsDatabaseError { () throws(GRDB.DatabaseError) in
+                        return try SignalRecipient.insertRecord(tx: tx)
+                    }
+                    mergedRecipient.aci = aci
+                    mergedRecipient.phoneNumber = SignalRecipient.PhoneNumber(
+                        stringValue: phoneNumber.stringValue,
+                        isDiscoverable: false,
+                    )
+                    mergedRecipient.pni = alreadyKnownPni
+                    return mergedRecipient
+                }(),
+                otherUpdatedRecipients: mergeResult.otherUpdatedRecipients,
+            )
         }
     }
 
@@ -508,37 +528,37 @@ class RecipientMergerImpl: RecipientMerger {
         aciRecipient: SignalRecipient?,
         phoneNumberRecipient: SignalRecipient?,
         tx: DBWriteTransaction
-    ) -> SignalRecipient? {
-        if let aciRecipient {
-            guard let phoneNumberRecipient else {
+    ) -> (mergedRecipient: SignalRecipient?, otherUpdatedRecipients: [SignalRecipient]) {
+        if var aciRecipient {
+            guard var phoneNumberRecipient else {
                 aciRecipient.phoneNumber = .init(stringValue: phoneNumber.stringValue, isDiscoverable: false)
                 aciRecipient.pni = nil
-                return aciRecipient
+                return (aciRecipient, [])
             }
 
             aciRecipient.phoneNumber = phoneNumberRecipient.phoneNumber
             aciRecipient.pni = phoneNumberRecipient.pni
             phoneNumberRecipient.phoneNumber = nil
             phoneNumberRecipient.pni = nil
-            return aciRecipient
+            return (aciRecipient, [phoneNumberRecipient])
         }
 
-        if let phoneNumberRecipient {
+        if var phoneNumberRecipient {
             if phoneNumberRecipient.aciString != nil {
                 // We can't change the ACI because it's non-empty. Instead, we must create
                 // a new SignalRecipient. We clear the phone number here since it will
                 // belong to the new SignalRecipient.
                 phoneNumberRecipient.phoneNumber = nil
                 phoneNumberRecipient.pni = nil
-                return nil
+                return (nil, [phoneNumberRecipient])
             }
 
             phoneNumberRecipient.aci = aci
-            return phoneNumberRecipient
+            return (phoneNumberRecipient, [])
         }
 
         // We couldn't find a recipient, so create a new one.
-        return nil
+        return (nil, [])
     }
 
     @discardableResult
@@ -565,15 +585,28 @@ class RecipientMergerImpl: RecipientMerger {
             insertSessionSwitchoverIfNeeded: true,
             isLocalMerge: isLocalRecipient,
             tx: tx
-        ) {
-            let existingRecipient = _mergeAlways(
+        ) { tx in
+            let mergeResult = _mergeAlways(
                 phoneNumber: phoneNumber,
                 pni: pni,
                 phoneNumberRecipient: phoneNumberRecipient,
                 pniRecipient: pniRecipient,
                 tx: tx
             )
-            return existingRecipient ?? SignalRecipient(aci: nil, pni: pni, phoneNumber: phoneNumber)
+            return (
+                mergedRecipient: mergeResult.mergedRecipient ?? {
+                    var mergedRecipient = failIfThrowsDatabaseError { () throws(GRDB.DatabaseError) in
+                        return try SignalRecipient.insertRecord(tx: tx)
+                    }
+                    mergedRecipient.phoneNumber = SignalRecipient.PhoneNumber(
+                        stringValue: phoneNumber.stringValue,
+                        isDiscoverable: false,
+                    )
+                    mergedRecipient.pni = pni
+                    return mergedRecipient
+                }(),
+                otherUpdatedRecipients: mergeResult.otherUpdatedRecipients,
+            )
         }
     }
 
@@ -583,35 +616,35 @@ class RecipientMergerImpl: RecipientMerger {
         phoneNumberRecipient: SignalRecipient?,
         pniRecipient: SignalRecipient?,
         tx: DBWriteTransaction
-    ) -> SignalRecipient? {
+    ) -> (mergedRecipient: SignalRecipient?, otherUpdatedRecipients: [SignalRecipient]) {
         // If we have a phoneNumberRecipient, we'll always prefer that one because
         // the PNI is property of the phone number (not the other way).
-        if let phoneNumberRecipient {
-            guard let pniRecipient else {
+        if var phoneNumberRecipient {
+            guard var pniRecipient else {
                 // If the PNI isn't on some other row, add it to this one.
                 phoneNumberRecipient.pni = pni
-                return phoneNumberRecipient
+                return (phoneNumberRecipient, [])
             }
             // If the PNI is on some other row, steal it for this one.
             phoneNumberRecipient.pni = pni
             pniRecipient.pni = nil
-            return phoneNumberRecipient
+            return (phoneNumberRecipient, [pniRecipient])
         }
 
         // If we have a pniRecipient, we can use it if it doesn't have a phone
         // number. If it does, that takes precedence, and we need a new recipient.
-        if let pniRecipient {
+        if var pniRecipient {
             if pniRecipient.phoneNumber != nil {
                 pniRecipient.pni = nil
-                return nil
+                return (nil, [pniRecipient])
             }
 
             pniRecipient.phoneNumber = .init(stringValue: phoneNumber.stringValue, isDiscoverable: false)
-            return pniRecipient
+            return (pniRecipient, [])
         }
 
         // We couldn't find a recipient, so create a new one.
-        return nil
+        return (nil, [])
     }
 
     private func mergeAlwaysFromStorageService(
@@ -638,8 +671,8 @@ class RecipientMergerImpl: RecipientMerger {
             insertSessionSwitchoverIfNeeded: true,
             isLocalMerge: false,
             tx: tx
-        ) {
-            let existingRecipient = _mergeAlwaysFromStorageService(
+        ) { tx in
+            let mergeResult = _mergeAlwaysFromStorageService(
                 aci: aci,
                 pni: pni,
                 isPrimaryDevice: isPrimaryDevice,
@@ -647,7 +680,17 @@ class RecipientMergerImpl: RecipientMerger {
                 pniRecipient: pniRecipient,
                 tx: tx
             )
-            return existingRecipient ?? SignalRecipient(aci: aci, pni: pni, phoneNumber: nil)
+            return (
+                mergedRecipient: mergeResult.mergedRecipient ?? {
+                    var mergedRecipient = failIfThrowsDatabaseError { () throws(GRDB.DatabaseError) in
+                        return try SignalRecipient.insertRecord(tx: tx)
+                    }
+                    mergedRecipient.aci = aci
+                    mergedRecipient.pni = pni
+                    return mergedRecipient
+                }(),
+                otherUpdatedRecipients: mergeResult.otherUpdatedRecipients,
+            )
         }
     }
 
@@ -658,8 +701,8 @@ class RecipientMergerImpl: RecipientMerger {
         aciRecipient: SignalRecipient?,
         pniRecipient: SignalRecipient?,
         tx: DBWriteTransaction
-    ) -> SignalRecipient? {
-        if let aciRecipient {
+    ) -> (mergedRecipient: SignalRecipient?, otherUpdatedRecipients: [SignalRecipient]) {
+        if var aciRecipient {
             let canAssignPni: Bool = {
                 if aciRecipient.phoneNumber == nil {
                     // If there's no phone number, we're not changing an E164/PNI association.
@@ -675,27 +718,29 @@ class RecipientMergerImpl: RecipientMerger {
                 }
                 return false
             }()
+            var updatedPniRecipient: SignalRecipient?
             if canAssignPni {
                 if let pniRecipient {
-                    pniRecipient.phoneNumber = nil
-                    pniRecipient.pni = nil
+                    updatedPniRecipient = pniRecipient
+                    updatedPniRecipient?.phoneNumber = nil
+                    updatedPniRecipient?.pni = nil
                 }
                 aciRecipient.pni = pni
             }
-            return aciRecipient
+            return (aciRecipient, [updatedPniRecipient].compacted())
         }
 
-        if let pniRecipient {
+        if var pniRecipient {
             if pniRecipient.aciString != nil {
                 pniRecipient.phoneNumber = nil
                 pniRecipient.pni = nil
-                return nil
+                return (nil, [pniRecipient])
             }
             pniRecipient.aci = aci
-            return pniRecipient
+            return (pniRecipient, [])
         }
 
-        return nil
+        return (nil, [])
     }
 
     // MARK: - Helpers
@@ -717,9 +762,9 @@ class RecipientMergerImpl: RecipientMerger {
         insertSessionSwitchoverIfNeeded: Bool,
         isLocalMerge: Bool,
         tx: DBWriteTransaction,
-        applyMerge: () -> SignalRecipient
+        applyMerge: (DBWriteTransaction) -> (mergedRecipient: SignalRecipient, otherUpdatedRecipients: [SignalRecipient]),
     ) -> SignalRecipient {
-        let oldRecipients = existingRecipients.map { $0.copyRecipient() }
+        let oldRecipients = existingRecipients
 
         // If PN_1 is associated with ACI_A when this method starts, and if we're
         // trying to associate PN_1 with ACI_B, then we should ensure everything
@@ -731,39 +776,41 @@ class RecipientMergerImpl: RecipientMerger {
         // Also, if PN_2 is associated with ACI_B when this method starts, and if
         // we're trying to associate PN_1 with ACI_B, then we also should ensure
         // everything that currently references PN_2 is updated to reference ACI_B.
-        existingRecipients.forEach { recipient in
+        oldRecipients.forEach { recipient in
             observers.willBreakAssociation(for: recipient, mightReplaceNonnilPhoneNumber: mightReplaceNonnilPhoneNumber, tx: tx)
         }
 
-        let mergedRecipient = applyMerge()
+        // Don't throw errors or return until we've saved every affectedRecipient
+        // to the database.
 
-        let sessionEvents = prepareSessionEventsToInsert(
-            oldRecipients: oldRecipients,
-            newRecipients: existingRecipients,
-            mergedRecipient: mergedRecipient,
-            tx: tx
-        )
+        let (mergedRecipient, newRecipients) = applyMerge(tx)
 
         // Always put `mergedRecipient` at the end to ensure we don't violate
         // UNIQUE constraints. Note that `mergedRecipient` might be brand new, so
         // we might not find it during the call to `removeAll`.
-        var affectedRecipients = existingRecipients
-        affectedRecipients.removeAll(where: { $0.uniqueId == mergedRecipient.uniqueId })
-        affectedRecipients.append(mergedRecipient)
+        owsPrecondition(!newRecipients.contains(where: { $0.uniqueId == mergedRecipient.uniqueId }))
+        let affectedRecipients = newRecipients + [mergedRecipient]
+
+        let sessionEvents = prepareSessionEventsToInsert(
+            oldRecipients: oldRecipients,
+            affectedRecipients: affectedRecipients,
+            mergedRecipient: mergedRecipient,
+            tx: tx
+        )
 
         for affectedRecipient in affectedRecipients {
             if affectedRecipient.isEmpty {
                 // TODO: Should we clean up any more state related to the discarded recipient?
                 aciSessionStore.mergeRecipient(affectedRecipient, into: mergedRecipient, tx: tx)
                 identityManager.mergeRecipient(affectedRecipient, into: mergedRecipient, tx: tx)
-                blockedRecipientStore.mergeRecipientId(affectedRecipient.id!, into: mergedRecipient.id!, tx: tx)
+                blockedRecipientStore.mergeRecipientId(affectedRecipient.id, into: mergedRecipient.id, tx: tx)
                 failIfThrows { try storyRecipientStore.mergeRecipient(affectedRecipient, into: mergedRecipient, tx: tx) }
                 recipientDatabaseTable.removeRecipient(affectedRecipient, transaction: tx)
-            } else if existingRecipients.contains(where: { $0.uniqueId == affectedRecipient.uniqueId }) {
+            } else if oldRecipients.contains(where: { $0.uniqueId == affectedRecipient.uniqueId }) {
                 recipientDatabaseTable.updateRecipient(affectedRecipient, transaction: tx)
                 searchableNameIndexer.update(affectedRecipient, tx: tx)
             } else {
-                recipientDatabaseTable.insertRecipient(affectedRecipient, transaction: tx)
+                recipientDatabaseTable.updateRecipient(affectedRecipient, transaction: tx)
                 searchableNameIndexer.insert(affectedRecipient, tx: tx)
             }
         }
@@ -801,12 +848,13 @@ class RecipientMergerImpl: RecipientMerger {
 
     private func prepareSessionEventsToInsert(
         oldRecipients: [SignalRecipient],
-        newRecipients: [SignalRecipient],
+        affectedRecipients: [SignalRecipient],
         mergedRecipient: SignalRecipient,
         tx: DBWriteTransaction
     ) -> [SessionEvent] {
         var result = [SessionEvent]()
-        for (oldRecipient, newRecipient) in zip(oldRecipients, newRecipients) {
+        for oldRecipient in oldRecipients {
+            let newRecipient = affectedRecipients.first(where: { $0.uniqueId == oldRecipient.uniqueId }) ?? oldRecipient
             let recipientPair = MergePair(
                 fromValue: oldRecipient,
                 intoValue: newRecipient.isEmpty ? mergedRecipient : newRecipient

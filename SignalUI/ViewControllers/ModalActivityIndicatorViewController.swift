@@ -13,7 +13,7 @@ public class ModalActivityIndicatorViewController: OWSViewController {
         public static let defaultPresentationDelay: TimeInterval = 0.05
     }
 
-    public var wasCancelled: Bool = false
+    private(set) public var wasCancelled: Bool = false
 
     private let canCancel: Bool
     private let isInvisible: Bool
@@ -129,12 +129,12 @@ public class ModalActivityIndicatorViewController: OWSViewController {
     ///
     /// - SeeAlso ``present(fromViewController:canCancel:presentationDelay:isInvisible:asyncBlock:)``.
     @MainActor
-    public class func presentAndPropagateResult<T>(
+    public class func presentAndPropagateResult<T, E>(
         from viewController: UIViewController,
         presentationDelay: TimeInterval = Constants.defaultPresentationDelay,
-        wrappedAsyncBlock: @escaping () async throws -> T
-    ) async throws -> T {
-        return try await withCheckedThrowingContinuation { continuation in
+        wrappedAsyncBlock: @escaping () async throws(E) -> T
+    ) async throws(E) -> T {
+        let result: Result<T, E> = await withCheckedContinuation { continuation in
             present(
                 fromViewController: viewController,
                 canCancel: false,
@@ -142,11 +142,13 @@ public class ModalActivityIndicatorViewController: OWSViewController {
                 asyncBlock: { modal in
                     let result = await Result(catching: wrappedAsyncBlock)
                     modal.dismiss {
-                        continuation.resume(with: result)
+                        continuation.resume(returning: result)
                     }
                 }
             )
         }
+
+        return try result.get()
     }
 
     @MainActor
@@ -219,7 +221,7 @@ public class ModalActivityIndicatorViewController: OWSViewController {
                 cancelButton.setTitle(CommonStrings.cancelButton, for: .normal)
                 cancelButton.setTitleColor(UIColor.white, for: .normal)
                 cancelButton.backgroundColor = UIColor.ows_gray80
-                let font = UIFont.dynamicTypeBody.semibold()
+                let font = UIFont.dynamicTypeHeadline
                 cancelButton.titleLabel?.font = font
                 cancelButton.layer.cornerRadius = .scaleFromIPhone5To7Plus(4, 5)
                 cancelButton.clipsToBounds = true

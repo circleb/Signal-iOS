@@ -78,20 +78,21 @@ fileprivate extension SMKMessageType {
 @objc
 public class SMKSecretSessionCipher: NSObject {
     private let currentSessionStore: SessionStore
-    private let currentPreKeyStore: PreKeyStore
+    private let currentPreKeyStore: LibSignalClient.PreKeyStore
     private let currentSignedPreKeyStore: SignedPreKeyStore
     private let currentKyberPreKeyStore: KyberPreKeyStore
     private let currentIdentityStore: IdentityKeyStore
     private let currentSenderKeyStore: LibSignalClient.SenderKeyStore
 
     // public SecretSessionCipher(SignalProtocolStore signalProtocolStore) {
-    public init(sessionStore: SessionStore,
-                preKeyStore: PreKeyStore,
-                signedPreKeyStore: SignedPreKeyStore,
-                kyberPreKeyStore: KyberPreKeyStore,
-                identityStore: IdentityKeyStore,
-                senderKeyStore: LibSignalClient.SenderKeyStore) throws {
-
+    init(
+        sessionStore: SessionStore,
+        preKeyStore: LibSignalClient.PreKeyStore,
+        signedPreKeyStore: SignedPreKeyStore,
+        kyberPreKeyStore: KyberPreKeyStore,
+        identityStore: IdentityKeyStore,
+        senderKeyStore: LibSignalClient.SenderKeyStore
+    ) {
         self.currentSessionStore = sessionStore
         self.currentPreKeyStore = preKeyStore
         self.currentSignedPreKeyStore = signedPreKeyStore
@@ -170,7 +171,7 @@ public class SMKSecretSessionCipher: NSObject {
     // public Pair<SignalProtocolAddress, byte[]> decrypt(CertificateValidator validator, byte[] ciphertext, long timestamp)
     //    throws InvalidMetadataMessageException, InvalidMetadataVersionException, ProtocolInvalidMessageException, ProtocolInvalidKeyException, ProtocolNoSessionException, ProtocolLegacyMessageException, ProtocolInvalidVersionException, ProtocolDuplicateMessageException, ProtocolInvalidKeyIdException, ProtocolUntrustedIdentityException
     public func decryptMessage(
-        trustRoot: PublicKey,
+        trustRoots: [PublicKey],
         cipherTextData: Data,
         timestamp: UInt64,
         localIdentifiers: LocalIdentifiers,
@@ -204,7 +205,7 @@ public class SMKSecretSessionCipher: NSObject {
 
         do {
             // validator.validate(content.getSenderCertificate(), timestamp);
-            guard try messageContent.senderCertificate.validate(trustRoot: trustRoot, time: timestamp) else {
+            guard messageContent.senderCertificate.validate(trustRoots: trustRoots, time: timestamp) else {
                 throw SMKSecretSessionCipherError.invalidCertificate
             }
 
@@ -273,7 +274,7 @@ public class SMKSecretSessionCipher: NSObject {
                 signedPreKeyStore: currentSignedPreKeyStore,
                 kyberPreKeyStore: currentKyberPreKeyStore,
                 context: context,
-                usePqRatchet: RemoteConfig.current.usePqRatchet)
+            )
         case .senderKey:
             plaintextData = try groupDecrypt(
                 messageContent.contents,

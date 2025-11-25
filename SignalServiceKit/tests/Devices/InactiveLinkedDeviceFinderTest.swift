@@ -9,9 +9,8 @@ import XCTest
 
 final class InactiveLinkedDeviceFinderTest: XCTestCase {
     private var mockDateProvider: DateProvider!
-    private var mockDB: (any DB)!
-    private var mockDeviceNameDecrypter: MockDeviceNameDecrypter!
-    private var mockDeviceStore: MockDeviceStore!
+    private var mockDB: DB!
+    private var mockDeviceStore: OWSDeviceStore!
     private var mockDevicesService: MockDevicesService!
     private var mockTSAccountManager: MockTSAccountManager!
 
@@ -38,15 +37,13 @@ final class InactiveLinkedDeviceFinderTest: XCTestCase {
         mockDateProvider = { nowDate }
 
         mockDB = InMemoryDB()
-        mockDeviceNameDecrypter = MockDeviceNameDecrypter()
-        mockDeviceStore = MockDeviceStore()
+        mockDeviceStore = OWSDeviceStore()
         mockDevicesService = MockDevicesService()
         mockTSAccountManager = MockTSAccountManager()
 
         inactiveLinkedDeviceFinder = InactiveLinkedDeviceFinderImpl(
             dateProvider: { self.mockDateProvider() },
             db: mockDB,
-            deviceNameDecrypter: mockDeviceNameDecrypter,
             deviceService: mockDevicesService,
             deviceStore: mockDeviceStore,
             remoteConfigProvider: MockRemoteConfigProvider(),
@@ -84,10 +81,10 @@ final class InactiveLinkedDeviceFinderTest: XCTestCase {
 
         // Nothing if never refreshed.
         mockTSAccountManager.registrationStateMock = { .registered }
-        mockDeviceStore.devices = [
+        setMockDevices([
             .primary(),
             .fixture(name: "eye pad", lastSeenAt: inactiveLastSeenAt),
-        ]
+        ])
         XCTAssertNil(findLeastActive())
 
         // Do a refresh...
@@ -97,54 +94,48 @@ final class InactiveLinkedDeviceFinderTest: XCTestCase {
 
         // Only include inactive devices.
         mockTSAccountManager.registrationStateMock = { .registered }
-        mockDeviceStore.devices = [
+        setMockDevices([
             .primary(),
             .fixture(name: "eye pad", lastSeenAt: inactiveLastSeenAt),
             .fixture(name: "lap top", lastSeenAt: activeLastSeenAt)
-        ]
+        ])
         XCTAssertEqual(
-            findLeastActive(),
-            InactiveLinkedDevice(
-                displayName: "eye pad",
-                expirationDate: inactiveLastSeenAt.addingTimeInterval(45 * .day)
-            )
+            findLeastActive()?.displayName,
+            "eye pad",
         )
 
         // If multiple inactive devices, pick the "least active" one.
         mockTSAccountManager.registrationStateMock = { .registered }
-        mockDeviceStore.devices = [
+        setMockDevices([
             .primary(),
             .fixture(name: "🏖️", lastSeenAt: inactiveLastSeenAt.addingTimeInterval(-.second)),
             .fixture(name: "🦩", lastSeenAt: inactiveLastSeenAt),
-        ]
+        ])
         XCTAssertEqual(
-            findLeastActive(),
-            InactiveLinkedDevice(
-                displayName: "🏖️",
-                expirationDate: inactiveLastSeenAt.addingTimeInterval(-.second).addingTimeInterval(45 * .day)
-            )
+            findLeastActive()?.displayName,
+            "🏖️",
         )
 
         // Nothing if no linked devices.
         mockTSAccountManager.registrationStateMock = { .registered }
-        mockDeviceStore.devices = [.primary()]
+        setMockDevices([.primary()])
         XCTAssertNil(findLeastActive())
 
         // Nothing if not a primary.
         mockTSAccountManager.registrationStateMock = { .provisioned }
-        mockDeviceStore.devices = [
+        setMockDevices([
             .primary(),
             .fixture(name: "eye pad", lastSeenAt: inactiveLastSeenAt),
-        ]
+        ])
         XCTAssertNil(findLeastActive())
     }
 
     func testPermanentlyDisabling() async {
         mockTSAccountManager.registrationStateMock = { .registered }
-        mockDeviceStore.devices = [
+        setMockDevices([
             .primary(),
             .fixture(name: "a sedentary device", lastSeenAt: inactiveLastSeenAt),
-        ]
+        ])
 
         mockDB.write { inactiveLinkedDeviceFinder.permanentlyDisableFinders(tx: $0) }
         await inactiveLinkedDeviceFinder.refreshLinkedDeviceStateIfNecessary()
@@ -158,15 +149,21 @@ final class InactiveLinkedDeviceFinderTest: XCTestCase {
         XCTAssertEqual(mockDevicesService.refreshCount, 1)
         XCTAssertTrue(mockDB.read { inactiveLinkedDeviceFinder.hasInactiveLinkedDevice(tx: $0) })
     }
+
+    private func setMockDevices(_ devices: [OWSDevice]) {
+        mockDB.write { tx in
+            _ = mockDeviceStore.replaceAll(with: devices, tx: tx)
+        }
+    }
 }
 
 private extension OWSDevice {
     static func primary() -> OWSDevice {
         return OWSDevice(
             deviceId: .primary,
-            encryptedName: nil,
             createdAt: .distantPast,
-            lastSeenAt: Date()
+            lastSeenAt: Date(),
+            name: nil,
         )
     }
 
@@ -176,54 +173,14 @@ private extension OWSDevice {
     ) -> OWSDevice {
         return OWSDevice(
             deviceId: DeviceId(validating: 24)!,
-            encryptedName: name,
             createdAt: .distantPast,
-            lastSeenAt: lastSeenAt
+            lastSeenAt: lastSeenAt,
+            name: name,
         )
     }
 }
 
 // MARK: - Mocks
-
-private class MockDeviceNameDecrypter: InactiveLinkedDeviceFinderImpl.Shims.OWSDeviceNameDecrypter {
-    func decryptName(device: OWSDevice, tx: DBReadTransaction) -> String {
-        return device.encryptedName!
-    }
-}
-
-private class MockDeviceStore: OWSDeviceStore {
-    var devices: [OWSDevice] = []
-
-    func fetchAll(tx: DBReadTransaction) -> [OWSDevice] {
-        return devices
-    }
-
-    func replaceAll(with newDevices: [OWSDevice], tx: DBWriteTransaction) -> Bool {
-        let isChanging = devices.count == newDevices.count
-        devices = newDevices
-        return isChanging
-    }
-
-    func remove(_ device: OWSDevice, tx: DBWriteTransaction) {
-        devices.removeAll { _device in
-            device.deviceId == _device.deviceId
-        }
-    }
-
-    func setEncryptedName(_ encryptedName: String, for device: OWSDevice, tx: DBWriteTransaction) {
-        device.encryptedName = encryptedName
-    }
-
-    func mostRecentlyLinkedDeviceDetails(tx: DBReadTransaction) throws -> MostRecentlyLinkedDeviceDetails? {
-        nil
-    }
-
-    func setMostRecentlyLinkedDeviceDetails(linkedTime: Date, notificationDelay: TimeInterval, tx: DBWriteTransaction) throws {
-    }
-
-    func clearMostRecentlyLinkedDeviceDetails(tx: DBWriteTransaction) {
-    }
-}
 
 private class MockDevicesService: OWSDeviceService {
     var shouldFail: Bool = false
@@ -236,7 +193,7 @@ private class MockDevicesService: OWSDeviceService {
         return true
     }
 
-    func unlinkDevice(deviceId: DeviceId, auth: ChatServiceAuth) async throws {}
+    func unlinkDevice(deviceId: DeviceId) async throws {}
 
-    func renameDevice(device: OWSDevice, toEncryptedName encryptedName: String) async throws {}
+    func renameDevice(device: OWSDevice, newName: String) async throws(OWSDeviceRenameError) {}
 }

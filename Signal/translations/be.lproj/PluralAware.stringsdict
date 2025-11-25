@@ -117,6 +117,26 @@
 			<string>Дадаць новых удзельнікаў</string>
 		</dict>
 	</dict>
+	<key>BACKUP_SETTINGS_BACKUP_PLAN_FREE_HEADER_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>SMS + %1$d дзень утрымання медыяфайлаў</string>
+			<key>few</key>
+			<string>SMS + %1$d дні ўтрымання медыяфайлаў</string>
+			<key>many</key>
+			<string>SMS + %1$d дзён утрымання медыяфайлаў</string>
+			<key>other</key>
+			<string>SMS + %1$d дзён утрымання медыяфайлаў</string>
+		</dict>
+	</dict>
 	<key>CALLS_TAB_DELETE_MULTIPLE_TITLE</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -377,6 +397,66 @@
 			<string>Гэты колер ёсць ў %1$d чатах. Жадаеце захаваць змяненні для ўсіх чатаў?</string>
 		</dict>
 	</dict>
+	<key>CHOOSE_BACKUP_PLAN_BULLET_RECENT_MEDIA_BACKUP_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d апошні дзень утрымання медыяфайлаў</string>
+			<key>few</key>
+			<string>%1$d апошнія дні ўтрымання медыяфайлаў</string>
+			<key>many</key>
+			<string>%1$d апошніх дзён утрымання медыяфайлаў</string>
+			<key>other</key>
+			<string>%1$d апошніх дзён утрымання медыяфайлаў</string>
+		</dict>
+	</dict>
+	<key>CHOOSE_BACKUP_PLAN_DOWNGRADE_CONFIRMATION_ACTION_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Калі вы зменіце свой тарыфны план, усе вашы тэкставыя паведамленні і медыяфайлы за апошні %1$d дзень будуць уключаны ў рэзервовую копію.</string>
+			<key>few</key>
+			<string>Калі вы зменіце свой тарыфны план, усе вашы тэкставыя паведамленні і медыяфайлы за апошнія %1$d днi будуць уключаны ў рэзервовую копію.</string>
+			<key>many</key>
+			<string>Калі вы зменіце свой тарыфны план, усе вашы тэкставыя паведамленні і медыяфайлы за апошнія %1$d дзён будуць уключаны ў рэзервовую копію.</string>
+			<key>other</key>
+			<string>Калі вы зменіце свой тарыфны план, усе вашы тэкставыя паведамленні і медыяфайлы за апошнія %1$d дзён будуць уключаны ў рэзервовую копію.</string>
+		</dict>
+	</dict>
+	<key>CHOOSE_BACKUP_PLAN_FREE_PLAN_SUBTITLE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>SMS + %1$d дзень утрымання медыяфайлаў</string>
+			<key>few</key>
+			<string>SMS + %1$d дні ўтрымання медыяфайлаў</string>
+			<key>many</key>
+			<string>SMS + %1$d дзён утрымання медыяфайлаў</string>
+			<key>other</key>
+			<string>SMS + %1$d дзён утрымання медыяфайлаў</string>
+		</dict>
+	</dict>
 	<key>CONVERSATION_DELETE_CONFIRMATIONS_ALERT_TITLE_%d</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -610,26 +690,6 @@
 			<string>Толькі %1$d змяненняў могуць быць унесены да гэтага паведамлення.</string>
 			<key>other</key>
 			<string>Толькі %1$d змяненняў могуць быць унесены да гэтага паведамлення.</string>
-		</dict>
-	</dict>
-	<key>FORWARD_MESSAGE_FIRST_FORWARD_PROCEED_%d</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@text@</string>
-		<key>text</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
-			<key>one</key>
-			<string>Адправіць паведамленне</string>
-			<key>few</key>
-			<string>Адправіць %1$d паведамленні</string>
-			<key>many</key>
-			<string>Адправіць %1$d паведамленняў</string>
-			<key>other</key>
-			<string>Адправіць %1$d паведамленняў</string>
 		</dict>
 	</dict>
 	<key>GROUPS_TOO_MANY_MEMBERS_ALERT_MESSAGE_%d</key>
@@ -1212,6 +1272,26 @@
 			<string>Каб захаваць «%2$@» падлучаным, адкрыйце Signal на гэтай прыладзе на працягу %1$d дзён.</string>
 		</dict>
 	</dict>
+	<key>LINK_DEVICE_CONFIRMATION_ALERT_TRANSFER_SUBTITLE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Перанесці ўсе вашы тэкставыя паведамленні + вашы медыяфайлы за апошні %1$d дзень</string>
+			<key>few</key>
+			<string>Перанесці ўсе вашы тэкставыя паведамленні + вашы медыяфайлы за апошнія %1$d днi</string>
+			<key>many</key>
+			<string>Перанесці ўсе вашы тэкставыя паведамленні + вашы медыяфайлы за апошнія %1$d дзён</string>
+			<key>other</key>
+			<string>Перанесці ўсе вашы тэкставыя паведамленні + вашы медыяфайлы за апошнія %1$d дзён</string>
+		</dict>
+	</dict>
 	<key>MANY_GROUPS_IN_COMMON_%d</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -1330,26 +1410,6 @@
 			<string>Пераслаць %1$d</string>
 			<key>other</key>
 			<string>Пераслаць %1$d</string>
-		</dict>
-	</dict>
-	<key>MESSAGES_VIEW_GROUP_N_MEMBERS_BLOCKED_%d</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@caption@</string>
-		<key>caption</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
-			<key>one</key>
-			<string>Вы заблакавалі %1$d удзельніка гэтай групы</string>
-			<key>few</key>
-			<string>Вы заблакавалі %1$d удзельнікаў гэтай групы</string>
-			<key>many</key>
-			<string>Вы заблакавалі %1$d удзельнікаў гэтай групы</string>
-			<key>other</key>
-			<string>Вы заблакавалі %1$d удзельнікаў гэтай групы</string>
 		</dict>
 	</dict>
 	<key>MESSAGE_ACTIONS_TOOLBAR_CAPTION_%d</key>
@@ -1672,6 +1732,26 @@
 			<string>Адклікаць %1$d запрашэнняў у групу, што адправіла «%2$@»?</string>
 		</dict>
 	</dict>
+	<key>POLL_VOTE_COUNT</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d голас</string>
+			<key>few</key>
+			<string>%1$d галасы</string>
+			<key>many</key>
+			<string>%1$d галасоў</string>
+			<key>other</key>
+			<string>%1$d галасоў</string>
+		</dict>
+	</dict>
 	<key>PRIVATE_STORY_VIEWERS_%d</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -1910,6 +1990,86 @@
 			<string>%1$ld іншых</string>
 			<key>other</key>
 			<string>%1$ld іншых</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_AUDIO_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Гэта галасавое паведамленне не было перанесена з вашага тэлефона, калі была звязана гэта прылада. Немагчыма сінхранізаваць медыяфайлы і файлы, старэйшыя за %1$d дзень на той момант, калі была звязана прылада.</string>
+			<key>few</key>
+			<string>Гэта галасавое паведамленне не было перанесена з вашага тэлефона, калі была звязана гэта прылада. Немагчыма сінхранізаваць медыяфайлы і файлы, старэйшыя за %1$d днi на той момант, калі была звязана прылада.</string>
+			<key>many</key>
+			<string>Гэта галасавое паведамленне не было перанесена з вашага тэлефона, калі была звязана гэта прылада. Немагчыма сінхранізаваць медыяфайлы і файлы, старэйшыя за %1$d дзён на той момант, калі была звязана прылада.</string>
+			<key>other</key>
+			<string>Гэта галасавое паведамленне не было перанесена з вашага тэлефона, калі была звязана гэта прылада. Немагчыма сінхранізаваць медыяфайлы і файлы, старэйшыя за %1$d дзён на той момант, калі была звязана прылада.</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_FILE_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Гэты файл не быў перанесены з вашага тэлефона, калі была звязана гэта прылада. Немагчыма сінхранізаваць медыяфайлы і файлы, старэйшыя за %1$d дзень на той момант, калі была звязана прылада.</string>
+			<key>few</key>
+			<string>Гэты файл не быў перанесены з вашага тэлефона, калі была звязана гэта прылада. Немагчыма сінхранізаваць медыяфайлы і файлы, старэйшыя за %1$d днi на той момант, калі была звязана прылада.</string>
+			<key>many</key>
+			<string>Гэты файл не быў перанесены з вашага тэлефона, калі была звязана гэта прылада. Немагчыма сінхранізаваць медыяфайлы і файлы, старэйшыя за %1$d дзён на той момант, калі была звязана прылада.</string>
+			<key>other</key>
+			<string>Гэты файл не быў перанесены з вашага тэлефона, калі была звязана гэта прылада. Немагчыма сінхранізаваць медыяфайлы і файлы, старэйшыя за %1$d дзён на той момант, калі была звязана прылада.</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_OVERSIZE_TEXT_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Поўны тэкст у гэтым паведамленні не быў перанесены з вашага тэлефона, калі была звязана гэта прылада. Немагчыма сінхранізаваць медыяфайлы і файлы, старэйшыя за %1$d дзень на той момант, калі была звязана прылада.</string>
+			<key>few</key>
+			<string>Поўны тэкст у гэтым паведамленні не быў перанесены з вашага тэлефона, калі была звязана гэта прылада. Немагчыма сінхранізаваць медыяфайлы і файлы, старэйшыя за %1$d днi на той момант, калі была звязана прылада.</string>
+			<key>many</key>
+			<string>Поўны тэкст у гэтым паведамленні не быў перанесены з вашага тэлефона, калі была звязана гэта прылада. Немагчыма сінхранізаваць медыяфайлы і файлы, старэйшыя за %1$d дзён на той момант, калі была звязана прылада.</string>
+			<key>other</key>
+			<string>Поўны тэкст у гэтым паведамленні не быў перанесены з вашага тэлефона, калі была звязана гэта прылада. Немагчыма сінхранізаваць медыяфайлы і файлы, старэйшыя за %1$d дзён на той момант, калі была звязана прылада.</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_STICKER_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Гэты стыкер не быў перанесены з вашага тэлефона, калі была звязана гэта прылада. Немагчыма сінхранізаваць медыяфайлы і файлы, старэйшыя за %1$d дзень на той момант, калі была звязана прылада.</string>
+			<key>few</key>
+			<string>Гэты стыкер не быў перанесены з вашага тэлефона, калі была звязана гэта прылада. Немагчыма сінхранізаваць медыяфайлы і файлы, старэйшыя за %1$d днi на той момант, калі была звязана прылада.</string>
+			<key>many</key>
+			<string>Гэты стыкер не быў перанесены з вашага тэлефона, калі была звязана гэта прылада. Немагчыма сінхранізаваць медыяфайлы і файлы, старэйшыя за %1$d дзён на той момант, калі была звязана прылада.</string>
+			<key>other</key>
+			<string>Гэты стыкер не быў перанесены з вашага тэлефона, калі была звязана гэта прылада. Немагчыма сінхранізаваць медыяфайлы і файлы, старэйшыя за %1$d дзён на той момант, калі была звязана прылада.</string>
 		</dict>
 	</dict>
 	<key>USERNAME_SELECTION_TOO_SHORT_ERROR_MESSAGE_%d</key>

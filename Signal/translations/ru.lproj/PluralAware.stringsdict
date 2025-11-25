@@ -117,6 +117,26 @@
 			<string>Добавить новых участников</string>
 		</dict>
 	</dict>
+	<key>BACKUP_SETTINGS_BACKUP_PLAN_FREE_HEADER_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Резервное копирование сообщений и медиафайлов за %1$d день</string>
+			<key>few</key>
+			<string>Резервное копирование сообщений и медиафайлов за %1$d дня</string>
+			<key>many</key>
+			<string>Резервное копирование сообщений и медиафайлов за %1$d дней</string>
+			<key>other</key>
+			<string>Резервное копирование сообщений и медиафайлов за %1$d дня</string>
+		</dict>
+	</dict>
 	<key>CALLS_TAB_DELETE_MULTIPLE_TITLE</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -377,6 +397,66 @@
 			<string>Этот цвет используется в %1$d чата. Вы хотите сохранить изменения для всех чатов?</string>
 		</dict>
 	</dict>
+	<key>CHOOSE_BACKUP_PLAN_BULLET_RECENT_MEDIA_BACKUP_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Медиафайлы за %1$d последний день</string>
+			<key>few</key>
+			<string>Медиафайлы за %1$d последних дня</string>
+			<key>many</key>
+			<string>Медиафайлы за %1$d последних дней</string>
+			<key>other</key>
+			<string>Медиафайлы за %1$d последних дня</string>
+		</dict>
+	</dict>
+	<key>CHOOSE_BACKUP_PLAN_DOWNGRADE_CONFIRMATION_ACTION_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Если вы измените свой план, в резервную копию будут включены все ваши текстовые сообщения и медиафайлы за %1$d последний день.</string>
+			<key>few</key>
+			<string>Если вы измените свой план, в резервную копию будут включены все ваши текстовые сообщения и медиафайлы за последние %1$d дня.</string>
+			<key>many</key>
+			<string>Если вы измените свой план, в резервную копию будут включены все ваши текстовые сообщения и медиафайлы за последние %1$d дней.</string>
+			<key>other</key>
+			<string>Если вы измените свой план, в резервную копию будут включены все ваши текстовые сообщения и медиафайлы за последние %1$d дня.</string>
+		</dict>
+	</dict>
+	<key>CHOOSE_BACKUP_PLAN_FREE_PLAN_SUBTITLE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Текстовые сообщения + медиафайлы за %1$d день</string>
+			<key>few</key>
+			<string>Текстовые сообщения + медиафайлы за %1$d дня</string>
+			<key>many</key>
+			<string>Текстовые сообщения + медиафайлы за %1$d дней</string>
+			<key>other</key>
+			<string>Текстовые сообщения + медиафайлы за %1$d дня</string>
+		</dict>
+	</dict>
 	<key>CONVERSATION_DELETE_CONFIRMATIONS_ALERT_TITLE_%d</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -610,26 +690,6 @@
 			<string>Только %1$d изменений могут быть внесены в это сообщение.</string>
 			<key>other</key>
 			<string>Только %1$d изменения могут быть внесены в это сообщение.</string>
-		</dict>
-	</dict>
-	<key>FORWARD_MESSAGE_FIRST_FORWARD_PROCEED_%d</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@text@</string>
-		<key>text</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
-			<key>one</key>
-			<string>Отправить %1$d сообщение</string>
-			<key>few</key>
-			<string>Отправить %1$d сообщения</string>
-			<key>many</key>
-			<string>Отправить %1$d сообщений</string>
-			<key>other</key>
-			<string>Отправить %1$d сообщения</string>
 		</dict>
 	</dict>
 	<key>GROUPS_TOO_MANY_MEMBERS_ALERT_MESSAGE_%d</key>
@@ -1212,6 +1272,26 @@
 			<string>Чтобы сохранить связь с «%2$@», откройте Signal на этом устройстве в течение %1$d дня.</string>
 		</dict>
 	</dict>
+	<key>LINK_DEVICE_CONFIRMATION_ALERT_TRANSFER_SUBTITLE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Перенести все ваши текстовые сообщения и медиафайлы за %1$d последний день</string>
+			<key>few</key>
+			<string>Перенести все ваши текстовые сообщения и медиафайлы за последние %1$d дня</string>
+			<key>many</key>
+			<string>Перенести все ваши текстовые сообщения и медиафайлы а последние %1$d дней</string>
+			<key>other</key>
+			<string>Перенести все ваши текстовые сообщения и медиафайлы за последние %1$d дня</string>
+		</dict>
+	</dict>
 	<key>MANY_GROUPS_IN_COMMON_%d</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -1330,26 +1410,6 @@
 			<string>Переслать %1$d</string>
 			<key>other</key>
 			<string>Переслать %1$d</string>
-		</dict>
-	</dict>
-	<key>MESSAGES_VIEW_GROUP_N_MEMBERS_BLOCKED_%d</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@caption@</string>
-		<key>caption</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
-			<key>one</key>
-			<string>Вы заблокировали %1$d участника этой группы</string>
-			<key>few</key>
-			<string>Вы заблокировали %1$d участников этой группы</string>
-			<key>many</key>
-			<string>Вы заблокировали %1$d участников этой группы</string>
-			<key>other</key>
-			<string>Вы заблокировали %1$d участника этой группы</string>
 		</dict>
 	</dict>
 	<key>MESSAGE_ACTIONS_TOOLBAR_CAPTION_%d</key>
@@ -1672,6 +1732,26 @@
 			<string>Отозвать %1$d приглашения, которые отправил(-а) «%2$@»?</string>
 		</dict>
 	</dict>
+	<key>POLL_VOTE_COUNT</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d голос</string>
+			<key>few</key>
+			<string>%1$d голоса</string>
+			<key>many</key>
+			<string>%1$d голосов</string>
+			<key>other</key>
+			<string>%1$d голоса</string>
+		</dict>
+	</dict>
 	<key>PRIVATE_STORY_VIEWERS_%d</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -1910,6 +1990,86 @@
 			<string>%1$ld другими</string>
 			<key>other</key>
 			<string>%1$ld другими</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_AUDIO_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Это голосовое сообщение не было перенесено с вашего телефона при привязке этого устройства. Медиафайлы и файлы, срок создания которых на момент привязки устройства превышал %1$d день, не могут быть синхронизированы.</string>
+			<key>few</key>
+			<string>Это голосовое сообщение не было перенесено с вашего телефона при привязке этого устройства. Медиафайлы и файлы, срок создания которых на момент привязки устройства превышал %1$d дня, не могут быть синхронизированы.</string>
+			<key>many</key>
+			<string>Это голосовое сообщение не было перенесено с вашего телефона при привязке этого устройства. Медиафайлы и файлы, срок создания которых на момент привязки устройства превышал %1$d дней, не могут быть синхронизированы.</string>
+			<key>other</key>
+			<string>Это голосовое сообщение не было перенесено с вашего телефона при привязке этого устройства. Медиафайлы и файлы, срок создания которых на момент привязки устройства превышал %1$d дня, не могут быть синхронизированы.</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_FILE_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Этот файл не был перенесён с вашего телефона при привязке этого устройства. Медиафайлы и файлы, срок создания которых на момент привязки устройства превышал %1$d день, не могут быть синхронизированы.</string>
+			<key>few</key>
+			<string>Этот файл не был перенесён с вашего телефона при привязке этого устройства. Медиафайлы и файлы, срок создания которых на момент привязки устройства превышал %1$d дня, не могут быть синхронизированы.</string>
+			<key>many</key>
+			<string>Этот файл не был перенесён с вашего телефона при привязке этого устройства. Медиафайлы и файлы, срок создания которых на момент привязки устройства превышал %1$d дней, не могут быть синхронизированы.</string>
+			<key>other</key>
+			<string>Этот файл не был перенесён с вашего телефона при привязке этого устройства. Медиафайлы и файлы, срок создания которых на момент привязки устройства превышал %1$d дня, не могут быть синхронизированы.</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_OVERSIZE_TEXT_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Полный текст этого сообщения не был перенесён с вашего телефона при привязке этого устройства. Медиафайлы и файлы, срок создания которых на момент привязки устройства превышал %1$d день, не могут быть синхронизированы.</string>
+			<key>few</key>
+			<string>Полный текст этого сообщения не был перенесён с вашего телефона при привязке этого устройства. Медиафайлы и файлы, срок создания которых на момент привязки устройства превышал %1$d дня, не могут быть синхронизированы.</string>
+			<key>many</key>
+			<string>Полный текст этого сообщения не был перенесён с вашего телефона при привязке этого устройства. Медиафайлы и файлы, срок создания которых на момент привязки устройства превышал %1$d дней, не могут быть синхронизированы.</string>
+			<key>other</key>
+			<string>Полный текст этого сообщения не был перенесён с вашего телефона при привязке этого устройства. Медиафайлы и файлы, срок создания которых на момент привязки устройства превышал %1$d дня, не могут быть синхронизированы.</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_STICKER_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Этот стикер не был перенесён с вашего телефона при привязке этого устройства. Медиафайлы и файлы, срок создания которых на момент привязки устройства превышал %1$d день, не могут быть синхронизированы.</string>
+			<key>few</key>
+			<string>Этот стикер не был перенесён с вашего телефона при привязке этого устройства. Медиафайлы и файлы, срок создания которых на момент привязки устройства превышал %1$d дня, не могут быть синхронизированы.</string>
+			<key>many</key>
+			<string>Этот стикер не был перенесён с вашего телефона при привязке этого устройства. Медиафайлы и файлы, срок создания которых на момент привязки устройства превышал %1$d дней, не могут быть синхронизированы.</string>
+			<key>other</key>
+			<string>Этот стикер не был перенесён с вашего телефона при привязке этого устройства. Медиафайлы и файлы, срок создания которых на момент привязки устройства превышал %1$d дня, не могут быть синхронизированы.</string>
 		</dict>
 	</dict>
 	<key>USERNAME_SELECTION_TOO_SHORT_ERROR_MESSAGE_%d</key>

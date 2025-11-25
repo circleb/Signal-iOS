@@ -124,23 +124,23 @@ class PreviewWallpaperViewController: UIViewController {
             guard let standalonePage = self.standalonePage else {
                 return owsFailDebug("Missing standalone page for photo")
             }
-            croppedAndScaledPhoto = standalonePage.view.renderAsImage()
+            croppedAndScaledPhoto = standalonePage.generateSnapshotImage()
             preset = nil
         case .preset(let selectedWallpaper):
             croppedAndScaledPhoto = nil
             preset = selectedWallpaper
         }
-        DispatchQueue.global().async { [weak self, thread] in
+        Task { [weak self, thread] in
             do {
                 if let croppedAndScaledPhoto {
-                    try DependenciesBridge.shared.wallpaperStore.setPhoto(croppedAndScaledPhoto, for: thread)
+                    try await DependenciesBridge.shared.wallpaperStore.setPhoto(croppedAndScaledPhoto, for: thread)
                 } else if let preset {
-                    try DependenciesBridge.shared.wallpaperStore.setBuiltIn(preset, for: thread)
+                    try await DependenciesBridge.shared.wallpaperStore.setBuiltIn(preset, for: thread)
                 }
             } catch {
                 owsFailDebug("Failed to set wallpaper \(error)")
             }
-            DispatchQueue.main.async { [weak self] in
+            await MainActor.run { [weak self] in
                 guard let self else { return }
                 self.delegate?.previewWallpaperDidComplete(self)
             }
@@ -320,6 +320,7 @@ private class WallpaperPage: UIViewController {
 
     var wallpaperView: WallpaperView?
     var wallpaperPreviewView: UIView?
+    var scrollView: UIScrollView?
 
     override func loadView() {
         let rootView = ManualLayoutViewWithLayer(name: "rootView")
@@ -329,7 +330,7 @@ private class WallpaperPage: UIViewController {
         view = rootView
 
         let shouldDimInDarkTheme = SSKEnvironment.shared.databaseStorageRef.read { transaction in
-            DependenciesBridge.shared.wallpaperStore.fetchDimInDarkMode(
+            DependenciesBridge.shared.wallpaperStore.fetchDimInDarkModeForRendering(
                 for: thread?.uniqueId,
                 tx: transaction
             )
@@ -358,6 +359,7 @@ private class WallpaperPage: UIViewController {
             view.addSubview(scrollView)
             scrollView.autoPinEdgesToSuperviewEdges()
             scrollView.addSubview(wallpaperPreviewView)
+            self.scrollView = scrollView
 
             wallpaperPreviewView.autoPinEdgesToSuperviewEdges()
 
@@ -421,14 +423,17 @@ private class WallpaperPage: UIViewController {
 
     private var blurredPhoto: UIImage?
     private func prepareBlurredPhoto() {
-        photo?.withGaussianBlurPromise(
-            radius: 10,
-            resizeToMaxPixelDimension: 1024
-        ).done(on: DispatchQueue.main) { [weak self] blurredPhoto in
-            self?.blurredPhoto = blurredPhoto
-            self?.updatePhoto()
-        }.catch { error in
-            owsFailDebug("Failed to blur image \(error)")
+        Task { [weak self, photo] in
+            do {
+                let blurredPhoto = try await photo?.withGaussianBlurAsync(
+                    radius: 10,
+                    resizeToMaxPixelDimension: 1024
+                )
+                self?.blurredPhoto = blurredPhoto
+                self?.updatePhoto()
+            } catch {
+                owsFailDebug("Failed to blur image \(error)")
+            }
         }
     }
 
@@ -473,6 +478,24 @@ private class WallpaperPage: UIViewController {
         } else {
             wallpaperViewHeightAndWidthPriorityConstraints.forEach { $0.isActive = true }
         }
+    }
+
+    func generateSnapshotImage() -> UIImage? {
+        guard case .photo = wallpaper, let scrollView else {
+            return view.renderAsImage()
+        }
+
+        let viewForSnapshotting = UIView(frame: scrollView.frame)
+        viewForSnapshotting.clipsToBounds = true
+        let imageView = UIImageView(image: shouldBlur ? blurredPhoto : photo)
+        viewForSnapshotting.addSubview(imageView)
+        imageView.frame = CGRect(
+            x: -scrollView.contentOffset.x,
+            y: -scrollView.contentOffset.y,
+            width: scrollView.contentScaleFactor * scrollView.contentSize.width,
+            height: scrollView.contentScaleFactor * scrollView.contentSize.height
+        )
+        return viewForSnapshotting.renderAsImage()
     }
 }
 

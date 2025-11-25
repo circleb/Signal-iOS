@@ -3,6 +3,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+public import LibSignalClient
+
 public class NoopNotificationPresenterImpl: NotificationPresenter {
     public func registerNotificationSettings() async {
         Logger.warn("")
@@ -64,6 +66,23 @@ public class NoopNotificationPresenterImpl: NotificationPresenter {
         Logger.warn("")
     }
 
+    public func notifyUserOfPollEnd(
+        forMessage message: TSIncomingMessage,
+        thread: TSThread,
+        transaction: DBWriteTransaction
+    ) {
+        Logger.warn("")
+    }
+
+    public func notifyUserOfPollVote(
+        forMessage message: TSOutgoingMessage,
+        voteAuthor: Aci,
+        thread: TSThread,
+        transaction: DBWriteTransaction
+    ) {
+        Logger.warn("")
+    }
+
     public func notifyTestPopulation(ofErrorMessage errorString: String) {
         owsAssertDebug(expectErrors, "Internal error message: \(errorString)")
         Logger.warn("")
@@ -97,6 +116,18 @@ public class NoopNotificationPresenterImpl: NotificationPresenter {
         Logger.warn("")
     }
 
+    public func scheduleNotifyForBackupsEnabled(backupsTimestamp: Date) {
+        Logger.warn("")
+    }
+
+    public func notifyUserOfMediaTierQuotaConsumed() {
+        Logger.warn("")
+    }
+
+    public func notifyUserOfListMediaIntegrityCheckFailure() {
+        Logger.warn("")
+    }
+
     public func notifyUserToRelaunchAfterTransfer(completion: @escaping () -> Void) {
         Logger.warn("")
     }
@@ -109,11 +140,7 @@ public class NoopNotificationPresenterImpl: NotificationPresenter {
         Logger.warn("")
     }
 
-    public func clearAllNotificationsExceptNewLinkedDevices() {
-        Logger.warn("")
-    }
-
-    public static func clearAllNotificationsExceptNewLinkedDevices() {
+    public func clearNotificationsForAppActivate() {
         Logger.warn("")
     }
 

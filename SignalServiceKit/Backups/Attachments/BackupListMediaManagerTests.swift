@@ -11,11 +11,11 @@ import Testing
 
 public class BackupListMediaManagerTests {
 
+    let accountKeyStore: AccountKeyStore
     let attachmentStore = AttachmentStoreImpl()
-    let backupAttachmentDownloadStore = BackupAttachmentDownloadStoreImpl()
+    let backupAttachmentDownloadStore = BackupAttachmentDownloadStore()
     let backupAttachmentUploadScheduler = BackupAttachmentUploadSchedulerMock()
-    let backupAttachmentUploadStore = BackupAttachmentUploadStoreImpl()
-    let backupKeyMaterial = BackupKeyMaterialMock()
+    let backupAttachmentUploadStore = BackupAttachmentUploadStore()
     fileprivate let backupRequestManager = BackupRequestManagerMock()
     let backupSettingsStore = BackupSettingsStore()
     let db = InMemoryDB()
@@ -29,7 +29,11 @@ public class BackupListMediaManagerTests {
         let dateProvider: DateProvider = {
             Date()
         }
+        self.accountKeyStore = AccountKeyStore(
+            backupSettingsStore: backupSettingsStore
+        )
         self.listMediaManager = BackupListMediaManagerImpl(
+            accountKeyStore: accountKeyStore,
             attachmentStore: attachmentStore,
             attachmentUploadStore: AttachmentUploadStoreImpl(
                 attachmentStore: attachmentStore
@@ -40,11 +44,12 @@ public class BackupListMediaManagerTests {
             backupAttachmentUploadScheduler: backupAttachmentUploadScheduler,
             backupAttachmentUploadStore: backupAttachmentUploadStore,
             backupAttachmentUploadEraStore: BackupAttachmentUploadEraStore(),
-            backupKeyMaterial: backupKeyMaterial,
+            backupListMediaStore: BackupListMediaStore(),
             backupRequestManager: backupRequestManager,
             backupSettingsStore: backupSettingsStore,
             dateProvider: dateProvider,
             db: db,
+            notificationPresenter: NoopNotificationPresenterImpl(),
             orphanedBackupAttachmentStore: orphanedBackupAttachmentStore,
             remoteConfigManager: remoteConfigManager,
             tsAccountManager: tsAccountManager
@@ -56,16 +61,14 @@ public class BackupListMediaManagerTests {
         let localUploadEra = "1"
 
         let remoteConfigCdnNumber: UInt32 = 100
-        remoteConfigManager.cachedConfig = RemoteConfig(
+        remoteConfigManager._currentConfig = RemoteConfig(
             clockSkew: 0,
             valueFlags: ["global.backups.mediaTierFallbackCdnNumber": "\(remoteConfigCdnNumber)"],
         )
 
-        backupKeyMaterial.mediaBackupKey = try BackupKey(
-            contents: Data(repeating: 8, count: 32)
-        )
-
+        let mediaRootBackupKey = MediaRootBackupKey(backupKey: .generateRandom())
         await db.awaitableWrite { tx in
+            accountKeyStore.setMediaRootBackupKey(mediaRootBackupKey, tx: tx)
             backupSettingsStore.setBackupPlan(.paid(optimizeLocalStorage: false), tx: tx)
         }
 
@@ -113,7 +116,7 @@ public class BackupListMediaManagerTests {
         let discoveredCdnNumberIds = try await db.awaitableWrite { tx in
             return try (0..<numAttachmentsPerCase).map { _ in
                 let mediaName = UUID().uuidString
-                let mediaId = try backupKeyMaterial.mediaBackupKey.deriveMediaId(mediaName)
+                let mediaId = try mediaRootBackupKey.deriveMediaId(mediaName)
                 discoveredCdnNumberMedia.append(.init(
                     cdn: discoveredCdnNumber,
                     mediaId: mediaId.asBase64Url,
@@ -134,7 +137,7 @@ public class BackupListMediaManagerTests {
         let matchingCdnNumberIds = try await db.awaitableWrite { tx in
             return try (0..<numAttachmentsPerCase).map { _ in
                 let mediaName = UUID().uuidString
-                let mediaId = try backupKeyMaterial.mediaBackupKey.deriveMediaId(mediaName)
+                let mediaId = try mediaRootBackupKey.deriveMediaId(mediaName)
                 matchingCdnNumberMedia.append(.init(
                     cdn: matchingCdnNumber,
                     mediaId: mediaId.asBase64Url,
@@ -165,7 +168,7 @@ public class BackupListMediaManagerTests {
         let nonMatchingCdnNumberIds = try await db.awaitableWrite { tx in
             return try (0..<numAttachmentsPerCase).map { _ in
                 let mediaName = UUID().uuidString
-                let mediaId = try backupKeyMaterial.mediaBackupKey.deriveMediaId(mediaName)
+                let mediaId = try mediaRootBackupKey.deriveMediaId(mediaName)
                 nonMatchingCdnNumberMedia.append(.init(
                     // Prefer a cdn number matching remote config,
                     // instead of the other orphaned one below
@@ -309,7 +312,7 @@ public class BackupListMediaManagerTests {
                 blurHash: nil,
                 mimeType: "image/jpeg",
                 encryptionKey: UUID().data,
-                transitTierInfo: nil,
+                latestTransitTierInfo: nil,
                 sha256ContentHash: UUID().data,
                 mediaName: mediaName,
                 mediaTierInfo: mediaTierInfo,
@@ -370,82 +373,5 @@ public class BackupListMediaManagerTests {
         }
 
         return attachmentRecord.sqliteId!
-    }
-}
-
-// MAEK: - Mocks
-
-private class BackupRequestManagerMock: BackupRequestManager {
-
-    init() {}
-
-    func fetchBackupServiceAuth(
-        for credentialType: SignalServiceKit.BackupAuthCredentialType,
-        localAci: LibSignalClient.Aci,
-        auth: SignalServiceKit.ChatServiceAuth,
-        forceRefreshUnlessCachedPaidCredential: Bool
-    ) async throws -> SignalServiceKit.BackupServiceAuth {
-        return BackupServiceAuth.mock(type: .media, backupLevel: .paid)
-    }
-
-    func fetchBackupUploadForm(
-        backupByteLength: UInt32,
-        auth: SignalServiceKit.BackupServiceAuth
-    ) async throws -> SignalServiceKit.Upload.Form {
-        fatalError("Unimplemented")
-    }
-
-    func fetchBackupMediaAttachmentUploadForm(
-        auth: SignalServiceKit.BackupServiceAuth
-    ) async throws -> SignalServiceKit.Upload.Form {
-        fatalError("Unimplemented")
-    }
-
-    func fetchMediaTierCdnRequestMetadata(
-        cdn: Int32,
-        auth: SignalServiceKit.BackupServiceAuth
-    ) async throws -> SignalServiceKit.MediaTierReadCredential {
-        fatalError("Unimplemented")
-    }
-
-    func fetchBackupRequestMetadata(
-        auth: SignalServiceKit.BackupServiceAuth
-    ) async throws -> SignalServiceKit.BackupReadCredential {
-        fatalError("Unimplemented")
-    }
-
-    func copyToMediaTier(
-        item: SignalServiceKit.BackupArchive.Request.MediaItem,
-        auth: SignalServiceKit.BackupServiceAuth
-    ) async throws -> UInt32 {
-        fatalError("Unimplemented")
-    }
-
-    func copyToMediaTier(
-        items: [SignalServiceKit.BackupArchive.Request.MediaItem],
-        auth: SignalServiceKit.BackupServiceAuth
-    ) async throws -> [SignalServiceKit.BackupArchive.Response.BatchedBackupMediaResult] {
-        fatalError("Unimplemented")
-    }
-
-    var listMediaResults = [BackupArchive.Response.ListMediaResult]()
-
-    func listMediaObjects(
-        cursor: String?,
-        limit: UInt32?,
-        auth: SignalServiceKit.BackupServiceAuth
-    ) async throws -> SignalServiceKit.BackupArchive.Response.ListMediaResult {
-        return listMediaResults.popFirst()!
-    }
-
-    func deleteMediaObjects(
-        objects: [SignalServiceKit.BackupArchive.Request.DeleteMediaTarget],
-        auth: SignalServiceKit.BackupServiceAuth
-    ) async throws {
-        fatalError("Unimplemented")
-    }
-
-    func redeemReceipt(receiptCredentialPresentation: Data) async throws {
-        fatalError("Unimplemented")
     }
 }

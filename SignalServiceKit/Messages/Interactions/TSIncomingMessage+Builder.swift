@@ -30,8 +30,7 @@ public class TSIncomingMessageBuilder: TSMessageBuilder {
         receivedAtTimestamp: UInt64?,
         authorAci: Aci?,
         authorE164: E164?,
-        messageBody: String?,
-        bodyRanges: MessageBodyRanges?,
+        messageBody: ValidatedInlineMessageBody?,
         editState: TSEditState,
         expiresInSeconds: UInt32,
         expireTimerVersion: UInt32?,
@@ -53,7 +52,8 @@ public class TSIncomingMessageBuilder: TSMessageBuilder {
         linkPreview: OWSLinkPreview?,
         messageSticker: MessageSticker?,
         giftBadge: OWSGiftBadge?,
-        paymentNotification: TSPaymentNotification?
+        paymentNotification: TSPaymentNotification?,
+        isPoll: Bool
     ) {
         self.authorAci = authorAci
         self.authorE164 = authorE164
@@ -69,7 +69,6 @@ public class TSIncomingMessageBuilder: TSMessageBuilder {
             timestamp: timestamp,
             receivedAtTimestamp: receivedAtTimestamp,
             messageBody: messageBody,
-            bodyRanges: bodyRanges,
             editState: editState,
             expiresInSeconds: expiresInSeconds,
             expireTimerVersion: expireTimerVersion,
@@ -85,7 +84,8 @@ public class TSIncomingMessageBuilder: TSMessageBuilder {
             contactShare: contactShare,
             linkPreview: linkPreview,
             messageSticker: messageSticker,
-            giftBadge: giftBadge
+            giftBadge: giftBadge,
+            isPoll: isPoll
         )
     }
 
@@ -96,8 +96,7 @@ public class TSIncomingMessageBuilder: TSMessageBuilder {
         receivedAtTimestamp: UInt64? = nil,
         authorAci: Aci? = nil,
         authorE164: E164? = nil,
-        messageBody: String? = nil,
-        bodyRanges: MessageBodyRanges? = nil,
+        messageBody: ValidatedInlineMessageBody? = nil,
         editState: TSEditState = .none,
         expiresInSeconds: UInt32 = 0,
         expireTimerVersion: UInt32? = nil,
@@ -119,7 +118,8 @@ public class TSIncomingMessageBuilder: TSMessageBuilder {
         linkPreview: OWSLinkPreview? = nil,
         messageSticker: MessageSticker? = nil,
         giftBadge: OWSGiftBadge? = nil,
-        paymentNotification: TSPaymentNotification? = nil
+        paymentNotification: TSPaymentNotification? = nil,
+        isPoll: Bool = false
     ) -> TSIncomingMessageBuilder {
         return TSIncomingMessageBuilder(
             thread: thread,
@@ -128,7 +128,6 @@ public class TSIncomingMessageBuilder: TSMessageBuilder {
             authorAci: authorAci,
             authorE164: authorE164,
             messageBody: messageBody,
-            bodyRanges: bodyRanges,
             editState: editState,
             expiresInSeconds: expiresInSeconds,
             expireTimerVersion: expireTimerVersion,
@@ -150,7 +149,8 @@ public class TSIncomingMessageBuilder: TSMessageBuilder {
             linkPreview: linkPreview,
             messageSticker: messageSticker,
             giftBadge: giftBadge,
-            paymentNotification: paymentNotification
+            paymentNotification: paymentNotification,
+            isPoll: isPoll
         )
     }
 

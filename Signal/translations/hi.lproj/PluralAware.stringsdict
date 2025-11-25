@@ -93,6 +93,22 @@
 			<string>नए सदस्य जोड़ें</string>
 		</dict>
 	</dict>
+	<key>BACKUP_SETTINGS_BACKUP_PLAN_FREE_HEADER_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>टेक्स्ट + %1$d दिन का मीडिया बैकअप</string>
+			<key>other</key>
+			<string>टेक्स्ट + %1$d दिनों का मीडिया बैकअप</string>
+		</dict>
+	</dict>
 	<key>CALLS_TAB_DELETE_MULTIPLE_TITLE</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -264,7 +280,7 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>one</key>
-			<string>%1$dचीज़ें</string>
+			<string>%1$d आइटम</string>
 			<key>other</key>
 			<string>%1$d आइटम</string>
 		</dict>
@@ -299,6 +315,54 @@
 			<string>इस रंग का उपयोग %1$d चैट में किया गया है। क्या आप सभी चैट के लिए बदलाव सेव करना चाहते हैं?</string>
 			<key>other</key>
 			<string>इस रंग का उपयोग %1$d चैट में किया गया है। क्या आप सभी चैट के लिए बदलाव सेव करना चाहते हैं?</string>
+		</dict>
+	</dict>
+	<key>CHOOSE_BACKUP_PLAN_BULLET_RECENT_MEDIA_BACKUP_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>आखिरी %1$d दिन का मीडिया</string>
+			<key>other</key>
+			<string>आखिरी %1$d दिनों का मीडिया</string>
+		</dict>
+	</dict>
+	<key>CHOOSE_BACKUP_PLAN_DOWNGRADE_CONFIRMATION_ACTION_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>प्लान बदलने पर, आपके सभी टेक्स्ट मैसेज और पिछले %1$d दिन का मीडिया आपके बैकअप में आ जाएगा।</string>
+			<key>other</key>
+			<string>प्लान बदलने पर, आपके सभी टेक्स्ट मैसेज और पिछले %1$d दिनों का मीडिया आपके बैकअप में आ जाएगा।</string>
+		</dict>
+	</dict>
+	<key>CHOOSE_BACKUP_PLAN_FREE_PLAN_SUBTITLE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>टेक्स्ट + %1$d दिन का मीडिया</string>
+			<key>other</key>
+			<string>टेक्स्ट + %1$d दिनों का मीडिया</string>
 		</dict>
 	</dict>
 	<key>CONVERSATION_DELETE_CONFIRMATIONS_ALERT_TITLE_%d</key>
@@ -419,9 +483,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>one</key>
-			<string>%1$d मिनट</string>
+			<string>%1$d मि.</string>
 			<key>other</key>
-			<string>%1$d मिनट</string>
+			<string>%1$d मि.</string>
 		</dict>
 	</dict>
 	<key>DATE_MINUTES_AGO_LONG_%d</key>
@@ -486,22 +550,6 @@
 			<string>इस संदेश को केवल %1$d बार संपादित किया जा सकता है।</string>
 			<key>other</key>
 			<string>इस संदेश को केवल %1$d बार संपादित किया जा सकता है।</string>
-		</dict>
-	</dict>
-	<key>FORWARD_MESSAGE_FIRST_FORWARD_PROCEED_%d</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@text@</string>
-		<key>text</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
-			<key>one</key>
-			<string>संदेश भेजें</string>
-			<key>other</key>
-			<string>%1$d संदेश भेजें</string>
 		</dict>
 	</dict>
 	<key>GROUPS_TOO_MANY_MEMBERS_ALERT_MESSAGE_%d</key>
@@ -947,9 +995,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>one</key>
-			<string>आप 1 से अधिक आइटम शेयर नहीं कर सकते।</string>
+			<string>%1$d से ज़्यादा आइटम शेयर नहीं किए जा सकते।</string>
 			<key>other</key>
-			<string>आप %1$d से अधिक आइटम शेयर नहीं कर सकते।</string>
+			<string>%1$d से ज़्यादा आइटम शेयर नहीं किए जा सकते।</string>
 		</dict>
 	</dict>
 	<key>INACTIVE_LINKED_DEVICE_REMINDER_MEGAPHONE_BODY_%d</key>
@@ -966,6 +1014,22 @@
 			<string>&quot;%2$@&quot; को लिंक रखने के लिए, %1$d दिन के भीतर उस डिवाइस पर Signal खोलें।</string>
 			<key>other</key>
 			<string>&quot;%2$@&quot; को लिंक रखने के लिए, %1$d दिन के भीतर उस डिवाइस पर Signal खोलें।</string>
+		</dict>
+	</dict>
+	<key>LINK_DEVICE_CONFIRMATION_ALERT_TRANSFER_SUBTITLE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>अपने टेक्स्ट मैसेज और पिछले %1$d दिन का मीडिया ट्रांसफ़र करें</string>
+			<key>other</key>
+			<string>अपने टेक्स्ट मैसेज और पिछले %1$d दिनों का मीडिया ट्रांसफ़र करें</string>
 		</dict>
 	</dict>
 	<key>MANY_GROUPS_IN_COMMON_%d</key>
@@ -1062,22 +1126,6 @@
 			<string>%1$d को फ़ॉरवर्ड करें</string>
 			<key>other</key>
 			<string>%1$d को फ़ॉरवर्ड करें</string>
-		</dict>
-	</dict>
-	<key>MESSAGES_VIEW_GROUP_N_MEMBERS_BLOCKED_%d</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@caption@</string>
-		<key>caption</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
-			<key>one</key>
-			<string>आपने इस ग्रुप के %1$d सदस्य को ब्लॉक किया</string>
-			<key>other</key>
-			<string>आपने इस ग्रुप के %1$d सदस्यों को ब्लॉक किया</string>
 		</dict>
 	</dict>
 	<key>MESSAGE_ACTIONS_TOOLBAR_CAPTION_%d</key>
@@ -1315,9 +1363,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>one</key>
-			<string>आमंत्रण फिर से लागू करें</string>
+			<string>इनवाइट वापस लें</string>
 			<key>other</key>
-			<string>आमंत्रण फिर से लागू करें</string>
+			<string>इनवाइट वापस लें</string>
 		</dict>
 	</dict>
 	<key>PENDING_GROUP_MEMBERS_REVOKE_INVITE_CONFIRMATION_TITLE_%d</key>
@@ -1334,6 +1382,22 @@
 			<string>&quot;%2$@&quot; द्वारा भेजा गया ग्रुप आमंत्रण फिर से लागू करना है?</string>
 			<key>other</key>
 			<string>&quot;%2$@&quot; द्वारा भेजे गए %1$d आमंत्रण फिर से लागू करने हैं?</string>
+		</dict>
+	</dict>
+	<key>POLL_VOTE_COUNT</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d वोट</string>
+			<key>other</key>
+			<string>%1$d वोट</string>
 		</dict>
 	</dict>
 	<key>PRIVATE_STORY_VIEWERS_%d</key>
@@ -1526,6 +1590,70 @@
 			<string>%1$ldअन्य</string>
 			<key>other</key>
 			<string>%1$ldअन्य</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_AUDIO_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>इस डिवाइस को लिंक करते समय यह वॉइस मैसेज आपके फ़ोन से ट्रांसफ़र नहीं हुआ था। डिवाइस लिंक करते समय %1$d दिन से पुराना मीडिया और फ़ाइलें सिंक नहीं की जा सकतीं।</string>
+			<key>other</key>
+			<string>इस डिवाइस को लिंक करते समय यह वॉइस मैसेज आपके फ़ोन से ट्रांसफ़र नहीं हुआ था। डिवाइस लिंक करते समय %1$d दिनों से पुराना मीडिया और फ़ाइलें सिंक नहीं की जा सकतीं।</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_FILE_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>इस डिवाइस को लिंक करते समय यह फ़ाइल आपके फ़ोन से ट्रांसफ़र नहीं हुई थी। डिवाइस लिंक करते समय %1$d दिन से पुराना मीडिया और फ़ाइलें सिंक नहीं की जा सकतीं।</string>
+			<key>other</key>
+			<string>इस डिवाइस को लिंक करते समय यह फ़ाइल आपके फ़ोन से ट्रांसफ़र नहीं हुई थी। डिवाइस लिंक करते समय %1$d दिनों से पुराना मीडिया और फ़ाइलें सिंक नहीं की जा सकतीं।</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_OVERSIZE_TEXT_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>इस डिवाइस को लिंक करते समय इस मैसेज का पूरा टेक्स्ट आपके फ़ोन से ट्रांसफ़र नहीं हुआ था। डिवाइस लिंक करते समय %1$d दिन से पुराना मीडिया और फ़ाइलें सिंक नहीं की जा सकतीं।</string>
+			<key>other</key>
+			<string>इस डिवाइस को लिंक करते समय इस मैसेज का पूरा टेक्स्ट आपके फ़ोन से ट्रांसफ़र नहीं हुआ था। डिवाइस लिंक करते समय %1$d दिनों से पुराना मीडिया और फ़ाइलें सिंक नहीं की जा सकतीं।</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_STICKER_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>इस डिवाइस को लिंक करते समय यह स्टिकर आपके फ़ोन से ट्रांसफ़र नहीं हुआ था। डिवाइस लिंक करते समय %1$d दिन से पुराना मीडिया और फ़ाइलें सिंक नहीं की जा सकतीं।</string>
+			<key>other</key>
+			<string>इस डिवाइस को लिंक करते समय यह स्टिकर आपके फ़ोन से ट्रांसफ़र नहीं हुआ था। डिवाइस लिंक करते समय %1$d दिनों से पुराना मीडिया और फ़ाइलें सिंक नहीं की जा सकतीं।</string>
 		</dict>
 	</dict>
 	<key>USERNAME_SELECTION_TOO_SHORT_ERROR_MESSAGE_%d</key>

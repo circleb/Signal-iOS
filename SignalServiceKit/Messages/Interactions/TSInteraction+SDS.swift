@@ -26,7 +26,7 @@ public struct InteractionRecord: SDSRecord {
 
     // This defines all of the columns used in the table
     // where this model (and any subclasses) are persisted.
-    public let recordType: SDSRecordType
+    public let recordType: SDSRecordType?
     public let uniqueId: String
 
     // Properties
@@ -103,6 +103,7 @@ public struct InteractionRecord: SDSRecord {
     public let archivedPaymentInfo: Data?
     public let expireTimerVersion: UInt32?
     public let isSmsMessageRestoredFromBackup: Bool?
+    public let isPoll: Bool?
 
     public enum CodingKeys: String, CodingKey, ColumnExpression, CaseIterable {
         case id
@@ -181,6 +182,7 @@ public struct InteractionRecord: SDSRecord {
         case archivedPaymentInfo
         case expireTimerVersion
         case isSmsMessageRestoredFromBackup
+        case isPoll
     }
 
     public static func columnName(_ column: InteractionRecord.CodingKeys, fullyQualified: Bool = false) -> String {
@@ -205,7 +207,7 @@ public extension InteractionRecord {
 
     init(row: Row) {
         id = row[0]
-        recordType = row[1]
+        recordType = row[1].flatMap { SDSRecordType(rawValue: $0) }
         uniqueId = row[2]
         receivedAtTimestamp = row[3]
         timestamp = row[4]
@@ -215,7 +217,7 @@ public extension InteractionRecord {
         authorPhoneNumber = row[8]
         authorUUID = row[9]
         body = row[10]
-        callType = row[11]
+        callType = row[11].flatMap { RPRecentCallType(rawValue: $0) }
         configurationDurationSeconds = row[12]
         configurationIsEnabled = row[13]
         contactShare = row[14]
@@ -223,11 +225,11 @@ public extension InteractionRecord {
         createdInExistingGroup = row[16]
         customMessage = row[17]
         envelopeData = row[18]
-        errorType = row[19]
+        errorType = row[19].flatMap { TSErrorMessageType(rawValue: $0) }
         expireStartedAt = row[20]
         expiresAt = row[21]
         expiresInSeconds = row[22]
-        groupMetaMessage = row[23]
+        groupMetaMessage = row[23].flatMap { TSGroupMetaMessage(rawValue: $0) }
         hasLegacyMessageState = row[24]
         hasSyncedTranscript = row[25]
         wasNotCreatedLocally = row[26]
@@ -235,12 +237,12 @@ public extension InteractionRecord {
         isViewOnceComplete = row[28]
         isViewOnceMessage = row[29]
         isVoiceMessage = row[30]
-        legacyMessageState = row[31]
+        legacyMessageState = row[31].flatMap { TSOutgoingMessageState(rawValue: $0) }
         legacyWasDelivered = row[32]
         linkPreview = row[33]
         messageId = row[34]
         messageSticker = row[35]
-        messageType = row[36]
+        messageType = row[36].flatMap { TSInfoMessageType(rawValue: $0) }
         mostRecentFailureText = row[37]
         preKeyBundle = row[38]
         protocolVersion = row[39]
@@ -251,15 +253,15 @@ public extension InteractionRecord {
         sender = row[44]
         serverTimestamp = row[45]
         deprecated_sourceDeviceId = row[46]
-        storedMessageState = row[47]
+        storedMessageState = row[47].flatMap { TSOutgoingMessageState(rawValue: $0) }
         storedShouldStartExpireTimer = row[48]
         unregisteredAddress = row[49]
-        verificationState = row[50]
+        verificationState = row[50].flatMap { OWSVerificationState(rawValue: $0) }
         wasReceivedByUD = row[51]
         infoMessageUserInfo = row[52]
         wasRemotelyDeleted = row[53]
         bodyRanges = row[54]
-        offerType = row[55]
+        offerType = row[55].flatMap { TSRecentCallOfferType(rawValue: $0) }
         serverDeliveryTimestamp = row[56]
         eraId = row[57]
         hasEnded = row[58]
@@ -276,10 +278,11 @@ public extension InteractionRecord {
         isGroupStoryReply = row[69]
         storyReactionEmoji = row[70]
         giftBadge = row[71]
-        editState = row[72]
+        editState = row[72].flatMap { TSEditState(rawValue: $0) }
         archivedPaymentInfo = row[73]
         expireTimerVersion = row[74]
         isSmsMessageRestoredFromBackup = row[75]
+        isPoll = row[76]
     }
 }
 
@@ -302,11 +305,10 @@ extension TSInteraction {
     // the corresponding model class.
     class func fromRecord(_ record: InteractionRecord) throws -> TSInteraction {
 
-        guard let recordId = record.id else {
-            throw SDSError.invalidValue()
-        }
+        guard let recordId = record.id else { throw SDSError.missingRequiredField(fieldName: "id") }
+        guard let recordType = record.recordType else { throw SDSError.missingRequiredField(fieldName: "recordType") }
 
-        switch record.recordType {
+        switch recordType {
         case .addToContactsOfferMessage:
 
             let uniqueId: String = record.uniqueId
@@ -331,6 +333,7 @@ extension TSInteraction {
             let giftBadgeSerialized: Data? = record.giftBadge
             let giftBadge: OWSGiftBadge? = try SDSDeserialization.optionalUnarchive(giftBadgeSerialized, name: "giftBadge")
             let isGroupStoryReply: Bool = try SDSDeserialization.required(record.isGroupStoryReply, name: "isGroupStoryReply")
+            let isPoll: Bool = try SDSDeserialization.required(record.isPoll, name: "isPoll")
             let isSmsMessageRestoredFromBackup: Bool = try SDSDeserialization.required(record.isSmsMessageRestoredFromBackup, name: "isSmsMessageRestoredFromBackup")
             let isViewOnceComplete: Bool = try SDSDeserialization.required(record.isViewOnceComplete, name: "isViewOnceComplete")
             let isViewOnceMessage: Bool = try SDSDeserialization.required(record.isViewOnceMessage, name: "isViewOnceMessage")
@@ -373,6 +376,7 @@ extension TSInteraction {
                                                 expiresInSeconds: expiresInSeconds,
                                                 giftBadge: giftBadge,
                                                 isGroupStoryReply: isGroupStoryReply,
+                                                isPoll: isPoll,
                                                 isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                 isViewOnceComplete: isViewOnceComplete,
                                                 isViewOnceMessage: isViewOnceMessage,
@@ -415,6 +419,7 @@ extension TSInteraction {
             let giftBadgeSerialized: Data? = record.giftBadge
             let giftBadge: OWSGiftBadge? = try SDSDeserialization.optionalUnarchive(giftBadgeSerialized, name: "giftBadge")
             let isGroupStoryReply: Bool = try SDSDeserialization.required(record.isGroupStoryReply, name: "isGroupStoryReply")
+            let isPoll: Bool = try SDSDeserialization.required(record.isPoll, name: "isPoll")
             let isSmsMessageRestoredFromBackup: Bool = try SDSDeserialization.required(record.isSmsMessageRestoredFromBackup, name: "isSmsMessageRestoredFromBackup")
             let isViewOnceComplete: Bool = try SDSDeserialization.required(record.isViewOnceComplete, name: "isViewOnceComplete")
             let isViewOnceMessage: Bool = try SDSDeserialization.required(record.isViewOnceMessage, name: "isViewOnceMessage")
@@ -457,6 +462,7 @@ extension TSInteraction {
                                                         expiresInSeconds: expiresInSeconds,
                                                         giftBadge: giftBadge,
                                                         isGroupStoryReply: isGroupStoryReply,
+                                                        isPoll: isPoll,
                                                         isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                         isViewOnceComplete: isViewOnceComplete,
                                                         isViewOnceMessage: isViewOnceMessage,
@@ -499,6 +505,7 @@ extension TSInteraction {
             let giftBadgeSerialized: Data? = record.giftBadge
             let giftBadge: OWSGiftBadge? = try SDSDeserialization.optionalUnarchive(giftBadgeSerialized, name: "giftBadge")
             let isGroupStoryReply: Bool = try SDSDeserialization.required(record.isGroupStoryReply, name: "isGroupStoryReply")
+            let isPoll: Bool = try SDSDeserialization.required(record.isPoll, name: "isPoll")
             let isSmsMessageRestoredFromBackup: Bool = try SDSDeserialization.required(record.isSmsMessageRestoredFromBackup, name: "isSmsMessageRestoredFromBackup")
             let isViewOnceComplete: Bool = try SDSDeserialization.required(record.isViewOnceComplete, name: "isViewOnceComplete")
             let isViewOnceMessage: Bool = try SDSDeserialization.required(record.isViewOnceMessage, name: "isViewOnceMessage")
@@ -545,6 +552,7 @@ extension TSInteraction {
                                                                  expiresInSeconds: expiresInSeconds,
                                                                  giftBadge: giftBadge,
                                                                  isGroupStoryReply: isGroupStoryReply,
+                                                                 isPoll: isPoll,
                                                                  isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                                  isViewOnceComplete: isViewOnceComplete,
                                                                  isViewOnceMessage: isViewOnceMessage,
@@ -617,6 +625,7 @@ extension TSInteraction {
             let giftBadgeSerialized: Data? = record.giftBadge
             let giftBadge: OWSGiftBadge? = try SDSDeserialization.optionalUnarchive(giftBadgeSerialized, name: "giftBadge")
             let isGroupStoryReply: Bool = try SDSDeserialization.required(record.isGroupStoryReply, name: "isGroupStoryReply")
+            let isPoll: Bool = try SDSDeserialization.required(record.isPoll, name: "isPoll")
             let isSmsMessageRestoredFromBackup: Bool = try SDSDeserialization.required(record.isSmsMessageRestoredFromBackup, name: "isSmsMessageRestoredFromBackup")
             let isViewOnceComplete: Bool = try SDSDeserialization.required(record.isViewOnceComplete, name: "isViewOnceComplete")
             let isViewOnceMessage: Bool = try SDSDeserialization.required(record.isViewOnceMessage, name: "isViewOnceMessage")
@@ -660,6 +669,7 @@ extension TSInteraction {
                                                      expiresInSeconds: expiresInSeconds,
                                                      giftBadge: giftBadge,
                                                      isGroupStoryReply: isGroupStoryReply,
+                                                     isPoll: isPoll,
                                                      isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                      isViewOnceComplete: isViewOnceComplete,
                                                      isViewOnceMessage: isViewOnceMessage,
@@ -706,6 +716,7 @@ extension TSInteraction {
             let giftBadgeSerialized: Data? = record.giftBadge
             let giftBadge: OWSGiftBadge? = try SDSDeserialization.optionalUnarchive(giftBadgeSerialized, name: "giftBadge")
             let isGroupStoryReply: Bool = try SDSDeserialization.required(record.isGroupStoryReply, name: "isGroupStoryReply")
+            let isPoll: Bool = try SDSDeserialization.required(record.isPoll, name: "isPoll")
             let isSmsMessageRestoredFromBackup: Bool = try SDSDeserialization.required(record.isSmsMessageRestoredFromBackup, name: "isSmsMessageRestoredFromBackup")
             let isViewOnceComplete: Bool = try SDSDeserialization.required(record.isViewOnceComplete, name: "isViewOnceComplete")
             let isViewOnceMessage: Bool = try SDSDeserialization.required(record.isViewOnceMessage, name: "isViewOnceMessage")
@@ -751,6 +762,7 @@ extension TSInteraction {
                                              expiresInSeconds: expiresInSeconds,
                                              giftBadge: giftBadge,
                                              isGroupStoryReply: isGroupStoryReply,
+                                             isPoll: isPoll,
                                              isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                              isViewOnceComplete: isViewOnceComplete,
                                              isViewOnceMessage: isViewOnceMessage,
@@ -799,6 +811,7 @@ extension TSInteraction {
             let giftBadgeSerialized: Data? = record.giftBadge
             let giftBadge: OWSGiftBadge? = try SDSDeserialization.optionalUnarchive(giftBadgeSerialized, name: "giftBadge")
             let isGroupStoryReply: Bool = try SDSDeserialization.required(record.isGroupStoryReply, name: "isGroupStoryReply")
+            let isPoll: Bool = try SDSDeserialization.required(record.isPoll, name: "isPoll")
             let isSmsMessageRestoredFromBackup: Bool = try SDSDeserialization.required(record.isSmsMessageRestoredFromBackup, name: "isSmsMessageRestoredFromBackup")
             let isViewOnceComplete: Bool = try SDSDeserialization.required(record.isViewOnceComplete, name: "isViewOnceComplete")
             let isViewOnceMessage: Bool = try SDSDeserialization.required(record.isViewOnceMessage, name: "isViewOnceMessage")
@@ -851,6 +864,7 @@ extension TSInteraction {
                                                      expiresInSeconds: expiresInSeconds,
                                                      giftBadge: giftBadge,
                                                      isGroupStoryReply: isGroupStoryReply,
+                                                     isPoll: isPoll,
                                                      isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                      isViewOnceComplete: isViewOnceComplete,
                                                      isViewOnceMessage: isViewOnceMessage,
@@ -899,6 +913,7 @@ extension TSInteraction {
             let giftBadgeSerialized: Data? = record.giftBadge
             let giftBadge: OWSGiftBadge? = try SDSDeserialization.optionalUnarchive(giftBadgeSerialized, name: "giftBadge")
             let isGroupStoryReply: Bool = try SDSDeserialization.required(record.isGroupStoryReply, name: "isGroupStoryReply")
+            let isPoll: Bool = try SDSDeserialization.required(record.isPoll, name: "isPoll")
             let isSmsMessageRestoredFromBackup: Bool = try SDSDeserialization.required(record.isSmsMessageRestoredFromBackup, name: "isSmsMessageRestoredFromBackup")
             let isViewOnceComplete: Bool = try SDSDeserialization.required(record.isViewOnceComplete, name: "isViewOnceComplete")
             let isViewOnceMessage: Bool = try SDSDeserialization.required(record.isViewOnceMessage, name: "isViewOnceMessage")
@@ -953,6 +968,7 @@ extension TSInteraction {
                                              expiresInSeconds: expiresInSeconds,
                                              giftBadge: giftBadge,
                                              isGroupStoryReply: isGroupStoryReply,
+                                             isPoll: isPoll,
                                              isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                              isViewOnceComplete: isViewOnceComplete,
                                              isViewOnceMessage: isViewOnceMessage,
@@ -1003,6 +1019,7 @@ extension TSInteraction {
             let giftBadgeSerialized: Data? = record.giftBadge
             let giftBadge: OWSGiftBadge? = try SDSDeserialization.optionalUnarchive(giftBadgeSerialized, name: "giftBadge")
             let isGroupStoryReply: Bool = try SDSDeserialization.required(record.isGroupStoryReply, name: "isGroupStoryReply")
+            let isPoll: Bool = try SDSDeserialization.required(record.isPoll, name: "isPoll")
             let isSmsMessageRestoredFromBackup: Bool = try SDSDeserialization.required(record.isSmsMessageRestoredFromBackup, name: "isSmsMessageRestoredFromBackup")
             let isViewOnceComplete: Bool = try SDSDeserialization.required(record.isViewOnceComplete, name: "isViewOnceComplete")
             let isViewOnceMessage: Bool = try SDSDeserialization.required(record.isViewOnceMessage, name: "isViewOnceMessage")
@@ -1053,6 +1070,7 @@ extension TSInteraction {
                                                               expiresInSeconds: expiresInSeconds,
                                                               giftBadge: giftBadge,
                                                               isGroupStoryReply: isGroupStoryReply,
+                                                              isPoll: isPoll,
                                                               isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                               isViewOnceComplete: isViewOnceComplete,
                                                               isViewOnceMessage: isViewOnceMessage,
@@ -1100,6 +1118,7 @@ extension TSInteraction {
             let giftBadgeSerialized: Data? = record.giftBadge
             let giftBadge: OWSGiftBadge? = try SDSDeserialization.optionalUnarchive(giftBadgeSerialized, name: "giftBadge")
             let isGroupStoryReply: Bool = try SDSDeserialization.required(record.isGroupStoryReply, name: "isGroupStoryReply")
+            let isPoll: Bool = try SDSDeserialization.required(record.isPoll, name: "isPoll")
             let isSmsMessageRestoredFromBackup: Bool = try SDSDeserialization.required(record.isSmsMessageRestoredFromBackup, name: "isSmsMessageRestoredFromBackup")
             let isViewOnceComplete: Bool = try SDSDeserialization.required(record.isViewOnceComplete, name: "isViewOnceComplete")
             let isViewOnceMessage: Bool = try SDSDeserialization.required(record.isViewOnceMessage, name: "isViewOnceMessage")
@@ -1150,6 +1169,7 @@ extension TSInteraction {
                                                       expiresInSeconds: expiresInSeconds,
                                                       giftBadge: giftBadge,
                                                       isGroupStoryReply: isGroupStoryReply,
+                                                      isPoll: isPoll,
                                                       isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                       isViewOnceComplete: isViewOnceComplete,
                                                       isViewOnceMessage: isViewOnceMessage,
@@ -1197,6 +1217,7 @@ extension TSInteraction {
             let giftBadgeSerialized: Data? = record.giftBadge
             let giftBadge: OWSGiftBadge? = try SDSDeserialization.optionalUnarchive(giftBadgeSerialized, name: "giftBadge")
             let isGroupStoryReply: Bool = try SDSDeserialization.required(record.isGroupStoryReply, name: "isGroupStoryReply")
+            let isPoll: Bool = try SDSDeserialization.required(record.isPoll, name: "isPoll")
             let isSmsMessageRestoredFromBackup: Bool = try SDSDeserialization.required(record.isSmsMessageRestoredFromBackup, name: "isSmsMessageRestoredFromBackup")
             let isViewOnceComplete: Bool = try SDSDeserialization.required(record.isViewOnceComplete, name: "isViewOnceComplete")
             let isViewOnceMessage: Bool = try SDSDeserialization.required(record.isViewOnceMessage, name: "isViewOnceMessage")
@@ -1238,6 +1259,7 @@ extension TSInteraction {
                                                        expiresInSeconds: expiresInSeconds,
                                                        giftBadge: giftBadge,
                                                        isGroupStoryReply: isGroupStoryReply,
+                                                       isPoll: isPoll,
                                                        isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                        isViewOnceComplete: isViewOnceComplete,
                                                        isViewOnceMessage: isViewOnceMessage,
@@ -1279,6 +1301,7 @@ extension TSInteraction {
             let giftBadgeSerialized: Data? = record.giftBadge
             let giftBadge: OWSGiftBadge? = try SDSDeserialization.optionalUnarchive(giftBadgeSerialized, name: "giftBadge")
             let isGroupStoryReply: Bool = try SDSDeserialization.required(record.isGroupStoryReply, name: "isGroupStoryReply")
+            let isPoll: Bool = try SDSDeserialization.required(record.isPoll, name: "isPoll")
             let isSmsMessageRestoredFromBackup: Bool = try SDSDeserialization.required(record.isSmsMessageRestoredFromBackup, name: "isSmsMessageRestoredFromBackup")
             let isViewOnceComplete: Bool = try SDSDeserialization.required(record.isViewOnceComplete, name: "isViewOnceComplete")
             let isViewOnceMessage: Bool = try SDSDeserialization.required(record.isViewOnceMessage, name: "isViewOnceMessage")
@@ -1320,6 +1343,7 @@ extension TSInteraction {
                                                       expiresInSeconds: expiresInSeconds,
                                                       giftBadge: giftBadge,
                                                       isGroupStoryReply: isGroupStoryReply,
+                                                      isPoll: isPoll,
                                                       isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                       isViewOnceComplete: isViewOnceComplete,
                                                       isViewOnceMessage: isViewOnceMessage,
@@ -1361,6 +1385,7 @@ extension TSInteraction {
             let giftBadgeSerialized: Data? = record.giftBadge
             let giftBadge: OWSGiftBadge? = try SDSDeserialization.optionalUnarchive(giftBadgeSerialized, name: "giftBadge")
             let isGroupStoryReply: Bool = try SDSDeserialization.required(record.isGroupStoryReply, name: "isGroupStoryReply")
+            let isPoll: Bool = try SDSDeserialization.required(record.isPoll, name: "isPoll")
             let isSmsMessageRestoredFromBackup: Bool = try SDSDeserialization.required(record.isSmsMessageRestoredFromBackup, name: "isSmsMessageRestoredFromBackup")
             let isViewOnceComplete: Bool = try SDSDeserialization.required(record.isViewOnceComplete, name: "isViewOnceComplete")
             let isViewOnceMessage: Bool = try SDSDeserialization.required(record.isViewOnceMessage, name: "isViewOnceMessage")
@@ -1406,6 +1431,7 @@ extension TSInteraction {
                                                     expiresInSeconds: expiresInSeconds,
                                                     giftBadge: giftBadge,
                                                     isGroupStoryReply: isGroupStoryReply,
+                                                    isPoll: isPoll,
                                                     isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                     isViewOnceComplete: isViewOnceComplete,
                                                     isViewOnceMessage: isViewOnceMessage,
@@ -1450,6 +1476,7 @@ extension TSInteraction {
             let giftBadgeSerialized: Data? = record.giftBadge
             let giftBadge: OWSGiftBadge? = try SDSDeserialization.optionalUnarchive(giftBadgeSerialized, name: "giftBadge")
             let isGroupStoryReply: Bool = try SDSDeserialization.required(record.isGroupStoryReply, name: "isGroupStoryReply")
+            let isPoll: Bool = try SDSDeserialization.required(record.isPoll, name: "isPoll")
             let isSmsMessageRestoredFromBackup: Bool = try SDSDeserialization.required(record.isSmsMessageRestoredFromBackup, name: "isSmsMessageRestoredFromBackup")
             let isViewOnceComplete: Bool = try SDSDeserialization.required(record.isViewOnceComplete, name: "isViewOnceComplete")
             let isViewOnceMessage: Bool = try SDSDeserialization.required(record.isViewOnceMessage, name: "isViewOnceMessage")
@@ -1498,6 +1525,7 @@ extension TSInteraction {
                                                      expiresInSeconds: expiresInSeconds,
                                                      giftBadge: giftBadge,
                                                      isGroupStoryReply: isGroupStoryReply,
+                                                     isPoll: isPoll,
                                                      isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                      isViewOnceComplete: isViewOnceComplete,
                                                      isViewOnceMessage: isViewOnceMessage,
@@ -1568,6 +1596,7 @@ extension TSInteraction {
             let giftBadgeSerialized: Data? = record.giftBadge
             let giftBadge: OWSGiftBadge? = try SDSDeserialization.optionalUnarchive(giftBadgeSerialized, name: "giftBadge")
             let isGroupStoryReply: Bool = try SDSDeserialization.required(record.isGroupStoryReply, name: "isGroupStoryReply")
+            let isPoll: Bool = try SDSDeserialization.required(record.isPoll, name: "isPoll")
             let isSmsMessageRestoredFromBackup: Bool = try SDSDeserialization.required(record.isSmsMessageRestoredFromBackup, name: "isSmsMessageRestoredFromBackup")
             let isViewOnceComplete: Bool = try SDSDeserialization.required(record.isViewOnceComplete, name: "isViewOnceComplete")
             let isViewOnceMessage: Bool = try SDSDeserialization.required(record.isViewOnceMessage, name: "isViewOnceMessage")
@@ -1609,6 +1638,7 @@ extension TSInteraction {
                                   expiresInSeconds: expiresInSeconds,
                                   giftBadge: giftBadge,
                                   isGroupStoryReply: isGroupStoryReply,
+                                  isPoll: isPoll,
                                   isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                   isViewOnceComplete: isViewOnceComplete,
                                   isViewOnceMessage: isViewOnceMessage,
@@ -1650,6 +1680,7 @@ extension TSInteraction {
             let giftBadgeSerialized: Data? = record.giftBadge
             let giftBadge: OWSGiftBadge? = try SDSDeserialization.optionalUnarchive(giftBadgeSerialized, name: "giftBadge")
             let isGroupStoryReply: Bool = try SDSDeserialization.required(record.isGroupStoryReply, name: "isGroupStoryReply")
+            let isPoll: Bool = try SDSDeserialization.required(record.isPoll, name: "isPoll")
             let isSmsMessageRestoredFromBackup: Bool = try SDSDeserialization.required(record.isSmsMessageRestoredFromBackup, name: "isSmsMessageRestoredFromBackup")
             let isViewOnceComplete: Bool = try SDSDeserialization.required(record.isViewOnceComplete, name: "isViewOnceComplete")
             let isViewOnceMessage: Bool = try SDSDeserialization.required(record.isViewOnceMessage, name: "isViewOnceMessage")
@@ -1691,6 +1722,7 @@ extension TSInteraction {
                                      expiresInSeconds: expiresInSeconds,
                                      giftBadge: giftBadge,
                                      isGroupStoryReply: isGroupStoryReply,
+                                     isPoll: isPoll,
                                      isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                      isViewOnceComplete: isViewOnceComplete,
                                      isViewOnceMessage: isViewOnceMessage,
@@ -1736,6 +1768,7 @@ extension TSInteraction {
             let giftBadgeSerialized: Data? = record.giftBadge
             let giftBadge: OWSGiftBadge? = try SDSDeserialization.optionalUnarchive(giftBadgeSerialized, name: "giftBadge")
             let isGroupStoryReply: Bool = try SDSDeserialization.required(record.isGroupStoryReply, name: "isGroupStoryReply")
+            let isPoll: Bool = try SDSDeserialization.required(record.isPoll, name: "isPoll")
             let isSmsMessageRestoredFromBackup: Bool = try SDSDeserialization.required(record.isSmsMessageRestoredFromBackup, name: "isSmsMessageRestoredFromBackup")
             let isViewOnceComplete: Bool = try SDSDeserialization.required(record.isViewOnceComplete, name: "isViewOnceComplete")
             let isViewOnceMessage: Bool = try SDSDeserialization.required(record.isViewOnceMessage, name: "isViewOnceMessage")
@@ -1778,6 +1811,7 @@ extension TSInteraction {
                                  expiresInSeconds: expiresInSeconds,
                                  giftBadge: giftBadge,
                                  isGroupStoryReply: isGroupStoryReply,
+                                 isPoll: isPoll,
                                  isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                  isViewOnceComplete: isViewOnceComplete,
                                  isViewOnceMessage: isViewOnceMessage,
@@ -1835,6 +1869,7 @@ extension TSInteraction {
             let giftBadgeSerialized: Data? = record.giftBadge
             let giftBadge: OWSGiftBadge? = try SDSDeserialization.optionalUnarchive(giftBadgeSerialized, name: "giftBadge")
             let isGroupStoryReply: Bool = try SDSDeserialization.required(record.isGroupStoryReply, name: "isGroupStoryReply")
+            let isPoll: Bool = try SDSDeserialization.required(record.isPoll, name: "isPoll")
             let isSmsMessageRestoredFromBackup: Bool = try SDSDeserialization.required(record.isSmsMessageRestoredFromBackup, name: "isSmsMessageRestoredFromBackup")
             let isViewOnceComplete: Bool = try SDSDeserialization.required(record.isViewOnceComplete, name: "isViewOnceComplete")
             let isViewOnceMessage: Bool = try SDSDeserialization.required(record.isViewOnceMessage, name: "isViewOnceMessage")
@@ -1876,6 +1911,7 @@ extension TSInteraction {
                                                     expiresInSeconds: expiresInSeconds,
                                                     giftBadge: giftBadge,
                                                     isGroupStoryReply: isGroupStoryReply,
+                                                    isPoll: isPoll,
                                                     isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                     isViewOnceComplete: isViewOnceComplete,
                                                     isViewOnceMessage: isViewOnceMessage,
@@ -1917,6 +1953,7 @@ extension TSInteraction {
             let giftBadgeSerialized: Data? = record.giftBadge
             let giftBadge: OWSGiftBadge? = try SDSDeserialization.optionalUnarchive(giftBadgeSerialized, name: "giftBadge")
             let isGroupStoryReply: Bool = try SDSDeserialization.required(record.isGroupStoryReply, name: "isGroupStoryReply")
+            let isPoll: Bool = try SDSDeserialization.required(record.isPoll, name: "isPoll")
             let isSmsMessageRestoredFromBackup: Bool = try SDSDeserialization.required(record.isSmsMessageRestoredFromBackup, name: "isSmsMessageRestoredFromBackup")
             let isViewOnceComplete: Bool = try SDSDeserialization.required(record.isViewOnceComplete, name: "isViewOnceComplete")
             let isViewOnceMessage: Bool = try SDSDeserialization.required(record.isViewOnceMessage, name: "isViewOnceMessage")
@@ -1960,6 +1997,7 @@ extension TSInteraction {
                                                              expiresInSeconds: expiresInSeconds,
                                                              giftBadge: giftBadge,
                                                              isGroupStoryReply: isGroupStoryReply,
+                                                             isPoll: isPoll,
                                                              isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                              isViewOnceComplete: isViewOnceComplete,
                                                              isViewOnceMessage: isViewOnceMessage,
@@ -2003,6 +2041,7 @@ extension TSInteraction {
             let giftBadgeSerialized: Data? = record.giftBadge
             let giftBadge: OWSGiftBadge? = try SDSDeserialization.optionalUnarchive(giftBadgeSerialized, name: "giftBadge")
             let isGroupStoryReply: Bool = try SDSDeserialization.required(record.isGroupStoryReply, name: "isGroupStoryReply")
+            let isPoll: Bool = try SDSDeserialization.required(record.isPoll, name: "isPoll")
             let isSmsMessageRestoredFromBackup: Bool = try SDSDeserialization.required(record.isSmsMessageRestoredFromBackup, name: "isSmsMessageRestoredFromBackup")
             let isViewOnceComplete: Bool = try SDSDeserialization.required(record.isViewOnceComplete, name: "isViewOnceComplete")
             let isViewOnceMessage: Bool = try SDSDeserialization.required(record.isViewOnceMessage, name: "isViewOnceMessage")
@@ -2046,6 +2085,7 @@ extension TSInteraction {
                                                            expiresInSeconds: expiresInSeconds,
                                                            giftBadge: giftBadge,
                                                            isGroupStoryReply: isGroupStoryReply,
+                                                           isPoll: isPoll,
                                                            isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                            isViewOnceComplete: isViewOnceComplete,
                                                            isViewOnceMessage: isViewOnceMessage,
@@ -2089,6 +2129,7 @@ extension TSInteraction {
             let giftBadgeSerialized: Data? = record.giftBadge
             let giftBadge: OWSGiftBadge? = try SDSDeserialization.optionalUnarchive(giftBadgeSerialized, name: "giftBadge")
             let isGroupStoryReply: Bool = try SDSDeserialization.required(record.isGroupStoryReply, name: "isGroupStoryReply")
+            let isPoll: Bool = try SDSDeserialization.required(record.isPoll, name: "isPoll")
             let isSmsMessageRestoredFromBackup: Bool = try SDSDeserialization.required(record.isSmsMessageRestoredFromBackup, name: "isSmsMessageRestoredFromBackup")
             let isViewOnceComplete: Bool = try SDSDeserialization.required(record.isViewOnceComplete, name: "isViewOnceComplete")
             let isViewOnceMessage: Bool = try SDSDeserialization.required(record.isViewOnceMessage, name: "isViewOnceMessage")
@@ -2121,6 +2162,7 @@ extension TSInteraction {
                              expiresInSeconds: expiresInSeconds,
                              giftBadge: giftBadge,
                              isGroupStoryReply: isGroupStoryReply,
+                             isPoll: isPoll,
                              isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                              isViewOnceComplete: isViewOnceComplete,
                              isViewOnceMessage: isViewOnceMessage,
@@ -2157,6 +2199,7 @@ extension TSInteraction {
             let giftBadgeSerialized: Data? = record.giftBadge
             let giftBadge: OWSGiftBadge? = try SDSDeserialization.optionalUnarchive(giftBadgeSerialized, name: "giftBadge")
             let isGroupStoryReply: Bool = try SDSDeserialization.required(record.isGroupStoryReply, name: "isGroupStoryReply")
+            let isPoll: Bool = try SDSDeserialization.required(record.isPoll, name: "isPoll")
             let isSmsMessageRestoredFromBackup: Bool = try SDSDeserialization.required(record.isSmsMessageRestoredFromBackup, name: "isSmsMessageRestoredFromBackup")
             let isViewOnceComplete: Bool = try SDSDeserialization.required(record.isViewOnceComplete, name: "isViewOnceComplete")
             let isViewOnceMessage: Bool = try SDSDeserialization.required(record.isViewOnceMessage, name: "isViewOnceMessage")
@@ -2207,6 +2250,7 @@ extension TSInteraction {
                                      expiresInSeconds: expiresInSeconds,
                                      giftBadge: giftBadge,
                                      isGroupStoryReply: isGroupStoryReply,
+                                     isPoll: isPoll,
                                      isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                      isViewOnceComplete: isViewOnceComplete,
                                      isViewOnceMessage: isViewOnceMessage,
@@ -2246,7 +2290,7 @@ extension TSInteraction {
                                                 uniqueThreadId: uniqueThreadId)
 
         default:
-            owsFailDebug("Unexpected record type: \(record.recordType)")
+            owsFailDebug("Unexpected record type: \(recordType)")
             throw SDSError.invalidValue()
         }
     }
@@ -2416,6 +2460,7 @@ extension TSInteraction: DeepCopyable {
                giftBadge = nil
             }
             let isGroupStoryReply: Bool = modelToCopy.isGroupStoryReply
+            let isPoll: Bool = modelToCopy.isPoll
             let isSmsMessageRestoredFromBackup: Bool = modelToCopy.isSmsMessageRestoredFromBackup
             let isViewOnceComplete: Bool = modelToCopy.isViewOnceComplete
             let isViewOnceMessage: Bool = modelToCopy.isViewOnceMessage
@@ -2476,6 +2521,7 @@ extension TSInteraction: DeepCopyable {
                                                       expiresInSeconds: expiresInSeconds,
                                                       giftBadge: giftBadge,
                                                       isGroupStoryReply: isGroupStoryReply,
+                                                      isPoll: isPoll,
                                                       isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                       isViewOnceComplete: isViewOnceComplete,
                                                       isViewOnceMessage: isViewOnceMessage,
@@ -2538,6 +2584,7 @@ extension TSInteraction: DeepCopyable {
                giftBadge = nil
             }
             let isGroupStoryReply: Bool = modelToCopy.isGroupStoryReply
+            let isPoll: Bool = modelToCopy.isPoll
             let isSmsMessageRestoredFromBackup: Bool = modelToCopy.isSmsMessageRestoredFromBackup
             let isViewOnceComplete: Bool = modelToCopy.isViewOnceComplete
             let isViewOnceMessage: Bool = modelToCopy.isViewOnceMessage
@@ -2598,6 +2645,7 @@ extension TSInteraction: DeepCopyable {
                                                               expiresInSeconds: expiresInSeconds,
                                                               giftBadge: giftBadge,
                                                               isGroupStoryReply: isGroupStoryReply,
+                                                              isPoll: isPoll,
                                                               isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                               isViewOnceComplete: isViewOnceComplete,
                                                               isViewOnceMessage: isViewOnceMessage,
@@ -2660,6 +2708,7 @@ extension TSInteraction: DeepCopyable {
                giftBadge = nil
             }
             let isGroupStoryReply: Bool = modelToCopy.isGroupStoryReply
+            let isPoll: Bool = modelToCopy.isPoll
             let isSmsMessageRestoredFromBackup: Bool = modelToCopy.isSmsMessageRestoredFromBackup
             let isViewOnceComplete: Bool = modelToCopy.isViewOnceComplete
             let isViewOnceMessage: Bool = modelToCopy.isViewOnceMessage
@@ -2728,6 +2777,7 @@ extension TSInteraction: DeepCopyable {
                                              expiresInSeconds: expiresInSeconds,
                                              giftBadge: giftBadge,
                                              isGroupStoryReply: isGroupStoryReply,
+                                             isPoll: isPoll,
                                              isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                              isViewOnceComplete: isViewOnceComplete,
                                              isViewOnceMessage: isViewOnceMessage,
@@ -2793,6 +2843,7 @@ extension TSInteraction: DeepCopyable {
                giftBadge = nil
             }
             let isGroupStoryReply: Bool = modelToCopy.isGroupStoryReply
+            let isPoll: Bool = modelToCopy.isPoll
             let isSmsMessageRestoredFromBackup: Bool = modelToCopy.isSmsMessageRestoredFromBackup
             let isViewOnceComplete: Bool = modelToCopy.isViewOnceComplete
             let isViewOnceMessage: Bool = modelToCopy.isViewOnceMessage
@@ -2854,6 +2905,7 @@ extension TSInteraction: DeepCopyable {
                                                      expiresInSeconds: expiresInSeconds,
                                                      giftBadge: giftBadge,
                                                      isGroupStoryReply: isGroupStoryReply,
+                                                     isPoll: isPoll,
                                                      isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                      isViewOnceComplete: isViewOnceComplete,
                                                      isViewOnceMessage: isViewOnceMessage,
@@ -2917,6 +2969,7 @@ extension TSInteraction: DeepCopyable {
                giftBadge = nil
             }
             let isGroupStoryReply: Bool = modelToCopy.isGroupStoryReply
+            let isPoll: Bool = modelToCopy.isPoll
             let isSmsMessageRestoredFromBackup: Bool = modelToCopy.isSmsMessageRestoredFromBackup
             let isViewOnceComplete: Bool = modelToCopy.isViewOnceComplete
             let isViewOnceMessage: Bool = modelToCopy.isViewOnceMessage
@@ -2977,6 +3030,7 @@ extension TSInteraction: DeepCopyable {
                                      expiresInSeconds: expiresInSeconds,
                                      giftBadge: giftBadge,
                                      isGroupStoryReply: isGroupStoryReply,
+                                     isPoll: isPoll,
                                      isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                      isViewOnceComplete: isViewOnceComplete,
                                      isViewOnceMessage: isViewOnceMessage,
@@ -3039,6 +3093,7 @@ extension TSInteraction: DeepCopyable {
                giftBadge = nil
             }
             let isGroupStoryReply: Bool = modelToCopy.isGroupStoryReply
+            let isPoll: Bool = modelToCopy.isPoll
             let isSmsMessageRestoredFromBackup: Bool = modelToCopy.isSmsMessageRestoredFromBackup
             let isViewOnceComplete: Bool = modelToCopy.isViewOnceComplete
             let isViewOnceMessage: Bool = modelToCopy.isViewOnceMessage
@@ -3102,6 +3157,7 @@ extension TSInteraction: DeepCopyable {
                                                      expiresInSeconds: expiresInSeconds,
                                                      giftBadge: giftBadge,
                                                      isGroupStoryReply: isGroupStoryReply,
+                                                     isPoll: isPoll,
                                                      isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                      isViewOnceComplete: isViewOnceComplete,
                                                      isViewOnceMessage: isViewOnceMessage,
@@ -3162,6 +3218,7 @@ extension TSInteraction: DeepCopyable {
                giftBadge = nil
             }
             let isGroupStoryReply: Bool = modelToCopy.isGroupStoryReply
+            let isPoll: Bool = modelToCopy.isPoll
             let isSmsMessageRestoredFromBackup: Bool = modelToCopy.isSmsMessageRestoredFromBackup
             let isViewOnceComplete: Bool = modelToCopy.isViewOnceComplete
             let isViewOnceMessage: Bool = modelToCopy.isViewOnceMessage
@@ -3229,6 +3286,7 @@ extension TSInteraction: DeepCopyable {
                                                     expiresInSeconds: expiresInSeconds,
                                                     giftBadge: giftBadge,
                                                     isGroupStoryReply: isGroupStoryReply,
+                                                    isPoll: isPoll,
                                                     isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                     isViewOnceComplete: isViewOnceComplete,
                                                     isViewOnceMessage: isViewOnceMessage,
@@ -3288,6 +3346,7 @@ extension TSInteraction: DeepCopyable {
                giftBadge = nil
             }
             let isGroupStoryReply: Bool = modelToCopy.isGroupStoryReply
+            let isPoll: Bool = modelToCopy.isPoll
             let isSmsMessageRestoredFromBackup: Bool = modelToCopy.isSmsMessageRestoredFromBackup
             let isViewOnceComplete: Bool = modelToCopy.isViewOnceComplete
             let isViewOnceMessage: Bool = modelToCopy.isViewOnceMessage
@@ -3352,6 +3411,7 @@ extension TSInteraction: DeepCopyable {
                                                                  expiresInSeconds: expiresInSeconds,
                                                                  giftBadge: giftBadge,
                                                                  isGroupStoryReply: isGroupStoryReply,
+                                                                 isPoll: isPoll,
                                                                  isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                                  isViewOnceComplete: isViewOnceComplete,
                                                                  isViewOnceMessage: isViewOnceMessage,
@@ -3413,6 +3473,7 @@ extension TSInteraction: DeepCopyable {
                giftBadge = nil
             }
             let isGroupStoryReply: Bool = modelToCopy.isGroupStoryReply
+            let isPoll: Bool = modelToCopy.isPoll
             let isSmsMessageRestoredFromBackup: Bool = modelToCopy.isSmsMessageRestoredFromBackup
             let isViewOnceComplete: Bool = modelToCopy.isViewOnceComplete
             let isViewOnceMessage: Bool = modelToCopy.isViewOnceMessage
@@ -3473,6 +3534,7 @@ extension TSInteraction: DeepCopyable {
                                                         expiresInSeconds: expiresInSeconds,
                                                         giftBadge: giftBadge,
                                                         isGroupStoryReply: isGroupStoryReply,
+                                                        isPoll: isPoll,
                                                         isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                         isViewOnceComplete: isViewOnceComplete,
                                                         isViewOnceMessage: isViewOnceMessage,
@@ -3530,6 +3592,7 @@ extension TSInteraction: DeepCopyable {
                giftBadge = nil
             }
             let isGroupStoryReply: Bool = modelToCopy.isGroupStoryReply
+            let isPoll: Bool = modelToCopy.isPoll
             let isSmsMessageRestoredFromBackup: Bool = modelToCopy.isSmsMessageRestoredFromBackup
             let isViewOnceComplete: Bool = modelToCopy.isViewOnceComplete
             let isViewOnceMessage: Bool = modelToCopy.isViewOnceMessage
@@ -3590,6 +3653,7 @@ extension TSInteraction: DeepCopyable {
                                                 expiresInSeconds: expiresInSeconds,
                                                 giftBadge: giftBadge,
                                                 isGroupStoryReply: isGroupStoryReply,
+                                                isPoll: isPoll,
                                                 isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                 isViewOnceComplete: isViewOnceComplete,
                                                 isViewOnceMessage: isViewOnceMessage,
@@ -3647,6 +3711,7 @@ extension TSInteraction: DeepCopyable {
                giftBadge = nil
             }
             let isGroupStoryReply: Bool = modelToCopy.isGroupStoryReply
+            let isPoll: Bool = modelToCopy.isPoll
             let isSmsMessageRestoredFromBackup: Bool = modelToCopy.isSmsMessageRestoredFromBackup
             let isViewOnceComplete: Bool = modelToCopy.isViewOnceComplete
             let isViewOnceMessage: Bool = modelToCopy.isViewOnceMessage
@@ -3707,6 +3772,7 @@ extension TSInteraction: DeepCopyable {
                                  expiresInSeconds: expiresInSeconds,
                                  giftBadge: giftBadge,
                                  isGroupStoryReply: isGroupStoryReply,
+                                 isPoll: isPoll,
                                  isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                  isViewOnceComplete: isViewOnceComplete,
                                  isViewOnceMessage: isViewOnceMessage,
@@ -3764,6 +3830,7 @@ extension TSInteraction: DeepCopyable {
                giftBadge = nil
             }
             let isGroupStoryReply: Bool = modelToCopy.isGroupStoryReply
+            let isPoll: Bool = modelToCopy.isPoll
             let isSmsMessageRestoredFromBackup: Bool = modelToCopy.isSmsMessageRestoredFromBackup
             let isViewOnceComplete: Bool = modelToCopy.isViewOnceComplete
             let isViewOnceMessage: Bool = modelToCopy.isViewOnceMessage
@@ -3825,6 +3892,7 @@ extension TSInteraction: DeepCopyable {
                                              expiresInSeconds: expiresInSeconds,
                                              giftBadge: giftBadge,
                                              isGroupStoryReply: isGroupStoryReply,
+                                             isPoll: isPoll,
                                              isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                              isViewOnceComplete: isViewOnceComplete,
                                              isViewOnceMessage: isViewOnceMessage,
@@ -3888,6 +3956,7 @@ extension TSInteraction: DeepCopyable {
                giftBadge = nil
             }
             let isGroupStoryReply: Bool = modelToCopy.isGroupStoryReply
+            let isPoll: Bool = modelToCopy.isPoll
             let isSmsMessageRestoredFromBackup: Bool = modelToCopy.isSmsMessageRestoredFromBackup
             let isViewOnceComplete: Bool = modelToCopy.isViewOnceComplete
             let isViewOnceMessage: Bool = modelToCopy.isViewOnceMessage
@@ -3942,6 +4011,7 @@ extension TSInteraction: DeepCopyable {
                                                      expiresInSeconds: expiresInSeconds,
                                                      giftBadge: giftBadge,
                                                      isGroupStoryReply: isGroupStoryReply,
+                                                     isPoll: isPoll,
                                                      isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                      isViewOnceComplete: isViewOnceComplete,
                                                      isViewOnceMessage: isViewOnceMessage,
@@ -4003,6 +4073,7 @@ extension TSInteraction: DeepCopyable {
                giftBadge = nil
             }
             let isGroupStoryReply: Bool = modelToCopy.isGroupStoryReply
+            let isPoll: Bool = modelToCopy.isPoll
             let isSmsMessageRestoredFromBackup: Bool = modelToCopy.isSmsMessageRestoredFromBackup
             let isViewOnceComplete: Bool = modelToCopy.isViewOnceComplete
             let isViewOnceMessage: Bool = modelToCopy.isViewOnceMessage
@@ -4056,6 +4127,7 @@ extension TSInteraction: DeepCopyable {
                                      expiresInSeconds: expiresInSeconds,
                                      giftBadge: giftBadge,
                                      isGroupStoryReply: isGroupStoryReply,
+                                     isPoll: isPoll,
                                      isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                      isViewOnceComplete: isViewOnceComplete,
                                      isViewOnceMessage: isViewOnceMessage,
@@ -4116,6 +4188,7 @@ extension TSInteraction: DeepCopyable {
                giftBadge = nil
             }
             let isGroupStoryReply: Bool = modelToCopy.isGroupStoryReply
+            let isPoll: Bool = modelToCopy.isPoll
             let isSmsMessageRestoredFromBackup: Bool = modelToCopy.isSmsMessageRestoredFromBackup
             let isViewOnceComplete: Bool = modelToCopy.isViewOnceComplete
             let isViewOnceMessage: Bool = modelToCopy.isViewOnceMessage
@@ -4177,6 +4250,7 @@ extension TSInteraction: DeepCopyable {
                                                            expiresInSeconds: expiresInSeconds,
                                                            giftBadge: giftBadge,
                                                            isGroupStoryReply: isGroupStoryReply,
+                                                           isPoll: isPoll,
                                                            isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                            isViewOnceComplete: isViewOnceComplete,
                                                            isViewOnceMessage: isViewOnceMessage,
@@ -4235,6 +4309,7 @@ extension TSInteraction: DeepCopyable {
                giftBadge = nil
             }
             let isGroupStoryReply: Bool = modelToCopy.isGroupStoryReply
+            let isPoll: Bool = modelToCopy.isPoll
             let isSmsMessageRestoredFromBackup: Bool = modelToCopy.isSmsMessageRestoredFromBackup
             let isViewOnceComplete: Bool = modelToCopy.isViewOnceComplete
             let isViewOnceMessage: Bool = modelToCopy.isViewOnceMessage
@@ -4296,6 +4371,7 @@ extension TSInteraction: DeepCopyable {
                                                              expiresInSeconds: expiresInSeconds,
                                                              giftBadge: giftBadge,
                                                              isGroupStoryReply: isGroupStoryReply,
+                                                             isPoll: isPoll,
                                                              isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                              isViewOnceComplete: isViewOnceComplete,
                                                              isViewOnceMessage: isViewOnceMessage,
@@ -4354,6 +4430,7 @@ extension TSInteraction: DeepCopyable {
                giftBadge = nil
             }
             let isGroupStoryReply: Bool = modelToCopy.isGroupStoryReply
+            let isPoll: Bool = modelToCopy.isPoll
             let isSmsMessageRestoredFromBackup: Bool = modelToCopy.isSmsMessageRestoredFromBackup
             let isViewOnceComplete: Bool = modelToCopy.isViewOnceComplete
             let isViewOnceMessage: Bool = modelToCopy.isViewOnceMessage
@@ -4413,6 +4490,7 @@ extension TSInteraction: DeepCopyable {
                                                     expiresInSeconds: expiresInSeconds,
                                                     giftBadge: giftBadge,
                                                     isGroupStoryReply: isGroupStoryReply,
+                                                    isPoll: isPoll,
                                                     isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                     isViewOnceComplete: isViewOnceComplete,
                                                     isViewOnceMessage: isViewOnceMessage,
@@ -4469,6 +4547,7 @@ extension TSInteraction: DeepCopyable {
                giftBadge = nil
             }
             let isGroupStoryReply: Bool = modelToCopy.isGroupStoryReply
+            let isPoll: Bool = modelToCopy.isPoll
             let isSmsMessageRestoredFromBackup: Bool = modelToCopy.isSmsMessageRestoredFromBackup
             let isViewOnceComplete: Bool = modelToCopy.isViewOnceComplete
             let isViewOnceMessage: Bool = modelToCopy.isViewOnceMessage
@@ -4528,6 +4607,7 @@ extension TSInteraction: DeepCopyable {
                                                       expiresInSeconds: expiresInSeconds,
                                                       giftBadge: giftBadge,
                                                       isGroupStoryReply: isGroupStoryReply,
+                                                      isPoll: isPoll,
                                                       isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                       isViewOnceComplete: isViewOnceComplete,
                                                       isViewOnceMessage: isViewOnceMessage,
@@ -4584,6 +4664,7 @@ extension TSInteraction: DeepCopyable {
                giftBadge = nil
             }
             let isGroupStoryReply: Bool = modelToCopy.isGroupStoryReply
+            let isPoll: Bool = modelToCopy.isPoll
             let isSmsMessageRestoredFromBackup: Bool = modelToCopy.isSmsMessageRestoredFromBackup
             let isViewOnceComplete: Bool = modelToCopy.isViewOnceComplete
             let isViewOnceMessage: Bool = modelToCopy.isViewOnceMessage
@@ -4643,6 +4724,7 @@ extension TSInteraction: DeepCopyable {
                                                        expiresInSeconds: expiresInSeconds,
                                                        giftBadge: giftBadge,
                                                        isGroupStoryReply: isGroupStoryReply,
+                                                       isPoll: isPoll,
                                                        isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                                        isViewOnceComplete: isViewOnceComplete,
                                                        isViewOnceMessage: isViewOnceMessage,
@@ -4699,6 +4781,7 @@ extension TSInteraction: DeepCopyable {
                giftBadge = nil
             }
             let isGroupStoryReply: Bool = modelToCopy.isGroupStoryReply
+            let isPoll: Bool = modelToCopy.isPoll
             let isSmsMessageRestoredFromBackup: Bool = modelToCopy.isSmsMessageRestoredFromBackup
             let isViewOnceComplete: Bool = modelToCopy.isViewOnceComplete
             let isViewOnceMessage: Bool = modelToCopy.isViewOnceMessage
@@ -4758,6 +4841,7 @@ extension TSInteraction: DeepCopyable {
                                   expiresInSeconds: expiresInSeconds,
                                   giftBadge: giftBadge,
                                   isGroupStoryReply: isGroupStoryReply,
+                                  isPoll: isPoll,
                                   isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                                   isViewOnceComplete: isViewOnceComplete,
                                   isViewOnceMessage: isViewOnceMessage,
@@ -4814,6 +4898,7 @@ extension TSInteraction: DeepCopyable {
                giftBadge = nil
             }
             let isGroupStoryReply: Bool = modelToCopy.isGroupStoryReply
+            let isPoll: Bool = modelToCopy.isPoll
             let isSmsMessageRestoredFromBackup: Bool = modelToCopy.isSmsMessageRestoredFromBackup
             let isViewOnceComplete: Bool = modelToCopy.isViewOnceComplete
             let isViewOnceMessage: Bool = modelToCopy.isViewOnceMessage
@@ -4858,6 +4943,7 @@ extension TSInteraction: DeepCopyable {
                              expiresInSeconds: expiresInSeconds,
                              giftBadge: giftBadge,
                              isGroupStoryReply: isGroupStoryReply,
+                             isPoll: isPoll,
                              isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup,
                              isViewOnceComplete: isViewOnceComplete,
                              isViewOnceMessage: isViewOnceMessage,
@@ -4952,7 +5038,7 @@ extension InteractionRecord {
     // where this model (and any subclasses) are persisted.
     internal func asValues() -> [DatabaseValueConvertible?] {
         return [
-                recordType,
+                recordType?.rawValue,
                             uniqueId,
                             receivedAtTimestamp,
                             timestamp,
@@ -4962,7 +5048,7 @@ extension InteractionRecord {
                             authorPhoneNumber,
                             authorUUID,
                             body,
-                            callType,
+                            callType?.rawValue,
                             configurationDurationSeconds,
                             configurationIsEnabled,
                             contactShare,
@@ -4970,11 +5056,11 @@ extension InteractionRecord {
                             createdInExistingGroup,
                             customMessage,
                             envelopeData,
-                            errorType,
+                            errorType?.rawValue,
                             expireStartedAt,
                             expiresAt,
                             expiresInSeconds,
-                            groupMetaMessage,
+                            groupMetaMessage?.rawValue,
                             hasLegacyMessageState,
                             hasSyncedTranscript,
                             wasNotCreatedLocally,
@@ -4982,12 +5068,12 @@ extension InteractionRecord {
                             isViewOnceComplete,
                             isViewOnceMessage,
                             isVoiceMessage,
-                            legacyMessageState,
+                            legacyMessageState?.rawValue,
                             legacyWasDelivered,
                             linkPreview,
                             messageId,
                             messageSticker,
-                            messageType,
+                            messageType?.rawValue,
                             mostRecentFailureText,
                             preKeyBundle,
                             protocolVersion,
@@ -4998,15 +5084,15 @@ extension InteractionRecord {
                             sender,
                             serverTimestamp,
                             deprecated_sourceDeviceId,
-                            storedMessageState,
+                            storedMessageState?.rawValue,
                             storedShouldStartExpireTimer,
                             unregisteredAddress,
-                            verificationState,
+                            verificationState?.rawValue,
                             wasReceivedByUD,
                             infoMessageUserInfo,
                             wasRemotelyDeleted,
                             bodyRanges,
-                            offerType,
+                            offerType?.rawValue,
                             serverDeliveryTimestamp,
                             eraId,
                             hasEnded,
@@ -5023,10 +5109,11 @@ extension InteractionRecord {
                             isGroupStoryReply,
                             storyReactionEmoji,
                             giftBadge,
-                            editState,
+                            editState?.rawValue,
                             archivedPaymentInfo,
                             expireTimerVersion,
                             isSmsMessageRestoredFromBackup,
+                            isPoll,
 
         ]
     }
@@ -5119,6 +5206,7 @@ extension TSInteractionSerializer {
     static var archivedPaymentInfoColumn: SDSColumnMetadata { SDSColumnMetadata(columnName: "archivedPaymentInfo", columnType: .blob, isOptional: true) }
     static var expireTimerVersionColumn: SDSColumnMetadata { SDSColumnMetadata(columnName: "expireTimerVersion", columnType: .int64, isOptional: true) }
     static var isSmsMessageRestoredFromBackupColumn: SDSColumnMetadata { SDSColumnMetadata(columnName: "isSmsMessageRestoredFromBackup", columnType: .int, isOptional: true) }
+    static var isPollColumn: SDSColumnMetadata { SDSColumnMetadata(columnName: "isPoll", columnType: .int, isOptional: true) }
 
     public static var table: SDSTableMetadata {
         SDSTableMetadata(
@@ -5200,6 +5288,7 @@ extension TSInteractionSerializer {
                 archivedPaymentInfoColumn,
                 expireTimerVersionColumn,
                 isSmsMessageRestoredFromBackupColumn,
+                isPollColumn,
             ]
         )
     }
@@ -5416,44 +5505,6 @@ public extension TSInteraction {
                             })
     }
 
-    // Traverses all records' unique ids.
-    // Records are not visited in any particular order.
-    class func anyEnumerateUniqueIds(
-        transaction: DBReadTransaction,
-        block: (String, UnsafeMutablePointer<ObjCBool>) -> Void
-    ) {
-        anyEnumerateUniqueIds(transaction: transaction, batched: false, block: block)
-    }
-
-    // Traverses all records' unique ids.
-    // Records are not visited in any particular order.
-    class func anyEnumerateUniqueIds(
-        transaction: DBReadTransaction,
-        batched: Bool = false,
-        block: (String, UnsafeMutablePointer<ObjCBool>) -> Void
-    ) {
-        let batchSize = batched ? Batching.kDefaultBatchSize : 0
-        anyEnumerateUniqueIds(transaction: transaction, batchSize: batchSize, block: block)
-    }
-
-    // Traverses all records' unique ids.
-    // Records are not visited in any particular order.
-    //
-    // If batchSize > 0, the enumeration is performed in autoreleased batches.
-    class func anyEnumerateUniqueIds(
-        transaction: DBReadTransaction,
-        batchSize: UInt,
-        block: (String, UnsafeMutablePointer<ObjCBool>) -> Void
-    ) {
-        grdbEnumerateUniqueIds(transaction: transaction,
-                                sql: """
-                SELECT \(interactionColumn: .uniqueId)
-                FROM \(InteractionRecord.databaseTableName)
-            """,
-            batchSize: batchSize,
-            block: block)
-    }
-
     // Does not order the results.
     class func anyFetchAll(transaction: DBReadTransaction) -> [TSInteraction] {
         var result = [TSInteraction]()
@@ -5463,36 +5514,8 @@ public extension TSInteraction {
         return result
     }
 
-    // Does not order the results.
-    class func anyAllUniqueIds(transaction: DBReadTransaction) -> [String] {
-        var result = [String]()
-        anyEnumerateUniqueIds(transaction: transaction) { (uniqueId, _) in
-            result.append(uniqueId)
-        }
-        return result
-    }
-
     class func anyCount(transaction: DBReadTransaction) -> UInt {
         return InteractionRecord.ows_fetchCount(transaction.database)
-    }
-
-    class func anyExists(
-        uniqueId: String,
-        transaction: DBReadTransaction
-    ) -> Bool {
-        assert(!uniqueId.isEmpty)
-
-        let sql = "SELECT EXISTS ( SELECT 1 FROM \(InteractionRecord.databaseTableName) WHERE \(interactionColumn: .uniqueId) = ? )"
-        let arguments: StatementArguments = [uniqueId]
-        do {
-            return try Bool.fetchOne(transaction.database, sql: sql, arguments: arguments) ?? false
-        } catch {
-            DatabaseCorruptionState.flagDatabaseReadCorruptionIfNecessary(
-                userDefaults: CurrentAppContext().appUserDefaults(),
-                error: error
-            )
-            owsFail("Missing instance.")
-        }
     }
 }
 
@@ -5630,7 +5653,8 @@ class TSInteractionSerializer: SDSSerializer {
         let archivedPaymentInfo: Data? = nil
         let expireTimerVersion: UInt32? = nil
         let isSmsMessageRestoredFromBackup: Bool? = nil
+        let isPoll: Bool? = nil
 
-        return InteractionRecord(delegate: model, id: id, recordType: recordType, uniqueId: uniqueId, receivedAtTimestamp: receivedAtTimestamp, timestamp: timestamp, threadUniqueId: threadUniqueId, deprecated_attachmentIds: deprecated_attachmentIds, authorId: authorId, authorPhoneNumber: authorPhoneNumber, authorUUID: authorUUID, body: body, callType: callType, configurationDurationSeconds: configurationDurationSeconds, configurationIsEnabled: configurationIsEnabled, contactShare: contactShare, createdByRemoteName: createdByRemoteName, createdInExistingGroup: createdInExistingGroup, customMessage: customMessage, envelopeData: envelopeData, errorType: errorType, expireStartedAt: expireStartedAt, expiresAt: expiresAt, expiresInSeconds: expiresInSeconds, groupMetaMessage: groupMetaMessage, hasLegacyMessageState: hasLegacyMessageState, hasSyncedTranscript: hasSyncedTranscript, wasNotCreatedLocally: wasNotCreatedLocally, isLocalChange: isLocalChange, isViewOnceComplete: isViewOnceComplete, isViewOnceMessage: isViewOnceMessage, isVoiceMessage: isVoiceMessage, legacyMessageState: legacyMessageState, legacyWasDelivered: legacyWasDelivered, linkPreview: linkPreview, messageId: messageId, messageSticker: messageSticker, messageType: messageType, mostRecentFailureText: mostRecentFailureText, preKeyBundle: preKeyBundle, protocolVersion: protocolVersion, quotedMessage: quotedMessage, read: read, recipientAddress: recipientAddress, recipientAddressStates: recipientAddressStates, sender: sender, serverTimestamp: serverTimestamp, deprecated_sourceDeviceId: deprecated_sourceDeviceId, storedMessageState: storedMessageState, storedShouldStartExpireTimer: storedShouldStartExpireTimer, unregisteredAddress: unregisteredAddress, verificationState: verificationState, wasReceivedByUD: wasReceivedByUD, infoMessageUserInfo: infoMessageUserInfo, wasRemotelyDeleted: wasRemotelyDeleted, bodyRanges: bodyRanges, offerType: offerType, serverDeliveryTimestamp: serverDeliveryTimestamp, eraId: eraId, hasEnded: hasEnded, creatorUuid: creatorUuid, joinedMemberUuids: joinedMemberUuids, wasIdentityVerified: wasIdentityVerified, paymentCancellation: paymentCancellation, paymentNotification: paymentNotification, paymentRequest: paymentRequest, viewed: viewed, serverGuid: serverGuid, storyAuthorUuidString: storyAuthorUuidString, storyTimestamp: storyTimestamp, isGroupStoryReply: isGroupStoryReply, storyReactionEmoji: storyReactionEmoji, giftBadge: giftBadge, editState: editState, archivedPaymentInfo: archivedPaymentInfo, expireTimerVersion: expireTimerVersion, isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup)
+        return InteractionRecord(delegate: model, id: id, recordType: recordType, uniqueId: uniqueId, receivedAtTimestamp: receivedAtTimestamp, timestamp: timestamp, threadUniqueId: threadUniqueId, deprecated_attachmentIds: deprecated_attachmentIds, authorId: authorId, authorPhoneNumber: authorPhoneNumber, authorUUID: authorUUID, body: body, callType: callType, configurationDurationSeconds: configurationDurationSeconds, configurationIsEnabled: configurationIsEnabled, contactShare: contactShare, createdByRemoteName: createdByRemoteName, createdInExistingGroup: createdInExistingGroup, customMessage: customMessage, envelopeData: envelopeData, errorType: errorType, expireStartedAt: expireStartedAt, expiresAt: expiresAt, expiresInSeconds: expiresInSeconds, groupMetaMessage: groupMetaMessage, hasLegacyMessageState: hasLegacyMessageState, hasSyncedTranscript: hasSyncedTranscript, wasNotCreatedLocally: wasNotCreatedLocally, isLocalChange: isLocalChange, isViewOnceComplete: isViewOnceComplete, isViewOnceMessage: isViewOnceMessage, isVoiceMessage: isVoiceMessage, legacyMessageState: legacyMessageState, legacyWasDelivered: legacyWasDelivered, linkPreview: linkPreview, messageId: messageId, messageSticker: messageSticker, messageType: messageType, mostRecentFailureText: mostRecentFailureText, preKeyBundle: preKeyBundle, protocolVersion: protocolVersion, quotedMessage: quotedMessage, read: read, recipientAddress: recipientAddress, recipientAddressStates: recipientAddressStates, sender: sender, serverTimestamp: serverTimestamp, deprecated_sourceDeviceId: deprecated_sourceDeviceId, storedMessageState: storedMessageState, storedShouldStartExpireTimer: storedShouldStartExpireTimer, unregisteredAddress: unregisteredAddress, verificationState: verificationState, wasReceivedByUD: wasReceivedByUD, infoMessageUserInfo: infoMessageUserInfo, wasRemotelyDeleted: wasRemotelyDeleted, bodyRanges: bodyRanges, offerType: offerType, serverDeliveryTimestamp: serverDeliveryTimestamp, eraId: eraId, hasEnded: hasEnded, creatorUuid: creatorUuid, joinedMemberUuids: joinedMemberUuids, wasIdentityVerified: wasIdentityVerified, paymentCancellation: paymentCancellation, paymentNotification: paymentNotification, paymentRequest: paymentRequest, viewed: viewed, serverGuid: serverGuid, storyAuthorUuidString: storyAuthorUuidString, storyTimestamp: storyTimestamp, isGroupStoryReply: isGroupStoryReply, storyReactionEmoji: storyReactionEmoji, giftBadge: giftBadge, editState: editState, archivedPaymentInfo: archivedPaymentInfo, expireTimerVersion: expireTimerVersion, isSmsMessageRestoredFromBackup: isSmsMessageRestoredFromBackup, isPoll: isPoll)
     }
 }

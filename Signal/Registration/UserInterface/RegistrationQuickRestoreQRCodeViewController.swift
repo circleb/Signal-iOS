@@ -37,11 +37,7 @@ class RegistrationQuickRestoreQRCodeViewController:
         super.init()
 
         self.provisioningSocketManager.delegate = self
-
-        self.addChild(hostingController)
-        self.view.addSubview(hostingController.view)
-        hostingController.view.autoPinEdgesToSuperviewEdges()
-        hostingController.didMove(toParent: self)
+        self.navigationItem.hidesBackButton = true
     }
 
     private lazy var hostingController = UIHostingController(rootView: ContentStack(
@@ -52,6 +48,23 @@ class RegistrationQuickRestoreQRCodeViewController:
         }
     ))
 
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        view.backgroundColor = .Signal.background
+
+        addChild(hostingController)
+        view.addSubview(hostingController.view)
+        hostingController.view.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            hostingController.view.topAnchor.constraint(equalTo: contentLayoutGuide.topAnchor),
+            hostingController.view.leadingAnchor.constraint(equalTo: contentLayoutGuide.leadingAnchor),
+            hostingController.view.bottomAnchor.constraint(equalTo: contentLayoutGuide.bottomAnchor),
+            hostingController.view.trailingAnchor.constraint(equalTo: contentLayoutGuide.trailingAnchor),
+        ])
+        hostingController.didMove(toParent: self)
+    }
+
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         provisioningSocketManager.reset()
@@ -61,8 +74,29 @@ class RegistrationQuickRestoreQRCodeViewController:
                 let message: RegistrationProvisioningMessage = try await provisioningSocketManager.waitForMessage()
                 presenter?.didReceiveRegistrationMessage(message)
             } catch {
-                // TODO: [Backups]: Prompt the user with the error
-                Logger.error("Encountered error waiting for qick restore message")
+                let title = OWSLocalizedString(
+                    "REGISTRATION_SCAN_QR_CODE_FAILED_TITLE",
+                    comment: "Title of error notifying restore failed."
+                )
+                let body = OWSLocalizedString(
+                    "REGISTRATION_SCAN_QR_CODE_FAILED_BODY",
+                    comment: "Body of error notifying restore failed."
+                )
+                let sheet = HeroSheetViewController(
+                    hero: .circleIcon(
+                                icon: UIImage(named: "alert")!,
+                                iconSize: 36,
+                                tintColor: UIColor.Signal.label,
+                                backgroundColor: UIColor.Signal.background
+                            ),
+                    title: title,
+                    body: body,
+                    primaryButton: .init(title: CommonStrings.okayButton, action: { [weak self] _ in
+                        self?.provisioningSocketManager.reset()
+                        self?.presentedViewController?.dismiss(animated: true)
+                    })
+                )
+                present(sheet, animated: true)
             }
         }
     }
@@ -85,8 +119,6 @@ class RegistrationQuickRestoreQRCodeViewController:
     public var preferredNavigationBarStyle: OWSNavigationBarStyle { .solid }
 
     public var navbarBackgroundColorOverride: UIColor? { .clear }
-
-    public var prefersNavigationBarHidden: Bool { true }
 }
 
 // MARK: - SwiftUI
@@ -97,30 +129,28 @@ private struct ContentStack: View {
     let cancelAction: () -> Void
 
     var body: some View {
-        VStack {
-            Spacer()
-            Text(OWSLocalizedString(
-                "REGISTRATION_SCAN_QR_CODE_TITLE",
-                comment: "Title for screen containing QR code that users scan with their old phone when they want to transfer/restore their message history to a new device."
-            ))
-                .font(.title)
-                .fontWeight(.semibold)
-                .padding(.horizontal, 8)
+        ScrollView {
+            VStack(spacing: 36) {
+                Text(OWSLocalizedString(
+                    "REGISTRATION_SCAN_QR_CODE_TITLE",
+                    comment: "Title for screen containing QR code that users scan with their old phone when they want to transfer/restore their message history to a new device."
+                ))
+                .font(.title.weight(.semibold))
                 .multilineTextAlignment(.center)
-            Spacer()
+                .fixedSize(horizontal: false, vertical: true)
 
-            RotatingQRCodeView(model: model)
-                .padding(.horizontal, 50)
+                RotatingQRCodeView(model: model)
+                    .padding(.horizontal, 40)
 
-            Spacer()
-            TutorialStack()
-            Spacer()
-            Spacer()
-            Button(CommonStrings.cancelButton, action: self.cancelAction)
-                .font(.body.weight(.bold))
-                .tint(Color.Signal.ultramarine)
-                .padding(.vertical, 14)
-            Spacer()
+                TutorialStack()
+
+                Button(CommonStrings.cancelButton) {
+                    self.cancelAction()
+                }
+                .buttonStyle(Registration.UI.MediumSecondaryButtonStyle())
+                .dynamicTypeSize(...DynamicTypeSize.accessibility2)
+                .padding(.bottom, NSDirectionalEdgeInsets.buttonContainerLayoutMargins.bottom)
+            }
         }
     }
 }
@@ -135,6 +165,7 @@ private struct TutorialStack: View {
                 ),
                 image: "device-phone"
             )
+            .fixedSize(horizontal: false, vertical: true)
             Label(
                 OWSLocalizedString(
                 "REGISTRATION_SCAN_QR_CODE_TUTORIAL_TAP_CAMERA",
@@ -142,6 +173,7 @@ private struct TutorialStack: View {
                 ),
                 image: "camera"
             )
+            .fixedSize(horizontal: false, vertical: true)
             Label(
                 OWSLocalizedString(
                 "REGISTRATION_SCAN_QR_CODE_TUTORIAL_SCAN",
@@ -149,6 +181,7 @@ private struct TutorialStack: View {
                 ),
                 image: "qr_code"
             )
+            .fixedSize(horizontal: false, vertical: true)
         }
         .foregroundStyle(.secondary)
         .padding(.horizontal, 8)
@@ -160,8 +193,8 @@ private struct TutorialStack: View {
 #Preview {
     @Previewable @State var displayMode: RotatingQRCodeView.Model.URLDisplayMode = .loading
 
-    let url1 = URL(string: "https://support.signal.org/hc/articles/6712070553754-Phone-Number-Privacy-and-Usernames")!
-    let url2 = URL(string: "https://support.signal.org/hc/articles/6255134251546-Edit-Message")!
+    let url1 = URL(string: "https://signal.org")!
+    let url2 = URL(string: "https://support.signal.org")!
     let cycle: () async -> Void = { @MainActor in
         displayMode = .loading
         try? await Task.sleep(nanoseconds: NSEC_PER_SEC/2)

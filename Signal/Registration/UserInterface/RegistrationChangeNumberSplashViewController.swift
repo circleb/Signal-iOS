@@ -21,6 +21,7 @@ class RegistrationChangeNumberSplashViewController: OWSViewController, OWSNaviga
     public init(presenter: RegistrationChangeNumberSplashPresenter) {
         self.presenter = presenter
         super.init()
+        navigationItem.hidesBackButton = true
     }
 
     public var preferredNavigationBarStyle: OWSNavigationBarStyle {
@@ -31,118 +32,108 @@ class RegistrationChangeNumberSplashViewController: OWSViewController, OWSNaviga
         return view.backgroundColor
     }
 
-    private let bottomContainer = UIView()
-    private let scrollingStack = UIStackView()
+    private lazy var heroImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.addConstraints([
+            imageView.widthAnchor.constraint(lessThanOrEqualToConstant: 80),
+            imageView.heightAnchor.constraint(lessThanOrEqualToConstant: 80),
+        ])
+        return imageView
+    }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        navigationItem.setHidesBackButton(true, animated: false)
-
-        createContents()
-    }
-
-    private func createContents() {
-        navigationItem.leftBarButtonItem = .cancelButton { [weak self] in
+        view.backgroundColor = .Signal.groupedBackground
+        navigationItem.rightBarButtonItem = .cancelButton { [weak self] in
             self?.presenter?.exitRegistration()
         }
 
-        let scrollView = UIScrollView()
-        view.addSubview(scrollView)
-        scrollView.autoPinEdge(toSuperviewSafeArea: .leading)
-        scrollView.autoPinEdge(toSuperviewSafeArea: .trailing)
-        scrollView.autoPin(toTopLayoutGuideOf: self, withInset: 0)
+        // UI Elements
+        let heroImageCircle = OWSLayerView.circleView()
+        heroImageCircle.backgroundColor = .Signal.secondaryFill
+        heroImageCircle.addSubview(heroImageView)
+        let heroImageContainer = UIView.container()
+        heroImageContainer.addSubview(heroImageCircle)
+        heroImageView.translatesAutoresizingMaskIntoConstraints = false
+        heroImageCircle.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            heroImageView.centerXAnchor.constraint(equalTo: heroImageCircle.centerXAnchor),
+            heroImageView.centerYAnchor.constraint(equalTo: heroImageCircle.centerYAnchor),
 
-        scrollingStack.axis = .vertical
-        scrollingStack.alignment = .fill
-        scrollingStack.isLayoutMarginsRelativeArrangement = true
-        scrollingStack.layoutMargins = UIEdgeInsets(hMargin: 20, vMargin: 0)
-        scrollView.addSubview(scrollingStack)
-        scrollingStack.autoMatch(.width, to: .width, of: scrollView)
-        scrollingStack.autoPinEdgesToSuperviewEdges()
+            heroImageCircle.widthAnchor.constraint(equalToConstant: 112),
+            heroImageCircle.heightAnchor.constraint(equalToConstant: 112),
 
-        bottomContainer.layoutMargins = UIEdgeInsets(hMargin: 20, vMargin: 0)
-        view.addSubview(bottomContainer)
-        bottomContainer.autoPinEdge(toSuperviewSafeArea: .leading)
-        bottomContainer.autoPinEdge(toSuperviewSafeArea: .trailing)
-        bottomContainer.autoPinEdge(.top, to: .bottom, of: scrollView)
-        bottomContainer.autoPinEdge(.bottom, to: .bottom, of: keyboardLayoutGuideViewSafeArea)
+            heroImageCircle.topAnchor.constraint(equalTo: heroImageContainer.topAnchor),
+            heroImageCircle.leadingAnchor.constraint(greaterThanOrEqualTo: heroImageContainer.leadingAnchor),
+            heroImageCircle.centerXAnchor.constraint(equalTo: heroImageContainer.centerXAnchor),
+            heroImageCircle.bottomAnchor.constraint(equalTo: heroImageContainer.bottomAnchor),
+        ])
+        let titleLabel = UILabel.titleLabelForRegistration(
+            text: OWSLocalizedString(
+                "SETTINGS_CHANGE_PHONE_NUMBER_SPLASH_TITLE",
+                comment: "Title text in the 'change phone number splash' view."
+            )
+        )
+        let subtitleLabel = UILabel.explanationLabelForRegistration(
+            text: OWSLocalizedString(
+                "SETTINGS_CHANGE_PHONE_NUMBER_SPLASH_DESCRIPTION",
+                comment: "Description text in the 'change phone number splash' view."
+            )
+        )
+        let continueButton = UIButton(
+            configuration: .largePrimary(title: CommonStrings.continueButton),
+            primaryAction: UIAction { [weak self] _ in
+                self?.didTapContinue()
+            }
+        )
 
-        updateContents()
-    }
-
-    public override func themeDidChange() {
-        super.themeDidChange()
+        let stackView = addStaticContentStackView(arrangedSubviews: [
+            heroImageContainer,
+            titleLabel,
+            subtitleLabel,
+            .vStretchingSpacer(),
+            continueButton.enclosedInVerticalStackView(isFullWidthButton: true),
+        ])
+        stackView.setCustomSpacing(24, after: heroImageContainer)
 
         updateContents()
     }
 
     private func updateContents() {
-        view.backgroundColor = OWSTableViewController2.tableBackgroundColor(isUsingPresentedStyle: true)
-        owsNavigationController?.updateNavbarAppearance()
-
-        let heroImageName = (Theme.isDarkThemeEnabled
-                             ? "change-number-dark-40"
-                             : "change-number-light-40")
-        let heroImage = UIImage(named: heroImageName)
-        let heroImageView = UIImageView(image: heroImage)
-        heroImageView.autoSetDimension(.width, toSize: 80, relation: .lessThanOrEqual)
-        heroImageView.autoSetDimension(.height, toSize: 80, relation: .lessThanOrEqual)
-        let heroCircleView = OWSLayerView.circleView(size: 112)
-        heroCircleView.backgroundColor = (Theme.isDarkThemeEnabled
-                                          ? UIColor.ows_white
-                                          : UIColor.ows_black).withAlphaComponent(0.05)
-        heroCircleView.addSubview(heroImageView)
-        heroImageView.autoCenterInSuperview()
-        let heroStack = UIStackView(arrangedSubviews: [heroCircleView])
-        heroStack.axis = .vertical
-        heroStack.alignment = .center
-
-        let titleLabel = UILabel()
-        titleLabel.text = OWSLocalizedString("SETTINGS_CHANGE_PHONE_NUMBER_SPLASH_TITLE",
-                                            comment: "Title text in the 'change phone number splash' view.")
-        titleLabel.font = .dynamicTypeTitle2.semibold()
-        titleLabel.textColor = Theme.primaryTextColor
-        titleLabel.textAlignment = .center
-        titleLabel.numberOfLines = 0
-        titleLabel.lineBreakMode = .byWordWrapping
-
-        let descriptionLabel = UILabel()
-        descriptionLabel.text = OWSLocalizedString("SETTINGS_CHANGE_PHONE_NUMBER_SPLASH_DESCRIPTION",
-                                            comment: "Description text in the 'change phone number splash' view.")
-        descriptionLabel.font = .dynamicTypeBody
-        descriptionLabel.textColor = Theme.secondaryTextAndIconColor
-        descriptionLabel.textAlignment = .center
-        descriptionLabel.numberOfLines = 0
-        descriptionLabel.lineBreakMode = .byWordWrapping
-
-        let continueButton = OWSFlatButton.button(title: CommonStrings.continueButton,
-                                                  font: UIFont.dynamicTypeBody.semibold(),
-                                                  titleColor: .ows_white,
-                                                  backgroundColor: .ows_accentBlue,
-                                                  target: self,
-                                                  selector: #selector(didTapContinue))
-        continueButton.autoSetHeightUsingFont()
-        continueButton.cornerRadius = 8
-
-        scrollingStack.removeAllSubviews()
-        scrollingStack.addArrangedSubviews([
-            UIView.spacer(withHeight: 40),
-            heroStack,
-            UIView.spacer(withHeight: 24),
-            titleLabel,
-            UIView.spacer(withHeight: 12),
-            descriptionLabel,
-            UIView.vStretchingSpacer(minHeight: 16)
-        ])
-
-        bottomContainer.removeAllSubviews()
-        bottomContainer.addSubview(continueButton)
-        continueButton.autoPinEdgesToSuperviewMargins()
+        let heroImageName = Theme.isDarkThemeEnabled ? "change-number-dark-40" : "change-number-light-40"
+        heroImageView.image = UIImage(named: heroImageName)
+        heroImageView.sizeToFit()
     }
 
-    @objc
-    private func didTapContinue(_ sender: UIButton) {
+    private func didTapContinue() {
         presenter?.continueFromSplash()
     }
 }
+
+// MARK: -
+
+#if DEBUG
+
+private class PreviewRegistrationChangeNumberSplashPresenter: RegistrationChangeNumberSplashPresenter {
+    func continueFromSplash() {
+        print("continueFromSplash")
+    }
+
+    func exitRegistration() {
+        print("exitRegistration")
+    }
+}
+
+@available(iOS 17, *)
+#Preview {
+    let presenter = PreviewRegistrationChangeNumberSplashPresenter()
+    return UINavigationController(
+        rootViewController: RegistrationChangeNumberSplashViewController(
+            presenter: presenter
+        )
+    )
+}
+
+#endif

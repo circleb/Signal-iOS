@@ -5,7 +5,6 @@
 
 public import AVKit
 public import SignalServiceKit
-import YYImage
 
 /// Model object for a looping video asset
 /// Any LoopingVideoViews playing this instance will all be kept in sync
@@ -13,7 +12,7 @@ public class LoopingVideo: NSObject {
     fileprivate var asset: AVAsset
 
     public convenience init?(_ attachment: SignalAttachment) {
-        guard let url = attachment.dataUrl else {
+        guard let url = attachment.dataSource.dataUrl else {
             return nil
         }
         self.init(decryptedLocalFileUrl: url)
@@ -27,7 +26,10 @@ public class LoopingVideo: NSObject {
     }
 
     public convenience init?(decryptedLocalFileUrl url: URL) {
-        guard OWSMediaUtils.isVideoOfValidContentTypeAndSize(path: url.path) else {
+        do {
+            try OWSMediaUtils.validateVideoExtension(ofPath: url.path)
+            try OWSMediaUtils.validateVideoSize(atPath: url.path)
+        } catch {
             return nil
         }
         self.init(asset: AVAsset(url: url))

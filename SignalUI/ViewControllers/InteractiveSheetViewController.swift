@@ -8,7 +8,7 @@ import SignalServiceKit
 open class InteractiveSheetViewController: OWSViewController {
 
     public enum Constants {
-        public static let handleSize = CGSize(width: 36, height: 5)
+        public static let handleSize = CGSize(width: 52, height: 5)
         public static let handleInsideMargin: CGFloat = 12
         public static let handleHeight = 2*handleInsideMargin + handleSize.height
 
@@ -25,16 +25,23 @@ open class InteractiveSheetViewController: OWSViewController {
         fileprivate static let dismissVelocityThreshold: CGFloat = 1000
     }
 
+    public var topCornerRadius: CGFloat = 16 {
+        didSet {
+            sheetContainerView.layer.cornerRadius = topCornerRadius
+        }
+    }
+
     private lazy var sheetContainerView: UIView = {
         let view: UIView
-        if let blurEffect = blurEffect {
-            view = UIVisualEffectView(effect: blurEffect)
+        if let visualEffect {
+            view = UIVisualEffectView(effect: visualEffect)
         } else {
             view = UIView()
         }
-        view.layer.cornerRadius = 16
+        view.layer.cornerRadius = topCornerRadius
         view.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
         view.layer.masksToBounds = true
+        view.preservesSuperviewLayoutMargins = true
         return view
     }()
 
@@ -45,6 +52,7 @@ open class InteractiveSheetViewController: OWSViewController {
     private let sheetStackView: UIStackView = {
         let view = UIStackView()
         view.axis = .vertical
+        view.preservesSuperviewLayoutMargins = true
         return view
     }()
 
@@ -59,25 +67,37 @@ open class InteractiveSheetViewController: OWSViewController {
     open var canInteractWithParent: Bool { false }
 
     open var sheetBackgroundColor: UIColor { Theme.actionSheetBackgroundColor }
-    open var handleBackgroundColor: UIColor { Theme.tableView2PresentedSeparatorColor }
+    open var handleBackgroundColor: UIColor { UIColor.Signal.primaryFill }
+
+    /// Override to `true` to make the content appear on a glass background on
+    /// iOS 26 and later. `sheetBackgroundColor` will be ignored when on glass,
+    /// but still be sure to set it for devices running iOS 18 and older.
+    open var placeOnGlassIfAvailable: Bool { false }
+    private var isOnGlass: Bool {
+        if #available(iOS 26, *), BuildFlags.iOS26SDKIsAvailable {
+            placeOnGlassIfAvailable
+        } else {
+            false
+        }
+    }
 
     public weak var externalBackdropView: UIView?
     private lazy var _internalBackdropView = UIView()
     public var backdropView: UIView? { externalBackdropView ?? _internalBackdropView }
-    public var backdropColor = Theme.backdropColor
+    public var backdropColor = UIColor.Signal.backdrop
 
     public var maxWidth: CGFloat { 512 }
 
     private let handle = UIView()
     private lazy var handleContainer = UIView()
 
-    private let blurEffect: UIBlurEffect?
+    private let visualEffect: UIVisualEffect?
 
     public weak var sheetPanDelegate: SheetPanDelegate?
     public weak var dismissalDelegate: (any SheetDismissalDelegate)?
 
-    public init(blurEffect: UIBlurEffect? = nil) {
-        self.blurEffect = blurEffect
+    public init(visualEffect: UIVisualEffect? = nil) {
+        self.visualEffect = visualEffect
         super.init()
         modalPresentationStyle = .custom
         transitioningDelegate = self
@@ -152,7 +172,8 @@ open class InteractiveSheetViewController: OWSViewController {
         view.addSubview(sheetContainerView)
         sheetCurrentOffsetConstraint = sheetContainerView.autoPinEdge(toSuperviewEdge: .bottom)
         sheetContainerView.autoHCenterInSuperview()
-        sheetContainerView.backgroundColor = sheetBackgroundColor
+
+        let margin: CGFloat = isOnGlass ? 8 : 0
 
         // Prefer to be full width, but don't exceed the maximum width
         sheetContainerView.autoSetDimension(.width, toSize: maxWidth, relation: .lessThanOrEqual)
@@ -163,8 +184,14 @@ open class InteractiveSheetViewController: OWSViewController {
         }
 
         sheetContainerContentView.addSubview(sheetStackView)
-        sheetStackView.autoPinEdgesToSuperviewEdges()
+        sheetStackView.autoPinEdgesToSuperviewEdges(with: .init(
+            top: 0,
+            left: margin,
+            bottom: margin,
+            right: margin
+        ))
 
+        contentView.preservesSuperviewLayoutMargins = true
         sheetStackView.addArrangedSubview(contentView)
         contentView.autoPinWidthToSuperview()
 
@@ -184,6 +211,26 @@ open class InteractiveSheetViewController: OWSViewController {
 
         // Setup handle for interactive dismissal / resizing
         setupInteractiveSizing()
+
+        if #available(iOS 26.0, *), isOnGlass {
+#if compiler(>=6.2)
+            sheetContainerView.backgroundColor = .clear
+            let glassBackground = UIVisualEffectView(effect: UIGlassEffect(style: .regular))
+            sheetContainerView.insertSubview(glassBackground, at: 0)
+            glassBackground.autoPinEdges(toEdgesOf: sheetStackView)
+            let topRadius: CGFloat = if UIDevice.current.hasIPhoneXNotch {
+                40
+            } else {
+                20
+            }
+            glassBackground.cornerConfiguration = .uniformEdges(
+                topRadius: .fixed(topRadius),
+                bottomRadius: .containerConcentric(minimum: 20)
+            )
+#endif
+        } else {
+            sheetContainerView.backgroundColor = sheetBackgroundColor
+        }
     }
 
     open override func viewDidDisappear(_ animated: Bool) {
@@ -195,7 +242,11 @@ open class InteractiveSheetViewController: OWSViewController {
         super.themeDidChange()
 
         handle.backgroundColor = handleBackgroundColor
-        sheetContainerView.backgroundColor = sheetBackgroundColor
+        sheetContainerView.backgroundColor = if isOnGlass {
+            .clear
+        } else {
+            sheetBackgroundColor
+        }
     }
 
     @objc
@@ -479,7 +530,17 @@ open class InteractiveSheetViewController: OWSViewController {
 
             // Add resistance above the max preferred height
             if newHeight > maxHeight {
-                newHeight = maxHeight + (newHeight - maxHeight) / resistanceDivisor
+                if isOnGlass {
+                    // Doing a transform keeps the glass background the same
+                    // height and prevents its concentric corners from shirking
+                    // as they get farther from the edges of the screen.
+                    sheetContainerView.transform = .translate(.init(x: 0, y: (maxHeight - newHeight) / resistanceDivisor))
+                    newHeight = maxHeight
+                } else {
+                    // When not on glass, we want the bottom of the sheet to
+                    // extend to the bottom of the screen, so don't transform.
+                    newHeight = maxHeight + (newHeight - maxHeight) / resistanceDivisor
+                }
             }
 
             // Don't go past the max allowed height
@@ -573,6 +634,7 @@ open class InteractiveSheetViewController: OWSViewController {
 
             sheetPanDelegate?.sheetPanDecelerationDidBegin()
             self.animate {
+                self.sheetContainerView.transform = .identity
                 self.sheetCurrentOffsetConstraint?.constant = finalOffset
                 self.sheetCurrentHeightConstraint.constant = finalHeight
                 self.view.layoutIfNeeded()
@@ -743,7 +805,7 @@ private class InteractiveSheetAnimationController: UIPresentationController {
         return vc.externalBackdropView != nil
     }
 
-    init(presentedViewController: UIViewController, presenting presentingViewController: UIViewController?, backdropColor: UIColor? = Theme.backdropColor) {
+    init(presentedViewController: UIViewController, presenting presentingViewController: UIViewController?, backdropColor: UIColor? = .Signal.backdrop) {
         super.init(presentedViewController: presentedViewController, presenting: presentingViewController)
         backdropView?.backgroundColor = backdropColor
     }

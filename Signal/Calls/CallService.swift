@@ -95,6 +95,7 @@ final class CallService: CallServiceStateObserver, CallServiceStateDelegate {
         deviceSleepManager: DeviceSleepManagerImpl,
         mutableCurrentCall: AtomicValue<SignalCall?>,
         networkManager: NetworkManager,
+        remoteConfig: RemoteConfig,
         tsAccountManager: any TSAccountManager
     ) {
         self.appReadiness = appReadiness
@@ -102,7 +103,7 @@ final class CallService: CallServiceStateObserver, CallServiceStateDelegate {
         let httpClient = CallHTTPClient()
         self.callManager = CallManager<SignalCall, CallService>(
             httpClient: httpClient.ringRtcHttpClient,
-            fieldTrials: RingrtcFieldTrials.trials(with: appContext.appUserDefaults())
+            fieldTrials: RingrtcFieldTrials.trials(with: remoteConfig)
         )
         self.callManagerHttpClient = httpClient
         let callUIAdapter = CallUIAdapter()
@@ -247,7 +248,7 @@ final class CallService: CallServiceStateObserver, CallServiceStateDelegate {
 
         // Keep the connection open while we have an active call.
         let oldTokens = self.connectionTokens
-        self.connectionTokens = (newValue != nil) ? self.chatConnectionManager.requestConnections(shouldReconnectIfConnectedElsewhere: true) : []
+        self.connectionTokens = (newValue != nil) ? self.chatConnectionManager.requestConnections() : []
         oldTokens.forEach { $0.releaseConnection() }
 
         // Prevent device from sleeping while we have an active call.
@@ -288,6 +289,7 @@ final class CallService: CallServiceStateObserver, CallServiceStateDelegate {
             audioSession.isRTCAudioEnabled = false
         }
         audioSession.endAudioActivity(call.commonState.audioActivity)
+        updateIsVideoEnabled()
 
         switch call.mode {
         case .individual:
@@ -519,8 +521,10 @@ final class CallService: CallServiceStateObserver, CallServiceStateDelegate {
 
         switch call.mode {
         case .individual(let individualCall):
-            if individualCall.state == .connected || individualCall.state == .reconnecting {
-                callManager.setLocalVideoEnabled(enabled: shouldHaveLocalVideoTrack, call: call)
+            if individualCall.isEnded {
+                individualCall.videoCaptureController.stopCapture()
+            } else if individualCall.state == .connected || individualCall.state == .reconnecting {
+                callManager.setLocalVideoEnabled(call: call, enabled: shouldHaveLocalVideoTrack)
             } else if individualCall.isViewLoaded, individualCall.hasLocalVideo, !Platform.isSimulator {
                 // If we're not yet connected, just enable the camera but don't tell RingRTC
                 // to start sending video. This allows us to show a "vanity" view while connecting.
@@ -529,10 +533,14 @@ final class CallService: CallServiceStateObserver, CallServiceStateDelegate {
                 individualCall.videoCaptureController.stopCapture()
             }
         case .groupThread(let call as GroupCall), .callLink(let call as GroupCall):
-            if shouldHaveLocalVideoTrack {
-                call.videoCaptureController.startCapture()
-            } else {
+            if call.shouldTerminateOnEndEvent {
                 call.videoCaptureController.stopCapture()
+            } else {
+                if shouldHaveLocalVideoTrack {
+                    call.videoCaptureController.startCapture()
+                } else {
+                    call.videoCaptureController.stopCapture()
+                }
             }
         }
     }
@@ -746,7 +754,8 @@ final class CallService: CallServiceStateObserver, CallServiceStateDelegate {
             for: { [thread.contactAddress] },
             from: frontmostViewController,
             confirmationText: CallStrings.confirmAndCallButtonTitle,
-            untrustedThreshold: untrustedThreshold
+            untrustedThreshold: untrustedThreshold,
+            forceDarkTheme: true
         ) else {
             return
         }
@@ -1256,23 +1265,6 @@ extension CallService: CallManagerDelegate {
         }
     }
 
-    public nonisolated func callManager(
-        _ callManager: CallManager<SignalCall, CallService>,
-        shouldCompareCalls call1: SignalCall,
-        call2: SignalCall
-    ) -> Bool {
-        Logger.info("")
-        guard case .individual(let call1) = call1.mode else {
-            owsFailDebug("Can't compare multi-participant calls.")
-            return false
-        }
-        guard case .individual(let call2) = call2.mode else {
-            owsFailDebug("Can't compare multi-participant calls.")
-            return false
-        }
-        return call1.thread.uniqueId == call2.thread.uniqueId
-    }
-
     // MARK: - 1:1 Call Delegates
 
     public func callManager(
@@ -1607,7 +1599,7 @@ extension CallService: CallManagerDelegate {
                 return owsFailDebug("Failed to build group call")
             }
 
-            groupThreadCall.groupCallRingState = .incomingRing(caller: SignalServiceAddress(senderAci), ringId: ringId)
+            groupThreadCall.groupCallRingState = .incomingRing(caller: senderAci, ringId: ringId)
 
             self.callUIAdapter.reportIncomingCall(call)
         }

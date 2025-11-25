@@ -28,39 +28,30 @@ public struct AccountAttributesGenerator {
     }
 
     func generateForPrimary(
-        tx: DBWriteTransaction
+        aciRegistrationId: UInt32,
+        pniRegistrationId: UInt32,
+        tx: DBReadTransaction
     ) -> AccountAttributes {
         owsAssertDebug(tsAccountManager.registrationState(tx: tx).isPrimaryDevice == true)
 
-        let sdsTx: DBWriteTransaction = SDSDB.shimOnlyBridge(tx)
-
         let isManualMessageFetchEnabled = tsAccountManager.isManualMessageFetchEnabled(tx: tx)
 
-        let registrationId = tsAccountManager.getOrGenerateAciRegistrationId(tx: tx)
-        let pniRegistrationId = tsAccountManager.getOrGeneratePniRegistrationId(tx: tx)
-
-        guard let profileKey = profileManager.localUserProfile(tx: sdsTx)?.profileKey else {
+        guard let profileKey = profileManager.localUserProfile(tx: tx)?.profileKey else {
             owsFail("Couldn't fetch local profile key.")
         }
         let udAccessKey = SMKUDAccessKey(profileKey: profileKey).keyData.base64EncodedString()
 
-        let allowUnrestrictedUD = udManager.shouldAllowUnrestrictedAccessLocal(transaction: sdsTx)
+        let allowUnrestrictedUD = udManager.shouldAllowUnrestrictedAccessLocal(transaction: tx)
         let hasSVRBackups = svrLocalStorage.getIsMasterKeyBackedUp(tx)
 
-        let twoFaMode: AccountAttributes.TwoFactorAuthMode
+        let reglockToken: String?
         if
-            let reglockToken = accountKeyStore.getMasterKey(tx: tx)?.data(for: .registrationLock),
-            ows2FAManager.isRegistrationLockV2Enabled(transaction: sdsTx)
+            let _reglockToken = accountKeyStore.getMasterKey(tx: tx)?.data(for: .registrationLock),
+            ows2FAManager.isRegistrationLockV2Enabled(transaction: tx)
         {
-            twoFaMode = .v2(reglockToken: reglockToken.canonicalStringRepresentation)
-        } else if
-            let pinCode = ows2FAManager.pinCode(transaction: sdsTx),
-            pinCode.isEmpty.negated,
-            hasSVRBackups.negated
-        {
-            twoFaMode = .v1(pinCode: pinCode)
+            reglockToken = _reglockToken.canonicalStringRepresentation
         } else {
-            twoFaMode = .none
+            reglockToken = nil
         }
 
         let registrationRecoveryPassword = accountKeyStore.getMasterKey(tx: tx)?.data(
@@ -71,11 +62,11 @@ public struct AccountAttributesGenerator {
 
         return AccountAttributes(
             isManualMessageFetchEnabled: isManualMessageFetchEnabled,
-            registrationId: registrationId,
+            registrationId: aciRegistrationId,
             pniRegistrationId: pniRegistrationId,
             unidentifiedAccessKey: udAccessKey,
             unrestrictedUnidentifiedAccess: allowUnrestrictedUD,
-            twofaMode: twoFaMode,
+            reglockToken: reglockToken,
             registrationRecoveryPassword: registrationRecoveryPassword,
             encryptedDeviceName: nil,
             discoverableByPhoneNumber: phoneNumberDiscoverability,

@@ -4,13 +4,13 @@
 //
 
 import Foundation
-import LibSignalClient
+public import LibSignalClient
 
 public protocol IncomingPniChangeNumberProcessor {
 
     func processIncomingPniChangePhoneNumber(
         proto: SSKProtoSyncMessagePniChangeNumber,
-        updatedPni updatedPniString: String?,
+        updatedPni: Pni,
         tx: DBWriteTransaction
     )
 }
@@ -39,23 +39,18 @@ public class IncomingPniChangeNumberProcessorImpl: IncomingPniChangeNumberProces
 
     private struct PniChangePhoneNumberData {
         let identityKeyPair: ECKeyPair
-        let signedPreKey: SignalServiceKit.SignedPreKeyRecord
+        let signedPreKey: LibSignalClient.SignedPreKeyRecord
         // TODO (PQXDH): 8/14/2023 - This should me made non-optional after 90 days
-        let lastResortKyberPreKey: SignalServiceKit.KyberPreKeyRecord?
+        let lastResortKyberPreKey: LibSignalClient.KyberPreKeyRecord?
         let registrationId: UInt32
         let e164: E164
     }
 
     public func processIncomingPniChangePhoneNumber(
         proto: SSKProtoSyncMessagePniChangeNumber,
-        updatedPni updatedPniString: String?,
+        updatedPni: Pni,
         tx: DBWriteTransaction
     ) {
-        guard let updatedPni = Pni.parseFrom(pniString: updatedPniString) else {
-            owsFailDebug("Missing or invalid updated PNI string while processing incoming PNI change-number sync message!")
-            return
-        }
-
         guard let localAci = tsAccountManager.localIdentifiers(tx: tx)?.aci else {
             owsFailDebug("Missing ACI while processing incoming PNI change-number sync message!")
             return
@@ -74,19 +69,12 @@ public class IncomingPniChangeNumberProcessorImpl: IncomingPniChangeNumberProces
         )
 
         if let lastResortKey = pniChangeData.lastResortKyberPreKey {
-            try? pniProtocolStore.kyberPreKeyStore.storeLastResortPreKeyFromLinkedDevice(
-                record: lastResortKey,
-                tx: tx
-            )
+            pniProtocolStore.kyberPreKeyStore.storeLastResortPreKeyFromChangeNumber(lastResortKey, tx: tx)
         }
 
-        pniProtocolStore.signedPreKeyStore.storeSignedPreKey(
-            pniChangeData.signedPreKey.id,
-            signedPreKeyRecord: pniChangeData.signedPreKey,
-            tx: tx
-        )
+        pniProtocolStore.signedPreKeyStore.storeSignedPreKey(pniChangeData.signedPreKey, tx: tx)
 
-        tsAccountManager.setPniRegistrationId(pniChangeData.registrationId, tx: tx)
+        tsAccountManager.setRegistrationId(pniChangeData.registrationId, for: .pni, tx: tx)
         registrationStateChangeManager.didUpdateLocalPhoneNumber(
             pniChangeData.e164,
             aci: localAci,
@@ -117,14 +105,8 @@ public class IncomingPniChangeNumberProcessorImpl: IncomingPniChangeNumberProces
 
         do {
             let pniIdentityKeyPair = ECKeyPair(try IdentityKeyPair(bytes: pniIdentityKeyPairData))
-            let pniSignedPreKey = try LibSignalClient.SignedPreKeyRecord(bytes: pniSignedPreKeyData).asSSKRecord()
-
-            var pniLastResortKyberPreKey: KyberPreKeyRecord?
-            if let pniLastResortKyberKeyData = proto.lastResortKyberPreKey {
-                pniLastResortKyberPreKey = try LibSignalClient.KyberPreKeyRecord(
-                    bytes: pniLastResortKyberKeyData
-                ).asSSKLastResortRecord()
-            }
+            let pniSignedPreKey = try LibSignalClient.SignedPreKeyRecord(bytes: pniSignedPreKeyData)
+            let pniLastResortKyberPreKey = try proto.lastResortKyberPreKey.map { try LibSignalClient.KyberPreKeyRecord(bytes: $0) }
 
             let pniRegistrationId = proto.registrationID
 

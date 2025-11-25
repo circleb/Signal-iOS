@@ -118,7 +118,7 @@ public class DecryptedStickerMetadata: StickerMetadata {
     }
 
     public func isValidImage() -> Bool {
-        return Data.ows_isValidImage(at: stickerDataUrl, mimeType: mimeType)
+        return (try? DataImageSource.forPath(stickerDataUrl.path))?.ows_isValidImage ?? false
     }
 
     public func readStickerData() throws -> Data {
@@ -168,9 +168,9 @@ public class EncryptedStickerMetadata: StickerMetadata {
     public func readStickerData() throws -> Data {
         return try Cryptography.decryptFile(
             at: encryptedStickerDataUrl,
-            metadata: .init(
-                key: encryptionKey,
-                plaintextLength: Int(plaintextLength)
+            metadata: DecryptionMetadata(
+                key: AttachmentKey(combinedKey: encryptionKey),
+                plaintextLength: UInt64(safeCast: plaintextLength),
             )
         )
     }

@@ -431,7 +431,7 @@ class MessageDetailViewController: OWSTableViewController2 {
             let sectionTitle = self.sectionTitle(for: statusGroup)
             if let iconName = sectionIconName(for: statusGroup) {
                 let headerView = UIView()
-                headerView.layoutMargins = cellOuterInsetsWithMargin(
+                headerView.layoutMargins = .init(
                     top: (defaultSpacingBetweenSections ?? 0) + 12,
                     left: Self.cellHInnerMargin * 0.5,
                     bottom: 10,
@@ -440,7 +440,7 @@ class MessageDetailViewController: OWSTableViewController2 {
 
                 let label = UILabel()
                 label.textColor = Theme.isDarkThemeEnabled ? UIColor.ows_gray05 : UIColor.ows_gray90
-                label.font = UIFont.dynamicTypeBodyClamped.semibold()
+                label.font = UIFont.dynamicTypeHeadlineClamped
                 label.text = sectionTitle
 
                 headerView.addSubview(label)
@@ -1029,6 +1029,12 @@ extension MessageDetailViewController: CVComponentDelegate {
         shouldAllowReply: Bool
     ) { }
 
+    func didLongPressPoll(
+        _ cell: CVCell,
+        itemViewModel: CVItemViewModelImpl,
+        shouldAllowReply: Bool
+    ) {}
+
     // TODO:
     func didChangeLongPress(_ itemViewModel: CVItemViewModelImpl) {}
 
@@ -1279,6 +1285,12 @@ extension MessageDetailViewController: CVComponentDelegate {
     func didTapMessageRequestAcceptedOptions() {}
 
     func didTapJoinCallLinkCall(callLink: CallLink) {}
+
+    func didTapViewVotes(poll: OWSPoll) {}
+
+    func didTapViewPoll(pollInteractionUniqueId: String) {}
+
+    func didTapVoteOnPoll(poll: OWSPoll, optionIndex: UInt32, isUnvote: Bool) {}
 }
 
 extension MessageDetailViewController: UINavigationControllerDelegate {
@@ -1346,14 +1358,7 @@ private class AnimationController: NSObject, UIViewControllerAnimatedTransitioni
         bottomView.addSubview(bottomViewOverlay)
         bottomViewOverlay.frame = bottomView.bounds
 
-        let animationOptions: UIView.AnimationOptions
-        if percentDrivenTransition != nil {
-            animationOptions = .curveLinear
-        } else {
-            animationOptions = .curveEaseInOut
-        }
-
-        UIView.animate(withDuration: transitionDuration(using: transitionContext), delay: 0, options: animationOptions) {
+        let animations: () -> Void = {
             if isPushing {
                 topView.transform = topViewHiddenTransform
                 bottomView.transform = .identity
@@ -1363,7 +1368,9 @@ private class AnimationController: NSObject, UIViewControllerAnimatedTransitioni
                 bottomView.transform = bottomViewHiddenTransform
                 bottomViewOverlay.alpha = 1
             }
-        } completion: { _ in
+        }
+
+        let completion: () -> Void = {
             bottomView.transform = .identity
             topView.transform = .identity
             bottomViewOverlay.removeFromSuperview()
@@ -1382,6 +1389,25 @@ private class AnimationController: NSObject, UIViewControllerAnimatedTransitioni
             }
 
             transitionContext.completeTransition(!transitionContext.transitionWasCancelled)
+        }
+
+        let isInteractive = percentDrivenTransition != nil
+
+        if #available(iOS 18.0, *), !isInteractive {
+            UIView.animate(
+                .spring(duration: transitionDuration(using: transitionContext)),
+                changes: animations,
+                completion: completion
+            )
+        } else {
+            UIView.animate(
+                withDuration: transitionDuration(using: transitionContext),
+                delay: 0,
+                options: isInteractive ? .curveLinear : .curveEaseInOut,
+                animations: animations,
+            ) { _ in
+                completion()
+            }
         }
     }
 }

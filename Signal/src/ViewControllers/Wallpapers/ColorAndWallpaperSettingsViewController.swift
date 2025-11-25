@@ -65,7 +65,6 @@ public class ColorAndWallpaperSettingsViewController: OWSTableViewController2 {
         updateTableContents()
     }
 
-    @objc
     func updateTableContents() {
         let contents = OWSTableContents()
 
@@ -77,9 +76,7 @@ public class ColorAndWallpaperSettingsViewController: OWSTableViewController2 {
             guard let self = self else { return cell }
             let miniPreview = MiniPreviewView(wallpaperViewBuilder: self.wallpaperViewBuilder, chatColor: self.chatColor)
             cell.contentView.addSubview(miniPreview)
-            miniPreview.autoPinEdge(toSuperviewEdge: .left, withInset: self.cellHOuterLeftMargin)
-            miniPreview.autoPinEdge(toSuperviewEdge: .right, withInset: self.cellHOuterRightMargin)
-            miniPreview.autoPinHeightToSuperview()
+            miniPreview.autoPinEdgesToSuperviewEdges()
             return cell
         } actionBlock: {}
         previewSection.add(previewItem)
@@ -114,6 +111,7 @@ public class ColorAndWallpaperSettingsViewController: OWSTableViewController2 {
                         "WALLPAPER_SETTINGS_RESET_CONVERSATION_CHAT_COLOR",
                         comment: "Reset conversation chat color action in wallpaper settings view."
                     ),
+                    textColor: .Signal.red,
                     accessibilityIdentifier: UIView.accessibilityIdentifier(in: self, name: "reset_chat_color")
                 ) { [weak self] in
                     self?.didPressResetConversationChatColor()
@@ -124,6 +122,7 @@ public class ColorAndWallpaperSettingsViewController: OWSTableViewController2 {
                         "WALLPAPER_SETTINGS_RESET_DEFAULT_CHAT_COLORS",
                         comment: "Reset global chat colors action in wallpaper settings view."
                     ),
+                    textColor: .Signal.red,
                     accessibilityIdentifier: UIView.accessibilityIdentifier(in: self, name: "reset_chat_colors")
                 ) { [weak self] in
                     self?.didPressResetGlobalChatColors()
@@ -155,7 +154,7 @@ public class ColorAndWallpaperSettingsViewController: OWSTableViewController2 {
             accessibilityIdentifier: UIView.accessibilityIdentifier(in: self, name: "dim_wallpaper"),
             isOn: { () -> Bool in
                 SSKEnvironment.shared.databaseStorageRef.read {
-                    return DependenciesBridge.shared.wallpaperStore.fetchDimInDarkMode(
+                    return DependenciesBridge.shared.wallpaperStore.fetchDimInDarkModeForRendering(
                         for: self.thread?.uniqueId,
                         tx: $0
                     )
@@ -179,6 +178,7 @@ public class ColorAndWallpaperSettingsViewController: OWSTableViewController2 {
                     "WALLPAPER_SETTINGS_RESET_CONVERSATION_WALLPAPER",
                     comment: "Reset conversation wallpaper action in wallpaper settings view."
                 ),
+                textColor: .Signal.red,
                 accessibilityIdentifier: UIView.accessibilityIdentifier(in: self, name: "reset_wallpaper")
             ) { [weak self] in
                 self?.didPressResetConversationWallpaper()
@@ -189,6 +189,7 @@ public class ColorAndWallpaperSettingsViewController: OWSTableViewController2 {
                     "WALLPAPER_SETTINGS_RESET_GLOBAL_WALLPAPER",
                     comment: "Reset wallpapers action in wallpaper settings view."
                 ),
+                textColor: .Signal.red,
                 accessibilityIdentifier: UIView.accessibilityIdentifier(in: self, name: "reset_wallpapers")
             ) { [weak self] in
                 self?.didPressResetGlobalWallpapers()
@@ -253,7 +254,7 @@ public class ColorAndWallpaperSettingsViewController: OWSTableViewController2 {
 
     func resetWallpaper() {
         let thread = self.thread
-        DispatchQueue.global().async {
+        Task {
             do {
                 let wallpaperStore = DependenciesBridge.shared.wallpaperStore
                 let onInsert = { [wallpaperStore] (tx: DBWriteTransaction) throws -> Void in
@@ -261,20 +262,20 @@ public class ColorAndWallpaperSettingsViewController: OWSTableViewController2 {
                 }
 
                 if let thread {
-                    try DependenciesBridge.shared.wallpaperImageStore.setWallpaperImage(nil, for: thread, onInsert: onInsert)
+                    try await DependenciesBridge.shared.wallpaperImageStore.setWallpaperImage(nil, for: thread, onInsert: onInsert)
                 } else {
-                    try DependenciesBridge.shared.wallpaperImageStore.setGlobalThreadWallpaperImage(nil, onInsert: onInsert)
+                    try await DependenciesBridge.shared.wallpaperImageStore.setGlobalThreadWallpaperImage(nil, onInsert: onInsert)
                 }
             } catch {
                 owsFailDebug("Failed to clear wallpaper with error: \(error)")
-                DispatchQueue.main.async {
+                await MainActor.run {
                     OWSActionSheets.showErrorAlert(
                         message: OWSLocalizedString("WALLPAPER_SETTINGS_FAILED_TO_CLEAR",
                                                    comment: "An error indicating to the user that we failed to clear the wallpaper.")
                     )
                 }
             }
-            DispatchQueue.main.async {
+            await MainActor.run {
                 self.updateTableContents()
             }
         }

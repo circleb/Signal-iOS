@@ -57,7 +57,18 @@ public class PaymentsRestoreWalletWordViewController: OWSViewController {
 
         OWSTableViewController2.removeBackButtonText(viewController: self)
 
-        createContents()
+        rootView.axis = .vertical
+        rootView.alignment = .fill
+        rootView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(rootView)
+        NSLayoutConstraint.activate([
+            rootView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            rootView.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
+            rootView.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
+            rootView.bottomAnchor.constraint(equalTo: keyboardLayoutGuide.topAnchor),
+        ])
+
+        updateContents()
     }
 
     public override func viewWillAppear(_ animated: Bool) {
@@ -79,17 +90,6 @@ public class PaymentsRestoreWalletWordViewController: OWSViewController {
     }
 
     private let rootView = UIStackView()
-
-    private func createContents() {
-        rootView.axis = .vertical
-        rootView.alignment = .fill
-        view.addSubview(rootView)
-        rootView.autoPin(toTopLayoutGuideOf: self, withInset: 0)
-        rootView.autoPinEdge(.bottom, to: .bottom, of: keyboardLayoutGuideViewSafeArea)
-        rootView.autoPinWidthToSuperviewMargins()
-
-        updateContents()
-    }
 
     private func updateContents() {
 
@@ -166,7 +166,7 @@ public class PaymentsRestoreWalletWordViewController: OWSViewController {
                                                   vMargin: 0)
 
         let nextButton = OWSFlatButton.button(title: CommonStrings.nextButton,
-                                              font: UIFont.dynamicTypeBody.semibold(),
+                                              font: UIFont.dynamicTypeHeadline,
                                               titleColor: .white,
                                               backgroundColor: .ows_accentBlue,
                                               target: self,

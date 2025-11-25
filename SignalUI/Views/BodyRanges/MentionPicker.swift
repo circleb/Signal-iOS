@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import LibSignalClient
 import SignalServiceKit
 
 public enum MentionPickerStyle {
@@ -13,18 +14,6 @@ public enum MentionPickerStyle {
 }
 
 class MentionPicker: UIView {
-    private let tableView = UITableView()
-    private let hairlineView = UIView()
-    private let resizingScrollView = ResizingScrollView<UITableView>()
-    private var blurView: UIVisualEffectView?
-
-    let mentionableUsers: [MentionableUser]
-    struct MentionableUser {
-        let address: SignalServiceAddress
-        let displayName: String
-    }
-
-    lazy private(set) var filteredMentionableUsers = mentionableUsers
 
     typealias Style = MentionPickerStyle
 
@@ -32,13 +21,14 @@ class MentionPicker: UIView {
     let selectedAddressCallback: (SignalServiceAddress) -> Void
 
     init(
-        mentionableAddresses: [SignalServiceAddress],
+        mentionableAcis: [Aci],
         style: Style,
         selectedAddressCallback: @escaping (SignalServiceAddress) -> Void
     ) {
-        mentionableUsers = SSKEnvironment.shared.databaseStorageRef.read { transaction in
+        let databaseStorage = SSKEnvironment.shared.databaseStorageRef
+        mentionableUsers = databaseStorage.read { transaction in
             let sortedAddresses = SSKEnvironment.shared.contactManagerImplRef.sortSignalServiceAddresses(
-                mentionableAddresses,
+                mentionableAcis.map({ SignalServiceAddress($0) }),
                 transaction: transaction
             )
 
@@ -60,82 +50,333 @@ class MentionPicker: UIView {
 
         super.init(frame: .zero)
 
-        backgroundColor = .clear
+        layoutMargins = .zero
 
-        addSubview(tableView)
-        tableView.autoPinEdgesToSuperviewEdges()
+        let useVisualEffectViewBackground: Bool
+        let useGlassBackground: Bool
 
-        tableView.delegate = self
-        tableView.dataSource = self
-        tableView.estimatedRowHeight = cellHeight
-        tableView.rowHeight = UITableView.automaticDimension
-        tableView.separatorStyle = .none
-        tableView.isScrollEnabled = false
+        switch style {
+        case .composingAttachment:
+            overrideUserInterfaceStyle = .dark
+            tableView.backgroundColor = UIColor.ows_gray95
 
-        tableView.register(MentionableUserCell.self, forCellReuseIdentifier: MentionableUserCell.reuseIdentifier)
+            useVisualEffectViewBackground = false
+            useGlassBackground = false
 
-        resizingScrollView.resizingView = tableView
-        resizingScrollView.delegate = self
-        addSubview(resizingScrollView)
-        resizingScrollView.autoPinEdgesToSuperviewEdges()
-        tableView.autoMatch(.height, to: .height, of: resizingScrollView)
+        case .groupReply:
+            overrideUserInterfaceStyle = .dark
 
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(applyTheme),
-            name: .themeDidChange,
-            object: nil
-        )
+            useVisualEffectViewBackground = true
+            useGlassBackground = false
 
-        addSubview(hairlineView)
-        hairlineView.autoPinWidthToSuperview()
-        hairlineView.autoPinEdge(.top, to: .top, of: tableView)
-        hairlineView.autoSetDimension(.height, toSize: 1)
+        case .default:
+            useVisualEffectViewBackground = true
+            if #available(iOS 26, *), BuildFlags.iOS26SDKIsAvailable {
+                useGlassBackground = true
+            } else {
+                useGlassBackground = false
+            }
+        }
 
-        applyTheme()
+        if useVisualEffectViewBackground {
+#if compiler(>=6.2)
+            // Glass background, rounded corners, horizontal insets.
+            if #available(iOS 26, *), useGlassBackground {
+                let glassEffectView = UIVisualEffectView(effect: backgroundViewVisualEffect())
+                glassEffectView.clipsToBounds = true
+                glassEffectView.cornerConfiguration = .uniformCorners(radius: .fixed(34))
+
+                backgroundView = glassEffectView
+
+                tableView.cornerConfiguration = .uniformCorners(radius: .fixed(34))
+                tableView.contentInset.top = 10
+                tableView.contentInset.bottom = 10
+
+                directionalLayoutMargins = .init(hMargin: OWSTableViewController2.cellHInnerMargin, vMargin: 0)
+            }
+#endif
+
+            // Blur background.
+            if backgroundView == nil {
+                if UIAccessibility.isReduceTransparencyEnabled {
+                    tableView.backgroundColor = overrideUserInterfaceStyle == .dark
+                    ? Theme.darkThemeBackgroundColor
+                    : Theme.backgroundColor
+                } else {
+                    backgroundView = UIVisualEffectView(effect: backgroundViewVisualEffect())
+                }
+            }
+
+            if let backgroundView {
+                backgroundView.translatesAutoresizingMaskIntoConstraints = false
+                addSubview(backgroundView)
+                NSLayoutConstraint.activate([
+                    backgroundView.topAnchor.constraint(equalTo: topAnchor),
+                    backgroundView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor),
+                    backgroundView.trailingAnchor.constraint(equalTo: layoutMarginsGuide.trailingAnchor),
+                    backgroundView.bottomAnchor.constraint(equalTo: bottomAnchor),
+                ])
+            }
+        }
+
+        if let backgroundView {
+            backgroundView.contentView.addSubview(tableView)
+        } else {
+            addSubview(tableView)
+        }
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            tableView.topAnchor.constraint(equalTo: topAnchor),
+            tableView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: layoutMarginsGuide.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: bottomAnchor),
+        ])
+
+        // Hairline for when there's no glass background.
+        if !useGlassBackground {
+            let hairlineView = UIView()
+            switch style {
+            case .composingAttachment:
+                hairlineView.backgroundColor = .ows_gray65
+
+            case .groupReply, .default:
+                hairlineView.backgroundColor = UIColor { traitCollection in
+                    traitCollection.userInterfaceStyle == .dark ? UIColor.ows_gray75 : UIColor.ows_gray05
+                }
+            }
+            hairlineView.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(hairlineView)
+            NSLayoutConstraint.activate([
+                hairlineView.topAnchor.constraint(equalTo: tableView.topAnchor),
+                hairlineView.leadingAnchor.constraint(equalTo: leadingAnchor),
+                hairlineView.trailingAnchor.constraint(equalTo: trailingAnchor),
+                hairlineView.heightAnchor.constraint(equalToConstant: 1),
+            ])
+
+            self.hairlineView = hairlineView
+        }
+
+        // Setup height constraint for the container view.
+        heightConstraint = tableView.heightAnchor.constraint(equalToConstant: 0)
+        heightConstraint.priority = .defaultHigh
+        heightConstraint.isActive = true
+        updateHeightConstraint(to: minimumHeight())
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    public override var center: CGPoint {
-        didSet {
-            // iOS 15 layout changes introduce a crash where we re-enterantly perform
-            // layout. A stopgap candidate fix may be to only refresh height constraints
-            // if the center changes *significantly* (rather than any change at all)
-            if !oldValue.fuzzyEquals(center, tolerance: 0.1) {
-                resizingScrollView.refreshHeightConstraints()
-            }
+    override func didMoveToSuperview() {
+        super.didMoveToSuperview()
+        updateHeightIfNeeded()
+        DispatchQueue.main.async {
+            self.updateHeightIfNeeded()
         }
     }
 
-    private var cellHeight: CGFloat { MentionableUserCell.cellHeight }
-    private var minimumTableHeight: CGFloat {
-        let minimumTableHeight = filteredMentionableUsers.count < 5
+    // MARK: - Layout
+
+    // `nil` if "Reduce Transparency" is enabled on iOS 15-18.
+    private var backgroundView: UIVisualEffectView?
+
+    private func backgroundViewVisualEffect() -> UIVisualEffect? {
+#if compiler(>=6.2)
+        if #available(iOS 26.1, *) {
+            let glassEffect = UIGlassEffect(style: .regular)
+            // Copy from ConversationInputToolbar.
+            glassEffect.tintColor = UIColor { traitCollection in
+                if traitCollection.userInterfaceStyle == .dark {
+                    return UIColor(white: 0, alpha: 0.2)
+                }
+                return UIColor(white: 1, alpha: 0.12)
+            }
+            return glassEffect
+        }
+        // 26.0 would still use a panel with rounded corners, but with blur effect instead of glass.
+        // This is because on 26.0 `UIGlassEffect` can't "dematerialize" due to UIKit bug.
+        if #available(iOS 26, *) {
+            return UIBlurEffect(style: .systemThinMaterial)
+        }
+#endif
+
+        guard !UIAccessibility.isReduceTransparencyEnabled else { return nil }
+
+        let blurEffect = overrideUserInterfaceStyle == .dark ? Theme.darkThemeBarBlurEffect : Theme.barBlurEffect
+        return blurEffect
+    }
+
+    private lazy var tableView: UITableView = {
+        let tableView = UITableView(frame: .zero, style: .plain)
+        tableView.delegate = self
+        tableView.dataSource = self
+        tableView.estimatedRowHeight = MentionableUserCell.cellHeight
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.separatorStyle = .none
+        tableView.backgroundColor = .clear
+        tableView.register(MentionableUserCell.self, forCellReuseIdentifier: MentionableUserCell.reuseIdentifier)
+        return tableView
+    }()
+
+    private var hairlineView: UIView?
+
+    private var currentHeight: CGFloat = 0
+
+    private var heightConstraint: NSLayoutConstraint!
+
+    private var isUpdatingHeight = false
+
+    private var isExpanded = false
+
+    private func updateHeightConstraint(to height: CGFloat) {
+        let constrainedHeight = height.clamp(minimumHeight(), maximumHeight())
+
+        guard constrainedHeight != currentHeight else { return }
+
+        heightConstraint.constant = constrainedHeight
+        currentHeight = constrainedHeight
+
+        isUpdatingHeight = true
+        UIView.animate(
+            withDuration: 0.25,
+            animations: {
+                self.superview?.layoutIfNeeded()
+            }, completion: { _ in
+                self.isUpdatingHeight = false
+                self.lastContentOffset = self.tableView.contentOffset.y
+            }
+        )
+    }
+
+    func updateHeightIfNeeded() {
+        let targetHeight = isExpanded ? maximumHeight() : minimumHeight()
+        updateHeightConstraint(to: targetHeight)
+    }
+
+    private func expandTableView() {
+        guard !isExpanded else { return }
+
+        isExpanded = true
+        let targetHeight = maximumHeight()
+        updateHeightConstraint(to: targetHeight)
+    }
+
+    private func collapseTableView() {
+        guard isExpanded else { return }
+
+        isExpanded = false
+        let targetHeight = minimumHeight()
+        updateHeightConstraint(to: targetHeight)
+    }
+
+    private func minimumHeight() -> CGFloat {
+        let cellHeight = MentionableUserCell.cellHeight
+        let minimumHeight = filteredMentionableUsers.count < 5
             ? CGFloat(filteredMentionableUsers.count) * cellHeight
             : 4.5 * cellHeight
-        return min(minimumTableHeight, maximumTableHeight)
+        return minimumHeight + tableView.contentInset.totalHeight
     }
 
-    // The way this class does sizing needs to be redone. In short, it relies on oversizing
-    // itself to the screen height then have the superview size itself to that screen height
-    // and THEN it can compute its own height correctly.
-    // For now, just avoid re-entrancy that comes from the fact that maximumTableHeight is
-    // is called from ResizingScrollView.layoutSubviews but itself calls layoutIfNeeded.
-    private var layoutReentrancy = false
-
-    private var maximumTableHeight: CGFloat {
-        guard let superview = superview else { return CurrentAppContext().frame.height }
-        if !layoutReentrancy {
-            layoutReentrancy = true
-            superview.layoutIfNeeded()
-            layoutReentrancy = false
+    private func maximumHeight() -> CGFloat {
+        var maximumContainerHeight = 0.5 * CurrentAppContext().frame.height
+        if let superview, frame.size.height > 0 {
+            maximumContainerHeight = frame.maxY - superview.safeAreaInsets.top
         }
-        let maximumCellHeight = CGFloat(filteredMentionableUsers.count) * cellHeight
-        let maximumContainerHeight = superview.height - (superview.height - frame.maxY) - superview.safeAreaInsets.top
-        return min(maximumCellHeight, maximumContainerHeight)
+        let maximumContentHeight = CGFloat(filteredMentionableUsers.count) * MentionableUserCell.cellHeight + tableView.contentInset.totalHeight
+        return min(maximumContentHeight, maximumContainerHeight)
     }
+
+    // MARK: - Animations
+
+    // Make sure to match parementers in ConversationInputToolbar.StickerLayout.
+    private static func animator() -> UIViewPropertyAnimator {
+        return UIViewPropertyAnimator(
+            duration: 0.35,
+            springDamping: 1,
+            springResponse: 0.35
+        )
+    }
+
+    // Make sure to match parementers in ConversationInputToolbar.StickerLayout.
+    private static var animationTransform: CGAffineTransform {
+        guard #available(iOS 26, *), BuildFlags.iOS26SDKIsAvailable else { return .identity }
+        return .scale(0.9)
+    }
+
+    func prepareToAnimateIn() {
+        if let backgroundView {
+            backgroundView.effect = nil
+        }
+        tableView.alpha = 0
+        hairlineView?.alpha = 0
+        transform = MentionPicker.animationTransform
+    }
+
+    func animateIn() {
+        let animator = MentionPicker.animator()
+        animator.addAnimations {
+            self.transform = .identity
+
+            if let backgroundView = self.backgroundView,
+               let backgroundViewEffect = self.backgroundViewVisualEffect()
+            {
+                backgroundView.effect = backgroundViewEffect
+            }
+
+            self.tableView.alpha = 1
+            self.hairlineView?.alpha = 1
+        }
+        animator.startAnimation()
+    }
+
+    func animateOut(completion: @escaping (UIViewAnimatingPosition) -> Void) {
+        let animator = MentionPicker.animator()
+        animator.addAnimations {
+            self.transform = MentionPicker.animationTransform
+
+            if let backgroundView = self.backgroundView {
+                backgroundView.effect = nil
+            }
+
+            self.tableView.alpha = 0
+            self.hairlineView?.alpha = 0
+        }
+        animator.addCompletion(completion)
+        animator.startAnimation()
+    }
+
+    // MARK: - Scroll Handling
+
+    private var lastContentOffset: CGFloat = 0
+
+    private func handleScroll(_ scrollView: UIScrollView) {
+        guard !isUpdatingHeight else { return }
+
+        let currentOffset = scrollView.contentOffset.y
+        let offsetDifference = currentOffset - lastContentOffset
+
+        let scrollThreshold: CGFloat = 40
+
+        guard abs(offsetDifference) > scrollThreshold else { return }
+
+        if offsetDifference > 0, !isExpanded {
+            expandTableView()
+        } else if isExpanded, currentOffset < -(scrollThreshold + tableView.contentInset.top) {
+            collapseTableView()
+        }
+        lastContentOffset = currentOffset
+    }
+
+    // MARK: - User Matching
+
+    struct MentionableUser {
+        let address: SignalServiceAddress
+        let displayName: String
+    }
+
+    private let mentionableUsers: [MentionableUser]
+
+    lazy private(set) var filteredMentionableUsers = mentionableUsers
 
     /// Used to update the filtered list of users for display.
     /// If the mention text results in no users remaining, returns
@@ -167,65 +408,16 @@ class MentionPicker: UIView {
 
         tableView.reloadData()
 
-        resizingScrollView.refreshHeightConstraints()
+        updateHeightIfNeeded()
 
         return true
     }
-
-    // MARK: -
-
-    @objc
-    private func applyTheme() {
-        switch style {
-        case .composingAttachment:
-            tableView.backgroundColor = UIColor.ows_gray95
-            hairlineView.backgroundColor = .ows_gray65
-        case .groupReply:
-            blurView?.removeFromSuperview()
-            blurView = nil
-
-            if UIAccessibility.isReduceTransparencyEnabled {
-                tableView.backgroundColor = Theme.darkThemeBackgroundColor
-            } else {
-                tableView.backgroundColor = .clear
-
-                let blurView = UIVisualEffectView(effect: Theme.darkThemeBarBlurEffect)
-                self.blurView = blurView
-                insertSubview(blurView, belowSubview: tableView)
-                blurView.autoPinEdgesToSuperviewEdges()
-            }
-
-            hairlineView.backgroundColor = .ows_gray75
-        case .`default`:
-            blurView?.removeFromSuperview()
-            blurView = nil
-
-            if UIAccessibility.isReduceTransparencyEnabled {
-                tableView.backgroundColor = Theme.backgroundColor
-            } else {
-                tableView.backgroundColor = .clear
-
-                let blurView = UIVisualEffectView(effect: Theme.barBlurEffect)
-                self.blurView = blurView
-                insertSubview(blurView, belowSubview: tableView)
-                blurView.autoPinEdgesToSuperviewEdges()
-            }
-
-            hairlineView.backgroundColor = Theme.isDarkThemeEnabled ? .ows_gray75 : .ows_gray05
-        }
-        tableView.reloadData()
-    }
-}
-
-extension MentionPicker: ResizingScrollViewDelegate {
-    var resizingViewMinimumHeight: CGFloat { minimumTableHeight }
-
-    var resizingViewMaximumHeight: CGFloat { maximumTableHeight }
 }
 
 // MARK: - Keyboard Interaction
 
 extension MentionPicker {
+
     func highlightAndScrollToRow(_ row: Int, animated: Bool = true) {
         guard row >= 0 && row < filteredMentionableUsers.count else { return }
 
@@ -277,8 +469,18 @@ extension MentionPicker {
 // MARK: -
 
 extension MentionPicker: UITableViewDelegate, UITableViewDataSource {
+
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        guard scrollView.isTracking else { return }
+        handleScroll(scrollView)
+    }
+
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        lastContentOffset = scrollView.contentOffset.y
+    }
+
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-       return filteredMentionableUsers.count
+        return filteredMentionableUsers.count
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -308,55 +510,81 @@ extension MentionPicker: UITableViewDelegate, UITableViewDataSource {
     }
 }
 
+// MARK: -
+
 private class MentionableUserCell: UITableViewCell {
+
     static let reuseIdentifier = "MentionPickerCell"
 
-    static let avatarSizeClass: ConversationAvatarView.Configuration.SizeClass = .thirtySix
-    static let vSpacing: CGFloat = 10
-    static let hSpacing: CGFloat = 12
+    private static let avatarSizeClass: ConversationAvatarView.Configuration.SizeClass = .thirtySix
 
     static var cellHeight: CGFloat {
         let cell = MentionableUserCell()
         cell.displayNameLabel.text = LocalizationNotNeeded("size")
-        cell.displayNameLabel.sizeToFit()
-        return max(CGFloat(avatarSizeClass.size.height), ceil(cell.displayNameLabel.height)) + vSpacing * 2
+        let cellSize = cell.systemLayoutSizeFitting(
+            CGSize(width: 300, height: CGFloat.greatestFiniteMagnitude),
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel
+        )
+        return cellSize.height
     }
 
-    let displayNameLabel = UILabel()
-    let avatarView = ConversationAvatarView(
+    private let displayNameLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .Signal.label
+        label.font = .dynamicTypeBody
+        return label
+    }()
+
+    private let avatarView = ConversationAvatarView(
         sizeClass: MentionableUserCell.avatarSizeClass,
         localUserDisplayMode: .asUser,
-        useAutolayout: true)
+        useAutolayout: true
+    )
+
+    private static let vMargin: CGFloat = 10
+    private static let hMargin: CGFloat = 2 * vMargin
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
 
-        backgroundColor = .clear
-        selectedBackgroundView = UIView()
-
         let avatarContainer = UIView()
         avatarContainer.addSubview(avatarView)
-        avatarView.autoPinWidthToSuperview()
-        avatarView.autoVCenterInSuperview()
-        avatarView.autoMatch(.height, to: .height, of: avatarContainer, withOffset: 0, relation: .lessThanOrEqual)
+        avatarView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            avatarView.widthAnchor.constraint(equalToConstant: Self.avatarSizeClass.size.width),
+            avatarView.heightAnchor.constraint(equalToConstant: Self.avatarSizeClass.size.height),
 
-        displayNameLabel.font = .dynamicTypeBody2
-
-        let stackView = UIStackView(arrangedSubviews: [
-            avatarContainer,
-            displayNameLabel,
-            UIView.hStretchingSpacer()
+            avatarView.topAnchor.constraint(greaterThanOrEqualTo: avatarContainer.topAnchor),
+            avatarView.centerYAnchor.constraint(equalTo: avatarContainer.centerYAnchor),
+            avatarView.leadingAnchor.constraint(equalTo: avatarContainer.leadingAnchor),
+            avatarView.trailingAnchor.constraint(equalTo: avatarContainer.trailingAnchor),
         ])
-        stackView.axis = .horizontal
-        stackView.spacing = Self.hSpacing
-        stackView.isUserInteractionEnabled = false
-        stackView.isLayoutMarginsRelativeArrangement = true
-        stackView.layoutMargins = UIEdgeInsets(top: Self.vSpacing, left: Self.hSpacing, bottom: Self.vSpacing, right: Self.hSpacing)
 
+        let stackView = UIStackView(arrangedSubviews: [ avatarContainer, displayNameLabel ])
+        stackView.axis = .horizontal
+        stackView.spacing = 12
+        stackView.isUserInteractionEnabled = false
+        stackView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(stackView)
-        stackView.autoPinHeightToSuperview()
-        stackView.autoPinEdge(toSuperviewSafeArea: .leading)
-        stackView.autoPinEdge(toSuperviewSafeArea: .trailing)
+        NSLayoutConstraint.activate([
+            stackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: Self.vMargin),
+            stackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: Self.hMargin),
+            stackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -Self.hMargin),
+            stackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -Self.vMargin),
+        ])
+    }
+
+    override func updateConfiguration(using state: UICellConfigurationState) {
+        var configuration = UIBackgroundConfiguration.clear()
+        if state.isSelected || state.isHighlighted {
+            configuration.backgroundColor = .Signal.primaryFill
+            if #available(iOS 26, *), BuildFlags.iOS26SDKIsAvailable {
+                configuration.backgroundInsets = .init(hMargin: 0.5 * Self.hMargin, vMargin: 0)
+                configuration.cornerRadius = 50
+            }
+        }
+        backgroundConfiguration = configuration
     }
 
     required init?(coder: NSCoder) {
@@ -364,15 +592,6 @@ private class MentionableUserCell: UITableViewCell {
     }
 
     func configure(with mentionableUser: MentionPicker.MentionableUser, style: MentionPicker.Style) {
-        switch style {
-        case .composingAttachment, .groupReply:
-            displayNameLabel.textColor = Theme.darkThemePrimaryColor
-            selectedBackgroundView?.backgroundColor = UIColor.white.withAlphaComponent(0.2)
-        case .`default`:
-            displayNameLabel.textColor = Theme.primaryTextColor
-            selectedBackgroundView?.backgroundColor = Theme.cellSelectedColor
-        }
-
         displayNameLabel.text = mentionableUser.displayName
 
         avatarView.updateWithSneakyTransactionIfNecessary { configuration in

@@ -21,6 +21,7 @@ public protocol OWSIdentityManager {
     func recipientIdentity(for recipientUniqueId: RecipientUniqueId, tx: DBReadTransaction) -> OWSRecipientIdentity?
     func removeRecipientIdentity(for recipientUniqueId: RecipientUniqueId, tx: DBWriteTransaction)
 
+    func generateNewIdentityKeyPair() -> ECKeyPair
     func identityKeyPair(for identity: OWSIdentity, tx: DBReadTransaction) -> ECKeyPair?
     func setIdentityKeyPair(_ keyPair: ECKeyPair?, for identity: OWSIdentity, tx: DBWriteTransaction)
     func wipeIdentityKeysFromFailedProvisioning(tx: DBWriteTransaction)
@@ -187,12 +188,6 @@ private extension OWSIdentity {
     }
 }
 
-extension OWSIdentityManager {
-    func generateNewIdentityKeyPair() -> ECKeyPair {
-        ECKeyPair.generateKeyPair()
-    }
-}
-
 public class OWSIdentityManagerImpl: OWSIdentityManager {
     private let aciProtocolStore: SignalProtocolStore
     private let appReadiness: AppReadiness
@@ -256,16 +251,17 @@ public class OWSIdentityManagerImpl: OWSIdentityManager {
         guard let identityKeyPair = self.identityKeyPair(for: identity, tx: tx) else {
             throw OWSAssertionError("no identity key pair for \(identity)")
         }
+        guard self.tsAccountManager.getRegistrationId(for: identity, tx: tx) != nil else {
+            throw OWSAssertionError("no registrationId for \(identity)")
+        }
         return IdentityStore(
             identityManager: self,
             identityKeyPair: identityKeyPair.identityKeyPair,
             fetchLocalRegistrationId: { [tsAccountManager] in
-                switch identity {
-                case .aci:
-                    return tsAccountManager.getOrGenerateAciRegistrationId(tx: $0)
-                case .pni:
-                    return tsAccountManager.getOrGeneratePniRegistrationId(tx: $0)
+                guard let registrationId = tsAccountManager.getRegistrationId(for: identity, tx: $0) else {
+                    owsFail("Missing registrationId for \(identity)")
                 }
+                return registrationId
             }
         )
     }
@@ -306,6 +302,10 @@ public class OWSIdentityManagerImpl: OWSIdentityManager {
     }
 
     // MARK: - Local Identity
+
+    public func generateNewIdentityKeyPair() -> ECKeyPair {
+        ECKeyPair.generateKeyPair()
+    }
 
     public func identityKeyPair(for identity: OWSIdentity, tx: DBReadTransaction) -> ECKeyPair? {
         return ownIdentityKeyValueStore.getObject(identity.persistenceKey, ofClass: ECKeyPair.self, transaction: tx)
@@ -758,7 +758,10 @@ public class OWSIdentityManagerImpl: OWSIdentityManager {
     ) -> ChangeVerificationStateResult {
         owsAssertDebug(identityKey.count == Constants.storedIdentityKeyLength)
 
-        let recipient = OWSAccountIdFinder.ensureRecipient(forAddress: address, transaction: tx)
+        guard let recipient = recipientDatabaseTable.fetchRecipient(address: address, tx: tx) else {
+            owsFailDebug("Missing SignalRecipient")
+            return .error
+        }
         let recipientUniqueId = recipient.uniqueId
         let recipientIdentity = OWSRecipientIdentity.anyFetch(uniqueId: recipientUniqueId, transaction: tx)
         guard let recipientIdentity else {
@@ -830,7 +833,7 @@ public class OWSIdentityManagerImpl: OWSIdentityManager {
     // MARK: - Verified
 
     public func processIncomingVerifiedProto(_ verified: SSKProtoVerified, tx: DBWriteTransaction) throws {
-        guard let aci = Aci.parseFrom(aciString: verified.destinationAci) else {
+        guard let aci = Aci.parseFrom(serviceIdBinary: verified.destinationAciBinary, serviceIdString: verified.destinationAci) else {
             return owsFailDebug("Verification state sync message missing destination.")
         }
         Logger.info("Received verification state message for \(aci)")
@@ -1022,7 +1025,7 @@ public class OWSIdentityManagerImpl: OWSIdentityManager {
                 throw OWSAssertionError("Unexpected response from batch identity request \(response.responseStatusCode)")
             }
 
-            guard let json = response.responseBodyJson, let responseDictionary = json as? [String: AnyObject] else {
+            guard let responseDictionary = response.responseBodyDict else {
                 throw OWSAssertionError("Missing or invalid JSON")
             }
 

@@ -3,12 +3,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-public import SignalServiceKit
+import SignalServiceKit
 import SignalUI
 
 public class CLVReminderViews {
 
-    fileprivate let reminderViewCell = UITableViewCell()
+    let reminderViewCell = UITableViewCell()
+
     fileprivate let reminderStackView = UIStackView()
     fileprivate let expiredView = ExpirationNagView(
         dateProvider: Date.provider,
@@ -33,8 +34,6 @@ public class CLVReminderViews {
         reminderViewCell.selectionStyle = .none
         reminderViewCell.contentView.addSubview(reminderStackView)
         reminderStackView.autoPinEdgesToSuperviewEdges()
-        reminderViewCell.accessibilityIdentifier = "reminderViewCell"
-        reminderStackView.accessibilityIdentifier = "reminderStackView"
 
         let deregisteredText: String
         let deregisteredActionTitle: String
@@ -195,19 +194,7 @@ public class CLVReminderViews {
 
 extension ChatListViewController {
 
-    public var unreadPaymentNotificationsCount: UInt {
-        get { viewState.unreadPaymentNotificationsCount }
-        set { viewState.unreadPaymentNotificationsCount = newValue }
-    }
-
-    fileprivate var firstUnreadPaymentModel: TSPaymentModel? {
-        get { viewState.firstUnreadPaymentModel }
-        set { viewState.firstUnreadPaymentModel = newValue }
-    }
-
-    public var reminderViewCell: UITableViewCell { reminderViews.reminderViewCell }
-
-    fileprivate var reminderStackView: UIStackView { reminderViews.reminderStackView }
+    private var reminderViews: CLVReminderViews { viewState.reminderViews }
     fileprivate var expiredView: ExpirationNagView { reminderViews.expiredView }
     fileprivate var deregisteredView: UIView { reminderViews.deregisteredView }
     fileprivate var outageView: UIView { reminderViews.outageView }
@@ -215,8 +202,6 @@ extension ChatListViewController {
     fileprivate var paymentsReminderView: UIView { reminderViews.paymentsReminderView }
     fileprivate var usernameCorruptedReminderView: UIView { reminderViews.usernameCorruptedReminderView }
     fileprivate var usernameLinkCorruptedReminderView: UIView { reminderViews.usernameLinkCorruptedReminderView }
-
-    public var reminderViews: CLVReminderViews { viewState.reminderViews }
 
     public func updateArchiveReminderView() {
         archiveReminderView.isHidden = viewState.chatListMode != .archive
@@ -260,6 +245,87 @@ extension ChatListViewController {
         }
     }
 
+    // MARK: -
+
+    public func updateBackupFailureAlertsWithSneakyTransaction() {
+        typealias BackupFailureAlertType = CLVViewState.BackupFailureAlertType
+
+        let db = DependenciesBridge.shared.db
+        let failureStateManager = DependenciesBridge.shared.backupFailureStateManager
+
+        viewState.backupFailureAlerts = db.read { tx -> Set<BackupFailureAlertType> in
+            guard failureStateManager.hasFailedBackup(tx: tx) else {
+                return []
+            }
+
+            var alerts: Set<BackupFailureAlertType> = [.menuItem]
+            for alertType in BackupFailureAlertType.allCases {
+                if
+                    let errorBadgeTarget = alertType.errorBadgeTarget,
+                    failureStateManager.shouldShowErrorBadge(target: errorBadgeTarget, tx: tx)
+                {
+                    alerts.insert(alertType)
+                }
+            }
+            return alerts
+        }
+    }
+
+    public func updateBackupSubscriptionFailedToRedeemAlertsWithSneakyTx() {
+        typealias BackupSubscriptionFailedToRedeemAlertType = CLVViewState.BackupSubscriptionFailedToRedeemAlertType
+
+        let db = DependenciesBridge.shared.db
+        let backupSubscriptionIssueStore = BackupSubscriptionIssueStore()
+
+        viewState.backupSubscriptionFailedToRedeemAlerts = db.read { tx in
+            var alerts = Set<BackupSubscriptionFailedToRedeemAlertType>()
+            if backupSubscriptionIssueStore.shouldShowIAPSubscriptionFailedToRenewChatListBadge(tx: tx) {
+                alerts.insert(.avatarBadge)
+            }
+            if backupSubscriptionIssueStore.shouldShowIAPSubscriptionFailedToRenewChatListMenuItem(tx: tx) {
+                alerts.insert(.menuItem)
+            }
+            return alerts
+        }
+    }
+
+    public func updateBackupIAPNotFoundLocallyAlertsWithSneakyTx() {
+        typealias BackupIAPNotFoundLocallyAlertType = CLVViewState.BackupIAPNotFoundLocallyAlertType
+
+        let db = DependenciesBridge.shared.db
+        let backupSubscriptionIssueStore = BackupSubscriptionIssueStore()
+
+        viewState.backupIAPNotFoundLocallyAlerts = db.read { tx in
+            var alerts = Set<BackupIAPNotFoundLocallyAlertType>()
+            if backupSubscriptionIssueStore.shouldShowIAPSubscriptionNotFoundLocallyChatListBadge(tx: tx) {
+                alerts.insert(.avatarBadge)
+            }
+            if backupSubscriptionIssueStore.shouldShowIAPSubscriptionNotFoundLocallyChatListMenuItem(tx: tx) {
+                alerts.insert(.menuItem)
+            }
+            return alerts
+        }
+    }
+
+    public func updateHasConsumedMediaTierCapacityWithSneakyTransaction() {
+        let backupSettingsStore = BackupSettingsStore()
+        viewState.hasConsumedMediaTierCapacity = SSKEnvironment.shared.databaseStorageRef.read { tx in
+            backupSettingsStore.hasConsumedMediaTierCapacity(tx: tx)
+        }
+    }
+
+    // MARK: -
+
+    fileprivate var unreadPaymentNotificationsCount: UInt {
+        get { viewState.unreadPaymentNotificationsCount }
+        set { viewState.unreadPaymentNotificationsCount = newValue }
+    }
+
+    fileprivate var firstUnreadPaymentModel: TSPaymentModel? {
+        get { viewState.firstUnreadPaymentModel }
+        set { viewState.firstUnreadPaymentModel = newValue }
+    }
+
     public func updateUnreadPaymentNotificationsCountWithSneakyTransaction() {
         AssertIsOnMainThread()
 
@@ -295,6 +361,8 @@ extension ChatListViewController {
 
         updatePaymentReminderView()
     }
+
+    // MARK: -
 
     /// Update reminder views as appropriate for the current username state.
     private func updateUsernameStateViews(tx: DBReadTransaction) {

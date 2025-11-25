@@ -7,7 +7,7 @@ import SignalServiceKit
 import SignalUI
 
 class BadgeGiftingChooseRecipientViewController: RecipientPickerContainerViewController {
-    typealias PaymentMethodsConfiguration = DonationSubscriptionManager.DonationConfiguration.PaymentMethodsConfiguration
+    typealias PaymentMethodsConfiguration = DonationSubscriptionConfiguration.PaymentMethodsConfiguration
 
     private let badge: ProfileBadge
     private let price: FiatMoney
@@ -26,6 +26,8 @@ class BadgeGiftingChooseRecipientViewController: RecipientPickerContainerViewCon
     public override func viewDidLoad() {
         super.viewDidLoad()
 
+        view.backgroundColor = .Signal.groupedBackground
+
         title = OWSLocalizedString(
             "DONATION_ON_BEHALF_OF_A_FRIEND_CHOOSE_RECIPIENT_TITLE",
             comment: "Title on the screen where you choose who you're going to donate on behalf of."
@@ -35,23 +37,8 @@ class BadgeGiftingChooseRecipientViewController: RecipientPickerContainerViewCon
         recipientPicker.shouldHideLocalRecipient = true
         recipientPicker.groupsToShow = .noGroups
         recipientPicker.delegate = self
-        addChild(recipientPicker)
-        view.addSubview(recipientPicker.view)
-        recipientPicker.view.autoPin(toTopLayoutGuideOf: self, withInset: 0)
-        recipientPicker.view.autoPinEdge(toSuperviewEdge: .leading)
-        recipientPicker.view.autoPinEdge(toSuperviewEdge: .trailing)
-        recipientPicker.view.autoPinEdge(toSuperviewEdge: .bottom)
 
-        rerender()
-    }
-
-    override func themeDidChange() {
-        super.themeDidChange()
-        rerender()
-    }
-
-    private func rerender() {
-        view.backgroundColor = OWSTableViewController2.tableBackgroundColor(isUsingPresentedStyle: true)
+        addRecipientPicker()
     }
 }
 

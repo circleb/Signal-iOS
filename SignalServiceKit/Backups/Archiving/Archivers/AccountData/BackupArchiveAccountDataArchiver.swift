@@ -56,14 +56,17 @@ public class BackupArchiveAccountDataArchiver: BackupArchiveProtoStreamWriter {
     private let chatStyleArchiver: BackupArchiveChatStyleArchiver
     private let disappearingMessageConfigurationStore: DisappearingMessagesConfigurationStore
     private let donationSubscriptionManager: BackupArchive.Shims.DonationSubscriptionManager
+    private let imageQuality: BackupArchive.Shims.ImageQuality
     private let linkPreviewSettingStore: LinkPreviewSettingStore
     private let localUsernameManager: LocalUsernameManager
+    private let mediaBandwidthPreferenceStore: MediaBandwidthPreferenceStore
     private let ows2FAManager: BackupArchive.Shims.OWS2FAManager
     private let phoneNumberDiscoverabilityManager: PhoneNumberDiscoverabilityManager
     private let preferences: BackupArchive.Shims.Preferences
     private let profileManager: BackupArchive.Shims.ProfileManager
     private let receiptManager: BackupArchive.Shims.ReceiptManager
     private let reactionManager: BackupArchive.Shims.ReactionManager
+    private let screenLock: BackupArchive.Shims.ScreenLock
     private let sskPreferences: BackupArchive.Shims.SSKPreferences
     private let storyManager: BackupArchive.Shims.StoryManager
     private let systemStoryManager: BackupArchive.Shims.SystemStoryManager
@@ -78,14 +81,17 @@ public class BackupArchiveAccountDataArchiver: BackupArchiveProtoStreamWriter {
         chatStyleArchiver: BackupArchiveChatStyleArchiver,
         disappearingMessageConfigurationStore: DisappearingMessagesConfigurationStore,
         donationSubscriptionManager: BackupArchive.Shims.DonationSubscriptionManager,
+        imageQuality: BackupArchive.Shims.ImageQuality,
         linkPreviewSettingStore: LinkPreviewSettingStore,
         localUsernameManager: LocalUsernameManager,
+        mediaBandwidthPreferenceStore: MediaBandwidthPreferenceStore,
         ows2FAManager: BackupArchive.Shims.OWS2FAManager,
         phoneNumberDiscoverabilityManager: PhoneNumberDiscoverabilityManager,
         preferences: BackupArchive.Shims.Preferences,
         profileManager: BackupArchive.Shims.ProfileManager,
         receiptManager: BackupArchive.Shims.ReceiptManager,
         reactionManager: BackupArchive.Shims.ReactionManager,
+        screenLock: BackupArchive.Shims.ScreenLock,
         sskPreferences: BackupArchive.Shims.SSKPreferences,
         storyManager: BackupArchive.Shims.StoryManager,
         systemStoryManager: BackupArchive.Shims.SystemStoryManager,
@@ -99,14 +105,17 @@ public class BackupArchiveAccountDataArchiver: BackupArchiveProtoStreamWriter {
         self.chatStyleArchiver = chatStyleArchiver
         self.disappearingMessageConfigurationStore = disappearingMessageConfigurationStore
         self.donationSubscriptionManager = donationSubscriptionManager
+        self.imageQuality = imageQuality
         self.linkPreviewSettingStore = linkPreviewSettingStore
         self.localUsernameManager = localUsernameManager
+        self.mediaBandwidthPreferenceStore = mediaBandwidthPreferenceStore
         self.ows2FAManager = ows2FAManager
         self.phoneNumberDiscoverabilityManager = phoneNumberDiscoverabilityManager
         self.preferences = preferences
         self.profileManager = profileManager
         self.receiptManager = receiptManager
         self.reactionManager = reactionManager
+        self.screenLock = screenLock
         self.sskPreferences = sskPreferences
         self.storyManager = storyManager
         self.systemStoryManager = systemStoryManager
@@ -134,6 +143,8 @@ public class BackupArchiveAccountDataArchiver: BackupArchiveProtoStreamWriter {
             accountData.givenName = localProfile.givenName ?? ""
             accountData.familyName = localProfile.familyName ?? ""
             accountData.avatarURLPath = localProfile.avatarUrlPath ?? ""
+            accountData.bioText = localProfile.bio ?? ""
+            accountData.bioEmoji = localProfile.bioEmoji ?? ""
 
             if let donationSubscriberId = donationSubscriptionManager.getSubscriberID(tx: context.tx) {
                 var donationSubscriberData = BackupProto_AccountData.SubscriberData()
@@ -238,6 +249,7 @@ public class BackupArchiveAccountDataArchiver: BackupArchiveProtoStreamWriter {
         case .everybody: .everybody
         case .nobody: .nobody
         }
+        let hasPinReminders = ows2FAManager.areRemindersEnabled(tx: context.tx)
 
         // Populate the proto with the settings
         var accountSettings = BackupProto_AccountData.AccountSettings()
@@ -258,6 +270,7 @@ public class BackupArchiveAccountDataArchiver: BackupArchiveProtoStreamWriter {
         accountSettings.phoneNumberSharingMode = phoneNumberSharingMode
         accountSettings.preferredReactionEmoji = reactionManager.customEmojiSet(tx: context.tx) ?? []
         accountSettings.storyViewReceiptsEnabled = storyManager.areViewReceiptsEnabled(tx: context.tx)
+        accountSettings.pinReminders = hasPinReminders
         switch backupPlanManager.backupPlan(tx: context.tx) {
         case .disabling, .disabled:
             accountSettings.clearBackupTier()
@@ -294,6 +307,30 @@ public class BackupArchiveAccountDataArchiver: BackupArchiveProtoStreamWriter {
             return .failure(archiveFrameError)
         }
 
+        accountSettings.showSealedSenderIndicators = udManager.shouldAllowUnrestrictedAccessLocal(tx: context.tx)
+        accountSettings.defaultSentMediaQuality = (imageQuality.resolvedQuality(tx: context.tx) == .high ? .high : .standard)
+
+        var downloadSettings = BackupProto_AccountData.AutoDownloadSettings()
+        for type in MediaBandwidthPreferences.MediaType.allCases {
+            let setting = mediaBandwidthPreferenceStore.preference(for: type, tx: context.tx)
+            switch type {
+            case .audio:
+                downloadSettings.audio = setting.backupProtoPreference
+            case .video:
+                downloadSettings.video = setting.backupProtoPreference
+            case .document:
+                downloadSettings.documents = setting.backupProtoPreference
+            case .photo:
+                downloadSettings.images = setting.backupProtoPreference
+            }
+        }
+        accountSettings.autoDownloadSettings = downloadSettings
+
+        if screenLock.isScreenLockEnabled(tx: context.tx) {
+            let screenLockSeconds = screenLock.screenLockTimeout(tx: context.tx)
+            accountSettings.screenLockTimeoutMinutes = UInt32(screenLockSeconds / Double(60))
+        }
+
         return .success(accountSettings)
     }
 
@@ -320,6 +357,8 @@ public class BackupArchiveAccountDataArchiver: BackupArchiveProtoStreamWriter {
             givenName: accountData.givenName,
             familyName: accountData.familyName.nilIfEmpty,
             avatarUrlPath: accountData.avatarURLPath.nilIfEmpty,
+            bio: accountData.bioText.nilIfEmpty,
+            bioEmoji: accountData.bioEmoji.nilIfEmpty,
             profileKey: profileKey,
             tx: context.tx
         )
@@ -379,7 +418,7 @@ public class BackupArchiveAccountDataArchiver: BackupArchiveProtoStreamWriter {
             uploadEra = backupAttachmentUploadEraStore.currentUploadEra(tx: context.tx)
 
             let optimizeLocalStorage = accountData.accountSettings.optimizeOnDeviceStorage
-            if FeatureFlags.Backups.avoidStoreKitForTesters {
+            if BuildFlags.Backups.avoidStoreKitForTesters {
                 // If we're importing into a build that can't make purchases,
                 // opt ourselves into "paid as tester" mode. We'll manage IAP
                 // data, if there is any, separately.
@@ -504,6 +543,60 @@ public class BackupArchiveAccountDataArchiver: BackupArchiveProtoStreamWriter {
             case .failure(let errors):
                 return .failure(errors)
             }
+
+            udManager.setShouldAllowUnrestrictedAccessLocal(settings.showSealedSenderIndicators, tx: context.tx)
+
+            switch settings.defaultSentMediaQuality {
+            case .unknownQuality, .UNRECOGNIZED, .standard:
+                imageQuality.setUserSelectedHighQuality(false, tx: context.tx)
+            case .high:
+                imageQuality.setUserSelectedHighQuality(true, tx: context.tx)
+            }
+
+            if settings.hasAutoDownloadSettings {
+                let mediaSettings = settings.autoDownloadSettings
+                for type in MediaBandwidthPreferences.MediaType.allCases {
+                    switch type {
+                    case .audio:
+                        mediaBandwidthPreferenceStore.set(
+                            mediaSettings.audio.mediaBandwidthPreference,
+                            for: .audio,
+                            tx: context.tx
+                        )
+                    case .video:
+                        mediaBandwidthPreferenceStore.set(
+                            mediaSettings.video.mediaBandwidthPreference,
+                            for: .video,
+                            tx: context.tx
+                        )
+                    case .document:
+                        mediaBandwidthPreferenceStore.set(
+                            mediaSettings.documents.mediaBandwidthPreference,
+                            for: .document,
+                            tx: context.tx
+                        )
+                    case .photo:
+                        mediaBandwidthPreferenceStore.set(
+                            mediaSettings.images.mediaBandwidthPreference,
+                            for: .photo,
+                            tx: context.tx
+                        )
+                    }
+                }
+            }
+
+            if settings.hasScreenLockTimeoutMinutes {
+                let timeout = Double(settings.screenLockTimeoutMinutes * 60)
+                screenLock.setIsScreenLockEnabled(true, tx: context.tx)
+                screenLock.setScreenLockTimeout(timeout, tx: context.tx)
+            }
+
+            if settings.hasPinReminders {
+                ows2FAManager.setAreRemindersEnabled(settings.pinReminders, tx: context.tx)
+                if settings.pinReminders {
+                    ows2FAManager.resetDefaultRepetitionIntervalForBackupRestore(tx: context.tx)
+                }
+            }
         }
 
         // Restore username details (username, link, QR color)
@@ -564,6 +657,27 @@ private extension BackupProto_AccountData.UsernameLink.Color {
         case .pink: return .pink
         case .purple: return .purple
         case .unknown, .UNRECOGNIZED: return .unknown
+        }
+    }
+}
+
+private extension MediaBandwidthPreferences.Preference {
+    var backupProtoPreference: BackupProto_AccountData.AutoDownloadSettings.AutoDownloadOption {
+        switch self {
+        case .never: return .never
+        case .wifiOnly: return .wifi
+        case .wifiAndCellular: return .wifiAndCellular
+        }
+    }
+}
+
+private extension BackupProto_AccountData.AutoDownloadSettings.AutoDownloadOption {
+    var mediaBandwidthPreference: MediaBandwidthPreferences.Preference {
+        switch self {
+        case .never: return .never
+        case .wifi: return .wifiOnly
+        case .wifiAndCellular: return .wifiAndCellular
+        case .unknown, .UNRECOGNIZED: return .never
         }
     }
 }

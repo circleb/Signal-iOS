@@ -138,6 +138,7 @@ public class SafetyTipsViewController: InteractiveSheetViewController, UIScrollV
     }
 
     public override func viewDidLoad() {
+        super.viewDidLoad()
 
         minimizedHeight = min(725, CurrentAppContext().frame.height)
         super.allowsExpansion = false
@@ -159,7 +160,6 @@ public class SafetyTipsViewController: InteractiveSheetViewController, UIScrollV
         buildContents()
         updateButtonState()
         setColorsForCurrentTheme()
-        super.viewDidLoad()
     }
 
     public override func themeDidChange() {
@@ -193,7 +193,7 @@ public class SafetyTipsViewController: InteractiveSheetViewController, UIScrollV
                 "SAFETY_TIPS_PREVIOUS_TIP_BUTTON",
                 comment: "Button that will show the previous safety tip."
             ),
-            font: .dynamicTypeBodyClamped.semibold(),
+            font: .dynamicTypeHeadlineClamped,
             titleColor: .white,
             backgroundColor: .ows_accentBlue,
             target: self,
@@ -210,7 +210,7 @@ public class SafetyTipsViewController: InteractiveSheetViewController, UIScrollV
                 "SAFETY_TIPS_NEXT_TIP_BUTTON",
                 comment: "Button that will show the next safety tip."
             ),
-            font: .dynamicTypeBodyClamped.semibold(),
+            font: .dynamicTypeHeadlineClamped,
             titleColor: .white,
             backgroundColor: .ows_accentBlue,
             target: self,
@@ -397,7 +397,7 @@ extension SafetyTipsViewController {
 
         func updateFontsForCurrentPreferredContentSize() {
             titleLabel.font = .dynamicTypeTitle2Clamped.bold()
-            subtitleLabel.font = .dynamicTypeBody2Clamped
+            subtitleLabel.font = .dynamicTypeSubheadlineClamped
         }
 
         func setColorsForCurrentTheme() {

@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import LibSignalClient
 import SignalServiceKit
 import SignalUI
 
@@ -38,9 +39,9 @@ extension GifPickerNavigationViewController: GifPickerViewControllerDelegate {
             options: self.hasQuotedReplyDraft ? [.disallowViewOnce] : [],
             attachmentApprovalItems: [attachmentApprovalItem],
         )
+        attachmentApproval.approvalDataSource = self
         attachmentApproval.setMessageBody(initialMessageBody, txProvider: DependenciesBridge.shared.db.readTxProvider)
         attachmentApproval.approvalDelegate = self
-        attachmentApproval.approvalDataSource = self
         pushViewController(attachmentApproval, animated: true) {
             // Remove any selected state in case the user returns "back" to the gif picker.
             self.gifPickerViewController.clearSelectedState()
@@ -54,43 +55,40 @@ extension GifPickerNavigationViewController: GifPickerViewControllerDelegate {
 
 extension GifPickerNavigationViewController: AttachmentApprovalViewControllerDelegate {
 
-    public func attachmentApproval(_ attachmentApproval: AttachmentApprovalViewController,
-                                   didApproveAttachments attachments: [SignalAttachment],
-                                   messageBody: MessageBody?) {
+    func attachmentApproval(_ attachmentApproval: AttachmentApprovalViewController, didApproveAttachments attachments: [SignalAttachment], messageBody: MessageBody?) {
         approvalDelegate?.attachmentApproval(attachmentApproval, didApproveAttachments: attachments, messageBody: messageBody)
     }
 
-    public func attachmentApprovalDidCancel() {
+    func attachmentApprovalDidCancel() {
         approvalDelegate?.attachmentApprovalDidCancel()
     }
 
-    public func attachmentApproval(_ attachmentApproval: AttachmentApprovalViewController,
-                                   didChangeMessageBody newMessageBody: MessageBody?) {
+    func attachmentApproval(_ attachmentApproval: AttachmentApprovalViewController, didChangeMessageBody newMessageBody: MessageBody?) {
         approvalDelegate?.attachmentApproval(attachmentApproval, didChangeMessageBody: newMessageBody)
     }
 
-    public func attachmentApproval(_ attachmentApproval: AttachmentApprovalViewController, didRemoveAttachment attachment: SignalAttachment) { }
+    func attachmentApproval(_ attachmentApproval: AttachmentApprovalViewController, didRemoveAttachment attachment: SignalAttachment) { }
 
-    public func attachmentApprovalDidTapAddMore(_ attachmentApproval: AttachmentApprovalViewController) { }
+    func attachmentApprovalDidTapAddMore(_ attachmentApproval: AttachmentApprovalViewController) { }
 
-    public func attachmentApproval(_ attachmentApproval: AttachmentApprovalViewController, didChangeViewOnceState isViewOnce: Bool) { }
+    func attachmentApproval(_ attachmentApproval: AttachmentApprovalViewController, didChangeViewOnceState isViewOnce: Bool) { }
 }
 
 extension GifPickerNavigationViewController: AttachmentApprovalViewControllerDataSource {
 
-    public var attachmentApprovalTextInputContextIdentifier: String? {
+    var attachmentApprovalTextInputContextIdentifier: String? {
         return approvalDataSource?.attachmentApprovalTextInputContextIdentifier
     }
 
-    public var attachmentApprovalRecipientNames: [String] {
+    var attachmentApprovalRecipientNames: [String] {
         approvalDataSource?.attachmentApprovalRecipientNames ?? []
     }
 
-    public func attachmentApprovalMentionableAddresses(tx: DBReadTransaction) -> [SignalServiceAddress] {
-        return approvalDataSource?.attachmentApprovalMentionableAddresses(tx: tx) ?? []
+    func attachmentApprovalMentionableAcis(tx: DBReadTransaction) -> [Aci] {
+        return approvalDataSource?.attachmentApprovalMentionableAcis(tx: tx) ?? []
     }
 
-    public func attachmentApprovalMentionCacheInvalidationKey() -> String {
+    func attachmentApprovalMentionCacheInvalidationKey() -> String {
         return approvalDataSource?.attachmentApprovalMentionCacheInvalidationKey() ?? UUID().uuidString
     }
 }
@@ -290,10 +288,13 @@ class GifPickerViewController: OWSViewController, UISearchBarDelegate, UICollect
 
         let bottomBanner = UIView()
         bottomBannerContainer.addSubview(bottomBanner)
-
-        bottomBanner.autoPinEdge(toSuperviewEdge: .top)
-        bottomBanner.autoPinWidthToSuperview()
-        bottomBanner.autoPinEdge(.bottom, to: .bottom, of: keyboardLayoutGuideViewSafeArea)
+        bottomBanner.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            bottomBanner.topAnchor.constraint(equalTo: bottomBannerContainer.topAnchor),
+            bottomBanner.leadingAnchor.constraint(equalTo: bottomBannerContainer.leadingAnchor),
+            bottomBanner.trailingAnchor.constraint(equalTo: bottomBannerContainer.trailingAnchor),
+            bottomBanner.bottomAnchor.constraint(equalTo: keyboardLayoutGuide.topAnchor),
+        ])
 
         // The Giphy API requires us to "show their trademark prominently" in our GIF experience.
         let logoImage = UIImage(named: "giphy_logo")
@@ -472,40 +473,46 @@ class GifPickerViewController: OWSViewController, UISearchBarDelegate, UICollect
         GiphyDownloader.giphyDownloader.cancelAllRequests()
 
         fileForCellTask?.cancel()
-        fileForCellTask = Task.detached(priority: .userInitiated) {
+        fileForCellTask = Task {
             do {
                 let asset = try await cell.requestRenditionForSending()
-                guard let giphyAsset = asset.assetDescription as? GiphyAsset else {
-                    throw OWSAssertionError("Invalid asset description.")
-                }
-
-                let assetTypeIdentifier = giphyAsset.type.utiType
-                let assetFileExtension = giphyAsset.type.extension
-                let pathForCachedAsset = asset.filePath
-
-                let pathForConsumableFile = OWSFileSystem.temporaryFilePath(fileExtension: assetFileExtension)
-                try FileManager.default.copyItem(atPath: pathForCachedAsset, toPath: pathForConsumableFile)
-                let dataSource = try DataSourcePath(filePath: pathForConsumableFile, shouldDeleteOnDeallocation: false)
-
-                let attachment = SignalAttachment.attachment(dataSource: dataSource, dataUTI: assetTypeIdentifier)
-                attachment.isLoopingVideo = attachment.isVideo
-
-                await self.delegate?.gifPickerDidSelect(attachment: attachment)
+                let attachment = try await buildAttachment(forAsset: asset)
+                self.delegate?.gifPickerDidSelect(attachment: attachment)
             } catch {
-                await MainActor.run {
-                    let alert = ActionSheetController(title: OWSLocalizedString("GIF_PICKER_FAILURE_ALERT_TITLE", comment: "Shown when selected GIF couldn't be fetched"),
-                                                      message: error.userErrorDescription)
-                    alert.addAction(ActionSheetAction(title: CommonStrings.retryButton, style: .default) { _ in
-                        self.getFileForCell(cell)
-                    })
-                    alert.addAction(ActionSheetAction(title: CommonStrings.dismissButton, style: .cancel) { _ in
-                        self.delegate?.gifPickerDidCancel()
-                    })
-
-                    self.presentActionSheet(alert)
-                }
+                let alert = ActionSheetController(
+                    title: OWSLocalizedString("GIF_PICKER_FAILURE_ALERT_TITLE", comment: "Shown when selected GIF couldn't be fetched"),
+                    message: error.userErrorDescription,
+                )
+                alert.addAction(ActionSheetAction(title: CommonStrings.retryButton, style: .default) { _ in
+                    self.getFileForCell(cell)
+                })
+                alert.addAction(ActionSheetAction(title: CommonStrings.dismissButton, style: .cancel) { _ in
+                    self.delegate?.gifPickerDidCancel()
+                })
+                self.presentActionSheet(alert)
             }
         }
+    }
+
+    #if compiler(>=6.2)
+    @concurrent
+    #endif
+    private nonisolated func buildAttachment(forAsset asset: ProxiedContentAsset) async throws -> SignalAttachment {
+        guard let giphyAsset = asset.assetDescription as? GiphyAsset else {
+            throw OWSAssertionError("Invalid asset description.")
+        }
+
+        let assetFileExtension = giphyAsset.type.extension
+        let assetFilePath = asset.filePath
+        let assetTypeIdentifier = giphyAsset.type.utiType
+
+        let consumableFilePath = OWSFileSystem.temporaryFilePath(fileExtension: assetFileExtension)
+        try FileManager.default.copyItem(atPath: assetFilePath, toPath: consumableFilePath)
+        let dataSource = try DataSourcePath(filePath: consumableFilePath, shouldDeleteOnDeallocation: false)
+
+        let attachment = try SignalAttachment.attachment(dataSource: dataSource, dataUTI: assetTypeIdentifier)
+        attachment.isLoopingVideo = attachment.isVideo
+        return attachment
     }
 
     public func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {

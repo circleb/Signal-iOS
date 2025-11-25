@@ -44,7 +44,7 @@ public class GroupInviteLinksUI: UIView {
             let existingGroupThread = (SSKEnvironment.shared.databaseStorageRef.read { transaction in
                 TSGroupThread.fetch(forGroupId: groupV2ContextInfo.groupId, tx: transaction)
             }),
-            existingGroupThread.isLocalUserFullMember || existingGroupThread.isLocalUserRequestingMember
+            existingGroupThread.groupModel.groupMembership.isLocalUserFullMember || existingGroupThread.groupModel.groupMembership.isLocalUserRequestingMember
         {
             SignalApp.shared.presentConversationForThread(
                 threadUniqueId: existingGroupThread.uniqueId,
@@ -77,7 +77,7 @@ private class GroupInviteLinksActionSheet: ActionSheetController {
         self.groupInviteLinkInfo = groupInviteLinkInfo
         self.groupV2ContextInfo = groupV2ContextInfo
 
-        super.init(theme: .default)
+        super.init()
 
         isCancelable = true
 
@@ -101,7 +101,6 @@ private class GroupInviteLinksActionSheet: ActionSheetController {
 
         let header = UIView()
         header.layoutMargins = UIEdgeInsets(hMargin: 32, vMargin: 32)
-        header.backgroundColor = Theme.actionSheetBackgroundColor
         self.customHeader = header
 
         avatarView.image = databaseStorage.read { tx in
@@ -149,9 +148,9 @@ private class GroupInviteLinksActionSheet: ActionSheetController {
         messageLabel.textAlignment = .center
         messageLabel.setContentHuggingVerticalHigh()
 
-        let buttonColor: UIColor = Theme.isDarkThemeEnabled ? .ows_gray65 : .ows_gray05
+        let buttonColor = ActionSheetAction.buttonBackgroundColor
         let cancelButton = OWSFlatButton.button(title: CommonStrings.cancelButton,
-                                                font: UIFont.dynamicTypeBody.semibold(),
+                                                font: UIFont.dynamicTypeHeadline,
                                                 titleColor: Theme.secondaryTextAndIconColor,
                                                 backgroundColor: buttonColor,
                                                 target: self,
@@ -162,7 +161,7 @@ private class GroupInviteLinksActionSheet: ActionSheetController {
         self.cancelButton = cancelButton
 
         let joinButton = OWSFlatButton.button(title: "",
-                                              font: UIFont.dynamicTypeBody.semibold(),
+                                              font: UIFont.dynamicTypeHeadline,
                                               titleColor: .ows_accentBlue,
                                               backgroundColor: buttonColor,
                                               target: self,
@@ -174,7 +173,7 @@ private class GroupInviteLinksActionSheet: ActionSheetController {
         self.joinButton = joinButton
 
         let invalidOkayButton = OWSFlatButton.button(title: CommonStrings.okayButton,
-                                              font: UIFont.dynamicTypeBody.semibold(),
+                                              font: UIFont.dynamicTypeHeadline,
                                               titleColor: Theme.primaryTextColor,
                                               backgroundColor: buttonColor,
                                               target: self,
@@ -197,7 +196,7 @@ private class GroupInviteLinksActionSheet: ActionSheetController {
 
         let divider = UIView()
         divider.autoSetDimension(.height, toSize: .hairlineWidth)
-        divider.backgroundColor = buttonColor
+        divider.backgroundColor = UIColor.Signal.opaqueSeparator
 
         let stackView = UIStackView(arrangedSubviews: [
             headerStack,
@@ -244,7 +243,7 @@ private class GroupInviteLinksActionSheet: ActionSheetController {
                             avatarUrlPath: avatarUrlPath,
                             groupSecretParams: groupV2ContextInfo.groupSecretParams
                         )
-                        guard avatarData.ows_isValidImage else {
+                        guard DataImageSource(avatarData).ows_isValidImage else {
                             throw OWSAssertionError("Invalid group avatar.")
                         }
                         guard let image = UIImage(data: avatarData) else {

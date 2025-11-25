@@ -8,69 +8,64 @@ import LibSignalClient
 
 extension GroupManager {
     // Serialize group updates by group ID
-    private static let groupUpdateOperationQueues = AtomicValue<[Data: SerialTaskQueue]>([:], lock: .init())
-
-    private static func operationQueue(
-        forUpdatingGroup groupModel: TSGroupModel
-    ) -> SerialTaskQueue {
-        return groupUpdateOperationQueues.update {
-            if let operationQueue = $0[groupModel.groupId] {
-                return operationQueue
-            }
-            let operationQueue = SerialTaskQueue()
-            $0[groupModel.groupId] = operationQueue
-            return operationQueue
-        }
-    }
+    private static let groupUpdateQueues = KeyedConcurrentTaskQueue<GroupIdentifier>(concurrentLimitPerKey: 1)
 
     private enum GenericGroupUpdateOperation {
         static func run(
-            groupSecretParamsData: Data,
+            secretParams: GroupSecretParams,
             updateDescription: String,
+            isDeletingAccount: Bool,
             changesBlock: @escaping (GroupsV2OutgoingChanges) -> Void
-        ) async throws {
+        ) async throws -> [Promise<Void>] {
             do {
-                try await Promise.wrapAsync {
-                    try await self._run(groupSecretParamsData: groupSecretParamsData, changesBlock: changesBlock)
+                return try await Promise.wrapAsync {
+                    return try await self._run(
+                        secretParams: secretParams,
+                        isDeletingAccount: isDeletingAccount,
+                        changesBlock: changesBlock,
+                    )
                 }.timeout(seconds: GroupManager.groupUpdateTimeoutDuration, description: updateDescription) {
                     return GroupsV2Error.timeout
                 }.awaitable()
             } catch {
-                switch error {
-                case GroupsV2Error.redundantChange:
-                    // From an operation perspective, this is a success!
-                    break
-                default:
-                    owsFailDebug("Group update failed: \(error)")
-                }
+                Logger.warn("Group update failed: \(error)")
                 throw error
             }
         }
 
         private static func _run(
-            groupSecretParamsData: Data,
+            secretParams: GroupSecretParams,
+            isDeletingAccount: Bool,
             changesBlock: (GroupsV2OutgoingChanges) -> Void
-        ) async throws {
+        ) async throws -> [Promise<Void>] {
             try await GroupManager.ensureLocalProfileHasCommitmentIfNecessary()
 
-            try await SSKEnvironment.shared.groupsV2Ref.updateGroupV2(
-                secretParams: try GroupSecretParams(contents: groupSecretParamsData),
+            return try await SSKEnvironment.shared.groupsV2Ref.updateGroupV2(
+                secretParams: secretParams,
+                isDeletingAccount: isDeletingAccount,
                 changesBlock: changesBlock
             )
         }
     }
 
+    /// - Returns: A list of Promises for sending the group update message(s).
+    /// Each Promise represents sending a message to one or more recipients.
+    @discardableResult
     public static func updateGroupV2(
         groupModel: TSGroupModelV2,
         description: String,
+        isDeletingAccount: Bool = false,
         changesBlock: @escaping (GroupsV2OutgoingChanges) -> Void
-    ) async throws {
-        try await operationQueue(forUpdatingGroup: groupModel).enqueue {
-            try await GenericGroupUpdateOperation.run(
-                groupSecretParamsData: groupModel.secretParamsData,
+    ) async throws -> [Promise<Void>] {
+        let secretParams = try groupModel.secretParams()
+        let groupId = try secretParams.getPublicParams().getGroupIdentifier()
+        return try await groupUpdateQueues.run(forKey: groupId) {
+            return try await GenericGroupUpdateOperation.run(
+                secretParams: secretParams,
                 updateDescription: description,
+                isDeletingAccount: isDeletingAccount,
                 changesBlock: changesBlock
             )
-        }.value
+        }
     }
 }

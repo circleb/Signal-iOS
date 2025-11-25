@@ -3,10 +3,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import UIKit
 import Foundation
+import LibSignalClient
 import SignalServiceKit
 import SignalUI
+import UIKit
 
 class SharingThreadPickerViewController: ConversationPickerViewController {
 
@@ -32,24 +33,25 @@ class SharingThreadPickerViewController: ConversationPickerViewController {
         }
     }
 
-    var isTextMessage: Bool {
+    private var isTextMessage: Bool {
         guard let attachments = attachments, attachments.count == 1, let attachment = attachments.first else { return false }
-        return attachment.isConvertibleToTextMessage && attachment.dataLength <= kOversizeTextMessageSizeThreshold
+        // TODO: it may be convertible to an oversize text message, check that
+        return attachment.isConvertibleToTextMessage && attachment.dataSource.dataLength <= OWSMediaUtils.kOversizeTextMessageSizeThresholdBytes
     }
 
-    var isContactShare: Bool {
+    private var isContactShare: Bool {
         guard let attachments = attachments, attachments.count == 1, let attachment = attachments.first else { return false }
         return attachment.isConvertibleToContactShare
     }
 
-    var approvedAttachments: [SignalAttachment]?
-    var approvedContactShare: ContactShareDraft?
-    var approvalMessageBody: MessageBody?
-    var approvalLinkPreviewDraft: OWSLinkPreviewDraft?
+    private var approvedAttachments: [SignalAttachment]?
+    private var approvedContactShare: ContactShareDraft?
+    private var approvalMessageBody: MessageBody?
+    private var approvalLinkPreviewDraft: OWSLinkPreviewDraft?
 
-    var mentionCandidates: [SignalServiceAddress] = []
+    private var mentionCandidates: [Aci] = []
 
-    var selectedConversations: [ConversationItem] { selection.conversations }
+    private var selectedConversations: [ConversationItem] { selection.conversations }
 
     public init(areAttachmentStoriesCompatPrecheck: Bool, shareViewDelegate: ShareViewDelegate) {
         self.areAttachmentStoriesCompatPrecheck = areAttachmentStoriesCompatPrecheck
@@ -68,35 +70,37 @@ class SharingThreadPickerViewController: ConversationPickerViewController {
         if let navigationController = shareViewDelegate?.shareViewNavigationController {
             navigationController.presentActionSheet(alert)
         } else {
-            super.presentActionSheet(alert)
+            self.presentActionSheet(alert)
         }
     }
 
     private func updateMentionCandidates() {
         AssertIsOnMainThread()
 
-        guard selectedConversations.count == 1,
-              case .group(let groupThreadId) = selectedConversations.first?.messageRecipient else {
+        guard
+            selectedConversations.count == 1,
+            case .group(let groupThreadId) = selectedConversations.first?.messageRecipient else
+        {
             mentionCandidates = []
             return
         }
 
-        let groupThread = SSKEnvironment.shared.databaseStorageRef.read { readTx in
-            TSGroupThread.anyFetchGroupThread(uniqueId: groupThreadId, transaction: readTx)
-        }
-
-        owsAssertDebug(groupThread != nil)
-        if let groupThread = groupThread, groupThread.allowsMentionSend {
-            mentionCandidates = groupThread.recipientAddressesWithSneakyTransaction
-        } else {
-            mentionCandidates = []
+        let databaseStorage = SSKEnvironment.shared.databaseStorageRef
+        self.mentionCandidates = databaseStorage.read { tx in
+            let groupThread = TSGroupThread.anyFetchGroupThread(uniqueId: groupThreadId, transaction: tx)
+            owsAssertDebug(groupThread != nil)
+            if let groupThread, groupThread.allowsMentionSend {
+                return groupThread.recipientAddresses(with: tx).compactMap(\.aci)
+            } else {
+                return []
+            }
         }
     }
 
     private func updateStoriesState() {
         if areAttachmentStoriesCompatPrecheck == true {
             sectionOptions.insert(.stories)
-        } else if let attachments = attachments, attachments.allSatisfy({ $0.isValidImage || $0.isValidVideo }) {
+        } else if let attachments = attachments, attachments.allSatisfy({ $0.dataSource.isValidImage || $0.dataSource.isValidVideo }) {
             sectionOptions.insert(.stories)
         } else if isTextMessage {
             sectionOptions.insert(.stories)
@@ -137,7 +141,7 @@ extension SharingThreadPickerViewController {
         let approvalVC: UIViewController
 
         if isTextMessage {
-            guard let messageText = String(data: firstAttachment.data, encoding: .utf8)?.filterForDisplay else {
+            guard let messageText = String(data: firstAttachment.dataSource.data, encoding: .utf8)?.filterForDisplay else {
                 throw OWSAssertionError("Missing or invalid message text for text attachment")
             }
             let approvalView = TextApprovalViewController(messageBody: MessageBody(text: messageText, ranges: .empty))
@@ -145,7 +149,7 @@ extension SharingThreadPickerViewController {
             approvalView.delegate = self
 
         } else if isContactShare {
-            let cnContact = try SystemContact.parseVCardData(firstAttachment.data)
+            let cnContact = try SystemContact.parseVCardData(firstAttachment.dataSource.data)
 
             let contactShareDraft = SSKEnvironment.shared.databaseStorageRef.read { tx in
                 return ContactShareDraft.load(
@@ -230,7 +234,7 @@ extension SharingThreadPickerViewController {
 
             let linkPreviewDataSource: LinkPreviewDataSource?
             if let linkPreviewDraft {
-                linkPreviewDataSource = try? DependenciesBridge.shared.linkPreviewManager.buildDataSource(
+                linkPreviewDataSource = try? await DependenciesBridge.shared.linkPreviewManager.buildDataSource(
                     from: linkPreviewDraft
                 )
             } else {
@@ -266,7 +270,7 @@ extension SharingThreadPickerViewController {
             }
             let contactShareForSending: ContactShareDraft.ForSending
             do {
-                contactShareForSending = try DependenciesBridge.shared.contactShareManager.validateAndPrepare(
+                contactShareForSending = try await DependenciesBridge.shared.contactShareManager.validateAndPrepare(
                     draft: contactShareDraft
                 )
             } catch {
@@ -287,6 +291,7 @@ extension SharingThreadPickerViewController {
                     let message = builder.build(transaction: tx)
                     let unpreparedMessage = UnpreparedOutgoingMessage.forMessage(
                         message,
+                        body: nil,
                         contactShareDraft: contactShareForSending
                     )
                     return try unpreparedMessage.prepare(tx: tx)
@@ -576,9 +581,9 @@ extension SharingThreadPickerViewController: ConversationPickerDelegate {
         // Check if the attachments are compatible with sending to stories.
         let storySelections = selection.conversations.compactMap({ $0 as? StoryConversationItem })
         if !storySelections.isEmpty, let attachments = attachments {
-            let areImagesOrVideos = attachments.allSatisfy({ $0.isValidImage || $0.isValidVideo })
+            let areImagesOrVideos = attachments.allSatisfy({ $0.dataSource.isValidImage || $0.dataSource.isValidVideo })
             let isTextMessage = attachments.count == 1 && attachments.first.map {
-                $0.isConvertibleToTextMessage && $0.dataLength <= kOversizeTextMessageSizeThreshold
+                $0.isConvertibleToTextMessage && $0.dataSource.dataLength <= OWSMediaUtils.kOversizeTextMessageSizeThresholdBytes
             } ?? false
             if !areImagesOrVideos && !isTextMessage {
                 // Can't send to stories!
@@ -730,7 +735,7 @@ extension SharingThreadPickerViewController: AttachmentApprovalViewControllerDat
         selectedConversations.map { $0.titleWithSneakyTransaction }
     }
 
-    func attachmentApprovalMentionableAddresses(tx: DBReadTransaction) -> [SignalServiceAddress] {
+    func attachmentApprovalMentionableAcis(tx: DBReadTransaction) -> [Aci] {
         mentionCandidates
     }
 

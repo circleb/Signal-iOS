@@ -56,10 +56,10 @@ public extension DatabaseRecovery {
                 do {
                     try SqliteUtil.reindex(db: tx.database)
                     Logger.info("Reindexed database")
-                    return .commit(())
+                    return .commit
                 } catch {
                     Logger.warn("Failed to reindex database")
-                    return .rollback(())
+                    return .rollback
                 }
             }
         } catch {
@@ -242,7 +242,6 @@ public extension DatabaseRecovery {
             do {
                 let didPerformIncrementalMigrations = try GRDBSchemaMigrator.migrateDatabase(
                     databaseStorage: databaseStorage,
-                    isMainDatabase: false,
                     runDataMigrations: {
                         switch mode {
                             // We skip old data migrations because we suspect data is more likely to be corrupted.
@@ -308,6 +307,10 @@ public extension DatabaseRecovery {
             GroupMessageProcessorJob.databaseTableName,
             "ListedBackupMediaObject",
             "BackupOversizeTextCache",
+            "Poll",
+            "PollOption",
+            "PollVote",
+            "PinnedMessage"
         ]
 
         private static func prepareToCopyTablesWithBestEffort(
@@ -368,6 +371,8 @@ public extension DatabaseRecovery {
             BlockedRecipient.databaseTableName,
             BlockedGroup.databaseTableName,
             StoryRecipient.databaseTableName,
+            PreKey.databaseTableName,
+            KyberPreKeyUseRecord.databaseTableName,
         ]
 
         /// Copy tables that must be copied flawlessly. Operation throws if any tables fail.
@@ -623,13 +628,12 @@ public extension DatabaseRecovery {
     class ManualRecreation {
         private let databaseStorage: SDSDatabaseStorage
 
-        private let unitCountForMediaGallery: Int64 = 1
         private let unitCountForFullTextSearch: Int64 = 2
         public let progress: Progress
 
         public init(databaseStorage: SDSDatabaseStorage) {
             self.databaseStorage = databaseStorage
-            self.progress = Progress(totalUnitCount: unitCountForMediaGallery + unitCountForFullTextSearch)
+            self.progress = Progress(totalUnitCount: unitCountForFullTextSearch)
         }
 
         public func run() {
@@ -638,23 +642,8 @@ public extension DatabaseRecovery {
                 return
             }
 
-            progress.performAsCurrent(withPendingUnitCount: unitCountForMediaGallery) {
-                attemptToRecreateMediaGallery()
-            }
             progress.performAsCurrent(withPendingUnitCount: unitCountForFullTextSearch) {
                 attemptToRecreateFullTextSearch()
-            }
-        }
-
-        private func attemptToRecreateMediaGallery() {
-            Logger.info("Attempting to recreate media gallery records...")
-            databaseStorage.write { transaction in
-                do {
-                    try createInitialGalleryRecords(transaction: transaction)
-                    Logger.info("Recreated media gallery records.")
-                } catch {
-                    Logger.warn("Failed to recreate media gallery records, but moving on: \(error)")
-                }
             }
         }
 
@@ -674,7 +663,7 @@ public extension DatabaseRecovery {
                     do {
                         try FullTextSearchIndexer.insert(message, tx: tx)
                     } catch {
-                        owsFail("Error: \(error)")
+                        owsFailDebug("Failed to insert message into FTS: \(error)")
                     }
                 }
             }

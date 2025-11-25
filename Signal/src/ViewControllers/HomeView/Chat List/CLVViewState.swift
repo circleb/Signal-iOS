@@ -53,10 +53,66 @@ class CLVViewState {
     var firstUnreadPaymentModel: TSPaymentModel?
     var lastKnownTableViewContentOffset: CGPoint?
 
+    public enum BackupFailureAlertType: CaseIterable {
+        case avatarBadge
+        case menuItemBadge
+        case menuItem
+
+        var errorBadgeTarget: BackupSettingsStore.ErrorBadgeTarget? {
+            return switch self {
+            case .avatarBadge: .chatListAvatar
+            case .menuItemBadge: .chatListMenuItem
+            case .menuItem: nil
+            }
+        }
+    }
+    var backupFailureAlerts: Set<BackupFailureAlertType> = [] {
+        didSet {
+            settingsButtonCreator.updateState(
+                showBackupsFailedAvatarBadge: backupFailureAlerts.contains(.avatarBadge),
+                showBackupsFailedMenuItemBadge: backupFailureAlerts.contains(.menuItemBadge),
+                showBackupsFailedMenuItem: backupFailureAlerts.contains(.menuItem),
+            )
+        }
+    }
+
+    public enum BackupSubscriptionFailedToRedeemAlertType: CaseIterable {
+        case avatarBadge
+        case menuItem
+    }
+    var backupSubscriptionFailedToRedeemAlerts: Set<BackupSubscriptionFailedToRedeemAlertType> = [] {
+        didSet {
+            settingsButtonCreator.updateState(
+                showBackupsSubscriptionAlreadyRedeemedAvatarBadge: backupSubscriptionFailedToRedeemAlerts.contains(.avatarBadge),
+                showBackupsSubscriptionAlreadyRedeemedMenuItem: backupSubscriptionFailedToRedeemAlerts.contains(.menuItem),
+            )
+        }
+    }
+
+    public enum BackupIAPNotFoundLocallyAlertType: CaseIterable {
+        case avatarBadge
+        case menuItem
+    }
+    var backupIAPNotFoundLocallyAlerts: Set<BackupIAPNotFoundLocallyAlertType> = [] {
+        didSet {
+            settingsButtonCreator.updateState(
+                showBackupsIAPNotFoundLocallyAvatarBadge: backupIAPNotFoundLocallyAlerts.contains(.avatarBadge),
+                showBackupsIAPNotFoundLocallyMenuItem: backupIAPNotFoundLocallyAlerts.contains(.menuItem),
+            )
+        }
+    }
+
+    var hasConsumedMediaTierCapacity: Bool? {
+        didSet {
+            settingsButtonCreator.updateState(hasConsumedMediaTierCapacity: hasConsumedMediaTierCapacity)
+        }
+    }
+
     let backupDownloadProgressViewState = CLVBackupDownloadProgressView.State()
 
     // MARK: - Initializer
 
+    @MainActor
     init(chatListMode: ChatListMode, inboxFilter: InboxFilter?) {
         self.chatListMode = chatListMode
         self.inboxFilter = inboxFilter

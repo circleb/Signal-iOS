@@ -22,7 +22,7 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
         tableDataSource.scrollViewDelegate = self
         tableDataSource.viewController = self
         loadCoordinator.viewController = self
-        reminderViews.chatListViewController = self
+        viewState.reminderViews.chatListViewController = self
         viewState.backupDownloadProgressView.chatListViewController = self
         viewState.settingsButtonCreator.delegate = self
         viewState.proxyButtonCreator.delegate = self
@@ -42,7 +42,8 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
 
-        keyboardObservationBehavior = .never
+        view.backgroundColor = .Signal.background
+        tableView.backgroundColor = .Signal.background
 
         switch viewState.chatListMode {
         case .inbox:
@@ -61,6 +62,7 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
         tableView.estimatedRowHeight = 60
         tableView.allowsSelectionDuringEditing = true
         tableView.allowsMultipleSelectionDuringEditing = true
+        tableView.selectionFollowsFocus = false
 
         if let filterControl {
             filterControl.clearAction = .disableChatListFilter(target: self)
@@ -94,7 +96,7 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
         updateExpirationReminderView()
         updatePaymentReminderView()
         updateUsernameReminderView()
-        applyTheme()
+        updateTableViewPaddingIfNeeded()
         observeNotifications()
         DependenciesBridge.shared.db.read { tx in
             self.viewState.backupDownloadProgressViewState.refetchDBState(tx: tx)
@@ -102,12 +104,10 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
         self.viewState.backupDownloadProgressView.update(viewState: self.viewState.backupDownloadProgressViewState)
     }
 
+    private var viewHasAppeared = false
+
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-
-        defer {
-            loadCoordinator.loadIfNecessary(suppressAnimations: true)
-        }
 
         isViewVisible = true
 
@@ -116,6 +116,33 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
         if shouldHideTabBar {
             tabBarController?.tabBar.isHidden = true
             extendedLayoutIncludesOpaqueBars = true
+        }
+
+        guard #available(iOS 26, *), BuildFlags.iOS26SDKIsAvailable else {
+            self._viewWillAppear(animated)
+            return
+        }
+
+        // iOS 26.1 introduced an egregious bug where view controller lifecycle
+        // functions are called inside the push/pop animation blocks when using
+        // UITabViewController. In practice, this means that changes to the chat
+        // list while in a conversation manifest as a growing-from-the-top-left
+        // animation when popping back. This dispatch alleviates that issue by
+        // ensuring the reloading doesn't happen with an animation.
+        if !viewHasAppeared {
+            // Prevent the chat list from flickering an empty state on launch
+            self._viewWillAppear(animated)
+            viewHasAppeared = true
+        } else {
+            DispatchQueue.main.async {
+                self._viewWillAppear(animated)
+            }
+        }
+    }
+
+    private func _viewWillAppear(_ animated: Bool) {
+        defer {
+            loadCoordinator.loadIfNecessary(suppressAnimations: true)
         }
 
         if isSearching {
@@ -142,8 +169,15 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
         }
 
         viewState.searchResultsController.viewWillAppear(animated)
+        viewState.backupDownloadProgressView.willAppear()
 
         updateUnreadPaymentNotificationsCountWithSneakyTransaction()
+
+        // Populate Backups error states
+        updateBackupFailureAlertsWithSneakyTransaction()
+        updateBackupSubscriptionFailedToRedeemAlertsWithSneakyTx()
+        updateBackupIAPNotFoundLocallyAlertsWithSneakyTx()
+        updateHasConsumedMediaTierCapacityWithSneakyTransaction()
 
         // During main app launch, the chat list becomes visible _before_
         // app is foreground and active.  Therefore we need to make an
@@ -200,10 +234,6 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
-        if #available(iOS 26, *), !UIDevice.current.isIPad {
-            (tabBarController as? HomeTabBarController)?.setTabBarHidden(false, animated: false)
-        }
-
         appReadiness.setUIIsReady()
 
         if getStartedBanner == nil && !hasEverPresentedExperienceUpgrade && ExperienceUpgradeManager.presentNext(fromViewController: self) {
@@ -216,13 +246,6 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
             hasPresentedBackupErrors = true
             DependenciesBridge.shared.backupArchiveErrorPresenter.presentOverTopmostViewController(completion: {})
         }
-
-        // Whether or not the theme has changed, always ensure
-        // the right theme is applied. The initial collapsed
-        // state of the split view controller is determined between
-        // `viewWillAppear` and `viewDidAppear`, so this is the soonest
-        // we can know the right thing to display.
-        applyTheme()
 
         requestReviewIfAppropriate()
 
@@ -261,6 +284,7 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
         super.viewDidDisappear(animated)
 
         searchResultsController.viewDidDisappear(animated)
+        viewState.backupDownloadProgressView.didDisappear()
     }
 
     public override func viewIsAppearing(_ animated: Bool) {
@@ -297,14 +321,8 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
     public override func themeDidChange() {
         super.themeDidChange()
 
-        applyTheme()
         reloadTableDataAndResetCellContentCache()
         applyThemeToContextMenuAndToolbar()
-    }
-
-    private func applyTheme() {
-        view.backgroundColor = Theme.backgroundColor
-        tableView.backgroundColor = Theme.backgroundColor
     }
 
     public override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -324,13 +342,13 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
         // transition occurs. For iPhone, this moment is _during_ the
         // transition. We reload in the right places accordingly.
         if UIDevice.current.isIPad {
+            updateTableViewPaddingIfNeeded()
             reloadTableDataAndResetCellContentCache()
         }
 
         coordinator.animate { context in
-            self.applyTheme()
-
             if !UIDevice.current.isIPad {
+                self.updateTableViewPaddingIfNeeded()
                 self.reloadTableDataAndResetCellContentCache()
             }
 
@@ -351,6 +369,9 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
     @objc
     func showFYISheetIfNecessary() {
         let fyiSheetCoordinator = ChatListFYISheetCoordinator(
+            backupExportJobRunner: DependenciesBridge.shared.backupExportJobRunner,
+            backupFailureStateManager: DependenciesBridge.shared.backupFailureStateManager,
+            backupSubscriptionIssueStore: BackupSubscriptionIssueStore(),
             donationReceiptCredentialResultStore: DependenciesBridge.shared.donationReceiptCredentialResultStore,
             donationSubscriptionManager: DonationSubscriptionManager.self,
             db: DependenciesBridge.shared.db,
@@ -439,11 +460,147 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
     }()
 
     private func settingsBarButtonItem() -> UIBarButtonItem {
+        let backupSettingsStore = BackupSettingsStore()
+        let backupSubscriptionIssueStore = BackupSubscriptionIssueStore()
+        let db = SSKEnvironment.shared.databaseStorageRef
+
+        let badgeColor: UIColor?
+        var onDidDismissContextMenu: () -> Void
+        if viewState.settingsButtonCreator.showBackupsFailedAvatarBadge {
+            badgeColor = .Signal.yellow
+            onDidDismissContextMenu = { [weak self] in
+                db.write { tx in
+                    backupSettingsStore.setErrorBadgeMuted(target: .chatListAvatar, tx: tx)
+                }
+                self?.updateBackupFailureAlertsWithSneakyTransaction()
+            }
+        } else if viewState.settingsButtonCreator.showBackupsSubscriptionAlreadyRedeemedAvatarBadge {
+            badgeColor = .Signal.yellow
+            onDidDismissContextMenu = { [weak self] in
+                db.write { tx in
+                    backupSubscriptionIssueStore.setDidAckIAPSubscriptionAlreadyRedeemedChatListBadge(tx: tx)
+                }
+                self?.updateBackupSubscriptionFailedToRedeemAlertsWithSneakyTx()
+            }
+        } else if viewState.settingsButtonCreator.showBackupsIAPNotFoundLocallyAvatarBadge {
+            badgeColor = .Signal.yellow
+            onDidDismissContextMenu = { [weak self] in
+                db.write { tx in
+                    backupSubscriptionIssueStore.setDidAckIAPSubscriptionNotFoundLocallyChatListBadge(tx: tx)
+                }
+                self?.updateBackupIAPNotFoundLocallyAlertsWithSneakyTx()
+            }
+        } else if viewState.settingsButtonCreator.hasUnreadPaymentNotification {
+            badgeColor = .Signal.accent
+            onDidDismissContextMenu = {}
+        } else if viewState.settingsButtonCreator.hasConsumedMediaTierCapacity {
+            badgeColor = .Signal.red
+            onDidDismissContextMenu = {}
+        } else {
+            badgeColor = nil
+            onDidDismissContextMenu = {}
+        }
+
         let barButtonItem = createSettingsBarButtonItem(
-            databaseStorage: SSKEnvironment.shared.databaseStorageRef,
-            shouldShowUnreadPaymentBadge: viewState.settingsButtonCreator.hasUnreadPaymentNotification,
-            buildActions: { settingsAction -> [UIAction] in
-                var contextMenuActions: [UIAction] = []
+            databaseStorage: db,
+            badgeColor: badgeColor,
+            onDidDismissContextMenu: onDidDismissContextMenu,
+            buildActions: { settingsAction -> [UIMenuElement] in
+                var contextMenuActions: [UIMenuElement] = []
+
+                if viewState.settingsButtonCreator.showBackupsFailedMenuItem {
+                    var image = Theme.iconImage(.backup).withTintColor(.Signal.label)
+                    if viewState.settingsButtonCreator.showBackupsFailedMenuItemBadge {
+                        image = image.withBadge(color: .Signal.yellow)
+                    }
+
+                    contextMenuActions.append(
+                        UIMenu(options: [.displayInline], children: [
+                            UIAction(
+                                title: OWSLocalizedString(
+                                    "HOME_VIEW_TITLE_FAILED_TO_BACKUP",
+                                    comment: "Title for the conversation list's failed to backup context menu action."
+                                ),
+                                image: image,
+                                handler: { [weak self] _ in
+                                    SignalApp.shared.showAppSettings(mode: .backups)
+                                    db.write { tx in
+                                        backupSettingsStore.setErrorBadgeMuted(target: .chatListMenuItem, tx: tx)
+                                    }
+                                    self?.updateBackupFailureAlertsWithSneakyTransaction()
+                                }
+                            )
+                        ])
+                    )
+                } else if viewState.settingsButtonCreator.showBackupsSubscriptionAlreadyRedeemedMenuItem {
+                    let image = Theme.iconImage(.backup)
+                        .withTintColor(.Signal.label)
+                        .withBadge(color: .Signal.yellow)
+
+                    contextMenuActions.append(
+                        UIMenu(options: .displayInline, children: [
+                            UIAction(
+                                title: OWSLocalizedString(
+                                    "HOME_VIEW_TITLE_BACKUP_SUBSCRIPTION_FAILED_TO_REDEEM",
+                                    comment: "Title for the conversation list's failed to redeem backup subscription context menu action.",
+                                ),
+                                image: image,
+                                handler: { [weak self] _ in
+                                    SignalApp.shared.showAppSettings(mode: .backups)
+                                    db.write { tx in
+                                        backupSubscriptionIssueStore.setDidAckIAPSubscriptionAlreadyRedeemedChatListMenuItem(tx: tx)
+                                    }
+                                    self?.updateBackupSubscriptionFailedToRedeemAlertsWithSneakyTx()
+                                }
+                            )
+                        ])
+                    )
+                } else if viewState.settingsButtonCreator.showBackupsIAPNotFoundLocallyMenuItem {
+                    let image = Theme.iconImage(.backup)
+                        .withTintColor(.Signal.label)
+                        .withBadge(
+                            color: .Signal.yellow,
+                            badgeSize: .square(8.5)
+                        )
+
+                    contextMenuActions.append(
+                        UIMenu(options: .displayInline, children: [
+                            UIAction(
+                                title: OWSLocalizedString(
+                                    "HOME_VIEW_TITLE_BACKUP_SUBSCRIPTION_NOT_FOUND_LOCALLY",
+                                    comment: "Title for the conversation list's backup subscription not found locally context menu action.",
+                                ),
+                                image: image,
+                                handler: { [weak self] _ in
+                                    SignalApp.shared.showAppSettings(mode: .backups)
+                                    db.write { tx in
+                                        backupSubscriptionIssueStore.setDidAckIAPSubscriptionNotFoundLocallyChatListMenuItem(tx: tx)
+                                    }
+                                    self?.updateBackupIAPNotFoundLocallyAlertsWithSneakyTx()
+                                }
+                            )
+                        ])
+                    )
+                } else if viewState.settingsButtonCreator.hasConsumedMediaTierCapacity {
+                    let image = Theme.iconImage(.backup)
+                        .withTintColor(.Signal.label)
+                        .withBadge(color: .Signal.red)
+
+                    contextMenuActions.append(
+                        UIMenu(options: [.displayInline], children: [
+                            UIAction(
+                                title: OWSLocalizedString(
+                                    "HOME_VIEW_TITLE_BACKUP_OUT_OF_STORAGE_QUOTA",
+                                    comment: "Title for the conversation list's backup storage full context menu action."
+                                ),
+                                image: image,
+                                handler: { _ in
+                                    SignalApp.shared.showAppSettings(mode: .backups)
+                                }
+                            )
+                        ])
+                    )
+                }
 
                 // FIXME: combine viewState.inboxFilter and renderState.viewInfo.inboxFilter to avoid bugs with them getting out of sync
                 switch viewState.inboxFilter {
@@ -491,7 +648,6 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
             }
         )
         barButtonItem.accessibilityLabel = CommonStrings.openAppSettingsButton
-        barButtonItem.accessibilityIdentifier = "ChatListViewController.settingsButton"
         return barButtonItem
     }
 
@@ -563,6 +719,24 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
             }
             cell.ensureCellAnimations()
         }
+    }
+
+    /// iOS 26+: checks if this VC is displayed in the collapsed split view controller
+    /// and updates `containerView.tableViewHorizontalInset` accordingly.
+    /// Does nothing on prior iOS versions.
+    private func updateTableViewPaddingIfNeeded() {
+        guard #available(iOS 26, *) else { return }
+
+        let useSidebarChatListCellAppearance: Bool
+        if let splitViewController = splitViewController, !splitViewController.isCollapsed {
+            useSidebarChatListCellAppearance = true
+        } else {
+            useSidebarChatListCellAppearance = false
+        }
+        // We need to add/remove horizotal padding around table view...
+        containerView.tableViewHorizontalInset = useSidebarChatListCellAppearance ? 16 : 0
+        // ... and tell ChatListCell to use rounded corners if there is non-zero padding.
+        tableDataSource.useSideBarChatListCellAppearance = useSidebarChatListCellAppearance
     }
 
     // MARK: UI Helpers
@@ -683,6 +857,8 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
 
     private func applyDefaultBackButton() {
         AssertIsOnMainThread()
+
+        if #available(iOS 26, *), BuildFlags.iOS26SDKIsAvailable { return }
 
         // We don't show any text for the back button, so there's no need to localize it. But because we left align the
         // conversation title view, we add a little tappable padding after the back button, by having a title of spaces.
@@ -936,9 +1112,9 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
         stack.spacing = 10
         stack.layoutMargins = UIEdgeInsets(
             top: OWSTableViewController2.cellVInnerMargin,
-            left: OWSTableViewController2.cellHOuterLeftMargin(in: view),
+            left: OWSTableViewController2.cellOuterInset(in: view),
             bottom: OWSTableViewController2.cellVInnerMargin,
-            right: OWSTableViewController2.cellHOuterRightMargin(in: view)
+            right: OWSTableViewController2.cellOuterInset(in: view)
         )
         stack.isLayoutMarginsRelativeArrangement = true
         paymentsBannerView.addSubview(stack)
@@ -1053,7 +1229,7 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
             return
         }
 
-        let actionSheet = ActionSheetController(
+        OWSActionSheets.showContactSupportActionSheet(
             title: OWSLocalizedString(
                 "NOTIFICATIONS_ERROR_TITLE",
                 comment: "Shown as the title of an alert when notifications can't be shown due to an error."
@@ -1064,24 +1240,12 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
                     comment: "Shown as the body of an alert when notifications can't be shown due to an error."
                 ),
                 UIDevice.current.localizedModel
-            )
+            ),
+            emailFilter: .custom("NotLaunchingNSE"),
+            fromViewController: self
         )
-        actionSheet.addAction(ActionSheetAction(
-            title: CommonStrings.contactSupport,
-            handler: { [weak self] _ in
-                guard let self else { return }
-                ContactSupportActionSheet.present(
-                    emailFilter: .custom("NotLaunchingNSE"),
-                    logDumper: .fromGlobals(),
-                    fromViewController: self,
-                )
-            }
-        ))
-        actionSheet.addAction(ActionSheetAction(title: CommonStrings.okButton))
 
         let promptDate = Date()
-        self.present(actionSheet, animated: true)
-
         await SSKEnvironment.shared.databaseStorageRef.awaitableWrite { tx in
             keyValueStore.setDate(promptDate, key: mostRecentDateKey, transaction: tx)
             keyValueStore.setInt(
@@ -1156,14 +1320,16 @@ extension ChatListViewController: ChatListProxyButtonDelegate {
     }
 }
 
+// MARK: -
+
 extension ChatListViewController {
     enum ShowAppSettingsMode {
-        case none
         case payments
         case payment(paymentsHistoryItem: PaymentsHistoryItem)
         case paymentsTransferIn
         case appearance
         case avatarBuilder
+        case backups
         case corruptedUsernameResolution
         case corruptedUsernameLinkResolution
         case donate(donateMode: DonateViewController.DonateMode)
@@ -1171,19 +1337,7 @@ extension ChatListViewController {
         case proxy
     }
 
-    func showAppSettings() {
-        showAppSettings(mode: .none)
-    }
-
-    func showAppSettingsInAppearanceMode() {
-        showAppSettings(mode: .appearance)
-    }
-
-    func showAppSettingsInAvatarBuilderMode() {
-        showAppSettings(mode: .avatarBuilder)
-    }
-
-    func showAppSettings(mode: ShowAppSettingsMode) {
+    func showAppSettings(mode: ShowAppSettingsMode? = nil, completion: (() -> Void)? = nil) {
         AssertIsOnMainThread()
 
         Logger.info("")
@@ -1192,61 +1346,72 @@ extension ChatListViewController {
         conversationSplitViewController?.selectedConversationViewController?
             .dismissMessageContextMenu(animated: true)
 
+        let navigationController = OWSNavigationController()
         let appSettingsViewController = AppSettingsViewController(appReadiness: appReadiness)
 
-        var completion: (() -> Void)?
+        var internalCompletion: (() -> Void)?
         var viewControllers: [UIViewController] = [ appSettingsViewController ]
 
         switch mode {
-        case .none:
+        case nil:
             break
+
         case .payments:
             let paymentsSettings = PaymentsSettingsViewController(mode: .inAppSettings, appReadiness: appReadiness)
             viewControllers += [ paymentsSettings ]
+
         case .payment(let paymentsHistoryItem):
             let paymentsSettings = PaymentsSettingsViewController(mode: .inAppSettings, appReadiness: appReadiness)
             let paymentsDetail = PaymentsDetailViewController(paymentItem: paymentsHistoryItem)
             viewControllers += [ paymentsSettings, paymentsDetail ]
+
         case .paymentsTransferIn:
             let paymentsSettings = PaymentsSettingsViewController(mode: .inAppSettings, appReadiness: appReadiness)
             let paymentsTransferIn = PaymentsTransferInViewController()
             viewControllers += [ paymentsSettings, paymentsTransferIn ]
+
         case .appearance:
             let appearance = AppearanceSettingsTableViewController()
             viewControllers += [ appearance ]
+
         case .avatarBuilder:
             let profile = ProfileSettingsViewController(
                 usernameChangeDelegate: appSettingsViewController,
                 usernameLinkScanDelegate: appSettingsViewController
             )
-
             viewControllers += [ profile ]
-            completion = { profile.presentAvatarSettingsView() }
+            internalCompletion = { profile.presentAvatarSettingsView() }
+
+        case .backups:
+            viewControllers += [
+                BackupOnboardingCoordinator()
+                    .prepareForPresentation(inNavController: navigationController)
+            ]
+
         case .corruptedUsernameResolution:
             let profile = ProfileSettingsViewController(
                 usernameChangeDelegate: appSettingsViewController,
                 usernameLinkScanDelegate: appSettingsViewController
             )
-
             viewControllers += [ profile ]
-            completion = { profile.presentUsernameCorruptedResolution() }
+            internalCompletion = { profile.presentUsernameCorruptedResolution() }
+
         case .corruptedUsernameLinkResolution:
             let profile = ProfileSettingsViewController(
                 usernameChangeDelegate: appSettingsViewController,
                 usernameLinkScanDelegate: appSettingsViewController
             )
-
             viewControllers += [ profile ]
-            completion = { profile.presentUsernameLinkCorruptedResolution() }
+            internalCompletion = { profile.presentUsernameLinkCorruptedResolution() }
+
         case let .donate(donateMode):
             guard DonationUtilities.canDonate(
                 inMode: donateMode.asDonationMode,
-                localNumber: DependenciesBridge.shared.tsAccountManager.localIdentifiersWithMaybeSneakyTransaction?.phoneNumber
+                tsAccountManager: DependenciesBridge.shared.tsAccountManager,
             ) else {
                 DonationViewsUtil.openDonateWebsite()
                 return
             }
-
             let donate = DonateViewController(preferredDonateMode: donateMode) { [weak self] finishResult in
                 switch finishResult {
                 case let .completedDonation(donateSheet, receiptCredentialSuccessMode):
@@ -1272,23 +1437,32 @@ extension ChatListViewController {
                 }
             }
             viewControllers += [donate]
+
         case .linkedDevices:
             viewControllers += [ LinkedDevicesHostingController() ]
+
         case .proxy:
             viewControllers += [ PrivacySettingsViewController(), AdvancedPrivacySettingsViewController(), ProxySettingsViewController() ]
+
         }
 
-        let navigationController = OWSNavigationController()
         navigationController.setViewControllers(viewControllers, animated: false)
-        presentFormSheet(navigationController, animated: true, completion: completion)
+        presentFormSheet(navigationController, animated: true) {
+            completion?()
+            internalCompletion?()
+        }
     }
 }
+
+// MARK: - ThreadSwipeHandler
 
 extension ChatListViewController: ThreadSwipeHandler {
     func updateUIAfterSwipeAction() {
         updateViewState()
     }
 }
+
+// MARK: - GetStartedBannerViewControllerDelegate
 
 extension ChatListViewController: GetStartedBannerViewControllerDelegate {
     func presentGetStartedBannerIfNecessary() {
@@ -1320,7 +1494,7 @@ extension ChatListViewController: GetStartedBannerViewControllerDelegate {
     }
 
     func getStartedBannerDidTapAppearance(_ banner: GetStartedBannerViewController) {
-        showAppSettingsInAppearanceMode()
+        showAppSettings(mode: .appearance)
     }
 
     func getStartedBannerDidDismissAllCards(_ banner: GetStartedBannerViewController, animated: Bool) {
@@ -1340,7 +1514,7 @@ extension ChatListViewController: GetStartedBannerViewControllerDelegate {
     }
 
     func getStartedBannerDidTapAvatarBuilder(_ banner: GetStartedBannerViewController) {
-        showAppSettingsInAvatarBuilderMode()
+        showAppSettings(mode: .avatarBuilder)
     }
 }
 

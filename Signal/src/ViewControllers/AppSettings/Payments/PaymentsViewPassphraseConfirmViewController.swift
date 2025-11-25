@@ -155,7 +155,7 @@ public class PaymentsViewPassphraseConfirmViewController: OWSTableViewController
             title: OWSLocalizedString(
                 "SETTINGS_PAYMENTS_VIEW_PASSPHRASE_CONFIRM",
                 comment: "Label for 'confirm' button in the 'view payments passphrase' view of the app settings."),
-            font: UIFont.dynamicTypeBody.semibold(),
+            font: UIFont.dynamicTypeHeadline,
             titleColor: .white,
             backgroundColor: .ows_accentBlue,
             target: self,
@@ -169,7 +169,7 @@ public class PaymentsViewPassphraseConfirmViewController: OWSTableViewController
             title: OWSLocalizedString(
                 "SETTINGS_PAYMENTS_VIEW_PASSPHRASE_SEE_PASSPHRASE_AGAIN",
                 comment: "Label for 'see passphrase again' button in the 'view payments passphrase' view of the app settings."),
-            font: UIFont.dynamicTypeBody.semibold(),
+            font: UIFont.dynamicTypeHeadline,
             titleColor: .ows_accentBlue,
             backgroundColor: self.tableBackgroundColor,
             target: self,
@@ -181,13 +181,12 @@ public class PaymentsViewPassphraseConfirmViewController: OWSTableViewController
         bottomStack.axis = .vertical
         bottomStack.alignment = .fill
         bottomStack.isLayoutMarginsRelativeArrangement = true
-        bottomStack.layoutMargins = cellOuterInsetsWithMargin(top: 8, left: 20, right: 20)
+        bottomStack.layoutMargins = .init(top: 8, left: 20, bottom: 8, right: 20)
         bottomStack.removeAllSubviews()
         bottomStack.addArrangedSubviews([
             confirmButton,
             UIView.spacer(withHeight: 8),
             backButton,
-            UIView.spacer(withHeight: 8)
         ])
     }
 
@@ -281,7 +280,7 @@ public class PaymentsViewPassphraseConfirmViewController: OWSTableViewController
 
         let explanationLabel = UILabel()
         explanationLabel.text = explanation
-        explanationLabel.font = .dynamicTypeBody2Clamped
+        explanationLabel.font = .dynamicTypeSubheadlineClamped
         explanationLabel.textColor = Theme.secondaryTextAndIconColor
         explanationLabel.textAlignment = .center
         explanationLabel.numberOfLines = 0
@@ -291,12 +290,11 @@ public class PaymentsViewPassphraseConfirmViewController: OWSTableViewController
             titleLabel,
             UIView.spacer(withHeight: 10),
             explanationLabel,
-            UIView.spacer(withHeight: 40)
         ])
         topStack.axis = .vertical
         topStack.alignment = .center
         topStack.isLayoutMarginsRelativeArrangement = true
-        topStack.layoutMargins = cellOuterInsetsWithMargin(top: 32, left: 20, right: 20)
+        topStack.layoutMargins = .init(top: 32, left: 20, bottom: 40, right: 20)
         return topStack
     }
 

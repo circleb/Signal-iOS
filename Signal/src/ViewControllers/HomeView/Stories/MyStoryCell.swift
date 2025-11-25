@@ -11,18 +11,35 @@ import SignalUI
 class MyStoryCell: UITableViewCell {
     static let reuseIdentifier = "MyStoryCell"
 
-    let titleLabel = UILabel()
-    let titleChevron = UIImageView()
-    let subtitleLabel = UILabel()
-    let avatarView = ConversationAvatarView(sizeClass: .fiftySix, localUserDisplayMode: .asUser, badged: false, useAutolayout: true)
-    let attachmentThumbnail = UIView()
+    private let titleLabel: UILabel = {
+        let label = UILabel()
+        label.font = .dynamicTypeHeadline
+        label.textColor = .Signal.label
+        return label
+    }()
+    private let titleChevron: UIImageView = {
+        let imageView = UIImageView()
+        imageView.tintColor = .Signal.label
+        return imageView
+    }()
+    private let subtitleLabel: UILabel = {
+        let label = UILabel()
+        label.font = .dynamicTypeSubheadline
+        label.textColor = .Signal.secondaryLabel
+        return label
+    }()
+    private let avatarView = ConversationAvatarView(sizeClass: .fiftySix, localUserDisplayMode: .asUser, badged: false, useAutolayout: true)
+    private let attachmentThumbnail = UIView()
 
-    let failedIconView = UIImageView()
+    private let failedIconView = UIImageView(image: Theme.iconImage(.error16))
 
-    let addStoryButton = OWSButton()
+    private let addStoryButton = OWSButton()
     private let plusIcon = PlusIconView()
 
-    let contentHStackView = UIStackView()
+    private let contentHStackView = UIStackView()
+
+    /// If set to `true` background in `selected` state would have rounded corners.
+    var useSidebarAppearance = false
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -67,12 +84,26 @@ class MyStoryCell: UITableViewCell {
         contentHStackView.autoPinEdgesToSuperviewMargins()
 
         attachmentThumbnail.autoSetDimensions(to: CGSize(width: 64, height: 84))
-
-        updateColors()
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    override func updateConfiguration(using state: UICellConfigurationState) {
+        var configuration = UIBackgroundConfiguration.clear()
+        if state.isSelected || state.isHighlighted {
+            configuration.backgroundColor = Theme.tableCell2SelectedBackgroundColor
+            if useSidebarAppearance {
+                configuration.cornerRadius = 24
+            }
+        } else {
+            configuration.backgroundColor = .Signal.background
+       }
+        backgroundConfiguration = configuration
+
+        attachmentThumbnailDividerView?.backgroundColor = configuration.backgroundColor
+        plusIcon.borderColor = configuration.backgroundColor
     }
 
     private var attachmentThumbnailDividerView: UIView?
@@ -82,15 +113,13 @@ class MyStoryCell: UITableViewCell {
     private var secondLatestMessageRevealedSpoilerIds: Set<StyleIdType>?
     private var secondLatestMessageAttachment: StoryThumbnailView.Attachment?
 
-    func configure(with model: MyStoryViewModel, spoilerState: SpoilerRenderState, addStoryAction: @escaping () -> Void) {
+    func configure(
+        with model: MyStoryViewModel,
+        spoilerState: SpoilerRenderState,
+        addStoryAction: @escaping () -> Void
+    ) {
         configureSubtitle(with: model)
 
-        self.backgroundColor = .clear
-
-        titleLabel.font = .dynamicTypeHeadline
-        titleLabel.textColor = Theme.primaryTextColor
-
-        titleChevron.tintColor = Theme.primaryTextColor
         titleChevron.isHiddenInStackView = model.messages.isEmpty
 
         addStoryButton.block = addStoryAction
@@ -151,7 +180,7 @@ class MyStoryCell: UITableViewCell {
                     secondLatestThumbnailView.autoPinEdge(toSuperviewEdge: .leading)
 
                     let dividerView = UIView()
-                    dividerView.backgroundColor = Theme.backgroundColor
+                    dividerView.backgroundColor = .Signal.background
                     dividerView.layer.cornerRadius = 12
                     attachmentThumbnail.insertSubview(dividerView, belowSubview: latestThumbnailView)
                     dividerView.autoSetDimensions(to: CGSize(width: 60, height: 88))
@@ -163,22 +192,12 @@ class MyStoryCell: UITableViewCell {
                 attachmentThumbnail.isHiddenInStackView = true
             }
         }
-
-        let selectedBackgroundView = SelectedBackgroundView()
-        selectedBackgroundView.backgroundColor = Theme.tableCell2SelectedBackgroundColor2
-        self.selectedBackgroundView = selectedBackgroundView
-
-        updateColors()
     }
 
     func configureSubtitle(with model: MyStoryViewModel) {
-        subtitleLabel.font = .dynamicTypeSubheadline
-        subtitleLabel.textColor = Theme.isDarkThemeEnabled ? Theme.secondaryTextAndIconColor : .ows_gray45
-        failedIconView.image = Theme.iconImage(.error16)
-
         if model.sendingCount > 0 {
             let format = OWSLocalizedString("STORY_SENDING_%d", tableName: "PluralAware", comment: "Indicates that N stories are currently sending")
-            subtitleLabel.text = .localizedStringWithFormat(format, model.sendingCount)
+            subtitleLabel.text = String.localizedStringWithFormat(format, model.sendingCount)
             failedIconView.isHiddenInStackView = model.failureState == .none
         } else if model.failureState != .none {
             switch model.failureState {
@@ -196,52 +215,6 @@ class MyStoryCell: UITableViewCell {
         } else {
             subtitleLabel.text = OWSLocalizedString("MY_STORY_TAP_TO_ADD", comment: "Prompt to add to your story")
             failedIconView.isHiddenInStackView = true
-        }
-
-        updateColors()
-    }
-
-    override func setHighlighted(_ highlighted: Bool, animated: Bool) {
-        super.setHighlighted(highlighted, animated: animated)
-
-        updateColors()
-    }
-
-    private var showingSelectedBackgroundView = false
-
-    public func updateColors() {
-        guard
-            showingSelectedBackgroundView,
-            let backgroundView = self.selectedBackgroundView
-        else {
-            attachmentThumbnailDividerView?.alpha = 1
-            attachmentThumbnailDividerView?.backgroundColor = Theme.backgroundColor
-            plusIcon.borderColor = Theme.backgroundColor
-            return
-        }
-        attachmentThumbnailDividerView?.alpha = backgroundView.alpha
-        attachmentThumbnailDividerView?.backgroundColor = backgroundView.backgroundColor
-        plusIcon.borderColor = backgroundView.backgroundColor?.withAlphaComponent(backgroundView.alpha)
-    }
-
-    private class SelectedBackgroundView: UIView {
-
-        override func willMove(toSuperview newSuperview: UIView?) {
-            if let cell = newSuperview as? MyStoryCell {
-                cell.showingSelectedBackgroundView = true
-                cell.updateColors()
-            } else if let cell = superview as? MyStoryCell {
-                cell.showingSelectedBackgroundView = false
-                cell.updateColors()
-            }
-        }
-
-        override var alpha: CGFloat {
-            didSet {
-                if let cell = superview as? MyStoryCell {
-                    cell.updateColors()
-                }
-            }
         }
     }
 
@@ -274,7 +247,7 @@ class MyStoryCell: UITableViewCell {
             iconView.backgroundColor = .ows_accentBlue
 
             // NOTE: gets written over by the cell's theme application.
-            outerCircle.backgroundColor = Theme.backgroundColor
+            outerCircle.backgroundColor = .Signal.background
             outerCircle.autoSetDimensions(to: .square(26))
             outerCircle.layer.cornerRadius = 13
             outerCircle.autoPinEdgesToSuperviewEdges()

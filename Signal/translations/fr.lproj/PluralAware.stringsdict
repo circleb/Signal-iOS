@@ -93,6 +93,22 @@
 			<string>Ajouter de nouveaux membres</string>
 		</dict>
 	</dict>
+	<key>BACKUP_SETTINGS_BACKUP_PLAN_FREE_HEADER_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Messages texte + %1$d jour de médias</string>
+			<key>other</key>
+			<string>Messages texte + %1$d jours de médias</string>
+		</dict>
+	</dict>
 	<key>CALLS_TAB_DELETE_MULTIPLE_TITLE</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -301,6 +317,54 @@
 			<string>Cette couleur est appliquée à %1$d conversations. Voulez-vous l&apos;appliquer à toutes les conversations ?</string>
 		</dict>
 	</dict>
+	<key>CHOOSE_BACKUP_PLAN_BULLET_RECENT_MEDIA_BACKUP_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Médias des dernières 24 heures</string>
+			<key>other</key>
+			<string>Médias des %1$d derniers jours</string>
+		</dict>
+	</dict>
+	<key>CHOOSE_BACKUP_PLAN_DOWNGRADE_CONFIRMATION_ACTION_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Si vous changez de forfait, votre sauvegarde comprendra tous vos messages texte, ainsi que vos médias des 24 dernières heures.</string>
+			<key>other</key>
+			<string>Si vous changez de forfait, votre sauvegarde comprendra tous vos messages texte, ainsi que vos médias des %1$d derniers jours.</string>
+		</dict>
+	</dict>
+	<key>CHOOSE_BACKUP_PLAN_FREE_PLAN_SUBTITLE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Message texte + %1$d jour de médias</string>
+			<key>other</key>
+			<string>Messages texte + %1$d jours de médias</string>
+		</dict>
+	</dict>
 	<key>CONVERSATION_DELETE_CONFIRMATIONS_ALERT_TITLE_%d</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -488,22 +552,6 @@
 			<string>Vous ne pouvez modifier ce message que %1$d fois.</string>
 		</dict>
 	</dict>
-	<key>FORWARD_MESSAGE_FIRST_FORWARD_PROCEED_%d</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@text@</string>
-		<key>text</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
-			<key>one</key>
-			<string>Envoyer le message</string>
-			<key>other</key>
-			<string>Envoyer %1$d messages</string>
-		</dict>
-	</dict>
 	<key>GROUPS_TOO_MANY_MEMBERS_ALERT_MESSAGE_%d</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -515,9 +563,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>one</key>
-			<string>Pour un fonctionnement optimal, les groupes Signal peuvent accueillir jusqu&apos;à %1$d membres. Si vous dépassez cette limite, l&apos;envoi et la réception des messages risquent de s&apos;en trouver ralentis.</string>
+			<string>Pour un fonctionnement optimal, les groupes Signal peuvent accueillir jusqu&apos;à %1$d membres. Si vous dépassez cette limite, l&apos;envoi et la réception de messages risquent de s&apos;en trouver ralentis.</string>
 			<key>other</key>
-			<string>Pour un fonctionnement optimal, les groupes Signal peuvent accueillir jusqu&apos;à %1$d membres. Si vous dépassez cette limite, l&apos;envoi et la réception des messages risquent de s&apos;en trouver ralentis.</string>
+			<string>Pour un fonctionnement optimal, les groupes Signal peuvent accueillir jusqu&apos;à %1$d membres. Si vous dépassez cette limite, l&apos;envoi et la réception de messages risquent de s&apos;en trouver ralentis.</string>
 		</dict>
 	</dict>
 	<key>GROUP_CALL_HAS_MAX_DEVICES_%d</key>
@@ -968,6 +1016,22 @@
 			<string>Il vous reste %1$d jours pour ouvrir Signal sur l’appareil &quot;%2$@&quot; avant qu’il ne soit dissocié.</string>
 		</dict>
 	</dict>
+	<key>LINK_DEVICE_CONFIRMATION_ALERT_TRANSFER_SUBTITLE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Transférez tous vos messages texte, ainsi que vos médias des dernières 24 heures.</string>
+			<key>other</key>
+			<string>Transférez tous vos messages texte, ainsi que vos médias des %1$d derniers jours.</string>
+		</dict>
+	</dict>
 	<key>MANY_GROUPS_IN_COMMON_%d</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -1062,22 +1126,6 @@
 			<string>Transférer %1$d média</string>
 			<key>other</key>
 			<string>Transférer %1$d médias</string>
-		</dict>
-	</dict>
-	<key>MESSAGES_VIEW_GROUP_N_MEMBERS_BLOCKED_%d</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@caption@</string>
-		<key>caption</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
-			<key>one</key>
-			<string>Vous avez bloqué %1$d membre de ce groupe</string>
-			<key>other</key>
-			<string>Vous avez bloqué %1$d membres de ce groupe</string>
 		</dict>
 	</dict>
 	<key>MESSAGE_ACTIONS_TOOLBAR_CAPTION_%d</key>
@@ -1336,6 +1384,22 @@
 			<string>Annuler %1$d invitations envoyées par %2$@ ?</string>
 		</dict>
 	</dict>
+	<key>POLL_VOTE_COUNT</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d vote</string>
+			<key>other</key>
+			<string>%1$d votes</string>
+		</dict>
+	</dict>
 	<key>PRIVATE_STORY_VIEWERS_%d</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -1526,6 +1590,70 @@
 			<string>%1$ld autre</string>
 			<key>other</key>
 			<string>%1$ld autres</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_AUDIO_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Ce message vocal n&apos;a pas été transféré depuis votre téléphone lorsque vous avez associé cet appareil. Les fichiers et médias datant de plus de %1$d jour au moment de l&apos;association ne sont pas synchronisés.</string>
+			<key>other</key>
+			<string>Ce message vocal n&apos;a pas été transféré depuis votre téléphone lorsque vous avez associé cet appareil. Les fichiers et médias datant de plus de %1$d jours au moment de l&apos;association ne sont pas synchronisés.</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_FILE_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Ce fichier n&apos;a pas été transféré depuis votre téléphone lorsque vous avez associé cet appareil. Les fichiers et médias datant de plus de %1$d jour au moment de l&apos;association ne sont pas synchronisés.</string>
+			<key>other</key>
+			<string>Ce fichier n&apos;a pas été transféré depuis votre téléphone lorsque vous avez associé cet appareil. Les fichiers et médias datant de plus de %1$d jours au moment de l&apos;association ne sont pas synchronisés.</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_OVERSIZE_TEXT_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Tout le texte de ce message n&apos;a pas été transféré depuis votre téléphone lorsque vous avez associé cet appareil. Les fichiers et médias datant de plus de %1$d jour au moment de l&apos;association ne sont pas synchronisés.</string>
+			<key>other</key>
+			<string>Tout le texte de ce message n&apos;a pas été transféré depuis votre téléphone lorsque vous avez associé cet appareil. Les fichiers et médias datant de plus de %1$d jours au moment de l&apos;association ne sont pas synchronisés.</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_STICKER_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Ce sticker n&apos;a pas été transféré depuis votre téléphone lorsque vous avez associé cet appareil. Les fichiers et médias datant de plus de %1$d jour au moment de l&apos;association ne sont pas synchronisés.</string>
+			<key>other</key>
+			<string>Ce sticker n&apos;a pas été transféré depuis votre téléphone lorsque vous avez associé cet appareil. Les fichiers et médias datant de plus de %1$d jours au moment de l&apos;association ne sont pas synchronisés.</string>
 		</dict>
 	</dict>
 	<key>USERNAME_SELECTION_TOO_SHORT_ERROR_MESSAGE_%d</key>

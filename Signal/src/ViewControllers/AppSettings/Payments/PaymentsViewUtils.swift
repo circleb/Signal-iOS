@@ -18,7 +18,7 @@ public class PaymentsViewUtils {
         let label = UILabel()
         label.text = memoMessage
         label.textColor = Theme.primaryTextColor
-        label.font = UIFont.dynamicTypeBody2Clamped
+        label.font = UIFont.dynamicTypeSubheadlineClamped
         label.textAlignment = .center
         label.numberOfLines = 0
         label.lineBreakMode = .byWordWrapping
@@ -62,16 +62,6 @@ public class PaymentsViewUtils {
     }
 
     // MARK: -
-
-    static func addUnreadBadge(toView: UIView) {
-        let avatarBadge = OWSLayerView.circleView(size: 12)
-        avatarBadge.backgroundColor = Theme.accentBlueColor
-        avatarBadge.layer.borderColor = UIColor.ows_white.cgColor
-        avatarBadge.layer.borderWidth = 1
-        toView.addSubview(avatarBadge)
-        avatarBadge.autoPinEdge(toSuperviewEdge: .top, withInset: -3)
-        avatarBadge.autoPinEdge(toSuperviewEdge: .trailing, withInset: -3)
-    }
 
     static func markPaymentAsRead(_ paymentModel: TSPaymentModel, transaction: DBWriteTransaction) {
         owsAssertDebug(paymentModel.isUnread)
@@ -124,7 +114,7 @@ public class PaymentsViewUtils {
                                       ])
                 attributedText.append(wordAndIndex.word,
                                       attributes: [
-                                        .font: UIFont.dynamicTypeBodyClamped.semibold(),
+                                        .font: UIFont.dynamicTypeHeadlineClamped,
                                         .foregroundColor: Theme.primaryTextColor
                                       ])
                 let wordLabel = UILabel()
@@ -170,30 +160,22 @@ public class PaymentsViewUtils {
 
     static func buildTextWithLearnMoreLinkTextView(text: String,
                                                    font: UIFont,
-                                                   learnMoreUrl: String) -> UITextView {
+                                                   learnMoreUrl: URL) -> UITextView {
         let textView = LinkingTextView()
         textView.backgroundColor = OWSTableViewController2.tableBackgroundColor(isUsingPresentedStyle: true)
-        textView.textColor = (Theme.isDarkThemeEnabled
-                                ? UIColor.ows_gray05
-                                : UIColor.ows_gray90)
-        textView.font = UIFont.dynamicTypeBodyClamped.semibold()
-        textView.textContainerInset = .zero
-
+        textView.textColor = .Signal.label
+        textView.font = UIFont.dynamicTypeHeadlineClamped
         textView.attributedText = NSAttributedString.composed(of: [
             text,
             " ",
             CommonStrings.learnMore.styled(
-                with: .link(URL(string: learnMoreUrl)!)
+                with: .link(learnMoreUrl)
             )
         ]).styled(
             with: .font(font),
             .color(Theme.secondaryTextAndIconColor)
         )
-        textView.linkTextAttributes = [
-            .foregroundColor: Theme.primaryTextColor,
-            NSAttributedString.Key.underlineColor: UIColor.clear,
-            NSAttributedString.Key.underlineStyle: NSUnderlineStyle.single.rawValue
-        ]
+        textView.linkTextAttributes = [ .foregroundColor: Theme.primaryTextColor ]
         return textView
     }
 }
@@ -318,11 +300,7 @@ public extension TSPaymentModel {
 
         switch failure {
         case .none:
-            if DebugFlags.paymentsIgnoreBadData.get() {
-                Logger.warn("Unexpected failure type: \(failure.rawValue)")
-            } else {
-                owsFailDebug("Unexpected failure type: \(failure.rawValue)")
-            }
+            owsFailDebug("Unexpected failure type: \(failure.rawValue)")
             return defaultDescription
         case .unknown:
             owsFailDebug("Unexpected failure type: \(failure.rawValue)")

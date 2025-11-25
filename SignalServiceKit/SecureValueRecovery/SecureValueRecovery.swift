@@ -19,7 +19,7 @@ public enum SVR {
 
     public enum KeysError: Error {
         case missingMasterKey
-        case missingMediaRootBackupKey
+        case missingOrInvalidMRBK
     }
 
     public enum PinType: Int {
@@ -64,13 +64,6 @@ public enum SVR {
         /// This case should only be used for decryption, and never for
         /// encryption!
         case legacy_storageServiceRecord(identifier: StorageService.StorageIdentifier)
-
-        /// The root key used for reads and writes to encrypted backups. NOT the same
-        /// as the Backup ID Material, that is derived from the backup key.
-        /// Referred to often as Kb (subscript b).
-        case backupKey
-
-        public static let backupKeyLength = 32
     }
 
     /// An auth credential is needed to talk to the SVR server.
@@ -110,9 +103,6 @@ public enum SVR {
                 return rawData.base64EncodedString()
             case .registrationLock:
                 return rawData.hexadecimalString
-            case .backupKey:
-                owsFailDebug("No know uses for canonical string representation")
-                return rawData.base64EncodedString()
             }
         }
     }
@@ -135,11 +125,6 @@ public protocol SecureValueRecovery {
 
     /// The pin type used (e.g. numeric, alphanumeric)
     func currentPinType(transaction: DBReadTransaction) -> SVR.PinType?
-
-    /// Indicates whether your pin is valid when compared to your stored keys.
-    /// This is a local verification and does not make any requests to the SVR.
-    /// Callback will happen on the main thread.
-    func verifyPin(_ pin: String, resultHandler: @escaping (Bool) -> Void)
 
     /// Loads the users key, if any, from the SVR into the database.
     func restoreKeys(pin: String, authMethod: SVR.AuthMethod) -> Guarantee<SVR.RestoreKeysResult>
@@ -172,18 +157,9 @@ public protocol SecureValueRecovery {
         tx: DBWriteTransaction
     ) throws(SVR.KeysError)
 
-    /// Rotate the master key and _don't_ back it up to the SVR server, in effect switching to a
-    /// local-only master key and disabling PIN usage for backup restoration.
-    func useDeviceLocalMasterKey(
-        _ masterKey: MasterKey,
+    func handleMasterKeyUpdated(
+        newMasterKey: MasterKey,
         disablePIN: Bool,
-        authedAccount: AuthedAccount,
-        transaction: DBWriteTransaction
+        tx: DBWriteTransaction,
     )
-
-    func useDeviceLocalAccountEntropyPool(
-        _ accountEntropyPool: AccountEntropyPool,
-        disablePIN: Bool,
-        authedAccount: AuthedAccount,
-        transaction: DBWriteTransaction)
 }

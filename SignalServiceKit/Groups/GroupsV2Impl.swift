@@ -76,6 +76,12 @@ public class GroupsV2Impl: GroupsV2 {
             name: .OWSApplicationDidBecomeActive,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(registrationStateDidChange),
+            name: .registrationStateDidChange,
+            object: nil,
+        )
     }
 
     @objc
@@ -87,6 +93,13 @@ public class GroupsV2Impl: GroupsV2 {
 
     @objc
     private func reachabilityChanged() {
+        AssertIsOnMainThread()
+
+        Self.enqueueRestoreGroupPass(authedAccount: .implicit())
+    }
+
+    @objc
+    private func registrationStateDidChange() {
         AssertIsOnMainThread()
 
         Self.enqueueRestoreGroupPass(authedAccount: .implicit())
@@ -194,16 +207,15 @@ public class GroupsV2Impl: GroupsV2 {
     //
     // We do those things here as well, to DRY them up and to ensure they're always
     // done immediately and in a consistent way.
-    private func updateExistingGroupOnService(changes: GroupsV2OutgoingChanges) async throws {
+    private func updateExistingGroupOnService(changes: GroupsV2OutgoingChanges, isDeletingAccount: Bool) async throws -> [Promise<Void>] {
 
         let justUploadedAvatars = GroupAvatarStateMap.from(changes: changes)
         let groupV2Params = try GroupV2Params(groupSecretParams: changes.groupSecretParams)
         let isAddingOrInviting = changes.membersToAdd.count > 0
 
-        let messageBehavior: GroupUpdateMessageBehavior
-        let httpResponse: HTTPResponse
+        let groupUpdateResult: GroupUpdateResult?
         do {
-            (messageBehavior, httpResponse) = try await buildGroupChangeProtoAndTryToUpdateGroupOnService(
+            groupUpdateResult = try await buildGroupChangeProtoAndTryToUpdateGroupOnService(
                 groupV2Params: groupV2Params,
                 changes: changes
             )
@@ -216,7 +228,7 @@ public class GroupsV2Impl: GroupsV2 {
 
                 try await refreshGroupWithTimeout(secretParams: groupV2Params.groupSecretParams)
 
-                (messageBehavior, httpResponse) = try await buildGroupChangeProtoAndTryToUpdateGroupOnService(
+                groupUpdateResult = try await buildGroupChangeProtoAndTryToUpdateGroupOnService(
                     groupV2Params: groupV2Params,
                     changes: changes
                 )
@@ -227,7 +239,7 @@ public class GroupsV2Impl: GroupsV2 {
                 // should try again exactly once, forcing a refresh of all the
                 // credentials first.
 
-                (messageBehavior, httpResponse) = try await buildGroupChangeProtoAndTryToUpdateGroupOnService(
+                groupUpdateResult = try await buildGroupChangeProtoAndTryToUpdateGroupOnService(
                     groupV2Params: groupV2Params,
                     changes: changes,
                     shouldForceRefreshProfileKeyCredentials: true,
@@ -238,15 +250,25 @@ public class GroupsV2Impl: GroupsV2 {
             }
         }
 
-        let changeResponse = try GroupsProtoGroupChangeResponse(serializedData: httpResponse.responseBodyData ?? Data())
+        guard let groupUpdateResult else {
+            return []
+        }
 
-        try await handleGroupUpdatedOnService(
+        let changeResponse = try GroupsProtoGroupChangeResponse(serializedData: groupUpdateResult.httpResponse.responseBodyData ?? Data())
+
+        return try await handleGroupUpdatedOnService(
             changeResponse: changeResponse,
-            messageBehavior: messageBehavior,
+            messageBehavior: groupUpdateResult.messageBehavior,
             justUploadedAvatars: justUploadedAvatars,
             isUrgent: isAddingOrInviting,
+            isDeletingAccount: isDeletingAccount,
             groupV2Params: groupV2Params
         )
+    }
+
+    private struct GroupUpdateResult {
+        var messageBehavior: GroupUpdateMessageBehavior
+        var httpResponse: HTTPResponse
     }
 
     /// Construct a group change proto from the given `changes` for the given
@@ -259,7 +281,7 @@ public class GroupsV2Impl: GroupsV2 {
         changes: GroupsV2OutgoingChanges,
         shouldForceRefreshProfileKeyCredentials: Bool = false,
         forceFailOn400: Bool = false
-    ) async throws -> (GroupUpdateMessageBehavior, HTTPResponse) {
+    ) async throws -> GroupUpdateResult? {
         let groupId = try groupV2Params.groupPublicParams.getGroupIdentifier()
 
         let (groupThread, dmToken) = try SSKEnvironment.shared.databaseStorageRef.read { tx in
@@ -282,6 +304,10 @@ public class GroupsV2Impl: GroupsV2 {
             currentDisappearingMessageToken: dmToken,
             forceRefreshProfileKeyCredentials: shouldForceRefreshProfileKeyCredentials
         )
+
+        guard let builtGroupChange else {
+            return nil
+        }
 
         var behavior400: Behavior400 = .fail
         if
@@ -312,7 +338,10 @@ public class GroupsV2Impl: GroupsV2 {
             behavior403: .fetchGroupUpdates,
         )
 
-        return (builtGroupChange.groupUpdateMessageBehavior, response)
+        return GroupUpdateResult(
+            messageBehavior: builtGroupChange.groupUpdateMessageBehavior,
+            httpResponse: response,
+        )
     }
 
     private func handleGroupUpdatedOnService(
@@ -320,8 +349,9 @@ public class GroupsV2Impl: GroupsV2 {
         messageBehavior: GroupUpdateMessageBehavior,
         justUploadedAvatars: GroupAvatarStateMap,
         isUrgent: Bool,
+        isDeletingAccount: Bool,
         groupV2Params: GroupV2Params
-    ) async throws {
+    ) async throws -> [Promise<Void>] {
         guard let changeProto = changeResponse.groupChange else {
             throw OWSAssertionError("Missing groupChange.")
         }
@@ -344,7 +374,7 @@ public class GroupsV2Impl: GroupsV2 {
 
         switch messageBehavior {
         case .sendNothing:
-            return
+            return []
         case .sendUpdateToOtherGroupMembers:
             break
         }
@@ -352,17 +382,22 @@ public class GroupsV2Impl: GroupsV2 {
         let groupId = try groupV2Params.groupPublicParams.getGroupIdentifier()
         let groupChangeProtoData = try changeProto.serializedData()
 
-        await GroupManager.sendGroupUpdateMessage(
+        var sendPromises = [Promise<Void>]()
+
+        sendPromises.append(await GroupManager.sendGroupUpdateMessage(
             groupId: groupId,
             isUrgent: isUrgent,
+            isDeletingAccount: isDeletingAccount,
             groupChangeProtoData: groupChangeProtoData
-        )
+        ))
 
-        await sendGroupUpdateMessageToRemovedUsers(
+        sendPromises.append(contentsOf: await sendGroupUpdateMessageToRemovedUsers(
             changeActionsProto: changeActionsProto,
             groupChangeProtoData: groupChangeProtoData,
             groupV2Params: groupV2Params
-        )
+        ))
+
+        return sendPromises
     }
 
     private func membersRemovedByChangeActions(
@@ -410,14 +445,14 @@ public class GroupsV2Impl: GroupsV2 {
         changeActionsProto: GroupsProtoGroupChangeActions,
         groupChangeProtoData: Data,
         groupV2Params: GroupV2Params
-    ) async {
+    ) async -> [Promise<Void>] {
         let serviceIds = membersRemovedByChangeActions(
             groupChangeActionsProto: changeActionsProto,
             groupV2Params: groupV2Params
         )
 
         if serviceIds.isEmpty {
-            return
+            return []
         }
 
         let plaintextData: Data
@@ -439,19 +474,19 @@ public class GroupsV2Impl: GroupsV2 {
             contentBuilder.setDataMessage(dataProto)
             plaintextData = try contentBuilder.buildSerializedData()
         } catch {
-            owsFailDebug("Error: \(error)")
-            return
+            owsFailDebug("\(error)")
+            return [Promise(error: error)]
         }
 
-        await SSKEnvironment.shared.databaseStorageRef.awaitableWrite { tx in
-            for serviceId in serviceIds {
+        return await SSKEnvironment.shared.databaseStorageRef.awaitableWrite { tx in
+            return serviceIds.map { serviceId in
                 let address = SignalServiceAddress(serviceId)
                 let contactThread = TSContactThread.getOrCreateThread(withContactAddress: address, transaction: tx)
                 let message = OWSStaticOutgoingMessage(thread: contactThread, timestamp: timestamp, plaintextData: plaintextData, transaction: tx)
                 let preparedMessage = PreparedOutgoingMessage.preprepared(
                     transientMessageWithoutAttachments: message
                 )
-                SSKEnvironment.shared.messageSenderJobQueueRef.add(message: preparedMessage, transaction: tx)
+                return SSKEnvironment.shared.messageSenderJobQueueRef.add(.promise, message: preparedMessage, transaction: tx)
             }
         }
     }
@@ -963,11 +998,12 @@ public class GroupsV2Impl: GroupsV2 {
 
     public func updateGroupV2(
         secretParams: GroupSecretParams,
+        isDeletingAccount: Bool,
         changesBlock: (GroupsV2OutgoingChanges) -> Void
-    ) async throws {
+    ) async throws -> [Promise<Void>] {
         let changes = GroupsV2OutgoingChanges(groupSecretParams: secretParams)
         changesBlock(changes)
-        try await updateExistingGroupOnService(changes: changes)
+        return try await updateExistingGroupOnService(changes: changes, isDeletingAccount: isDeletingAccount)
     }
 
     // MARK: - Rotate Profile Key
@@ -1178,6 +1214,10 @@ public class GroupsV2Impl: GroupsV2 {
                 Logger.warn("Failure. <- \(requestDescription): \(error)")
             }
 
+            if case URLError.cancelled = error {
+                throw error
+            }
+
             if error.isNetworkFailureOrTimeout {
                 throw error
             }
@@ -1237,7 +1277,7 @@ public class GroupsV2Impl: GroupsV2 {
                 expiration: groupSendEndorsementsResponse.expiration,
                 combinedEndorsement: combinedEndorsement,
                 individualEndorsements: individualEndorsements.map { serviceId, endorsement in
-                    return (recipientFetcher.fetchOrCreate(serviceId: serviceId, tx: tx).id!, endorsement)
+                    return (recipientFetcher.fetchOrCreate(serviceId: serviceId, tx: tx).id, endorsement)
                 },
                 tx: tx
             )
@@ -1657,7 +1697,7 @@ public class GroupsV2Impl: GroupsV2 {
                     secretParams: secretParams,
                     options: [.didJustAddSelfViaGroupLink]
                 )
-                await GroupManager.sendGroupUpdateMessage(
+                _ = await GroupManager.sendGroupUpdateMessage(
                     groupId: groupId,
                     groupChangeProtoData: try changeProto.serializedData()
                 )
@@ -1838,13 +1878,10 @@ public class GroupsV2Impl: GroupsV2 {
 
         var newRevision: UInt32?
         do {
-            newRevision = try await cancelRequestToJoinUsingPatch(
-                groupV2Params: groupV2Params,
-                inviteLinkPassword: groupModel.inviteLinkPassword
-            )
+            newRevision = try await cancelRequestToJoinUsingPatch(groupV2Params: groupV2Params)
         } catch {
             switch error {
-            case GroupsV2Error.localUserBlockedFromJoining, GroupsV2Error.localUserIsNotARequestingMember:
+            case GroupsV2Error.localUserIsNotARequestingMember:
                 // In both of these cases, our request has already been removed. We can proceed with updating the model.
                 break
             default:
@@ -1877,10 +1914,9 @@ public class GroupsV2Impl: GroupsV2 {
             if let proposedRevision = proposedRevision {
                 if oldGroupModel.revision >= proposedRevision {
                     // No need to update database, group state is already acceptable.
-                    owsAssertDebug(!oldGroupMembership.isMemberOfAnyKind(localIdentifiers.aci))
                     return
                 }
-                newRevision = max(newRevision, proposedRevision)
+                newRevision = proposedRevision
             }
 
             var builder = oldGroupModel.asBuilder
@@ -1911,10 +1947,7 @@ public class GroupsV2Impl: GroupsV2 {
         }
     }
 
-    private func cancelRequestToJoinUsingPatch(
-        groupV2Params: GroupV2Params,
-        inviteLinkPassword: Data?
-    ) async throws -> UInt32 {
+    private func cancelRequestToJoinUsingPatch(groupV2Params: GroupV2Params) async throws -> UInt32 {
         let groupId = try groupV2Params.groupPublicParams.getGroupIdentifier()
 
         // We re-fetch the GroupInviteLinkPreview before trying in order to get the latest:
@@ -1923,7 +1956,7 @@ public class GroupsV2Impl: GroupsV2 {
         // * addFromInviteLinkAccess
         // * local user's request status.
         let groupInviteLinkPreview = try await fetchGroupInviteLinkPreview(
-            inviteLinkPassword: inviteLinkPassword,
+            inviteLinkPassword: nil,
             groupSecretParams: groupV2Params.groupSecretParams
         )
         let oldRevision = groupInviteLinkPreview.revision
@@ -1938,7 +1971,7 @@ public class GroupsV2Impl: GroupsV2 {
                 groupChangeProto: groupChangeProto,
                 groupV2Params: groupV2Params,
                 authCredential: authCredential,
-                groupInviteLinkPassword: inviteLinkPassword
+                groupInviteLinkPassword: nil,
             )
         }
 
@@ -1993,11 +2026,11 @@ public class GroupsV2Impl: GroupsV2 {
                     // Not a placeholder model; no need to update.
                     return
                 }
-                guard isLocalUserRequestingMember != groupThread.isLocalUserRequestingMember else {
+                let oldGroupMembership = oldGroupModel.groupMembership
+                guard isLocalUserRequestingMember != oldGroupMembership.isLocalUserRequestingMember else {
                     // Nothing to change.
                     return
                 }
-                let oldGroupMembership = oldGroupModel.groupMembership
                 var builder = oldGroupModel.asBuilder
                 builder.isJoinRequestPlaceholder = true
                 if let revision {

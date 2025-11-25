@@ -25,7 +25,7 @@ class BackupEnablementMegaphone: MegaphoneView {
 
         let primaryButtonTitle = OWSLocalizedString(
             "BACKUP_ENABLEMENT_REMINDER_MEGAPHONE_ACTION",
-            comment: "Action text for Backup Key reminder megaphone"
+            comment: "Action text for Recovery Key reminder megaphone"
         )
         let secondaryButtonTitle = OWSLocalizedString(
             "BACKUP_ENABLEMENT_REMINDER_NOT_NOW_ACTION",
@@ -33,7 +33,7 @@ class BackupEnablementMegaphone: MegaphoneView {
         )
 
         let primaryButton = MegaphoneView.Button(title: primaryButtonTitle) { [weak self] in
-            BackupOnboardingCoordinator().present(fromViewController: fromViewController)
+            SignalApp.shared.showAppSettings(mode: .backups)
             self?.markAsSnoozedWithSneakyTransaction()
             self?.dismiss(animated: true)
         }

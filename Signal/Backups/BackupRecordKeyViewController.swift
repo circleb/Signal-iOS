@@ -7,212 +7,181 @@ import SignalServiceKit
 import SignalUI
 import SwiftUI
 
-class BackupRecordKeyViewController: HostingController<BackupRecordKeyView> {
-    private let onCompletion: (BackupRecordKeyViewController) -> Void
-    private let viewModel: BackupRecordKeyViewModel
-    private let isOnboardingFlow: Bool
+class BackupRecordKeyViewController: OWSViewController, OWSNavigationChildController {
+    struct Option: OptionSet {
+        let rawValue: Int
 
-    init(
-        aep: AccountEntropyPool,
-        isOnboardingFlow: Bool,
-        onCompletion: @escaping (BackupRecordKeyViewController) -> Void,
-    ) {
-        self.onCompletion = onCompletion
-        self.isOnboardingFlow = isOnboardingFlow
-        self.viewModel = BackupRecordKeyViewModel(aep: aep, isOnboardingFlow: isOnboardingFlow)
-
-        super.init(wrappedView: BackupRecordKeyView(viewModel: viewModel))
-
-        viewModel.actionsDelegate = self
+        /// Show a "continue" button in the view footer. Not compatible with
+        /// `.showCreateNewKeyButton`.
+        static let showContinueButton = Option(rawValue: 1 << 1)
+        /// Show a "create new key" button in the view footer. Not compatible
+        /// with `.showContinueButton`.
+        static let showCreateNewKeyButton = Option(rawValue: 1 << 2)
     }
-}
 
-extension BackupRecordKeyViewController: BackupRecordKeyViewModel.ActionsDelegate {
-    func copyToClipboard(_ aep: AccountEntropyPool) {
+    enum AEPMode {
+        /// The user's current AEP, which must only be viewed after device auth.
+        case current(AccountEntropyPool, LocalDeviceAuthentication.AuthSuccess)
+        /// A new candidate AEP.
+        case newCandidate(AccountEntropyPool)
+
+        fileprivate var aep: AccountEntropyPool {
+            switch self {
+            case .current(let aep, _): return aep
+            case .newCandidate(let aep): return aep
+            }
+        }
+    }
+
+    var shouldCancelNavigationBack: Bool {
+        onBackPressedBlock != nil
+    }
+
+    private let aep: AccountEntropyPool
+    private let onContinuePressedBlock: (BackupRecordKeyViewController) -> Void
+    private let onCreateNewKeyPressedBlock: (BackupRecordKeyViewController) -> Void
+    private let onBackPressedBlock: (() -> Void)?
+    private let options: [Option]
+
+    /// - Parameter onCreateNewKeyPressed
+    /// Called when the user taps the "create new key" button. Only relevant if
+    /// the `.showCreateNewKeyButton` option is passed.
+    /// - Parameter onContinuePressed
+    /// Called when the user taps the "continue" button. Only relevant if the
+    /// `.showContinueButton` option is passed.
+    init(
+        aepMode: AEPMode,
+        options: [Option],
+        onCreateNewKeyPressed: @escaping (BackupRecordKeyViewController) -> Void = { _ in },
+        onContinuePressed: @escaping (BackupRecordKeyViewController) -> Void = { _ in },
+        onBackPressed: (() -> Void)? = nil
+    ) {
+        self.aep = aepMode.aep
+        self.onContinuePressedBlock = onContinuePressed
+        self.onCreateNewKeyPressedBlock = onCreateNewKeyPressed
+        self.onBackPressedBlock = onBackPressed
+        self.options = options
+
+        super.init()
+
+        OWSTableViewController2.removeBackButtonText(viewController: self)
+    }
+
+    var navbarBackgroundColorOverride: UIColor? {
+        .Signal.groupedBackground
+    }
+
+    // MARK: -
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        view.backgroundColor = .Signal.groupedBackground
+
+        if let onBackPressedBlock {
+            navigationItem.hidesBackButton = true
+            navigationItem.leftBarButtonItem = .init(
+                image: UIImage(named: "chevron-left-bold-28"),
+                primaryAction: UIAction { _ in
+                    onBackPressedBlock()
+                }
+            )
+
+            isModalInPresentation = true
+        }
+
+        let heroIconView = UIImageView()
+        heroIconView.image = .backupsLock
+        heroIconView.contentMode = .scaleAspectFit
+
+        let headlineLabel = UILabel.title1Label(text: OWSLocalizedString(
+            "BACKUP_RECORD_KEY_TITLE",
+            comment: "Title for a view allowing users to record their 'Recovery Key'."
+        ))
+
+        let subheadlineLabel = UILabel.explanationTextLabel(text: OWSLocalizedString(
+            "BACKUP_RECORD_KEY_SUBTITLE",
+            comment: "Subtitle for a view allowing users to record their 'Recovery Key'."
+        ))
+
+        let aepTextView = AccountEntropyPoolTextView(mode: .display(aep: aep))
+        aepTextView.backgroundColor = .Signal.secondaryGroupedBackground
+
+        let copyToClipboardButton = UIButton(
+            configuration: .smallSecondary(title: OWSLocalizedString(
+                "BACKUP_RECORD_KEY_COPY_TO_CLIPBOARD_BUTTON_TITLE",
+                comment: "Title for a button allowing users to copy their 'Recovery Key' to the clipboard."
+            )),
+            primaryAction: UIAction { [weak self] _ in
+                self?.copyToClipboard()
+            }
+        )
+        copyToClipboardButton.translatesAutoresizingMaskIntoConstraints = false
+        let copyButtonContainer = UIView.container()
+        copyButtonContainer.addSubview(copyToClipboardButton)
+        copyButtonContainer.addConstraints([
+            copyToClipboardButton.topAnchor.constraint(equalTo: copyButtonContainer.topAnchor),
+            copyToClipboardButton.leadingAnchor.constraint(greaterThanOrEqualTo: copyToClipboardButton.leadingAnchor),
+            copyToClipboardButton.centerXAnchor.constraint(equalTo: copyButtonContainer.centerXAnchor),
+            copyToClipboardButton.bottomAnchor.constraint(equalTo: copyButtonContainer.bottomAnchor),
+        ])
+
+        let createNewKeyButton = UIButton(
+            configuration: .largeSecondary(title: OWSLocalizedString(
+                "BACKUP_RECORD_KEY_CREATE_NEW_KEY_BUTTON_TITLE",
+                comment: "Title for a button allowing users to create a new 'Recovery Key'."
+            )),
+            primaryAction: UIAction { [weak self] _ in
+                guard let self else { return }
+                onCreateNewKeyPressedBlock(self)
+            },
+        )
+
+        let continueButton = UIButton(
+            configuration: .largePrimary(title: CommonStrings.continueButton),
+            primaryAction: UIAction { [weak self] _ in
+                guard let self else { return }
+                onContinuePressedBlock(self)
+            },
+        )
+
+        let stackView = addStaticContentStackView(
+            arrangedSubviews: [
+                heroIconView,
+                headlineLabel,
+                subheadlineLabel,
+                aepTextView,
+                copyButtonContainer,
+                .vStretchingSpacer()
+            ],
+            isScrollable: true
+        )
+        stackView.spacing = 24
+        stackView.setCustomSpacing(32, after: aepTextView)
+
+        var bottomButtons = [UIButton]()
+        if options.contains(.showCreateNewKeyButton) {
+            bottomButtons.append(createNewKeyButton)
+        }
+        if options.contains(.showContinueButton) {
+            bottomButtons.append(continueButton)
+        }
+        if !bottomButtons.isEmpty {
+            stackView.addArrangedSubview(bottomButtons.enclosedInVerticalStackView(isFullWidthButtons: options.contains(.showContinueButton)))
+        }
+    }
+
+    private func copyToClipboard() {
         UIPasteboard.general.setItems(
-            [[UIPasteboard.typeAutomatic: aep.rawData]],
+            [[UIPasteboard.typeAutomatic: aep.displayString]],
             options: [.expirationDate: Date().addingTimeInterval(60)]
         )
-    }
 
-    func complete() {
-        onCompletion(self)
-    }
-}
-
-// MARK: -
-
-private class BackupRecordKeyViewModel: ObservableObject {
-    protocol ActionsDelegate: AnyObject {
-        func copyToClipboard(_ aep: AccountEntropyPool)
-        func complete()
-    }
-
-    weak var actionsDelegate: ActionsDelegate?
-    let aep: AccountEntropyPool
-    let isOnboardingFlow: Bool
-
-    init(aep: AccountEntropyPool, isOnboardingFlow: Bool) {
-        self.aep = aep
-        self.isOnboardingFlow = isOnboardingFlow
-    }
-
-    func copyToClipboard() {
-        actionsDelegate?.copyToClipboard(aep)
-    }
-
-    func complete() {
-        actionsDelegate?.complete()
-    }
-}
-
-struct BackupRecordKeyView: View {
-    fileprivate let viewModel: BackupRecordKeyViewModel
-
-    var body: some View {
-        ScrollableContentPinnedFooterView {
-            VStack {
-                Spacer().frame(height: 20)
-
-                Image(.backupsLock)
-                    .frame(width: 80, height: 80)
-
-                Spacer().frame(height: 16)
-
-                Text(OWSLocalizedString(
-                    "BACKUP_RECORD_KEY_TITLE",
-                    comment: "Title for a view allowing users to record their 'Backup Key'."
-                ))
-                .font(.title)
-                .fontWeight(.semibold)
-                .foregroundStyle(Color.Signal.label)
-                .padding(.horizontal, 24) // Extra
-
-                Spacer().frame(height: 12)
-
-                Text(OWSLocalizedString(
-                    "BACKUP_RECORD_KEY_SUBTITLE",
-                    comment: "Subtitle for a view allowing users to record their 'Backup Key'."
-                ))
-                .font(.body)
-                .foregroundStyle(Color.Signal.secondaryLabel)
-                .padding(.horizontal, 28) // Extra
-
-                Spacer().frame(height: 32)
-
-                DisplayAccountEntropyPoolView(aep: viewModel.aep)
-
-                Spacer().frame(height: 32)
-
-                Button {
-                    viewModel.copyToClipboard()
-                } label: {
-                    Text(OWSLocalizedString(
-                        "BACKUP_RECORD_KEY_COPY_TO_CLIPBOARD_BUTTON_TITLE",
-                        comment: "Title for a button allowing users to copy their 'Backup Key' to the clipboard."
-                    ))
-                    .fontWeight(.medium)
-                }
-                .buttonStyle(.plain)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background {
-                    Capsule().fill(Color.Signal.secondaryFill)
-                }
-
-                Spacer().frame(height: 20)
-            }
-            .padding(.horizontal, 12)
-        } pinnedFooter: {
-            // Only add "continue" button if we're in the onboarding flow.
-            if viewModel.isOnboardingFlow {
-                Button {
-                    viewModel.complete()
-                } label: {
-                    Text(CommonStrings.continueButton)
-                        .foregroundStyle(.white)
-                        .font(.headline)
-                        .padding(.vertical, 14)
-                }
-                .buttonStyle(.plain)
-                .frame(maxWidth: .infinity)
-                .background(Color.Signal.ultramarine)
-                .cornerRadius(12)
-                .padding(.horizontal, 40)
-            }
-        }
-        .multilineTextAlignment(.center)
-        .background(Color.Signal.groupedBackground)
-        .navigationBarBackButtonHidden(!viewModel.isOnboardingFlow)
-        .navigationBarItems(leading: viewModel.isOnboardingFlow ? nil : doneButton)
-    }
-
-    private var doneButton: some View {
-        Button(action: {
-            viewModel.complete()
-        }) {
-            Text(OWSLocalizedString("BUTTON_DONE", comment: "Label for generic done button."))
-                .buttonStyle(.plain)
-                .foregroundStyle(Color.Signal.label)
-        }
-    }
-}
-
-// MARK: -
-
-private struct DisplayAccountEntropyPoolView: View {
-    private enum Constants {
-        static let charsPerGroup = 4
-        static let charGroupsPerLine = 4
-        static let spacesTwixtGroups = 4
-
-        private static let formattingPrecondition: Void = {
-            let charsPerLine = charsPerGroup * charGroupsPerLine
-            owsPrecondition(AccountEntropyPool.Constants.byteLength % charsPerLine == 0)
-        }()
-    }
-
-    let aep: AccountEntropyPool
-
-    var body: some View {
-        Text(stylizedAEPText)
-            .lineSpacing(18)
-            .font(.body.monospaced())
-            .padding(.vertical, 18)
-            .padding(.horizontal, 36)
-            .background(Color.Signal.secondaryGroupedBackground)
-            .foregroundStyle(Color.Signal.label)
-            .cornerRadius(16)
-    }
-
-    /// Split the AEP into char groups, themselves split across multiple lines.
-    ///
-    /// - Important
-    /// This does index-based accesses, and will crash if the (hardcoded) length
-    /// of an AEP changes. `Constants.formattingPrecondition` should alert in
-    /// that case.
-    private var stylizedAEPText: String {
-        let aep = aep.rawData
-
-        let charGroups: [String] = stride(from: 0, to: aep.count, by: Constants.charsPerGroup).map {
-            let startIndex = aep.index(aep.startIndex, offsetBy: $0)
-            let endIndex = aep.index(startIndex, offsetBy: Constants.charsPerGroup)
-
-            return String(aep[startIndex..<endIndex])
-        }
-
-        let charGroupsByLine: [[String]] = stride(from: 0, to: charGroups.count, by: Constants.charGroupsPerLine).map {
-            let startIndex = charGroups.index(charGroups.startIndex, offsetBy: $0)
-            let endIndex = charGroups.index(startIndex, offsetBy: Constants.charGroupsPerLine)
-
-            return Array(charGroups[startIndex..<endIndex])
-        }
-
-        let lines: [String] = charGroupsByLine.map { charGroups in
-            return charGroups.joined(separator: String(repeating: " ", count: Constants.spacesTwixtGroups))
-        }
-
-        return lines.joined(separator: "\n")
+        let toast = ToastController(text: OWSLocalizedString(
+            "BACKUP_KEY_COPIED_MESSAGE_TOAST",
+            comment: "Toast indicating that the user has copied their recovery key."
+        ))
+        toast.presentToastView(from: .bottom, of: view, inset: view.safeAreaInsets.bottom + 8)
     }
 }
 
@@ -220,27 +189,34 @@ private struct DisplayAccountEntropyPoolView: View {
 
 #if DEBUG
 
-private extension BackupRecordKeyViewModel {
-    static func forPreview() -> BackupRecordKeyViewModel {
-        class PreviewActionsDelegate: ActionsDelegate {
-            func copyToClipboard(_ aep: AccountEntropyPool) {
-                print("Copying \(aep.rawData) to clipboard...!")
-            }
-
-            func complete() {
-                print("Continuing...!")
-            }
-        }
-
-        let viewModel = BackupRecordKeyViewModel(aep: AccountEntropyPool(), isOnboardingFlow: true)
-        let actionsDelegate = PreviewActionsDelegate()
-        ObjectRetainer.retainObject(actionsDelegate, forLifetimeOf: viewModel)
-        return viewModel
+private extension BackupRecordKeyViewController {
+    static func forPreview(
+        aepMode: AEPMode,
+        options: [Option],
+    ) -> BackupRecordKeyViewController {
+        return BackupRecordKeyViewController(
+            aepMode: aepMode,
+            options: options,
+            onCreateNewKeyPressed: { _ in print("Create New Key!") },
+            onContinuePressed: { _ in print("Continue!") },
+        )
     }
 }
 
-#Preview {
-    BackupRecordKeyView(viewModel: .forPreview())
+@available(iOS 17, *)
+#Preview("CreateNewKey") {
+    UINavigationController(rootViewController: BackupRecordKeyViewController.forPreview(
+        aepMode: .newCandidate(AccountEntropyPool()),
+        options: [.showCreateNewKeyButton]
+    ))
+}
+
+@available(iOS 17, *)
+#Preview("ContinueButton") {
+    UINavigationController(rootViewController: BackupRecordKeyViewController.forPreview(
+        aepMode: .newCandidate(AccountEntropyPool()),
+        options: [.showContinueButton]
+    ))
 }
 
 #endif

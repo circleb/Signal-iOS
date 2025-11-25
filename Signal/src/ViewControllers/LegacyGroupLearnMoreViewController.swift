@@ -54,6 +54,8 @@ public class LegacyGroupLearnMoreViewController: InteractiveSheetViewController 
     }
 
     override public func viewDidLoad() {
+        super.viewDidLoad()
+
         let textStackView: UIStackView = {
             func buildLabel(
                 font: UIFont,
@@ -108,7 +110,7 @@ public class LegacyGroupLearnMoreViewController: InteractiveSheetViewController 
         textScrollView.autoPinTopToSuperviewMargin(withInset: 24)
 
         let okayButton: UIView = {
-            let buttonFont = UIFont.dynamicTypeBodyClamped.semibold()
+            let buttonFont = UIFont.dynamicTypeHeadlineClamped
             let buttonHeight = OWSFlatButton.heightForFont(buttonFont)
             let button = OWSFlatButton.button(
                 title: CommonStrings.okayButton,

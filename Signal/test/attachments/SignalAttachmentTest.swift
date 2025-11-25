@@ -12,20 +12,20 @@ class SignalAttachmentTest: SignalBaseTest {
     // MARK: - Utilities
 
     func testMetadataStrippingDoesNotChangeOrientation(url: URL) throws {
-        let size = Data.imageSize(forFilePath: url.path, mimeType: "image/jpeg")
+        let size = (try? DataImageSource.forPath(url.path).imageMetadata()?.pixelSize) ?? .zero
 
         let dataSource = try DataSourcePath(fileUrl: url, shouldDeleteOnDeallocation: false)
-        let attachment = SignalAttachment.attachment(
+        let attachment = try SignalAttachment.imageAttachment(
             dataSource: dataSource,
             dataUTI: UTType.jpeg.identifier
         )
-        let newSize = attachment.data.imageMetadata(withPath: nil, mimeType: "image/jpeg").pixelSize
+        let newSize = DataImageSource(attachment.dataSource.data).imageMetadata()?.pixelSize
 
         XCTAssertEqual(newSize, size, "image dimensions changed for \(url.lastPathComponent)")
     }
 
     private func pngChunks(data: Data) throws -> [PngChunker.Chunk] {
-        let chunker = try PngChunker(source: data)
+        let chunker = try PngChunker(source: DataImageSource(data))
         var result = [PngChunker.Chunk]()
         while let chunk = try chunker.next() {
             result.append(chunk)
@@ -59,13 +59,13 @@ class SignalAttachmentTest: SignalBaseTest {
             "Test is not set up correctly. Fixture doesn't have the expected chunks"
         )
 
-        let attachment = SignalAttachment.attachment(
+        let attachment = try SignalAttachment.imageAttachment(
             dataSource: dataSource,
             dataUTI: UTType.png.identifier
         )
 
         XCTAssertEqual(
-            try pngChunkTypes(data: attachment.data),
+            try pngChunkTypes(data: attachment.dataSource.data),
             ["IHDR", "PLTE", "sRGB", "IDAT", "IEND"]
         )
     }
@@ -97,13 +97,13 @@ class SignalAttachmentTest: SignalBaseTest {
         )
         let dataSource = DataSourceValue(pngData, fileExtension: "png")
 
-        let attachment = SignalAttachment.attachment(
+        let attachment = try SignalAttachment.imageAttachment(
             dataSource: dataSource,
             dataUTI: UTType.png.identifier
         )
 
         XCTAssert(
-            !(try pngChunkTypes(data: attachment.data)).contains("tEXt"),
+            !(try pngChunkTypes(data: attachment.dataSource.data)).contains("tEXt"),
             "Result contained unexpected chunk"
         )
     }

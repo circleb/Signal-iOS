@@ -27,28 +27,34 @@ class ProvisioningController: NSObject {
 
     private let appReadiness: AppReadinessSetter
 
+    private lazy var registrationWebSocketManager = RegistrationWebSocketManagerImpl(
+        chatConnectionManager: DependenciesBridge.shared.chatConnectionManager,
+        messagePipelineSupervisor: SSKEnvironment.shared.messagePipelineSupervisorRef,
+        messageProcessor: SSKEnvironment.shared.messageProcessorRef,
+    )
+
     private lazy var provisioningCoordinator: ProvisioningCoordinator = {
         return ProvisioningCoordinatorImpl(
             chatConnectionManager: DependenciesBridge.shared.chatConnectionManager,
             db: DependenciesBridge.shared.db,
-            deviceService: DependenciesBridge.shared.deviceService,
             identityManager: DependenciesBridge.shared.identityManager,
             linkAndSyncManager: DependenciesBridge.shared.linkAndSyncManager,
             accountKeyStore: DependenciesBridge.shared.accountKeyStore,
-            messageFactory: ProvisioningCoordinatorImpl.Wrappers.MessageFactory(),
+            networkManager: SSKEnvironment.shared.networkManagerRef,
             preKeyManager: DependenciesBridge.shared.preKeyManager,
-            profileManager: ProvisioningCoordinatorImpl.Wrappers.ProfileManager(SSKEnvironment.shared.profileManagerImplRef),
+            profileManager: SSKEnvironment.shared.profileManagerImplRef,
             pushRegistrationManager: ProvisioningCoordinatorImpl.Wrappers.PushRegistrationManager(AppEnvironment.shared.pushRegistrationManagerRef),
             receiptManager: ProvisioningCoordinatorImpl.Wrappers.ReceiptManager(SSKEnvironment.shared.receiptManagerRef),
             registrationStateChangeManager: DependenciesBridge.shared.registrationStateChangeManager,
+            registrationWebSocketManager: registrationWebSocketManager,
             signalProtocolStoreManager: DependenciesBridge.shared.signalProtocolStoreManager,
             signalService: SSKEnvironment.shared.signalServiceRef,
             storageServiceManager: SSKEnvironment.shared.storageServiceManagerRef,
             svr: DependenciesBridge.shared.svr,
-            syncManager: ProvisioningCoordinatorImpl.Wrappers.SyncManager(SSKEnvironment.shared.syncManagerRef),
+            syncManager: SSKEnvironment.shared.syncManagerRef,
             threadStore: ThreadStoreImpl(),
             tsAccountManager: DependenciesBridge.shared.tsAccountManager,
-            udManager: ProvisioningCoordinatorImpl.Wrappers.UDManager(SSKEnvironment.shared.udManagerRef)
+            udManager: SSKEnvironment.shared.udManagerRef
         )
     }()
 
@@ -377,34 +383,27 @@ class ProvisioningController: NSObject {
     private func resetBackToQrCodeController(
         from viewController: ProvisioningQRCodeViewController,
         navigationController: UINavigationController
-    ) {
+    ) async {
         Logger.warn("")
 
         // Reset at the start so it goes while other stuff animates.
         viewController.reset()
+        await registrationWebSocketManager.releaseRestrictedWebSocket(isRegistered: false)
 
-        func popAndThenAwaitProvisioning() {
-            if navigationController.presentedViewController != nil {
-                navigationController.dismiss(animated: true, completion: {
-                    popAndThenAwaitProvisioning()
-                })
-                return
-            }
-            if viewController.presentedViewController != nil {
-                viewController.dismiss(animated: true, completion: {
-                    popAndThenAwaitProvisioning()
-                })
-                return
-            }
-            navigationController.popToViewController(viewController, animated: true)
-            Task {
-                await awaitProvisioning(
-                    from: viewController,
-                    navigationController: navigationController
-                )
-            }
+        if navigationController.presentedViewController != nil {
+            await navigationController.awaitableDismiss(animated: true)
         }
-        popAndThenAwaitProvisioning()
+        if viewController.presentedViewController != nil {
+            await viewController.awaitableDismiss(animated: true)
+        }
+        navigationController.popToViewController(viewController, animated: true)
+
+        Task {
+            await awaitProvisioning(
+                from: viewController,
+                navigationController: navigationController
+            )
+        }
     }
 
     @MainActor
@@ -434,7 +433,10 @@ class ProvisioningController: NSObject {
                         return
                     }
                 } else {
-                    progressViewController = LinkAndSyncProvisioningProgressViewController(viewModel: progressViewModel)
+                    progressViewController = LinkAndSyncProvisioningProgressViewController(
+                        provisioningController: self,
+                        viewModel: progressViewModel
+                    )
                 }
                 progressViewController.linkNSyncTask = task
                 viewController.present(progressViewController, animated: false)
@@ -458,7 +460,7 @@ class ProvisioningController: NSObject {
                             } else {
                                 // Crash if this fails; things have gone horribly wrong.
                                 try! await provisioningLinkAndSyncError.restartProvisioning()
-                                self.resetBackToQrCodeController(
+                                await self.resetBackToQrCodeController(
                                     from: viewController,
                                     navigationController: navigationController
                                 )
@@ -545,13 +547,14 @@ class ProvisioningController: NSObject {
                     "SECONDARY_LINKING_ERROR_DIFFERENT_ACCOUNT_RESET_DEVICE",
                     comment: "Label for the 'reset device' action in the 're-linking failed because the account did not match' alert."
                 ),
-                accessibilityIdentifier: "alert.reset_device",
                 style: .default,
                 handler: { _ in
-                    self.resetBackToQrCodeController(
-                        from: viewController,
-                        navigationController: navigationController
-                    )
+                    Task { @MainActor in
+                        await self.resetBackToQrCodeController(
+                            from: viewController,
+                            navigationController: navigationController
+                        )
+                    }
                 }
             ))
         case .deviceLimitExceededError(let error):
@@ -559,10 +562,12 @@ class ProvisioningController: NSObject {
             alert.addAction(ActionSheetAction(
                 title: CommonStrings.okButton,
                 handler: { _ in
-                    self.resetBackToQrCodeController(
-                        from: viewController,
-                        navigationController: navigationController
-                    )
+                    Task { @MainActor in
+                        await self.resetBackToQrCodeController(
+                            from: viewController,
+                            navigationController: navigationController
+                        )
+                    }
                 }
             ))
         case .obsoleteLinkedDeviceError:
@@ -583,7 +588,6 @@ class ProvisioningController: NSObject {
             )
             let updateAction = ActionSheetAction(
                 title: updateButtonText,
-                accessibilityIdentifier: "alert.update",
                 style: .default
             ) { _ in
                 let url = TSConstants.appStoreUrl
@@ -596,7 +600,6 @@ class ProvisioningController: NSObject {
             alert = ActionSheetController(title: title, message: message)
             alert.addAction(ActionSheetAction(
                 title: CommonStrings.retryButton,
-                accessibilityIdentifier: "alert.retry",
                 style: .default,
                 handler: { _ in
                     let isProvisioned = DependenciesBridge.shared.db.read { tx in
@@ -605,10 +608,12 @@ class ProvisioningController: NSObject {
                     if isProvisioned {
                         self.provisioningDidComplete(from: viewController)
                     } else {
-                        self.resetBackToQrCodeController(
-                            from: viewController,
-                            navigationController: navigationController
-                        )
+                        Task { @MainActor in
+                            await self.resetBackToQrCodeController(
+                                from: viewController,
+                                navigationController: navigationController
+                            )
+                        }
                     }
                 }
             ))
@@ -679,7 +684,7 @@ class ProvisioningController: NSObject {
                 Task { @MainActor in
                     // Crash if this fails; things have gone horribly wrong.
                     try! await error.restartProvisioning()
-                    self.resetBackToQrCodeController(
+                    await self.resetBackToQrCodeController(
                         from: viewController,
                         navigationController: navigationController
                     )
@@ -703,7 +708,7 @@ class ProvisioningController: NSObject {
                 Task { @MainActor in
                     // Crash if this fails; things have gone horribly wrong.
                     try! await error.restartProvisioning()
-                    self.resetBackToQrCodeController(
+                    await self.resetBackToQrCodeController(
                         from: viewController,
                         navigationController: navigationController
                     )
@@ -734,7 +739,7 @@ class ProvisioningController: NSObject {
                 Task { @MainActor in
                     // Crash if this fails; things have gone horribly wrong.
                     try! await error.restartProvisioning()
-                    self.resetBackToQrCodeController(
+                    await self.resetBackToQrCodeController(
                         from: viewController,
                         navigationController: navigationController
                     )

@@ -11,6 +11,7 @@ class BackupArchiveTSOutgoingMessageArchiver {
 
     private let contentsArchiver: BackupArchiveTSMessageContentsArchiver
     private let editHistoryArchiver: BackupArchiveTSMessageEditHistoryArchiver<TSOutgoingMessage>
+    private let editMessageStore: EditMessageStore
     private let interactionStore: BackupArchiveInteractionStore
 
     init(
@@ -22,6 +23,7 @@ class BackupArchiveTSOutgoingMessageArchiver {
         self.editHistoryArchiver = BackupArchiveTSMessageEditHistoryArchiver(
             editMessageStore: editMessageStore
         )
+        self.editMessageStore = editMessageStore
         self.interactionStore = interactionStore
     }
 
@@ -126,15 +128,15 @@ private extension BackupArchive {
     }
 }
 
-// MARK: - BackupArchiveTSMessageEditHistoryBuilder
+// MARK: - BackupArchive.TSMessageEditHistory.Builder
 
-extension BackupArchiveTSOutgoingMessageArchiver: BackupArchiveTSMessageEditHistoryBuilder {
-    typealias EditHistoryMessageType = TSOutgoingMessage
+extension BackupArchiveTSOutgoingMessageArchiver: BackupArchive.TSMessageEditHistory.Builder {
+    typealias MessageType = TSOutgoingMessage
 
     // MARK: - Archiving
 
     func buildMessageArchiveDetails(
-        message outgoingMessage: EditHistoryMessageType,
+        message outgoingMessage: MessageType,
         editRecord: EditRecord?,
         threadInfo: BackupArchive.ChatArchivingContext.CachedThreadInfo,
         context: BackupArchive.ChatArchivingContext
@@ -212,6 +214,7 @@ extension BackupArchiveTSOutgoingMessageArchiver: BackupArchiveTSMessageEditHist
 
         var wasAnySendSealedSender = false
         var outgoingDetails = BackupProto_ChatItem.OutgoingMessageDetails()
+        outgoingDetails.dateReceived = message.receivedAtTimestamp
 
         for (address, sendState) in message.recipientAddressStates ?? [:] {
             guard let recipientAddress = address.asSingleServiceIdBackupAddress()?.asArchivingAddress() else {
@@ -311,11 +314,10 @@ extension BackupArchiveTSOutgoingMessageArchiver: BackupArchiveTSMessageEditHist
 
     func restoreMessage(
         _ chatItem: BackupProto_ChatItem,
-        isPastRevision: Bool,
-        hasPastRevisions: Bool,
+        revisionType: BackupArchive.TSMessageEditHistory.RevisionType<MessageType>,
         chatThread: BackupArchive.ChatThread,
         context: BackupArchive.ChatItemRestoringContext
-    ) -> BackupArchive.RestoreInteractionResult<EditHistoryMessageType> {
+    ) -> BackupArchive.RestoreInteractionResult<MessageType> {
         guard let chatItemType = chatItem.item else {
             return .unrecognizedEnum(BackupArchive.UnrecognizedEnumError(
                 enumType: BackupProto_ChatItem.OneOf_Item.self
@@ -348,7 +350,7 @@ extension BackupArchiveTSOutgoingMessageArchiver: BackupArchiveTSMessageEditHist
                 context: context
             )
             .bubbleUp(
-                EditHistoryMessageType.self,
+                MessageType.self,
                 partialErrors: &partialErrors
             )
         {
@@ -358,16 +360,16 @@ extension BackupArchiveTSOutgoingMessageArchiver: BackupArchiveTSMessageEditHist
             return error
         }
 
-        let editState: TSEditState = {
-            if isPastRevision {
-                return .pastRevision
-            } else if hasPastRevisions {
-                // Outgoing messages are implicitly read.
-                return .latestRevisionRead
-            } else {
-                return .none
-            }
-        }()
+        let editState: TSEditState
+        switch revisionType {
+        case .latestRevision(hasPastRevisions: false):
+            editState = .none
+        case .latestRevision(hasPastRevisions: true):
+            // Outgoing messages are implicitly read.
+            editState = .latestRevisionRead
+        case .pastRevision:
+            editState = .pastRevision
+        }
 
         let outgoingMessage: TSOutgoingMessage
         switch self
@@ -380,7 +382,7 @@ extension BackupArchiveTSOutgoingMessageArchiver: BackupArchiveTSMessageEditHist
                 chatThread: chatThread
             )
             .bubbleUp(
-                EditHistoryMessageType.self,
+                MessageType.self,
                 partialErrors: &partialErrors
             )
         {
@@ -399,7 +401,7 @@ extension BackupArchiveTSOutgoingMessageArchiver: BackupArchiveTSMessageEditHist
                 context: context
             )
             .bubbleUp(
-                EditHistoryMessageType.self,
+                MessageType.self,
                 partialErrors: &partialErrors
             )
         {
@@ -407,6 +409,33 @@ extension BackupArchiveTSOutgoingMessageArchiver: BackupArchiveTSMessageEditHist
             break
         case .bubbleUpError(let error):
             return error
+        }
+
+        do {
+            let editRecord: EditRecord?
+            switch revisionType {
+            case .latestRevision:
+                editRecord = nil
+            case .pastRevision(let latestRevisionMessage):
+                // Outgoing messages, and their edits, are implicitly read.
+                editRecord = EditRecord(
+                    latestRevisionId: latestRevisionMessage.sqliteRowId!,
+                    pastRevisionId: outgoingMessage.sqliteRowId!,
+                    read: true,
+                )
+            }
+
+            if let editRecord {
+                try editMessageStore.insert(editRecord, tx: context.tx)
+            }
+        } catch {
+            return .partialRestore(
+                outgoingMessage,
+                [.restoreFrameError(
+                    .databaseInsertionFailed(error),
+                    chatItem.id
+                )] + partialErrors
+            )
         }
 
         if partialErrors.isEmpty {
@@ -513,12 +542,13 @@ extension BackupArchiveTSOutgoingMessageArchiver: BackupArchiveTSMessageEditHist
             let outgoingMessageBuilder = TSOutgoingMessageBuilder(
                 thread: chatThread.tsThread,
                 timestamp: chatItem.dateSent,
-                // If we pass `nil` this will default to "now", which is a much
-                // worse approximation than the "sent" timestamp. For outgoing
-                // messages, "sent" and "received" are the same, anyway.
-                receivedAtTimestamp: chatItem.dateSent,
+                receivedAtTimestamp: outgoingDetails.dateReceived > 0
+                    ? outgoingDetails.dateReceived
+                    // If we pass `nil` this will default to "now", which is a much
+                    // worse approximation than the "sent" timestamp. For outgoing
+                    // messages, "sent" and "received" are the same, anyway.
+                    : chatItem.dateSent,
                 messageBody: nil,
-                bodyRanges: nil,
                 editState: editState,
                 expiresInSeconds: expiresInSeconds,
                 // Backed up messages don't set the chat timer; version is irrelevant.
@@ -540,7 +570,8 @@ extension BackupArchiveTSOutgoingMessageArchiver: BackupArchiveTSMessageEditHist
                 contactShare: nil,
                 linkPreview: nil,
                 messageSticker: nil,
-                giftBadge: nil
+                giftBadge: nil,
+                isPoll: false // TODO(KC): fill in once polls are implemented in backups
             )
 
             switch contents {
@@ -555,8 +586,7 @@ extension BackupArchiveTSOutgoingMessageArchiver: BackupArchiveTSMessageEditHist
             case .remoteDeleteTombstone:
                 outgoingMessageBuilder.wasRemotelyDeleted = true
             case .text(let text):
-                outgoingMessageBuilder.messageBody = text.body?.text
-                outgoingMessageBuilder.bodyRanges = text.body?.ranges
+                outgoingMessageBuilder.setMessageBody(text.body)
                 outgoingMessageBuilder.quotedMessage = text.quotedMessage
                 outgoingMessageBuilder.linkPreview = text.linkPreview
                 outgoingMessageBuilder.isVoiceMessage = text.isVoiceMessage
@@ -577,8 +607,7 @@ extension BackupArchiveTSOutgoingMessageArchiver: BackupArchiveTSMessageEditHist
             case .storyReply(let storyReply):
                 switch storyReply.replyType {
                 case .textReply(let textReply):
-                    outgoingMessageBuilder.messageBody = textReply.body.text
-                    outgoingMessageBuilder.bodyRanges = textReply.body.ranges
+                    outgoingMessageBuilder.setMessageBody(textReply.body)
                 case .emoji(let emoji):
                     outgoingMessageBuilder.storyReactionEmoji = emoji
                 }
@@ -599,6 +628,9 @@ extension BackupArchiveTSOutgoingMessageArchiver: BackupArchiveTSMessageEditHist
                         + partialErrors
                     )
                 }
+            case .poll(let poll):
+                outgoingMessageBuilder.isPoll = true
+                outgoingMessageBuilder.setMessageBody(poll.question)
             }
 
             return .success(TSOutgoingMessage(
@@ -620,7 +652,6 @@ extension BackupArchiveTSOutgoingMessageArchiver: BackupArchiveTSMessageEditHist
                 outgoingMessage,
                 in: chatThread,
                 chatId: chatItem.typedChatId,
-                directionalDetails: outgoingDetails,
                 context: context
             )
         } catch let error {

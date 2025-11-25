@@ -32,6 +32,10 @@ public protocol AttachmentStore {
         tx: DBReadTransaction
     ) -> [AttachmentReference]
 
+    func fetchMaxRowId(
+        tx: DBReadTransaction
+    ) throws -> Attachment.IDType?
+
     /// Fetch attachments by id.
     func fetch(
         ids: [Attachment.IDType],
@@ -142,11 +146,6 @@ public protocol AttachmentStore {
         tx: DBWriteTransaction
     ) throws
 
-    func removeTransitTierInfo(
-        forAttachmentId id: Attachment.IDType,
-        tx: DBWriteTransaction
-    ) throws
-
     func removeMediaTierInfo(
         forAttachmentId id: Attachment.IDType,
         tx: DBWriteTransaction
@@ -175,7 +174,8 @@ public protocol AttachmentStore {
         into attachment: Attachment,
         encryptionKey: Data,
         validatedMimeType: String,
-        transitTierInfo: Attachment.TransitTierInfo?,
+        latestTransitTierInfo: Attachment.TransitTierInfo?,
+        originalTransitTierInfo: Attachment.TransitTierInfo?,
         mediaTierInfo: Attachment.MediaTierInfo?,
         thumbnailMediaTierInfo: Attachment.ThumbnailMediaTierInfo?,
         tx: DBWriteTransaction
@@ -210,11 +210,12 @@ public protocol AttachmentStore {
     /// Throws ``AttachmentInsertError.duplicatePlaintextHash`` if an existing
     /// attachment is found with the same plaintext hash.
     /// May throw other errors with less strict typing if database operations fail.
+    @discardableResult
     func insert(
         _ attachment: Attachment.ConstructionParams,
         reference: AttachmentReference.ConstructionParams,
         tx: DBWriteTransaction
-    ) throws
+    ) throws -> Attachment.IDType
 
     /// Remove all owners of thread types (wallpaper and global wallpaper owners).
     /// Will also delete any attachments that become unowned, like any other deletion.

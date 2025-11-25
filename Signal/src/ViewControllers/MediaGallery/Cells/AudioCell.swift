@@ -122,6 +122,11 @@ class AudioCell: MediaTileListModeCell {
             return
         }
 
+        guard let localAci = DependenciesBridge.shared.tsAccountManager.localIdentifiers(tx: transaction)?.aci else {
+            owsFailDebug("User not registered")
+            return
+        }
+
         let threadAssociatedData = ThreadAssociatedData.fetchOrDefault(for: audioItem.thread, transaction: transaction)
         // Make an itemModel which is needed to play the audio file.
         // This is only used to save the playback rate, which is kind of nuts.
@@ -144,10 +149,12 @@ class AudioCell: MediaTileListModeCell {
             spoilerReveal: spoilerState.revealState
         )
         let itemBuildingContext = CVItemBuildingContextImpl(
+            prevRenderState: nil,
             threadViewModel: threadViewModel,
             viewStateSnapshot: viewStateSnapshot,
             transaction: transaction,
-            avatarBuilder: CVAvatarBuilder(transaction: transaction)
+            avatarBuilder: CVAvatarBuilder(transaction: transaction),
+            localAci: localAci
         )
         guard let componentState = try? CVComponentState.build(
             interaction: audioItem.interaction,

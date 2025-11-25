@@ -74,8 +74,8 @@ public class PaymentsRestoreWalletSplashViewController: OWSViewController {
         let explanationLabel = PaymentsViewUtils.buildTextWithLearnMoreLinkTextView(
             text: OWSLocalizedString("SETTINGS_PAYMENTS_RESTORE_WALLET_SPLASH_EXPLANATION",
                                     comment: "Explanation of the 'restore payments wallet' process payments settings."),
-            font: .dynamicTypeBody2Clamped,
-            learnMoreUrl: "https://support.signal.org/hc/articles/360057625692#payments_wallet_restore_passphrase")
+            font: .dynamicTypeSubheadlineClamped,
+            learnMoreUrl: URL.Support.Payments.walletRestorePassphrase)
         explanationLabel.textAlignment = .center
 
         let topStack = UIStackView(arrangedSubviews: [
@@ -92,7 +92,7 @@ public class PaymentsRestoreWalletSplashViewController: OWSViewController {
 
         let pasteFromPasteboardButton = OWSFlatButton.button(title: OWSLocalizedString("SETTINGS_PAYMENTS_RESTORE_WALLET_PASTE_FROM_PASTEBOARD",
                                                                                       comment: "Label for the 'restore passphrase from pasteboard' button in the 'restore payments wallet from passphrase' view."),
-                                               font: UIFont.dynamicTypeBody.semibold(),
+                                               font: UIFont.dynamicTypeHeadline,
                                                titleColor: .ows_accentBlue,
                                                backgroundColor: backgroundColor,
                                                target: self,
@@ -101,7 +101,7 @@ public class PaymentsRestoreWalletSplashViewController: OWSViewController {
 
         let enterManuallyButton = OWSFlatButton.button(title: OWSLocalizedString("SETTINGS_PAYMENTS_RESTORE_WALLET_ENTER_MANUALLY",
                                                                                 comment: "Label for the 'enter passphrase manually' button in the 'restore payments wallet from passphrase' view."),
-                                               font: UIFont.dynamicTypeBody.semibold(),
+                                               font: UIFont.dynamicTypeHeadline,
                                                titleColor: .white,
                                                backgroundColor: .ows_accentBlue,
                                                target: self,

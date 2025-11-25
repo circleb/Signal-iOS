@@ -137,18 +137,19 @@ public extension TSOutgoingMessage {
         }
     }
 
-    /// Records a skipped send to one recipient.
-    func updateWithSkippedRecipient(
-        _ address: SignalServiceAddress,
-        transaction tx: DBWriteTransaction
+    /// Records a skipped send to multiple recipients.
+    func updateWithSkippedRecipients(
+        _ addresses: some Sequence<SignalServiceAddress>,
+        tx: DBWriteTransaction
     ) {
         anyUpdateOutgoingMessage(transaction: tx) { outgoingMessage in
-            guard let recipientState = outgoingMessage.recipientAddressStates?[address] else {
-                owsFailDebug("Missing recipient state for recipient: \(address)!")
-                return
+            for address in addresses {
+                guard let recipientState = outgoingMessage.recipientAddressStates?[address] else {
+                    owsFailDebug("Missing recipient state for recipient: \(address)!")
+                    continue
+                }
+                recipientState.updateStatusIfPossible(.skipped)
             }
-
-            recipientState.updateStatusIfPossible(.skipped)
         }
     }
 
@@ -210,8 +211,8 @@ public extension TSOutgoingMessage {
         _ recipientErrors: some Collection<(serviceId: ServiceId, error: Error)>,
         tx: DBWriteTransaction
     ) {
-        let fatalErrors = recipientErrors.lazy.filter { !$0.error.isRetryable }
-        let retryableErrors = recipientErrors.lazy.filter { $0.error.isRetryable }
+        let fatalErrors = recipientErrors.lazy.filter { !MessageSender.isRetryableError($0.error) }
+        let retryableErrors = recipientErrors.lazy.filter { MessageSender.isRetryableError($0.error) }
 
         if fatalErrors.isEmpty {
             Logger.warn("Couldn't send \(self.timestamp), but all errors are retryable: \(Array(retryableErrors))")
@@ -225,7 +226,7 @@ public extension TSOutgoingMessage {
                     owsFailDebug("Missing recipient state for \(serviceId)")
                     continue
                 }
-                if error.isRetryable, recipientState.status == .sending {
+                if MessageSender.isRetryableError(error), recipientState.status == .sending {
                     // For retryable errors, we can just set the error code and leave the
                     // state set as Sending
                 } else if error is SpamChallengeRequiredError || error is SpamChallengeResolvedError {
@@ -235,7 +236,11 @@ public extension TSOutgoingMessage {
                 }
 
                 if recipientState.canHaveErrorCode {
-                    recipientState.errorCode = (error as NSError).code
+                    if error is UntrustedIdentityError {
+                        recipientState.errorCode = OWSErrorCode.untrustedIdentity.rawValue
+                    } else {
+                        recipientState.errorCode = OWSErrorCode.genericFailure.rawValue
+                    }
                 }
             }
         }
@@ -250,7 +255,28 @@ public extension TSOutgoingMessage {
         transaction tx: DBWriteTransaction
     ) {
         anyUpdateOutgoingMessage(transaction: tx) { outgoingMessage in
-            if let error {
+            if error is AppExpiredError {
+                // TODO: Don't store rasterized strings in the database.
+                outgoingMessage.mostRecentFailureText = OWSLocalizedString(
+                    "ERROR_SENDING_EXPIRED",
+                    comment: "Error indicating a send failure due to an expired application."
+                )
+            } else if error is NotRegisteredError {
+                // TODO: Don't store rasterized strings in the database.
+                let tsAccountManager = DependenciesBridge.shared.tsAccountManager
+                switch tsAccountManager.registrationState(tx: tx).isPrimaryDevice {
+                case .some(true), .none:
+                    outgoingMessage.mostRecentFailureText = OWSLocalizedString(
+                        "ERROR_SENDING_DEREGISTERED",
+                        comment: "Error indicating a send failure due to a deregistered application.",
+                    )
+                case .some(false):
+                    outgoingMessage.mostRecentFailureText = OWSLocalizedString(
+                        "ERROR_SENDING_DELINKED",
+                        comment: "Error indicating a send failure due to a delinked application.",
+                    )
+                }
+            } else if let error {
                 outgoingMessage.mostRecentFailureText = error.userErrorDescription
             }
 
@@ -284,6 +310,11 @@ public extension TSOutgoingMessage {
             }
         }
     }
+
+    /// Called when a message successfully sends.
+    /// Subclasses that need to know when a message send succeeds can override this.
+    @objc
+    func updateWithSendSuccess(tx: DBWriteTransaction) { }
 }
 
 #if TESTABLE_BUILD
@@ -323,14 +354,16 @@ public extension TSOutgoingMessage {
     static func messageStateForRecipientStates(
         _ recipientStates: [TSOutgoingMessageRecipientState]
     ) -> TSOutgoingMessageState {
-        var hasFailedRecipient: Bool = false
+        var hasSendingReceipient = false
+        var hasPendingRecipient = false
+        var hasFailedRecipient = false
 
         for recipientState in recipientStates {
             switch recipientState.status {
             case .sending:
-                return .sending
+                hasSendingReceipient = true
             case .pending:
-                return .pending
+                hasPendingRecipient = true
             case .failed:
                 hasFailedRecipient = true
             case .skipped, .sent, .delivered, .read, .viewed:
@@ -338,11 +371,16 @@ public extension TSOutgoingMessage {
             }
         }
 
+        if hasSendingReceipient {
+            return .sending
+        }
+        if hasPendingRecipient {
+            return .pending
+        }
         if hasFailedRecipient {
             return .failed
-        } else {
-            return .sent
         }
+        return .sent
     }
 
     @objc
@@ -567,6 +605,20 @@ extension TSOutgoingMessage {
             parentMessage: self,
             tx: tx
         )
+    }
+
+    // MARK: - Polls
+
+    @objc
+    func buildPollProto(tx: DBReadTransaction) -> SSKProtoDataMessagePollCreate? {
+        do {
+            return try DependenciesBridge.shared.pollMessageManager.buildProtoForSending(
+                parentMessage: self,
+                tx: tx
+            )
+        } catch {
+            return nil
+        }
     }
 }
 

@@ -47,7 +47,7 @@ extension TSAttachmentMigration {
     /// Phases 1/2 must be a separate transaction from phase 3, which must be different from phase 4.
     ///
     /// Phase 1: "prepare" TSMessages for migration, starting with the newest first.
-    /// This will be enabled at the same time that we enable the FeatureFlag to use v2 attachments for
+    /// This will be enabled at the same time that we enable the BuildFlag to use v2 attachments for
     /// _new_ messages, so the start point marks the cutoff between legacy and v2 attachments.
     /// We work backwards, newest first, to migrate the legacy attachments.
     /// We "prepare" a TSMessage by inserting a row into the TSAttachmentMigration table.
@@ -990,17 +990,14 @@ extension TSAttachmentMigration {
                 return nil
             }
 
-            let encryptionKey: Data
-            if
-                let oldEncryptionKey = oldAttachment.encryptionKey,
-                oldEncryptionKey.count == 64
-            {
-                encryptionKey = oldEncryptionKey
+            let attachmentKey: AttachmentKey
+            if let oldAttachmentKey = try? oldAttachment.encryptionKey.map(AttachmentKey.init(combinedKey:)) {
+                attachmentKey = oldAttachmentKey
             } else {
                 if oldAttachment.encryptionKey != nil {
                     Logger.error("TSAttachment has invalid encryption key")
                 }
-                encryptionKey = Cryptography.randomAttachmentEncryptionKey()
+                attachmentKey = .generate()
             }
 
             let pendingAttachment: TSAttachmentMigration.PendingV2AttachmentFile?
@@ -1015,7 +1012,7 @@ extension TSAttachmentMigration {
                             audioWaveform: reservedFileIds.reservedV2AttachmentAudioWaveformFileId,
                             videoStillFrame: reservedFileIds.reservedV2AttachmentVideoStillFrameFileId
                         ),
-                        encryptionKey: encryptionKey,
+                        attachmentKey: attachmentKey,
                         mimeType: oldAttachment.contentType,
                         renderingFlag: oldAttachment.attachmentType.asRenderingFlag,
                         sourceFilename: oldAttachment.sourceFilename
@@ -1046,7 +1043,7 @@ extension TSAttachmentMigration {
                                 audioWaveform: reservedFileIds.reservedV2AttachmentAudioWaveformFileId,
                                 videoStillFrame: reservedFileIds.reservedV2AttachmentVideoStillFrameFileId
                             ),
-                            encryptionKey: encryptionKey,
+                            attachmentKey: attachmentKey,
                             mimeType: oldAttachment.contentType,
                             renderingFlag: oldAttachment.attachmentType.asRenderingFlag,
                             sourceFilename: oldAttachment.sourceFilename
@@ -1099,7 +1096,7 @@ extension TSAttachmentMigration {
                         transitCdnNumber: oldAttachment.cdnNumber,
                         transitCdnKey: oldAttachment.cdnKey,
                         transitUploadTimestamp: oldAttachment.uploadTimestamp,
-                        transitEncryptionKey: encryptionKey,
+                        transitEncryptionKey: attachmentKey.combinedKey,
                         transitUnencryptedByteCount: pendingAttachment.unencryptedByteCount,
                         transitDigestSHA256Ciphertext: oldAttachment.digest,
                         lastTransitDownloadAttemptTimestamp: nil,
@@ -1118,13 +1115,13 @@ extension TSAttachmentMigration {
                         encryptedByteCount: nil,
                         unencryptedByteCount: nil,
                         mimeType: oldAttachment.contentType,
-                        encryptionKey: encryptionKey,
+                        encryptionKey: attachmentKey.combinedKey,
                         digestSHA256Ciphertext: nil,
                         contentType: nil,
                         transitCdnNumber: oldAttachment.cdnNumber,
                         transitCdnKey: oldAttachment.cdnKey,
                         transitUploadTimestamp: oldAttachment.uploadTimestamp,
-                        transitEncryptionKey: encryptionKey,
+                        transitEncryptionKey: attachmentKey.combinedKey,
                         transitUnencryptedByteCount: oldAttachment.byteCount,
                         transitDigestSHA256Ciphertext: oldAttachment.digest,
                         lastTransitDownloadAttemptTimestamp: nil,

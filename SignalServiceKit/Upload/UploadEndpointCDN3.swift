@@ -41,7 +41,7 @@ struct UploadEndpointCDN3: UploadEndpoint {
         var headers = uploadForm.headers
         headers["Tus-Resumable"] = "1.0.0"
 
-        let urlSession = signalService.urlSessionForCdn(cdnNumber: uploadForm.cdnNumber, maxResponseSize: nil)
+        let urlSession = await signalService.sharedUrlSessionForCdn(cdnNumber: uploadForm.cdnNumber, maxResponseSize: nil)
 
         let response: HTTPResponse
         do {
@@ -86,26 +86,32 @@ struct UploadEndpointCDN3: UploadEndpoint {
         attempt: Upload.Attempt<Metadata>,
         progress: OWSProgressSource?
     ) async throws(Upload.Error) {
-        let urlSession = signalService.urlSessionForCdn(cdnNumber: uploadForm.cdnNumber, maxResponseSize: nil)
+        let urlSession = await signalService.sharedUrlSessionForCdn(cdnNumber: uploadForm.cdnNumber, maxResponseSize: nil)
         let totalDataLength = attempt.encryptedDataLength
-
         var headers = uploadForm.headers
+
+        let (uploadData, truncated) = try readUploadFileChunk(
+            fileSystem: fileSystem,
+            url: attempt.fileUrl,
+            startIndex: startPoint
+        )
+        guard uploadData.count > 0 else {
+            attempt.logger.error("No data to upload")
+            return
+        }
+
+        headers["Content-Length"] = "\(uploadData.count)"
         headers["Content-Type"] = "application/offset+octet-stream"
         headers["Tus-Resumable"] = "1.0.0"
         headers["Upload-Offset"] = "\(startPoint)"
 
         let method: HTTPMethod
-        let temporaryFileUrl: URL
-        var fileToCleanup: URL?
         let uploadURL: String
         if startPoint == 0 {
             // Either first attempt or no progress so far, use entire encrypted data.
-            uploadURL = attempt.uploadLocation.absoluteString
-
             // For initial uploads, send a POST to create the file
             method = .post
-            temporaryFileUrl = attempt.fileUrl
-            headers["Content-Length"] = "\(totalDataLength)"
+            uploadURL = attempt.uploadLocation.absoluteString
             headers["Upload-Length"] = "\(totalDataLength)"
 
             // On creation, provide a checksum for the server to validate
@@ -113,37 +119,9 @@ struct UploadEndpointCDN3: UploadEndpoint {
                 headers[Constants.checksumHeaderKey] = metadata.digest.base64EncodedString()
             }
         } else {
-            // Resuming, slice attachment data in memory.
-            // TODO[CDN3]: Avoid slicing file and instead use a input stream
-            let dataSliceFileUrl: URL
-            let dataSliceLength: Int
-            do {
-                (dataSliceFileUrl, dataSliceLength) = try fileSystem.createTempFileSlice(
-                    url: attempt.fileUrl,
-                    start: startPoint
-                )
-            } catch {
-                attempt.logger.warn("Failed to create temp file slice.")
-                throw Upload.Error.unknown
-            }
-
-            uploadURL = attempt.uploadLocation.absoluteString + "/" + uploadForm.cdnKey
-
             // Use PATCH to resume the upload
             method = .patch
-            temporaryFileUrl = dataSliceFileUrl
-            fileToCleanup = dataSliceFileUrl
-            headers["Content-Length"] = "\(dataSliceLength)"
-        }
-
-        defer {
-            if let fileToCleanup {
-                do {
-                    try fileSystem.deleteFile(url: fileToCleanup)
-                } catch {
-                    owsFailDebug("Error: \(error)")
-                }
-            }
+            uploadURL = attempt.uploadLocation.absoluteString + "/" + uploadForm.cdnKey
         }
 
         do {
@@ -151,12 +129,17 @@ struct UploadEndpointCDN3: UploadEndpoint {
                 uploadURL,
                 method: method,
                 headers: headers,
-                fileUrl: temporaryFileUrl,
+                requestData: uploadData,
                 progress: progress
             )
 
             switch response.responseStatusCode {
             case 200...204:
+                if truncated {
+                    // The upload succeeded in uploading a chunk of data. Throw this error
+                    // to the caller, which should trigger an immediate resume with the next chunk
+                    throw Upload.Error.partialUpload(bytesUploaded: UInt32(clamping: uploadData.count))
+                }
                 return
             default:
                 throw Upload.Error.unexpectedResponseStatusCode(response.responseStatusCode)
@@ -190,15 +173,15 @@ struct UploadEndpointCDN3: UploadEndpoint {
             switch error {
             case let error where error.httpStatusCode == 415:
                 // 415 is a checksum error, log the error and retry
-                attempt.logger.warn("Upload checksum validation failed, retry.\(debugInfo)")
+                attempt.logger.warn("Upload checksum validation failed [415], retry.\(debugInfo)")
                 throw Upload.Error.uploadFailure(recovery: .restart(retryMode))
             case let error where (400...499).contains(error.responseStatusCode):
                 // On 4XX errors, clients should restart the upload
-                attempt.logger.warn("Unexpected upload failure, restart.\(debugInfo)")
+                attempt.logger.warn("Unexpected upload failure [\(error.responseStatusCode)], restart.\(debugInfo)")
                 throw Upload.Error.uploadFailure(recovery: .restart(retryMode))
             case let error where (500...599).contains(error.responseStatusCode):
                 // On 5XX errors, clients should try to resume the upload
-                attempt.logger.warn("Temporary upload failure, retry.\(debugInfo)")
+                attempt.logger.warn("Temporary upload failure [\(error.responseStatusCode)], retry.\(debugInfo)")
                 throw Upload.Error.uploadFailure(recovery: .resume(retryMode))
             case .networkFailure(let wrappedError):
                 let debugMessage = DebugFlags.internalLogging ? " Error: \(wrappedError.debugDescription)" : ""
@@ -210,7 +193,7 @@ struct UploadEndpointCDN3: UploadEndpoint {
                     throw Upload.Error.networkError
                 }
             default:
-                attempt.logger.warn("Unknown upload failure. (HTTP status code: \(error.responseStatusCode)) \(debugInfo)")
+                attempt.logger.warn("Unknown upload failure. [\(error.responseStatusCode)] \(debugInfo)")
                 throw Upload.Error.unknown
             }
         } catch _ as CancellationError {

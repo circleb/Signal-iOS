@@ -24,15 +24,10 @@ class DonationHeroView: UIStackView {
         self.addArrangedSubview(avatarView)
         self.setCustomSpacing(12, after: avatarView)
 
-        let titleLabel = UILabel()
-        titleLabel.textAlignment = .center
-        titleLabel.font = UIFont.dynamicTypeTitle2.semibold()
-        titleLabel.text = OWSLocalizedString(
+        let titleLabel = UILabel.title2Label(text: OWSLocalizedString(
             "DONATION_SCREENS_HEADER_TITLE",
             comment: "On donation screens, a small amount of information text is shown. This is the title for that text."
-        )
-        titleLabel.numberOfLines = 0
-        titleLabel.lineBreakMode = .byWordWrapping
+        ))
         self.addArrangedSubview(titleLabel)
         self.setCustomSpacing(6, after: titleLabel)
 
@@ -52,7 +47,7 @@ class DonationHeroView: UIStackView {
         // We'd like a link that doesn't go anywhere, because we'd like to
         // handle the tapping ourselves. We use a "fake" URL because
         // NSAttributedString needs one.
-        let linkPart = StringStyle.Part.link(SupportConstants.subscriptionFAQURL)
+        let linkPart = StringStyle.Part.link(URL.Support.Donations.subscriptionFAQ)
         let readMoreText = OWSLocalizedString(
             "DONATION_SCREENS_HEADER_READ_MORE",
             comment: "On donation screens, a small amount of information text is shown. Users can click this link to learn more information."
@@ -61,12 +56,7 @@ class DonationHeroView: UIStackView {
             descriptionBodyText,
             " ",
             readMoreText
-        ]).styled(with: .color(UIColor.Signal.label), .font(.dynamicTypeBody))
-        descriptionTextView.linkTextAttributes = [
-            .foregroundColor: UIColor.Signal.accent,
-            .underlineColor: UIColor.clear,
-            .underlineStyle: NSUnderlineStyle.single.rawValue
-        ]
+        ]).styled(with: .color(UIColor.Signal.secondaryLabel), .font(.dynamicTypeBody))
         descriptionTextView.textAlignment = .center
     }
 

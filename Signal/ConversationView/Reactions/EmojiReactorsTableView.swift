@@ -21,7 +21,7 @@ class EmojiReactorsTableView: UITableView {
         super.init(frame: .zero, style: .plain)
 
         dataSource = self
-        backgroundColor = Theme.actionSheetBackgroundColor
+        backgroundColor = .clear
         separatorStyle = .none
 
         register(EmojiReactorCell.self, forCellReuseIdentifier: EmojiReactorCell.reuseIdentifier)
@@ -81,7 +81,7 @@ private class EmojiReactorCell: UITableViewCell {
         backgroundColor = .clear
         selectionStyle = .none
 
-        layoutMargins = UIEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+        layoutMargins = UIEdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20)
 
         contentView.addSubview(avatarView)
         avatarView.autoPinLeadingToSuperviewMargin()
@@ -104,8 +104,7 @@ private class EmojiReactorCell: UITableViewCell {
     }
 
     func configure(item: EmojiReactorsTableView.ReactorItem) {
-
-        nameLabel.textColor = Theme.primaryTextColor
+        nameLabel.textColor = UIColor.Signal.label
 
         emojiLabel.text = item.emoji
 

@@ -23,8 +23,16 @@ public protocol BGProcessingTaskRunner {
     /// MUST be defined in Info.plist under the "Permitted background task scheduler identifiers" key.
     static var taskIdentifier: String { get }
 
+    /// Prefix for any logs related to the BGProcessingTask itself.
+    static var logPrefix: String? { get }
+
     /// If true, informs iOS that we require a network connection to perform the task.
     static var requiresNetworkConnectivity: Bool { get }
+
+    /// If true, informs iOS that we require external power to perform the task; typically
+    /// you want this if CPU utilization will be very high, as without power iOS is much
+    /// more aggressive at terminating the process at high CPU utilization.
+    static var requiresExternalPower: Bool { get }
 
     /// See ``BGProcessingTaskStartCondition`` documentation.
     func startCondition() -> BGProcessingTaskStartCondition
@@ -38,7 +46,9 @@ public protocol BGProcessingTaskRunner {
 }
 
 extension BGProcessingTaskRunner where Self: Sendable {
-    private var logger: PrefixedLogger { PrefixedLogger(prefix: Self.taskIdentifier) }
+    private var logger: PrefixedLogger {
+        PrefixedLogger(prefix: Self.logPrefix ?? "", suffix: "[\(Self.taskIdentifier)]")
+    }
 
     /// Must be called synchronously within appDidFinishLaunching for every BGProcessingTask
     /// regardless of whether we eventually schedule and run it or not.
@@ -58,25 +68,33 @@ extension BGProcessingTaskRunner where Self: Sendable {
                     await withCheckedContinuation { continuation in
                         appReadiness.runNowOrWhenAppDidBecomeReadyAsync { continuation.resume() }
                     }
+
                     do {
+                        logger.info("Starting...")
                         try await self.run()
                         bgTask.setTaskCompleted(success: true)
+                        logger.info("Success!")
                     } catch is CancellationError {
                         // Apple WWDC talk specifies tasks must be completed even if the expiration
                         // handler is called.
                         // Re-schedule so we try to run it again if needed.
                         let startCondition = self.startCondition()
-                        if startCondition != .never {
-                            logger.warn("Rescheduling because it was canceled.")
+                        switch startCondition {
+                        case .never:
+                            logger.warn("Cancelled: not rescheduling.")
+                        case .asSoonAsPossible, .after:
+                            logger.warn("Cancelled: rescheduling.")
                             await self.scheduleBGProcessingTask(startCondition: startCondition)
                         }
+
                         bgTask.setTaskCompleted(success: false)
                     } catch {
+                        logger.warn("Failed with error. \(error)")
                         bgTask.setTaskCompleted(success: false)
                     }
                 }
                 bgTask.expirationHandler = {
-                    logger.warn("Timed out; cancelling.")
+                    logger.warn("Canceling due to expiration.")
                     // WWDC talk says we get a grace period after the expiration handler
                     // is called; use it to cleanly cancel the task.
                     task.cancel()
@@ -112,6 +130,7 @@ extension BGProcessingTaskRunner where Self: Sendable {
             request.earliestBeginDate = date
         }
         request.requiresNetworkConnectivity = Self.requiresNetworkConnectivity
+        request.requiresExternalPower = Self.requiresExternalPower
 
         do {
             try BGTaskScheduler.shared.submit(request)
@@ -175,7 +194,7 @@ extension BGProcessingTaskRunner where Self: Sendable {
         backgroundMessageFetcherFactory: BackgroundMessageFetcherFactory,
         operation: () async throws -> T,
     ) async throws -> T {
-        let backgroundMessageFetcher = backgroundMessageFetcherFactory.buildFetcher(useWebSocket: true)
+        let backgroundMessageFetcher = backgroundMessageFetcherFactory.buildFetcher()
 
         // We want a chat connection, and if we get a chat connection, we're also
         // going to need to deal with message processing.
@@ -188,11 +207,7 @@ extension BGProcessingTaskRunner where Self: Sendable {
         // for any incoming messages so that we can tear down gracefully.
         try? await backgroundMessageFetcher.waitForFetchingProcessingAndSideEffects()
 
-        // Wrap the cleanup of message processing in a new Task, so if we're
-        // canceled, that method doesn't inherit our cancellation.
-        await Task {
-            await backgroundMessageFetcher.stopAndWaitBeforeSuspending()
-        }.value
+        await backgroundMessageFetcher.stopAndWaitBeforeSuspending()
 
         // Pass the result of operation() to the caller.
         return try result.get()

@@ -16,6 +16,7 @@ class ExperienceUpgradeManager {
 
     static func presentNext(fromViewController: UIViewController) -> Bool {
         var shouldClearNewDeviceNotification = false
+        var shouldClearBackupsEnabledDetails = false
 
         let optionalNext = SSKEnvironment.shared.databaseStorageRef.read { transaction -> ExperienceUpgrade? in
             let tx = transaction
@@ -79,16 +80,29 @@ class ExperienceUpgradeManager {
                             .checkPreconditionsForContactsPermissionReminder()
                     case .backupKeyReminder:
                         return ExperienceUpgradeManifest
-                            .checkPreconditionsForBackupKeyReminder(
-                                remoteConfig: RemoteConfig.current,
+                            .checkPreconditionsForRecoveryKeyReminder(
+                                backupSettingsStore: BackupSettingsStore(),
+                                tsAccountManager: DependenciesBridge.shared.tsAccountManager,
                                 transaction: transaction,
                             )
                     case .enableBackupsReminder:
                         return ExperienceUpgradeManifest
                             .checkPreconditionsForBackupEnablementReminder(
-                                remoteConfig: RemoteConfig.current,
-                                transaction: transaction
+                                backupSettingsStore: BackupSettingsStore(),
+                                tsAccountManager: DependenciesBridge.shared.tsAccountManager,
+                                transaction: transaction,
                             )
+                    case .haveEnabledBackupsNotification:
+                        let result = ExperienceUpgradeManifest
+                            .checkPreconditionsForEnabledBackupsNotification(tx: tx)
+                        switch result {
+                        case .display:
+                            return true
+                        case .skip:
+                            return false
+                        case .clearStoredDetails:
+                            shouldClearBackupsEnabledDetails = true
+                        }
                     case .unrecognized:
                         break
                     }
@@ -100,6 +114,12 @@ class ExperienceUpgradeManager {
         if shouldClearNewDeviceNotification {
             DependenciesBridge.shared.db.write { tx in
                 DependenciesBridge.shared.deviceStore.clearMostRecentlyLinkedDeviceDetails(tx: tx)
+            }
+        }
+
+        if shouldClearBackupsEnabledDetails {
+            DependenciesBridge.shared.db.write { tx in
+                BackupSettingsStore().clearLastBackupEnabledDetails(tx: tx)
             }
         }
 
@@ -222,7 +242,8 @@ class ExperienceUpgradeManager {
                 .inactivePrimaryDeviceReminder,
                 .contactPermissionReminder,
                 .backupKeyReminder,
-                .enableBackupsReminder:
+                .enableBackupsReminder,
+                .haveEnabledBackupsNotification:
             return true
         case .remoteMegaphone:
             // Remote megaphones are always presentable. We filter out any with
@@ -249,7 +270,7 @@ class ExperienceUpgradeManager {
             return NotificationPermissionReminderMegaphone(experienceUpgrade: experienceUpgrade, fromViewController: fromViewController)
         case .newLinkedDeviceNotification:
             let mostRecentlyLinkedDeviceDetails = db.read { tx in
-                try? deviceStore.mostRecentlyLinkedDeviceDetails(tx: tx)
+                deviceStore.mostRecentlyLinkedDeviceDetails(tx: tx)
             }
 
             guard let mostRecentlyLinkedDeviceDetails else {
@@ -323,11 +344,27 @@ class ExperienceUpgradeManager {
                 fromViewController: fromViewController
             )
         case .backupKeyReminder:
-            return BackupKeyReminderMegaphone(experienceUpgrade: experienceUpgrade, fromViewController: fromViewController)
+            return RecoveryKeyReminderMegaphone(experienceUpgrade: experienceUpgrade, fromViewController: fromViewController)
         case .enableBackupsReminder:
             return BackupEnablementMegaphone(
                 experienceUpgrade: experienceUpgrade,
                 fromViewController: fromViewController
+            )
+        case .haveEnabledBackupsNotification:
+            let lastBackupsEnabledDetails = db.read { tx in
+                BackupSettingsStore().lastBackupEnabledDetails(tx: tx)
+            }
+
+            guard let lastBackupsEnabledDetails else {
+                owsFailDebug("Missing lastBackupsEnabledDetails")
+                return nil
+            }
+
+            return BackupsEnabledNotificationMegaphone(
+                experienceUpgrade: experienceUpgrade,
+                fromViewController: fromViewController,
+                backupsEnabledTime: lastBackupsEnabledDetails.enabledTime,
+                db: db
             )
         case .unrecognized:
             return nil

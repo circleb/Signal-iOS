@@ -3,26 +3,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-private extension UserDefaults {
-    static var app: UserDefaults {
-        CurrentAppContext().appUserDefaults()
-    }
-
-    static func removeAll() {
-        UserDefaults.standard.removeAll()
-        app.removeAll()
-    }
-
-    private func removeAll() {
-        owsAssertDebug(CurrentAppContext().isMainApp)
-
-        for (key, _) in self.dictionaryRepresentation() {
-            self.removeObject(forKey: key)
-        }
-        self.synchronize()
-    }
-}
-
 public enum NotificationType: UInt {
     case noNameNoPreview = 0
     case nameNoPreview = 1
@@ -56,10 +36,10 @@ public class Preferences {
         case wasViewOnceTooltipShown = "OWSPreferencesKeyWasViewOnceTooltipShown"
         case wasDeleteForEveryoneConfirmationShown = "OWSPreferencesKeyWasDeleteForEveryoneConfirmationShown"
         case wasBlurTooltipShown = "OWSPreferencesKeyWasBlurTooltipShown"
-        case wasGroupCallTooltipShown = "OWSPreferencesKeyWasGroupCallTooltipShown"
-        case wasGroupCallTooltipShownCount = "OWSPreferencesKeyWasGroupCallTooltipShownCount"
 
         // Obsolete
+        // case wasGroupCallTooltipShown = "OWSPreferencesKeyWasGroupCallTooltipShown"
+        // case wasGroupCallTooltipShownCount = "OWSPreferencesKeyWasGroupCallTooltipShownCount"
         // case callKitEnabled = "CallKitEnabled"
         // case callKitPrivacyEnabled = "CallKitPrivacyEnabled"
     }
@@ -81,13 +61,6 @@ public class Preferences {
     }
 
     // MARK: Helpers
-
-    public func removeAllValues() {
-        UserDefaults.removeAll()
-
-        // We don't need to clear our key-value store; database
-        // storage is cleared otherwise.
-    }
 
     private func hasValue(forKey key: Key) -> Bool {
         let result = SSKEnvironment.shared.databaseStorageRef.read { transaction in
@@ -164,19 +137,19 @@ public class Preferences {
     // MARK: Logging
 
     public static var isFailDebugEnabled: Bool {
-        return FeatureFlags.failDebug && UserDefaults.app.bool(forKey: UserDefaultsKeys.isFailDebugEnabled)
+        return BuildFlags.failDebug && CurrentAppContext().appUserDefaults().bool(forKey: UserDefaultsKeys.isFailDebugEnabled)
     }
 
     public static func setIsFailDebugEnabled(_ value: Bool) {
-        UserDefaults.app.set(value, forKey: UserDefaultsKeys.isFailDebugEnabled)
+        CurrentAppContext().appUserDefaults().set(value, forKey: UserDefaultsKeys.isFailDebugEnabled)
     }
 
     public static var isAudibleErrorLoggingEnabled: Bool {
-        UserDefaults.app.bool(forKey: UserDefaultsKeys.isAudibleErrorLoggingEnabled) && FeatureFlags.choochoo
+        CurrentAppContext().appUserDefaults().bool(forKey: UserDefaultsKeys.isAudibleErrorLoggingEnabled) && BuildFlags.choochoo
     }
 
     public static func setIsAudibleErrorLoggingEnabled(_ value: Bool) {
-        UserDefaults.app.set(value, forKey: UserDefaultsKeys.isAudibleErrorLoggingEnabled)
+        CurrentAppContext().appUserDefaults().set(value, forKey: UserDefaultsKeys.isAudibleErrorLoggingEnabled)
     }
 
     // MARK: Specific Preferences
@@ -275,26 +248,6 @@ public class Preferences {
 
     public func setWasViewOnceTooltipShown() {
         setBool(true, forKey: .wasViewOnceTooltipShown)
-    }
-
-    public func wasGroupCallTooltipShown(withTransaction transaction: DBReadTransaction) -> Bool {
-        keyValueStore.getBool(Key.wasGroupCallTooltipShown.rawValue, defaultValue: false, transaction: transaction)
-    }
-
-    public func incrementGroupCallTooltipShownCount() {
-        let currentCount = uint(forKey: .wasGroupCallTooltipShownCount, defaultValue: 0)
-        let incrementedCount = currentCount + 1
-
-        // If we have shown the tooltip more than 3 times, don't show it again.
-        if incrementedCount > 3 {
-            SSKEnvironment.shared.databaseStorageRef.write(block: setWasGroupCallTooltipShown(tx:))
-        } else {
-            setUInt(incrementedCount, forKey: .wasGroupCallTooltipShownCount)
-        }
-    }
-
-    public func setWasGroupCallTooltipShown(tx: DBWriteTransaction) {
-        setBool(true, forKey: .wasGroupCallTooltipShown, tx: tx)
     }
 
     public var wasBlurTooltipShown: Bool {

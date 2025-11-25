@@ -744,7 +744,7 @@ extension OWSContactsManager: ContactManager {
             return nil
         }
 
-        guard avatarData.ows_isValidImage else {
+        guard DataImageSource(avatarData).ows_isValidImage else {
             owsFailDebug("Couldn't validate system contact avatar")
             return nil
         }
@@ -1211,7 +1211,7 @@ extension OWSContactsManager: ContactManager {
         }
     }
 
-    private func intersectContacts(_ phoneNumbers: Set<String>) async throws -> Set<SignalRecipient> {
+    private func intersectContacts(_ phoneNumbers: Set<String>) async throws -> [SignalRecipient] {
         if phoneNumbers.isEmpty {
             return []
         }

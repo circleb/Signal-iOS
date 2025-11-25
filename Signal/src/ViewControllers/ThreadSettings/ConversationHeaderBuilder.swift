@@ -27,6 +27,7 @@ struct ConversationHeaderBuilder {
         static let search    = Options(rawValue: 1 << 4)
 
         static let renderLocalUserAsNoteToSelf = Options(rawValue: 1 << 5)
+        static let noBackground = Options(rawValue: 1 << 6)
     }
 
     static func buildHeader(
@@ -212,17 +213,19 @@ struct ConversationHeaderBuilder {
         if options.contains(.message) {
             buttons.append(buildIconButton(
                 icon: .settingsChats,
-                text: OWSLocalizedString(
-                        "CONVERSATION_SETTINGS_MESSAGE_BUTTON",
-                        comment: "Button to message the chat"
-                    ),
+                title: OWSLocalizedString(
+                    "CONVERSATION_SETTINGS_MESSAGE_BUTTON",
+                    comment: "Button to message the chat"
+                ),
                 action: { [weak delegate] in
                     guard let delegate = delegate else { return }
-                    SignalApp.shared.presentConversationForThread(
-                        threadUniqueId: delegate.thread.uniqueId,
-                        action: .compose,
-                        animated: true
-                    )
+                    SignalApp.shared.dismissAllModals(animated: true, completion: {
+                        SignalApp.shared.presentConversationForThread(
+                            threadUniqueId: delegate.thread.uniqueId,
+                            action: .compose,
+                            animated: true
+                        )
+                    })
                 }
             ))
         }
@@ -243,7 +246,7 @@ struct ConversationHeaderBuilder {
             if options.contains(.videoCall) {
                 buttons.append(buildIconButton(
                     icon: .buttonVideoCall,
-                    text: OWSLocalizedString(
+                    title: OWSLocalizedString(
                         "CONVERSATION_SETTINGS_VIDEO_CALL_BUTTON",
                         comment: "Button to start a video call"
                     ),
@@ -257,7 +260,7 @@ struct ConversationHeaderBuilder {
             if !delegate.thread.isGroupThread, options.contains(.audioCall) {
                 buttons.append(buildIconButton(
                     icon: .buttonVoiceCall,
-                    text: OWSLocalizedString(
+                    title: OWSLocalizedString(
                         "CONVERSATION_SETTINGS_VOICE_CALL_BUTTON",
                         comment: "Button to start a voice call"
                     ),
@@ -272,31 +275,28 @@ struct ConversationHeaderBuilder {
         if options.contains(.mute) {
             buttons.append(buildIconButton(
                 icon: .buttonMute,
-                text: delegate.threadViewModel.isMuted
-                    ? OWSLocalizedString(
-                        "CONVERSATION_SETTINGS_MUTED_BUTTON",
-                        comment: "Button to unmute the chat"
-                    )
-                    : OWSLocalizedString(
-                        "CONVERSATION_SETTINGS_MUTE_BUTTON",
-                        comment: "Button to mute the chat"
-                    ),
-                action: { [weak delegate] in
-                    guard let delegate = delegate else { return }
-                    ConversationSettingsViewController.showMuteUnmuteActionSheet(
-                        for: delegate.threadViewModel,
-                        from: delegate
-                    ) { [weak delegate] in
+                title: delegate.threadViewModel.isMuted
+                ? OWSLocalizedString(
+                    "CONVERSATION_SETTINGS_MUTED_BUTTON",
+                    comment: "Button to unmute the chat"
+                )
+                : OWSLocalizedString(
+                    "CONVERSATION_SETTINGS_MUTE_BUTTON",
+                    comment: "Button to mute the chat"
+                ),
+                menu: ConversationSettingsViewController.muteUnmuteMenu(
+                    for: delegate.threadViewModel,
+                    actionExecuted: { [weak delegate] in
                         delegate?.updateTableContents(shouldReload: true)
                     }
-                }
+                )
             ))
         }
 
         if options.contains(.search), !delegate.isGroupV1Thread {
             buttons.append(buildIconButton(
                 icon: .buttonSearch,
-                text: OWSLocalizedString(
+                title: OWSLocalizedString(
                     "CONVERSATION_SETTINGS_SEARCH_BUTTON",
                     comment: "Button to search the chat"
                 ),
@@ -338,16 +338,28 @@ struct ConversationHeaderBuilder {
     }
 
     private var maxIconButtonWidth: CGFloat = 0
-    mutating func buildIconButton(icon: ThemeIcon, text: String, isEnabled: Bool = true, action: @escaping () -> Void) -> UIView {
-        let button = SettingsHeaderButton(
-            text: text,
-            icon: icon,
-            backgroundColor: delegate.tableViewController.cellBackgroundColor,
-            isEnabled: isEnabled
-        ) { [weak delegate] in
+    mutating func buildIconButton(icon: ThemeIcon, title: String, isEnabled: Bool = true, action: @escaping () -> Void) -> UIView {
+        let button = SettingsHeaderButton(title: title.capitalized, icon: icon) { [weak delegate] in
             delegate?.tappedButton()
             action()
         }
+        button.isEnabled = isEnabled
+        button.buttonBackgroundColor = delegate.tableViewController.cellBackgroundColor
+        button.selectedButtonBackgroundColor = delegate.tableViewController.cellSelectedBackgroundColor
+
+        if maxIconButtonWidth < button.minimumWidth {
+            maxIconButtonWidth = button.minimumWidth
+        }
+
+        return button
+    }
+
+    mutating func buildIconButton(icon: ThemeIcon, title: String, isEnabled: Bool = true, menu: UIMenu) -> UIView {
+        let button = SettingsHeaderButton(title: title.capitalized, icon: icon)
+        button.isEnabled = isEnabled
+        button.menu = menu
+        button.buttonBackgroundColor = delegate.tableViewController.cellBackgroundColor
+        button.selectedButtonBackgroundColor = delegate.tableViewController.cellSelectedBackgroundColor
 
         if maxIconButtonWidth < button.minimumWidth {
             maxIconButtonWidth = button.minimumWidth
@@ -368,7 +380,6 @@ struct ConversationHeaderBuilder {
         previewView.textAlignment = .center
         previewView.numberOfLines = 2
 
-        subviews.append(UIView.spacer(withHeight: hasSubtitleLabel ? 4 : 8))
         subviews.append(previewView)
         hasSubtitleLabel = true
     }
@@ -381,8 +392,9 @@ struct ConversationHeaderBuilder {
         ), for: .normal)
         button.setTitleColor(Theme.secondaryTextAndIconColor, for: .normal)
         button.titleLabel?.font = .dynamicTypeSubheadlineClamped
+        // For some reason, setting edge insets to 0 uses a default, non-zero inset
+        button.ows_contentEdgeInsets = .init(hMargin: 0, vMargin: .ulpOfOne)
 
-        subviews.append(UIView.spacer(withHeight: hasSubtitleLabel ? 4 : 8))
         subviews.append(button)
         hasSubtitleLabel = true
     }
@@ -403,24 +415,23 @@ struct ConversationHeaderBuilder {
         return avatarView
     }
 
-    func buildThreadNameLabel() -> OWSButton {
-        let button = OWSButton()
-        button.setAttributedTitle(delegate.threadAttributedString(
+    func buildThreadNameLabel() -> UIButton {
+        var config = UIButton.Configuration.plain()
+        let title = delegate.threadAttributedString(
             renderLocalUserAsNoteToSelf: options.contains(.renderLocalUserAsNoteToSelf),
             tx: transaction
-        ), for: .normal)
-        button.titleLabel?.numberOfLines = 0
-        button.titleLabel?.textAlignment = .center
-        button.titleLabel?.lineBreakMode = .byWordWrapping
-        button.titleLabel?.setContentHuggingHigh()
-        button.titleLabel?.autoMatch(.height, to: .height, of: button)
-        if delegate.canTapThreadName {
-            button.block = { [weak delegate] in
+        ).styled(with: .alignment(.center))
+        config.attributedTitle = AttributedString(title)
+        config.titleLineBreakMode = .byWordWrapping
+        config.baseForegroundColor = UIColor.Signal.label
+        let action: UIAction? = if delegate.canTapThreadName {
+            UIAction { [weak delegate] _ in
                 delegate?.didTapThreadName()
             }
-            button.dimsWhenHighlighted = true
+        } else {
+            nil
         }
-        return button
+        return UIButton(configuration: config, primaryAction: action)
     }
 
     static func threadAttributedString(
@@ -514,12 +525,14 @@ struct ConversationHeaderBuilder {
         let header = UIStackView(arrangedSubviews: subviews)
         header.axis = .vertical
         header.alignment = .center
-        header.layoutMargins = delegate.tableViewController.cellOuterInsetsWithMargin(bottom: 24)
+        header.layoutMargins = .init(top: 0, left: 0, bottom: 24, right: 0)
         header.isLayoutMarginsRelativeArrangement = true
 
         header.isUserInteractionEnabled = true
         header.accessibilityIdentifier = UIView.accessibilityIdentifier(in: delegate, name: "mainSectionHeader")
-        header.addBackgroundView(withBackgroundColor: delegate.tableViewController.tableBackgroundColor)
+        if !options.contains(.noBackground) {
+            header.addBackgroundView(withBackgroundColor: delegate.tableViewController.tableBackgroundColor)
+        }
 
         return header
     }

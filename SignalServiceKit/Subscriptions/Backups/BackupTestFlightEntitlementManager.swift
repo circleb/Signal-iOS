@@ -8,23 +8,39 @@ import DeviceCheck
 
 /// Responsible for managing paid-tier Backup entitlements for TestFlight users,
 /// who aren't able to use StoreKit or perform real-money transactions.
-public final class BackupTestFlightEntitlementManager {
+public protocol BackupTestFlightEntitlementManager {
+    func acquireEntitlement() async throws
+
+    func setRenewEntitlementIsNecessary(tx: DBWriteTransaction)
+    func renewEntitlementIfNecessary() async throws
+}
+
+// MARK: -
+
+final class BackupTestFlightEntitlementManagerImpl: BackupTestFlightEntitlementManager {
     private enum StoreKeys {
         static let lastEntitlementRenewalDate = "lastEntitlementRenewalDate"
     }
 
     private let appAttestManager: AppAttestManager
     private let backupPlanManager: BackupPlanManager
+    private let backupSubscriptionIssueStore: BackupSubscriptionIssueStore
+    private let backupSubscriptionManager: BackupSubscriptionManager
     private let dateProvider: DateProvider
     private let db: DB
     private let logger: PrefixedLogger
     private let kvStore: KeyValueStore
+    private let serialTaskQueue: ConcurrentTaskQueue
+    private let tsAccountManager: TSAccountManager
 
     init(
         backupPlanManager: BackupPlanManager,
+        backupSubscriptionIssueStore: BackupSubscriptionIssueStore,
+        backupSubscriptionManager: BackupSubscriptionManager,
         dateProvider: @escaping DateProvider,
         db: DB,
         networkManager: NetworkManager,
+        tsAccountManager: TSAccountManager,
     ) {
         self.logger = PrefixedLogger(prefix: "[Backups]")
 
@@ -35,20 +51,39 @@ public final class BackupTestFlightEntitlementManager {
             networkManager: networkManager
         )
         self.backupPlanManager = backupPlanManager
+        self.backupSubscriptionIssueStore = backupSubscriptionIssueStore
+        self.backupSubscriptionManager = backupSubscriptionManager
         self.dateProvider = dateProvider
         self.db = db
         self.kvStore = KeyValueStore(collection: "BackupTestFlightEntitlementManager")
+        self.serialTaskQueue = ConcurrentTaskQueue(concurrentLimit: 1)
+        self.tsAccountManager = tsAccountManager
     }
 
     // MARK: -
 
-    public func acquireEntitlement() async throws {
-        owsPrecondition(FeatureFlags.Backups.avoidStoreKitForTesters)
+    func acquireEntitlement() async throws {
+        try await serialTaskQueue.run {
+            try await _acquireEntitlement()
+        }
+    }
+
+    private func _acquireEntitlement() async throws {
+        owsPrecondition(BuildFlags.Backups.avoidStoreKitForTesters)
 
         guard TSConstants.isUsingProductionService else {
             // If we're on Staging, no need to do anything – all accounts on
             // Staging get the entitlement automatically.
             logger.info("Skipping acquiring Backup entitlement: on Staging!")
+            return
+        }
+
+        guard !BuildFlags.Backups.avoidAppAttestForDevs else {
+            // If we're on a dev build, we can't use AppAttest. If you're a dev
+            // who needs the entitlement (i.e., paid-tier Backup auth
+            // credentials), make sure you've gotten it for your account via
+            // another path.
+            logger.warn("WARNING! Skipping acquiring Backup entitlement: AppAttest not supported. Make sure your account has the entitlement via other means, if necessary.")
             return
         }
 
@@ -59,36 +94,47 @@ public final class BackupTestFlightEntitlementManager {
 
     // MARK: -
 
-    public func renewEntitlementIfNecessary() async throws {
-        let isCurrentlyTesterBuild = FeatureFlags.Backups.avoidStoreKitForTesters
+    func setRenewEntitlementIsNecessary(tx: DBWriteTransaction) {
+        kvStore.removeValue(forKey: StoreKeys.lastEntitlementRenewalDate, transaction: tx)
+    }
+
+    func renewEntitlementIfNecessary() async throws {
         let (
+            isRegisteredPrimaryDevice,
+            isCurrentlyTesterBuild,
             currentBackupPlan,
-            lastEntitlementRenewalDate
+            lastEntitlementRenewalDate,
         ): (
+            Bool,
+            Bool,
             BackupPlan,
             Date?
         ) = db.read { tx in
             (
+                tsAccountManager.registrationState(tx: tx).isRegisteredPrimaryDevice,
+                BuildFlags.Backups.avoidStoreKitForTesters,
                 backupPlanManager.backupPlan(tx: tx),
                 kvStore.getDate(StoreKeys.lastEntitlementRenewalDate, transaction: tx)
             )
         }
 
+        guard isRegisteredPrimaryDevice else {
+            return
+        }
+
+        let optimizeLocalStorage: Bool
         switch currentBackupPlan {
         case .disabled, .disabling, .free, .paid, .paidExpiringSoon:
             // If we're not a paid-tier tester, nothing to do.
             return
-        case .paidAsTester:
-            break
+        case .paidAsTester(let _optimizeLocalStorage):
+            optimizeLocalStorage = _optimizeLocalStorage
         }
 
         guard isCurrentlyTesterBuild else {
-            // Uh oh: we think we're a paid-tier tester, but our current build
-            // isn't a tester build. We likely downgraded to prod builds, so
-            // correspondingly downgrade our BackupPlan to free.
-            try await db.awaitableWriteWithRollbackIfThrows { tx in
-                try backupPlanManager.setBackupPlan(.free, tx: tx)
-            }
+            try await downgradeForNoLongerTestFlight(
+                hadOptimizeLocalStorage: optimizeLocalStorage
+            )
             return
         }
 
@@ -96,7 +142,6 @@ public final class BackupTestFlightEntitlementManager {
             let lastEntitlementRenewalDate,
             lastEntitlementRenewalDate.addingTimeInterval(3 * .day) > dateProvider()
         {
-            logger.info("Not renewing; we did so recently.")
             return
         }
 
@@ -108,6 +153,40 @@ public final class BackupTestFlightEntitlementManager {
                 key: StoreKeys.lastEntitlementRenewalDate,
                 transaction: tx
             )
+        }
+    }
+
+    private func downgradeForNoLongerTestFlight(
+        hadOptimizeLocalStorage: Bool,
+    ) async throws {
+        let iapSubscription = try await backupSubscriptionManager.fetchAndMaybeDowngradeSubscription()
+
+        // We think we're a paid-tier tester, but our current build isn't a
+        // tester build! We likely went from TestFlight -> App Store builds.
+        //
+        // It's plausible, though, that we are still a paid-tier user by
+        // virtue of having an IAP subscription either from before we were
+        // on TestFlight, or from having moved to iOS from an Android on
+        // which we had an IAP subscription.
+        //
+        // To that end, check if we have an active IAP subscription. If so,
+        // set to `.paid`. If not, set to `.free`.
+        let newBackupPlan: BackupPlan
+        let shouldWarnDowngraded: Bool
+        if let iapSubscription, iapSubscription.active {
+            newBackupPlan = .paid(optimizeLocalStorage: hadOptimizeLocalStorage)
+            shouldWarnDowngraded = false
+        } else {
+            newBackupPlan = .free
+            shouldWarnDowngraded = true
+        }
+
+        try await db.awaitableWriteWithRollbackIfThrows { tx in
+            try backupPlanManager.setBackupPlan(newBackupPlan, tx: tx)
+
+            if shouldWarnDowngraded {
+                backupSubscriptionIssueStore.setShouldWarnTestFlightSubscriptionExpired(true, tx: tx)
+            }
         }
     }
 }
@@ -126,7 +205,7 @@ public final class BackupTestFlightEntitlementManager {
 ///
 /// However, to prevent abuse we need to restrict these requests to first-party
 /// TestFlight builds. We do this by gating the request with `AppAttest`, and
-/// then limit the requests to TestFlight-flavored builds using a `FeatureFlag`.
+/// then limit the requests to TestFlight-flavored builds using a BuildFlag.
 private struct AppAttestManager {
 
     /// Actions that require `DeviceCheck` attestation.
@@ -141,6 +220,12 @@ private struct AppAttestManager {
         case notSupported
         case networkError
         case genericError
+
+        /// iOS failed to generate an assertion using a previously-attested key.
+        ///
+        /// Believed to be an iOS issue, indicating that the previously-attested
+        /// key should be discarded.
+        case failedToGenerateAssertionWithPreviouslyAttestedKey
     }
 
     /// Represents a key, stored on this device in the Secure Enclave, which
@@ -181,7 +266,11 @@ private struct AppAttestManager {
         self.networkManager = networkManager
     }
 
-    private func parseDCError(_ dcError: DCError) -> AttestationError {
+    private func parseDCError(
+        _ dcError: DCError,
+        function: String = #function,
+        line: Int = #line,
+    ) -> AttestationError {
         switch dcError.code {
         case .featureUnsupported:
             return .notSupported
@@ -190,7 +279,7 @@ private struct AppAttestManager {
         case .unknownSystemFailure, .invalidInput, .invalidKey:
             fallthrough
         @unknown default:
-            owsFailDebug("Unexpected DCError code: \(dcError.code)", logger: logger)
+            owsFailDebug("Unexpected DCError code: \(dcError.code)", logger: logger, function: function, line: line)
             return .genericError
         }
     }
@@ -204,7 +293,7 @@ private struct AppAttestManager {
     /// request to Signal servers to perform the given action. That assertion
     /// is sent alongside the request to Signal servers, who upon validating the
     /// assertion will perform the action.
-    public func performAttestationAction(
+    func performAttestationAction(
         _ action: AttestationAction,
     ) async throws(AttestationError) {
         guard attestationService.isSupported else {
@@ -215,16 +304,24 @@ private struct AppAttestManager {
         let attestedKey = try await getOrGenerateAttestedKey()
 
         logger.info("Generating assertion.")
-        let requestAssertion = try await generateAssertionForAction(
-            action,
-            attestedKey: attestedKey
-        )
+        do {
+            let requestAssertion = try await generateAssertionForAction(
+                action,
+                attestedKey: attestedKey
+            )
 
-        logger.info("Performing attestation action with assertion.")
-        try await _performAttestationAction(
-            keyId: attestedKey.identifier,
-            requestAssertion: requestAssertion
-        )
+            logger.info("Performing attestation action with assertion.")
+            try await _performAttestationAction(
+                keyId: attestedKey.identifier,
+                requestAssertion: requestAssertion
+            )
+        } catch .failedToGenerateAssertionWithPreviouslyAttestedKey {
+            // If we failed to generate an assertion with a previously-attested
+            // key, throw that key away and try again.
+            logger.warn("Failed to generate assertion with previously-attested key. Wiping key and starting over.")
+            await wipeAttestedKeyId()
+            try await performAttestationAction(action)
+        }
     }
 
     private func _performAttestationAction(
@@ -265,7 +362,7 @@ private struct AppAttestManager {
     /// key if necessary, or returns an existing key if attestation was
     /// performed in the past.
     private func getOrGenerateAttestedKey() async throws(AttestationError) -> AttestedKey {
-        if let attestedKeyId = readAttestedKeyId() {
+        if let attestedKeyId = await readAttestedKeyId() {
             logger.info("Using previously-attested key.")
             return AttestedKey(identifier: attestedKeyId)
         }
@@ -451,7 +548,25 @@ private struct AppAttestManager {
                 clientDataHash: Data(SHA256.hash(data: requestData))
             )
         } catch let dcError as DCError {
-            throw parseDCError(dcError)
+            switch dcError.code {
+            case .invalidInput, .invalidKey:
+                /// There appears to be an issue with AppAttest that can cause
+                /// the `.generateAssertion` API to throw `.invalidInput` when
+                /// using a previously-attested key, some significant percentage
+                /// of the time. Doesn't seem to be a clear pattern, and is
+                /// widely reported:
+                ///
+                /// - https://github.com/firebase/firebase-ios-sdk/issues/12629
+                /// - https://developer.apple.com/forums/thread/788405
+                ///
+                /// If nothing else, we know now that AppAttest considers this
+                /// key invalid, so we should discard it and start over.
+                ///
+                /// For good measure, handle `.invalidKey` too.
+                throw .failedToGenerateAssertionWithPreviouslyAttestedKey
+            default:
+                throw parseDCError(dcError)
+            }
         } catch {
             owsFailDebug("Unexpected error generating assertion! \(error)", logger: logger)
             throw .genericError
@@ -518,7 +633,7 @@ private struct AppAttestManager {
 
     /// Returns the identifier of a key for this device that has previously
     /// passed attestation, if one exists.
-    private func readAttestedKeyId() -> String? {
+    private func readAttestedKeyId() async -> String? {
         return db.read { tx in
             return kvStore.getString(StoreKeys.keyId, transaction: tx)
         }
@@ -529,6 +644,12 @@ private struct AppAttestManager {
     private func saveAttestedKeyId(_ keyIdentifier: String) async {
         await db.awaitableWrite { tx in
             kvStore.setString(keyIdentifier, key: StoreKeys.keyId, transaction: tx)
+        }
+    }
+
+    private func wipeAttestedKeyId() async {
+        await db.awaitableWrite { tx in
+            kvStore.removeValue(forKey: StoreKeys.keyId, transaction: tx)
         }
     }
 }
@@ -550,11 +671,13 @@ private extension TSRequest {
         assertedRequestData: Data,
         assertion: Data,
     ) -> TSRequest {
+        let urlPath = "v1/devicecheck/assert"
         var request = TSRequest(
-            url: URL(string: "v1/devicecheck/assert?keyId=\(keyIdData.asBase64Url)&request=\(assertedRequestData.asBase64Url)")!,
+            url: URL(string: "\(urlPath)?keyId=\(keyIdData.asBase64Url)&request=\(assertedRequestData.asBase64Url)")!,
             method: "POST",
             body: .data(assertion)
         )
+        request.applyRedactionStrategy(.redactURL(replacement: "\(urlPath)?[REDACTED]"))
         request.headers["Content-Type"] = "application/octet-stream"
         return request
     }
@@ -571,11 +694,13 @@ private extension TSRequest {
         keyIdData: Data,
         keyAttestation: Data,
     ) -> TSRequest {
+        let urlPath = "v1/devicecheck/attest"
         var request = TSRequest(
-            url: URL(string: "v1/devicecheck/attest?keyId=\(keyIdData.asBase64Url)")!,
+            url: URL(string: "\(urlPath)?keyId=\(keyIdData.asBase64Url)")!,
             method: "PUT",
             body: .data(keyAttestation)
         )
+        request.applyRedactionStrategy(.redactURL(replacement: "\(urlPath)?[REDACTED]"))
         request.headers["Content-Type"] = "application/octet-stream"
         return request
     }

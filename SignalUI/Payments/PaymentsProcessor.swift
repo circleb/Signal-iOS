@@ -95,9 +95,6 @@ public class PaymentsProcessor: NSObject {
             else {
                 return
             }
-            guard !DebugFlags.paymentsHaltProcessing.get() else {
-                return
-            }
 
             // Kick of processing for any payments that need
             // processing but are not yet being processed.
@@ -593,11 +590,6 @@ private class PaymentProcessingOperation {
             throw PaymentsError.killSwitch
         }
 
-        if DebugFlags.paymentsSkipSubmissionAndOutgoingVerification.get() {
-            try await Self.updatePaymentStatePromise(paymentModel: paymentModel, fromState: .outgoingUnsubmitted, toState: .outgoingUnverified)
-            return
-        }
-
         // Only try to submit transactions within the first N minutes of them
         // being initiated.  If the app is terminated right after a transaction
         // is initiated (before transaction it can be submitted), we don't want
@@ -643,17 +635,6 @@ private class PaymentProcessingOperation {
 
     private func verifyOutgoingPayment(paymentModel: TSPaymentModel) async throws {
         owsAssertDebug(paymentModel.paymentState == .outgoingUnverified)
-
-        if DebugFlags.paymentsSkipSubmissionAndOutgoingVerification.get() {
-            try await SSKEnvironment.shared.databaseStorageRef.awaitableWrite { transaction in
-                guard let paymentModel = TSPaymentModel.anyFetch(uniqueId: paymentModel.uniqueId, transaction: transaction) else {
-                    throw OWSAssertionError("Missing TSPaymentModel.")
-                }
-                paymentModel.update(mcLedgerBlockIndex: 111, transaction: transaction)
-                paymentModel.update(paymentState: .outgoingVerified, transaction: transaction)
-            }
-            return
-        }
 
         let mobileCoinAPI = try await SUIEnvironment.shared.paymentsImplRef.getMobileCoinAPI()
 
@@ -709,6 +690,28 @@ private class PaymentProcessingOperation {
             return
         }
 
+        let messageBodyText: String? = try SSKEnvironment.shared.databaseStorageRef.read { tx in
+            guard let paymentModel = TSPaymentModel.anyFetch(uniqueId: paymentModel.uniqueId, transaction: tx) else {
+                throw OWSAssertionError("Missing paymentModel.")
+            }
+            guard let picoMob = paymentModel.paymentAmount?.picoMob else {
+                return nil
+            }
+            // Reverse type direction, so it reads correctly incoming to the recipient.
+            return PaymentsFormat.paymentPreviewText(
+                amount: picoMob,
+                transaction: tx,
+                type: .incomingMessage
+            )?.nilIfEmpty
+        }
+        let messageBody: ValidatedMessageBody?
+        if let messageBodyText = messageBodyText?.nilIfEmpty {
+            messageBody = try await DependenciesBridge.shared.attachmentContentValidator
+                .prepareOversizeTextIfNeeded(MessageBody(text: messageBodyText, ranges: .empty))
+        } else {
+            messageBody = nil
+        }
+
         try await SSKEnvironment.shared.databaseStorageRef.awaitableWrite { transaction in
             guard let paymentModel = TSPaymentModel.anyFetch(uniqueId: paymentModel.uniqueId, transaction: transaction) else {
                 throw OWSAssertionError("Missing paymentModel.")
@@ -721,17 +724,16 @@ private class PaymentProcessingOperation {
                     if paymentModel.isDefragmentation {
                         PaymentsImpl.sendDefragmentationSyncMessage(paymentModel: paymentModel, transaction: transaction)
                     } else {
-                        _ = try PaymentsImpl.sendPaymentNotificationMessage(paymentModel: paymentModel, transaction: transaction)
+                        _ = try PaymentsImpl.sendPaymentNotificationMessage(
+                            paymentModel: paymentModel,
+                            messageBody: messageBody,
+                            transaction: transaction
+                        )
                         PaymentsImpl.sendOutgoingPaymentSyncMessage(paymentModel: paymentModel, transaction: transaction)
                     }
                 }
 
                 try notify()
-
-                if DebugFlags.paymentsDoubleNotify.get() {
-                    // Notify again.
-                    try notify()
-                }
 
                 try paymentModel.updatePaymentModelState(fromState: .outgoingVerified, toState: .outgoingSending, transaction: transaction)
             } catch {

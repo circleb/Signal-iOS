@@ -267,33 +267,75 @@ public extension TSMessage {
 
     // MARK: - Edits
 
-    @objc
     func removeEdits(transaction: DBWriteTransaction) {
-        try! processEdits(transaction: transaction) { record, message in
-            try record.delete(transaction.database)
+        try! processRelatedMessageEdits(
+            deleteEditRecords: true,
+            tx: transaction,
+            processMessage: { message in
+                // Don't delete the message driving the deletion, just the related edits/interactions.
+                // The presumption is the message itself will be deleted after this step.
+                guard message.uniqueId != self.uniqueId else { return }
 
-            if let message {
-                DependenciesBridge.shared.interactionDeleteManager
-                    .delete(message, sideEffects: .default(), tx: transaction)
+                // Delete the message, but since edits are already in the process of being
+                // handled, don't do anything further by passing in `.doNotDelete`
+                DependenciesBridge.shared.interactionDeleteManager.delete(
+                    message,
+                    sideEffects: .custom(deleteAssociatedEdits: false),
+                    tx: transaction
+                )
             }
-        }
+        )
     }
 
-    /// Build a list of all related edits based on this message.  An array of record, message pairs are
-    /// returned, allowing the caller to operate on one or both of these items at the same time.
+    /// Enumerate "edited messages" (ie revisions) related to self.
     ///
-    /// The processing of edit records is unbounded, but the number of edits per message
-    /// is limited by both the sender and receiver.
-    private func processEdits(
-        transaction: DBWriteTransaction,
-        block: ((EditRecord, TSMessage?) throws -> Void)
+    /// You may pass the latest revision or a prior revision. Prior revisions
+    /// are passed to `processMessage` before the latest revision. If there
+    /// aren't any prior revisions, `self` is assumed to be the latest revision.
+    ///
+    /// The message for `self` isn't re-fetched -- `self` is always passed to
+    /// `processMessage`. (Note also that `self` is always passed to
+    /// `processMessage` exactly once.)
+    ///
+    /// The processing of edit records is unbounded, but the number of edits per
+    /// message is limited by both the sender and receiver.
+    private func processRelatedMessageEdits(
+        deleteEditRecords: Bool,
+        tx: DBWriteTransaction,
+        processMessage: ((TSMessage) throws -> Void)
     ) throws {
-        let editsToProcess = try DependenciesBridge.shared.editMessageStore.findEditDeleteRecords(
-            for: self,
-            tx: transaction
-        )
-        for edit in editsToProcess {
-            try block(edit.record, edit.message)
+        let editMessageStore = DependenciesBridge.shared.editMessageStore
+        let editRecords = try editMessageStore.findEditRecords(relatedTo: self, tx: tx)
+
+        if deleteEditRecords {
+            for editRecord in editRecords {
+                try editRecord.delete(tx.database)
+            }
+        }
+
+        let pastRevisionIds = Set(editRecords.map(\.pastRevisionId))
+        var latestRevisionIds = Set(editRecords.map(\.latestRevisionId))
+        latestRevisionIds.subtract(pastRevisionIds)
+
+        if editRecords.isEmpty {
+            latestRevisionIds.insert(self.sqliteRowId!)
+        } else {
+            // Check the integrity of the EditRecords.
+            if latestRevisionIds.count != 1 || pastRevisionIds.count != editRecords.count {
+                let revisionIds = editRecords.map { ($0.pastRevisionId, $0.latestRevisionId) }
+                owsFailDebug("Found malformed edit history: \(revisionIds)")
+            }
+        }
+
+        for revisionId in pastRevisionIds.sorted() + latestRevisionIds.sorted() {
+            if revisionId == self.sqliteRowId {
+                try processMessage(self)
+            } else {
+                let interaction = InteractionFinder.fetch(rowId: revisionId, transaction: tx)
+                if let message = interaction as? TSMessage {
+                    try processMessage(message)
+                }
+            }
         }
     }
 
@@ -408,14 +450,14 @@ public extension TSMessage {
     }
 
     private func markMessageAsRemotelyDeleted(transaction: DBWriteTransaction) {
-
-        // Delete the current interaction
-        updateWithRemotelyDeletedAndRemoveRenderableContent(with: transaction)
-
         // Delete any past edit revisions.
-        try! processEdits(transaction: transaction) { record, message in
-            message?.updateWithRemotelyDeletedAndRemoveRenderableContent(with: transaction)
-        }
+        try! processRelatedMessageEdits(
+            deleteEditRecords: false,
+            tx: transaction,
+            processMessage: { message in
+                message.updateWithRemotelyDeletedAndRemoveRenderableContent(with: transaction)
+            }
+        )
         SSKEnvironment.shared.notificationPresenterRef.cancelNotifications(messageIds: [self.uniqueId])
     }
 
@@ -613,8 +655,19 @@ public extension TSMessage {
             }
         }
 
+        var pollPrefix: String?
+        if isPoll {
+            let locPollString = OWSLocalizedString(
+                "POLL_PREFIX",
+                comment: "Prefix for a poll preview"
+            )
+
+            pollPrefix = PollMessageManager.pollEmoji + locPollString + " "
+        }
+
         if let bodyDescription = bodyDescription?.nilIfEmpty {
-            return .body(bodyDescription, prefix: attachmentEmoji?.nilIfEmpty?.appending(" "), ranges: bodyRanges)
+            let prefix = pollPrefix ?? attachmentEmoji?.nilIfEmpty?.appending(" ")
+            return .body(bodyDescription, prefix: prefix, ranges: bodyRanges)
         } else if let attachmentDescription = attachmentDescription?.nilIfEmpty {
             return .body(attachmentDescription, prefix: nil, ranges: bodyRanges)
         } else if let contactShare {
@@ -740,7 +793,8 @@ extension TSMessage {
             hasGiftBadge: giftBadge != nil,
             isStoryReply: isStoryReply,
             isPaymentMessage: isPaymentMessage,
-            storyReactionEmoji: storyReactionEmoji
+            storyReactionEmoji: storyReactionEmoji,
+            isPoll: isPoll
         )
     }
 }
@@ -753,7 +807,8 @@ extension TSMessageBuilder {
         hasQuotedReply: Bool,
         hasContactShare: Bool,
         hasSticker: Bool,
-        hasPayment: Bool
+        hasPayment: Bool,
+        hasPoll: Bool
     ) -> Bool {
         return Self.hasRenderableContent(
             hasNonemptyBody: messageBody?.nilIfEmpty != nil,
@@ -765,7 +820,8 @@ extension TSMessageBuilder {
             hasGiftBadge: giftBadge != nil,
             isStoryReply: storyAuthorAci != nil && storyTimestamp != nil,
             isPaymentMessage: hasPayment,
-            storyReactionEmoji: storyReactionEmoji
+            storyReactionEmoji: storyReactionEmoji,
+            isPoll: hasPoll
         )
     }
 
@@ -779,7 +835,8 @@ extension TSMessageBuilder {
         hasGiftBadge: Bool,
         isStoryReply: Bool,
         isPaymentMessage: Bool,
-        storyReactionEmoji: String?
+        storyReactionEmoji: String?,
+        isPoll: Bool
     ) -> Bool {
         if isPaymentMessage {
             // Android doesn't include any body or other content in payments.
@@ -799,6 +856,10 @@ extension TSMessageBuilder {
         }
 
         if hasBodyAttachmentsOrOversizeText() {
+            return true
+        }
+
+        if isPoll {
             return true
         }
 

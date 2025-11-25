@@ -11,7 +11,7 @@ class AttachmentStoreTests: XCTestCase {
 
     private var db: InMemoryDB!
 
-    private var attachmentStore: AttachmentStoreImpl!
+    private var attachmentStore: AttachmentStore!
     private var attachmentUploadStore: AttachmentUploadStoreImpl!
 
     override func setUp() async throws {
@@ -29,7 +29,7 @@ class AttachmentStoreTests: XCTestCase {
         )
 
         try db.write { tx in
-            try attachmentStore.insert(
+            _ = try attachmentStore.insert(
                 attachmentParams,
                 reference: referenceParams,
                 tx: tx
@@ -719,7 +719,7 @@ class AttachmentStoreTests: XCTestCase {
             XCTFail("Expected attachment stream!")
             return
         }
-        XCTAssertNil(attachment.transitTierInfo)
+        XCTAssertNil(attachment.latestTransitTierInfo)
 
         let transitTierInfo = Attachment.TransitTierInfo(
             cdnNumber: 3,
@@ -744,7 +744,7 @@ class AttachmentStoreTests: XCTestCase {
         // Refetch and check that it is appropriately marked.
         attachment = fetchAttachment()
 
-        XCTAssertEqual(attachment.transitTierInfo, transitTierInfo)
+        XCTAssertEqual(attachment.latestTransitTierInfo, transitTierInfo)
     }
 
     // MARK: - Remove Owner
@@ -1193,11 +1193,12 @@ class AttachmentStoreTests: XCTestCase {
         testUInt64FieldPresence(
             sampleInstance: Attachment.Record(params: Attachment.ConstructionParams.mockPointer()),
             keyPathNames: [
-                \.transitUploadTimestamp: "transitUploadTimestamp",
-                \.lastTransitDownloadAttemptTimestamp: "lastTransitDownloadAttemptTimestamp",
+                \.latestTransitUploadTimestamp: "latestTransitUploadTimestamp",
+                \.latestTransitLastDownloadAttemptTimestamp: "latestTransitLastDownloadAttemptTimestamp",
                 \.lastMediaTierDownloadAttemptTimestamp: "lastMediaTierDownloadAttemptTimestamp",
                 \.lastThumbnailDownloadAttemptTimestamp: "lastThumbnailDownloadAttemptTimestamp",
                 \.lastFullscreenViewTimestamp: "lastFullscreenViewTimestamp",
+                \.originalTransitUploadTimestamp: "originalTransitUploadTimestamp",
             ]
         )
     }

@@ -224,7 +224,7 @@ public class VersionedProfilesImpl: VersionedProfiles {
             commitment: commitmentData,
             auth: authedAccount.chatServiceAuth
         )
-        let response = try await SSKEnvironment.shared.networkManagerRef.asyncRequest(request, canUseWebSocket: false)
+        let response = try await SSKEnvironment.shared.networkManagerRef.asyncRequest(request)
 
         let avatarUrlPath: OptionalChange<String?>
         switch profileAvatarMutation {
@@ -359,7 +359,7 @@ public class VersionedProfilesImpl: VersionedProfiles {
     }
 
     public func clearProfileKeyCredentials(tx: DBWriteTransaction) {
-        clearProfileKeyCredentials(transaction: SDSDB.shimOnlyBridge(tx))
+        clearProfileKeyCredentials(transaction: tx)
     }
 }
 

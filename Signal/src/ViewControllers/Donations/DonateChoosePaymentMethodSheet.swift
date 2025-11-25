@@ -7,7 +7,7 @@ import Foundation
 import SignalUI
 import SignalServiceKit
 
-class DonateChoosePaymentMethodSheet: OWSTableSheetViewController {
+class DonateChoosePaymentMethodSheet: StackSheetViewController {
     enum DonationMode {
         case oneTime
         case monthly
@@ -20,7 +20,7 @@ class DonateChoosePaymentMethodSheet: OWSTableSheetViewController {
     private let supportedPaymentMethods: Set<DonationPaymentMethod>
     private let didChoosePaymentMethod: (DonateChoosePaymentMethodSheet, DonationPaymentMethod) -> Void
 
-    private let buttonHeight: CGFloat = 48
+    private let buttonHeight: CGFloat = if #available(iOS 26, *) { 52 } else { 48 }
 
     private var titleText: String {
         let currencyString = CurrencyFormatter.format(money: amount)
@@ -91,76 +91,114 @@ class DonateChoosePaymentMethodSheet: OWSTableSheetViewController {
         super.init()
     }
 
+    override var stackViewInsets: UIEdgeInsets {
+        .init(top: 32, leading: 0, bottom: 0, trailing: 0)
+    }
+
     // MARK: - Updating table contents
 
-    public override func updateTableContents(shouldReload: Bool = true) {
-        updateTop(shouldReload: shouldReload)
-        updateBottom()
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        stackView.addArrangedSubviews([headerStack(), buttonsStack()])
+        stackView.spacing = 24
     }
 
-    private func updateTop(shouldReload: Bool) {
-        let infoStackView: UIView = {
-            let stackView = UIStackView()
-            stackView.axis = .vertical
-            stackView.alignment = .center
-            stackView.spacing = 6
+    public func headerStack() -> UIStackView {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.alignment = .center
+        stackView.spacing = 6
 
-            if let assets = badge.assets {
-                let badgeImageView = UIImageView(image: assets.universal160)
-                badgeImageView.autoSetDimensions(to: CGSize(square: 80))
-                stackView.addArrangedSubview(badgeImageView)
-                stackView.setCustomSpacing(12, after: badgeImageView)
-            }
-
-            let titleLabel = UILabel()
-            titleLabel.font = .dynamicTypeTitle2.semibold()
-            titleLabel.textColor = Theme.primaryTextColor
-            titleLabel.textAlignment = .center
-            titleLabel.numberOfLines = 0
-            titleLabel.lineBreakMode = .byWordWrapping
-            titleLabel.text = titleText
-            stackView.addArrangedSubview(titleLabel)
-
-            if let bodyText = bodyText {
-                let bodyLabel = UILabel()
-                bodyLabel.font = .dynamicTypeBody
-                bodyLabel.textColor = Theme.primaryTextColor
-                bodyLabel.textAlignment = .center
-                bodyLabel.numberOfLines = 0
-                bodyLabel.lineBreakMode = .byWordWrapping
-                bodyLabel.text = bodyText
-                stackView.addArrangedSubview(bodyLabel)
-            }
-
-            return stackView
-        }()
-
-        let section = OWSTableSection(items: [.init(customCellBlock: {
-            let cell = OWSTableItem.newCell()
-            cell.contentView.addSubview(infoStackView)
-            infoStackView.autoPinEdgesToSuperviewMargins()
-            return cell
-        })])
-        section.hasBackground = false
-        section.shouldDisableCellSelection = true
-        let contents = OWSTableContents(sections: [section])
-
-        self.tableViewController.setContents(contents, shouldReload: shouldReload)
-    }
-
-    private func createButtonFor(paymentMethod: DonationPaymentMethod) -> UIView {
-        switch paymentMethod {
-        case .applePay:
-            return createApplePayButton()
-        case .creditOrDebitCard:
-            return createCreditOrDebitCardButton()
-        case .paypal:
-            return createPaypalButton()
-        case .sepa:
-            return createSEPAButton()
-        case .ideal:
-            return createIDEALButton()
+        if let assets = badge.assets {
+            let badgeImageView = UIImageView(image: assets.universal160)
+            badgeImageView.autoSetDimensions(to: CGSize(square: 80))
+            stackView.addArrangedSubview(badgeImageView)
+            stackView.setCustomSpacing(12, after: badgeImageView)
         }
+
+        let titleLabel = UILabel.title2Label(text: titleText)
+        stackView.addArrangedSubview(titleLabel)
+
+        if let bodyText {
+            let bodyLabel = UILabel.explanationTextLabel(text: bodyText)
+            stackView.addArrangedSubview(bodyLabel)
+        }
+
+        return stackView
+    }
+
+    private func buttonsStack() -> UIView {
+        let paymentMethods: [DonationPaymentMethod]
+        let applePayFirstRegions = PhoneNumberRegions(arrayLiteral: "1")
+
+        if let localNumber = DependenciesBridge.shared.tsAccountManager.localIdentifiersWithMaybeSneakyTransaction?.phoneNumber,
+           applePayFirstRegions.contains(e164: localNumber) {
+            paymentMethods = [
+                .applePay,
+                .creditOrDebitCard,
+                .paypal,
+                .sepa,
+                .ideal
+            ]
+        } else {
+            paymentMethods = [
+                .ideal,
+                .creditOrDebitCard,
+                .paypal,
+                .applePay,
+                .sepa,
+            ]
+        }
+
+        let paymentMethodButtons = paymentMethods
+            .filter(supportedPaymentMethods.contains)
+            .map(createButtonFor(paymentMethod:))
+
+        owsPrecondition(!paymentMethodButtons.isEmpty, "Expected at least one payment method")
+
+        let stackView = UIStackView.verticalButtonStack(buttons: paymentMethodButtons)
+
+        let view = UIView()
+        view.preservesSuperviewLayoutMargins = true
+        view.addSubview(stackView)
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            stackView.topAnchor.constraint(equalTo: view.topAnchor),
+            stackView.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
+            stackView.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
+            stackView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
+
+        return view
+    }
+
+    private func createButtonFor(paymentMethod: DonationPaymentMethod) -> UIButton {
+        var fixedHeight = true
+        let button: UIButton = {
+            switch paymentMethod {
+            case .applePay:
+                return createApplePayButton()
+            case .creditOrDebitCard:
+                fixedHeight = false
+                return createCreditOrDebitCardButton()
+            case .paypal:
+                return createPaypalButton()
+            case .sepa:
+                fixedHeight = false
+                return createSEPAButton()
+            case .ideal:
+                return createIDEALButton()
+            }
+        }()
+        button.translatesAutoresizingMaskIntoConstraints = false
+        if fixedHeight {
+            button.heightAnchor.constraint(equalToConstant: buttonHeight).isActive = true
+        } else {
+            button.heightAnchor.constraint(greaterThanOrEqualToConstant: buttonHeight).isActive = true
+        }
+
+        return button
     }
 
     private func createApplePayButton() -> ApplePayButton {
@@ -177,143 +215,83 @@ class DonateChoosePaymentMethodSheet: OWSTableSheetViewController {
         }
     }
 
-    private func createCreditOrDebitCardButton() -> OWSButton {
-        let title = OWSLocalizedString(
+    private func createPaymentMethodButton(
+        title: String,
+        image: UIImage?,
+        action: @escaping () -> Void
+    ) -> UIButton {
+        var configuration: UIButton.Configuration
+        if #available(iOS 26, *) {
+            configuration = UIButton.Configuration.glass()
+        } else {
+            configuration = .bordered()
+            configuration.background.cornerRadius = 12
+            configuration.baseForegroundColor = .label
+            configuration.baseBackgroundColor = .Signal.secondaryGroupedBackground
+        }
+
+        configuration.title = title
+        configuration.titleTextAttributesTransformer = .defaultFont(.dynamicTypeHeadlineClamped)
+        configuration.image = image
+        configuration.imagePadding = 8
+        configuration.contentInsets = NSDirectionalEdgeInsets(hMargin: 16, vMargin: 12)
+
+        let button = UIButton(
+            configuration: configuration,
+            primaryAction: UIAction { _ in action() }
+        )
+        return button
+    }
+
+    private func createCreditOrDebitCardButton() -> UIButton {
+        var configuration: UIButton.Configuration
+        if #available(iOS 26, *) {
+            configuration = .prominentGlass()
+        } else {
+            configuration = .borderedProminent()
+            configuration.background.cornerRadius = 12
+        }
+
+        configuration.title = OWSLocalizedString(
             "DONATE_CHOOSE_CREDIT_OR_DEBIT_CARD_AS_PAYMENT_METHOD",
             comment: "When users make donations, they can choose which payment method they want to use. This is the text on the button that lets them choose to pay with credit or debit card."
         )
+        configuration.titleTextAttributesTransformer = .defaultFont(.dynamicTypeHeadlineClamped)
+        configuration.image = UIImage(named: "payment")
+        configuration.imagePadding = 8
+        configuration.contentInsets = NSDirectionalEdgeInsets(hMargin: 16, vMargin: 12)
 
-        let creditOrDebitCardButton = OWSButton(title: title) { [weak self] in
-            guard let self else { return }
-            self.didChoosePaymentMethod(self, .creditOrDebitCard)
-        }
-        guard let image = UIImage(named: "payment")?.withRenderingMode(.alwaysTemplate) else {
-            owsFail("Card asset not found")
-        }
-        creditOrDebitCardButton.setImage(image, for: .normal)
-        creditOrDebitCardButton.imageView?.tintColor = .ows_white
-        creditOrDebitCardButton.setTitleColor(.ows_white, for: .normal)
-        creditOrDebitCardButton.setPaddingBetweenImageAndText(
-            to: 8,
-            isRightToLeft: CurrentAppContext().isRTL
+        let button = UIButton(
+            configuration: configuration,
+            primaryAction: UIAction { [weak self] _ in
+                guard let self else { return }
+                self.didChoosePaymentMethod(self, .creditOrDebitCard)
+            }
         )
-        creditOrDebitCardButton.layer.cornerRadius = 12
-        creditOrDebitCardButton.backgroundColor = .ows_accentBlue
-        creditOrDebitCardButton.dimsWhenHighlighted = true
-        creditOrDebitCardButton.titleLabel?.font = .dynamicTypeBodyClamped.semibold()
-
-        return creditOrDebitCardButton
+        button.tintColor = UIColor.Signal.accent
+        return button
     }
 
-    private func createSEPAButton() -> OWSButton {
-        let title = OWSLocalizedString(
-            "DONATE_CHOOSE_BANK_TRANSFER_AS_PAYMENT_METHOD",
-            comment: "When users make donations, they can choose which payment method they want to use. This is the text on the button that lets them choose to pay with bank transfer."
-        )
-
-        let sepaButton = OWSButton(title: title) { [weak self] in
+    private func createSEPAButton() -> UIButton {
+        createPaymentMethodButton(
+            title: OWSLocalizedString(
+                "DONATE_CHOOSE_BANK_TRANSFER_AS_PAYMENT_METHOD",
+                comment: "When users make donations, they can choose which payment method they want to use. This is the text on the button that lets them choose to pay with bank transfer."
+            ),
+            image: UIImage(named: "building")
+        ) { [weak self] in
             guard let self else { return }
             self.didChoosePaymentMethod(self, .sepa)
         }
-
-        guard let image = UIImage(named: "building")?.withRenderingMode(.alwaysTemplate) else {
-            owsFail("Bank asset not found")
-        }
-        sepaButton.setImage(image, for: .normal)
-        sepaButton.setPaddingBetweenImageAndText(
-            to: 8,
-            isRightToLeft: CurrentAppContext().isRTL
-        )
-        sepaButton.layer.cornerRadius = 12
-        sepaButton.dimsWhenHighlighted = true
-        sepaButton.titleLabel?.font = .dynamicTypeBodyClamped.semibold()
-
-        if Theme.isDarkThemeEnabled {
-            sepaButton.imageView?.tintColor = .ows_gray05
-            sepaButton.setTitleColor(.ows_gray05, for: .normal)
-            sepaButton.backgroundColor = .ows_gray80
-        } else {
-            sepaButton.imageView?.tintColor = .ows_gray90
-            sepaButton.setTitleColor(.ows_gray90, for: .normal)
-            sepaButton.backgroundColor = .ows_white
-        }
-
-        return sepaButton
     }
 
-    private func createIDEALButton() -> OWSButton {
-        let idealButton = OWSButton(title: "iDEAL") { [weak self] in
+    private func createIDEALButton() -> UIButton {
+        createPaymentMethodButton(
+            title: LocalizationNotNeeded("iDEAL"),
+            image: UIImage(named: "logo_ideal")
+        ) { [weak self] in
             guard let self else { return }
             self.didChoosePaymentMethod(self, .ideal)
         }
-
-        guard let image = UIImage(named: "logo_ideal") else {
-            owsFail("Bank asset not found")
-        }
-        idealButton.setImage(image, for: .normal)
-        idealButton.setPaddingBetweenImageAndText(
-            to: 8,
-            isRightToLeft: CurrentAppContext().isRTL
-        )
-        idealButton.setTitleColor(.ows_black, for: .normal)
-        idealButton.layer.cornerRadius = 12
-        idealButton.backgroundColor = .ows_white
-        idealButton.dimsWhenHighlighted = true
-        idealButton.titleLabel?.font = .dynamicTypeBody.semibold()
-
-        return idealButton
-    }
-
-    private func updateBottom() {
-        let paymentButtonContainerView: UIView = {
-            let paymentMethods: [DonationPaymentMethod]
-            let applePayFirstRegions = PhoneNumberRegions(arrayLiteral: "1")
-
-            if let localNumber = DependenciesBridge.shared.tsAccountManager.localIdentifiersWithMaybeSneakyTransaction?.phoneNumber,
-               applePayFirstRegions.contains(e164: localNumber) {
-                paymentMethods = [
-                    .applePay,
-                    .creditOrDebitCard,
-                    .paypal,
-                    .sepa,
-                    .ideal
-                ]
-            } else {
-                paymentMethods = [
-                    .ideal,
-                    .creditOrDebitCard,
-                    .paypal,
-                    .applePay,
-                    .sepa,
-                ]
-            }
-
-            let paymentMethodButtons = paymentMethods
-                .filter(supportedPaymentMethods.contains)
-                .map(createButtonFor(paymentMethod:))
-
-            owsPrecondition(!paymentMethodButtons.isEmpty, "Expected at least one payment method")
-
-            let stackView = UIStackView(arrangedSubviews: paymentMethodButtons)
-            stackView.axis = .vertical
-            stackView.alignment = .fill
-            stackView.spacing = 12
-
-            for button in paymentMethodButtons {
-                button.autoSetDimension(.height, toSize: buttonHeight)
-            }
-
-            return stackView
-        }()
-
-        footerStack.removeAllSubviews()
-        footerStack.addArrangedSubview(paymentButtonContainerView)
-        footerStack.alignment = .fill
-        footerStack.layoutMargins = UIEdgeInsets(top: 0, left: 20, bottom: 20, right: 20)
-        footerStack.isLayoutMarginsRelativeArrangement = true
-
-        paymentButtonContainerView.autoPinWidthToSuperviewMargins()
-
-        footerStack.layoutIfNeeded()
     }
 }

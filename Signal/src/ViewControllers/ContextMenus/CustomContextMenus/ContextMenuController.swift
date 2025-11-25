@@ -366,6 +366,9 @@ class ContextMenuController: OWSViewController, ContextMenuViewDelegate, UIGestu
 
     private var previewShadowVisible = false {
         didSet {
+            if #available(iOS 26, *), BuildFlags.iOS26SDKIsAvailable {
+                return
+            }
             self.previewView?.layer.shadowOpacity = previewShadowVisible ? 0.3 : 0
         }
     }
@@ -729,7 +732,6 @@ class ContextMenuController: OWSViewController, ContextMenuViewDelegate, UIGestu
 
             completion(emojiString)
         }
-        picker.externalBackdropView = blurView
         emojiPickerSheet = picker
         present(picker, animated: true)
     }

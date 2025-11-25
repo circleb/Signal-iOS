@@ -152,17 +152,6 @@ class ConversationSettingsViewController: OWSTableViewController2, BadgeCollecti
 
         defaultSeparatorInsetLeading = Self.cellHInnerMargin + 24 + OWSTableItem.iconSpacing
 
-        // The header should "extend" offscreen so that we
-        // don't see the root view's background color if we scroll down.
-        let backgroundTopView = UIView()
-        backgroundTopView.backgroundColor = tableBackgroundColor
-        tableView.addSubview(backgroundTopView)
-        backgroundTopView.autoPinEdge(.leading, to: .leading, of: view, withOffset: 0)
-        backgroundTopView.autoPinEdge(.trailing, to: .trailing, of: view, withOffset: 0)
-        let backgroundTopSize: CGFloat = 300
-        backgroundTopView.autoSetDimension(.height, toSize: backgroundTopSize)
-        backgroundTopView.autoPinEdge(.bottom, to: .top, of: tableView, withOffset: 0)
-
         tableView.register(ContactTableViewCell.self, forCellReuseIdentifier: ContactTableViewCell.reuseIdentifier)
 
         observeNotifications()
@@ -238,6 +227,13 @@ class ConversationSettingsViewController: OWSTableViewController2, BadgeCollecti
         updateTableContents()
     }
 
+    // iOS 26 adds a large leading safe area under the side column in split
+    // views. The safe area isn't updated right away so the header gets squished
+    override func viewSafeAreaInsetsDidChange() {
+        super.viewSafeAreaInsetsDidChange()
+        updateTableContents()
+    }
+
     // MARK: -
 
     private(set) var groupMemberStateMap = [SignalServiceAddress: VerificationState]()
@@ -309,23 +305,6 @@ class ConversationSettingsViewController: OWSTableViewController2, BadgeCollecti
         }
 
         updateTableContents()
-    }
-
-    var lastContentWidth: CGFloat?
-
-    public override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-
-        // Reload the table content if this view's width changes.
-        var hasContentWidthChanged = false
-        if let lastContentWidth = lastContentWidth,
-            lastContentWidth != view.width {
-            hasContentWidthChanged = true
-        }
-
-        if hasContentWidthChanged {
-            updateTableContents()
-        }
     }
 
     // MARK: -
@@ -569,11 +548,14 @@ class ConversationSettingsViewController: OWSTableViewController2, BadgeCollecti
                                           message: OWSLocalizedString("CONFIRM_LEAVE_GROUP_DESCRIPTION",
                                                                      comment: "Alert body"))
 
-        let leaveAction = ActionSheetAction(title: OWSLocalizedString("LEAVE_BUTTON_TITLE",
-                                                                     comment: "Confirmation button within contextual alert"),
-                                            accessibilityIdentifier: UIView.accessibilityIdentifier(in: self, name: "leave_group_confirm"),
-                                            style: .destructive) { _ in
-                                                self.leaveGroup(replacementAdminAci: replacementAdminAci)
+        let leaveAction = ActionSheetAction(
+            title: OWSLocalizedString(
+                "LEAVE_BUTTON_TITLE",
+                comment: "Confirmation button within contextual alert"
+            ),
+            style: .destructive
+        ) { _ in
+            self.leaveGroup(replacementAdminAci: replacementAdminAci)
         }
         alert.addAction(leaveAction)
         alert.addAction(OWSActionSheets.cancelAction)
@@ -590,16 +572,25 @@ class ConversationSettingsViewController: OWSTableViewController2, BadgeCollecti
             return
         }
 
-        let alert = ActionSheetController(title: OWSLocalizedString("GROUPS_REPLACE_ADMIN_ALERT_TITLE",
-                                                                   comment: "Title for the 'replace group admin' alert."),
-                                          message: OWSLocalizedString("GROUPS_REPLACE_ADMIN_ALERT_MESSAGE",
-                                                                     comment: "Message for the 'replace group admin' alert."))
+        let alert = ActionSheetController(
+            title: OWSLocalizedString(
+                "GROUPS_REPLACE_ADMIN_ALERT_TITLE",
+                comment: "Title for the 'replace group admin' alert."
+            ),
+            message: OWSLocalizedString(
+                "GROUPS_REPLACE_ADMIN_ALERT_MESSAGE",
+                comment: "Message for the 'replace group admin' alert."
+            )
+        )
 
-        alert.addAction(ActionSheetAction(title: OWSLocalizedString("GROUPS_REPLACE_ADMIN_BUTTON",
-                                                                   comment: "Label for the 'replace group admin' button."),
-                                          accessibilityIdentifier: UIView.accessibilityIdentifier(in: self, name: "replace_admin_alert"),
-                                          style: .default) { _ in
-                                            self.showReplaceAdminView(candidates: candidates)
+        alert.addAction(ActionSheetAction(
+            title: OWSLocalizedString(
+                "GROUPS_REPLACE_ADMIN_BUTTON",
+                comment: "Label for the 'replace group admin' button."
+            ),
+            style: .default
+        ) { _ in
+            self.showReplaceAdminView(candidates: candidates)
         })
         alert.addAction(OWSActionSheets.cancelAction)
         presentActionSheet(alert)
@@ -712,123 +703,122 @@ class ConversationSettingsViewController: OWSTableViewController2, BadgeCollecti
         navigationController?.pushViewController(view, animated: true)
     }
 
-    class func showMuteUnmuteActionSheet(for threadViewModel: ThreadViewModel, from fromVC: UIViewController, actionExecuted: @escaping () -> Void) {
-        var unmuteTitle: String?
-        if threadViewModel.isMuted {
-            let now = Date()
+    class func muteUnmuteMenu(for threadViewModel: ThreadViewModel, actionExecuted: @escaping () -> Void) -> UIMenu {
+        let menuTitle = muteUnmuteMenuTitle(for: threadViewModel)
+        let actions = muteUnmuteActions(for: threadViewModel, actionExecuted: actionExecuted)
+        return UIMenu(title: menuTitle ?? "", children: actions)
+    }
 
-            if threadViewModel.mutedUntilTimestamp == ThreadAssociatedData.alwaysMutedTimestamp {
-                unmuteTitle = OWSLocalizedString(
-                    "CONVERSATION_SETTINGS_MUTED_ALWAYS_UNMUTE",
-                    comment: "Indicates that this thread is muted forever."
-                )
-            } else if let mutedUntilDate = threadViewModel.mutedUntilDate, mutedUntilDate > now {
-                let calendar = Calendar.current
-                let muteUntilComponents = calendar.dateComponents([.year, .month, .day], from: mutedUntilDate)
-                let nowComponents = calendar.dateComponents([.year, .month, .day], from: now)
-                let dateFormatter = DateFormatter()
-                if nowComponents.year != muteUntilComponents.year
-                    || nowComponents.month != muteUntilComponents.month
-                    || nowComponents.day != muteUntilComponents.day {
-
-                    dateFormatter.dateStyle = .short
-                    dateFormatter.timeStyle = .short
-                } else {
-                    dateFormatter.dateStyle = .none
-                    dateFormatter.timeStyle = .short
-                }
-
-                let formatString = OWSLocalizedString(
-                    "CONVERSATION_SETTINGS_MUTED_UNTIL_UNMUTE_FORMAT",
-                    comment: "Indicates that this thread is muted until a given date or time. Embeds {{The date or time which the thread is muted until}}."
-                )
-                unmuteTitle = String(
-                    format: formatString,
-                    dateFormatter.string(from: mutedUntilDate)
-                )
-            }
-        }
-
-        let actionSheet = ActionSheetController(
-            title: threadViewModel.isMuted ? unmuteTitle : OWSLocalizedString(
+    private class func muteUnmuteMenuTitle(for threadViewModel: ThreadViewModel) -> String? {
+        guard threadViewModel.isMuted else {
+            return OWSLocalizedString(
                 "CONVERSATION_SETTINGS_MUTE_ACTION_SHEET_TITLE",
                 comment: "Title for the mute action sheet"
             )
-        )
-
-        if threadViewModel.isMuted {
-            let action =
-                ActionSheetAction(title: OWSLocalizedString("CONVERSATION_SETTINGS_UNMUTE_ACTION",
-                                                           comment: "Label for button to unmute a thread."),
-                                  accessibilityIdentifier: UIView.accessibilityIdentifier(in: fromVC, name: "unmute")) { _ in
-                    setThreadMutedUntilTimestamp(0, threadViewModel: threadViewModel)
-                    actionExecuted()
-                }
-            actionSheet.addAction(action)
-        } else {
-            #if DEBUG
-            actionSheet.addAction(ActionSheetAction(
-                title: LocalizationNotNeeded("1 minute"),
-                accessibilityIdentifier: UIView.accessibilityIdentifier(in: fromVC, name: "mute_1_minute")
-            ) { _ in
-                setThreadMuted(threadViewModel: threadViewModel) {
-                    var dateComponents = DateComponents()
-                    dateComponents.minute = 1
-                    return dateComponents
-                }
-                actionExecuted()
-            })
-            #endif
-            actionSheet.addAction(ActionSheetAction(title: OWSLocalizedString("CONVERSATION_SETTINGS_MUTE_ONE_HOUR_ACTION",
-                                                                             comment: "Label for button to mute a thread for a hour."),
-                                                    accessibilityIdentifier: UIView.accessibilityIdentifier(in: fromVC, name: "mute_1_hour")) { _ in
-                setThreadMuted(threadViewModel: threadViewModel) {
-                    var dateComponents = DateComponents()
-                    dateComponents.hour = 1
-                    return dateComponents
-                }
-                actionExecuted()
-            })
-            actionSheet.addAction(ActionSheetAction(title: OWSLocalizedString("CONVERSATION_SETTINGS_MUTE_EIGHT_HOUR_ACTION",
-                                                                             comment: "Label for button to mute a thread for eight hours."),
-                                                    accessibilityIdentifier: UIView.accessibilityIdentifier(in: fromVC, name: "mute_8_hour")) { _ in
-                setThreadMuted(threadViewModel: threadViewModel) {
-                    var dateComponents = DateComponents()
-                    dateComponents.hour = 8
-                    return dateComponents
-                }
-                actionExecuted()
-            })
-            actionSheet.addAction(ActionSheetAction(title: OWSLocalizedString("CONVERSATION_SETTINGS_MUTE_ONE_DAY_ACTION",
-                                                                             comment: "Label for button to mute a thread for a day."),
-                                                    accessibilityIdentifier: UIView.accessibilityIdentifier(in: fromVC, name: "mute_1_day")) { _ in
-                setThreadMuted(threadViewModel: threadViewModel) {
-                    var dateComponents = DateComponents()
-                    dateComponents.day = 1
-                    return dateComponents
-                }
-                actionExecuted()
-            })
-            actionSheet.addAction(ActionSheetAction(title: OWSLocalizedString("CONVERSATION_SETTINGS_MUTE_ONE_WEEK_ACTION",
-                                                                             comment: "Label for button to mute a thread for a week."),
-                                                    accessibilityIdentifier: UIView.accessibilityIdentifier(in: fromVC, name: "mute_1_week")) { _ in
-                setThreadMuted(threadViewModel: threadViewModel) {
-                    var dateComponents = DateComponents()
-                    dateComponents.day = 7
-                    return dateComponents
-                }
-                actionExecuted()
-            })
-            actionSheet.addAction(ActionSheetAction(title: OWSLocalizedString("CONVERSATION_SETTINGS_MUTE_ALWAYS_ACTION",
-                                                                             comment: "Label for button to mute a thread forever."),
-                                                    accessibilityIdentifier: UIView.accessibilityIdentifier(in: fromVC, name: "mute_always")) { _ in
-                setThreadMutedUntilTimestamp(ThreadAssociatedData.alwaysMutedTimestamp, threadViewModel: threadViewModel)
-                actionExecuted()
-            })
         }
 
-        actionSheet.addAction(OWSActionSheets.cancelAction)
-        fromVC.presentActionSheet(actionSheet)
+        guard threadViewModel.mutedUntilTimestamp != ThreadAssociatedData.alwaysMutedTimestamp else {
+            return OWSLocalizedString(
+                "CONVERSATION_SETTINGS_MUTED_ALWAYS_UNMUTE",
+                comment: "Indicates that this thread is muted forever."
+            )
+        }
+
+        let now = Date()
+        guard let mutedUntilDate = threadViewModel.mutedUntilDate, mutedUntilDate > now else {
+            return nil
+        }
+
+        let calendar = Calendar.current
+        let muteUntilComponents = calendar.dateComponents([.year, .month, .day], from: mutedUntilDate)
+        let nowComponents = calendar.dateComponents([.year, .month, .day], from: now)
+        let dateFormatter = DateFormatter()
+        if nowComponents.year != muteUntilComponents.year
+            || nowComponents.month != muteUntilComponents.month
+            || nowComponents.day != muteUntilComponents.day {
+
+            dateFormatter.dateStyle = .short
+            dateFormatter.timeStyle = .short
+        } else {
+            dateFormatter.dateStyle = .none
+            dateFormatter.timeStyle = .short
+        }
+
+        let formatString = OWSLocalizedString(
+            "CONVERSATION_SETTINGS_MUTED_UNTIL_UNMUTE_FORMAT",
+            comment: "Indicates that this thread is muted until a given date or time. Embeds {{The date or time which the thread is muted until}}."
+        )
+        return String(format: formatString, dateFormatter.string(from: mutedUntilDate))
+    }
+
+    private class func muteUnmuteActions(
+        for threadViewModel: ThreadViewModel,
+        actionExecuted: @escaping () -> Void
+    ) -> [UIAction] {
+
+        guard !threadViewModel.isMuted else {
+            return [UIAction(title: OWSLocalizedString(
+                "CONVERSATION_SETTINGS_UNMUTE_ACTION",
+                comment: "Label for button to unmute a thread."
+            )) { _ in
+                setThreadMutedUntilTimestamp(0, threadViewModel: threadViewModel)
+                actionExecuted()
+            }]
+        }
+
+        var actions = [UIAction]()
+        actions.append(UIAction(title: OWSLocalizedString(
+            "CONVERSATION_SETTINGS_MUTE_ONE_HOUR_ACTION",
+            comment: "Label for button to mute a thread for a hour."
+        )) { _ in
+            setThreadMuted(threadViewModel: threadViewModel) {
+                var dateComponents = DateComponents()
+                dateComponents.hour = 1
+                return dateComponents
+            }
+            actionExecuted()
+        })
+        actions.append(UIAction(title: OWSLocalizedString(
+            "CONVERSATION_SETTINGS_MUTE_EIGHT_HOUR_ACTION",
+            comment: "Label for button to mute a thread for eight hours."
+        )) { _ in
+            setThreadMuted(threadViewModel: threadViewModel) {
+                var dateComponents = DateComponents()
+                dateComponents.hour = 8
+                return dateComponents
+            }
+            actionExecuted()
+       })
+        actions.append(UIAction(title: OWSLocalizedString(
+            "CONVERSATION_SETTINGS_MUTE_ONE_DAY_ACTION",
+            comment: "Label for button to mute a thread for a day."
+        )) { _ in
+            setThreadMuted(threadViewModel: threadViewModel) {
+                var dateComponents = DateComponents()
+                dateComponents.day = 1
+                return dateComponents
+            }
+            actionExecuted()
+       })
+        actions.append(UIAction(title: OWSLocalizedString(
+            "CONVERSATION_SETTINGS_MUTE_ONE_WEEK_ACTION",
+            comment: "Label for button to mute a thread for a week."
+        )) { _ in
+            setThreadMuted(threadViewModel: threadViewModel) {
+                var dateComponents = DateComponents()
+                dateComponents.day = 7
+                return dateComponents
+            }
+            actionExecuted()
+        })
+        actions.append(UIAction(title: OWSLocalizedString(
+            "CONVERSATION_SETTINGS_MUTE_ALWAYS_ACTION",
+            comment: "Label for button to mute a thread forever."
+        )) { _ in
+            setThreadMutedUntilTimestamp(ThreadAssociatedData.alwaysMutedTimestamp, threadViewModel: threadViewModel)
+            actionExecuted()
+        })
+        return actions
     }
 
     private class func setThreadMuted(threadViewModel: ThreadViewModel, dateBlock: () -> DateComponents) {
@@ -901,7 +891,12 @@ class ConversationSettingsViewController: OWSTableViewController2, BadgeCollecti
 
             let imageView = UIImageView()
             imageView.clipsToBounds = true
-            imageView.layer.cornerRadius = 4
+            if #available(iOS 26, *), BuildFlags.iOS26SDKIsAvailable {
+                imageView.layer.cornerCurve = .continuous
+                imageView.layer.cornerRadius = 11
+            } else {
+                imageView.layer.cornerRadius = 4
+            }
             imageView.contentMode = .scaleAspectFill
 
             Task {
@@ -929,7 +924,7 @@ class ConversationSettingsViewController: OWSTableViewController2, BadgeCollecti
             self.mutualGroupThreads = TSGroupThread.groupThreads(
                 with: contactThread.contactAddress,
                 transaction: transaction
-            ).filter { $0.isLocalUserFullMember && $0.shouldThreadBeVisible }
+            ).filter { $0.groupModel.groupMembership.isLocalUserFullMember && $0.shouldThreadBeVisible }
         }
     }
 

@@ -117,6 +117,26 @@
 			<string>Dodaj nove članove</string>
 		</dict>
 	</dict>
+	<key>BACKUP_SETTINGS_BACKUP_PLAN_FREE_HEADER_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Poruke + medijski zapisi iz zadnjeg %1$d dana</string>
+			<key>few</key>
+			<string>Poruke + medijski zapisi iz zadnja %1$d dana</string>
+			<key>many</key>
+			<string>Poruke + medijski zapisi iz zadnjih %1$d dana</string>
+			<key>other</key>
+			<string>Poruke + medijski zapisi iz zadnjih %1$d dana</string>
+		</dict>
+	</dict>
 	<key>CALLS_TAB_DELETE_MULTIPLE_TITLE</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -377,6 +397,66 @@
 			<string>Ova boja se koristi u %1$d razgovora. Želite li spremiti promjene za sve razgovore?</string>
 		</dict>
 	</dict>
+	<key>CHOOSE_BACKUP_PLAN_BULLET_RECENT_MEDIA_BACKUP_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Medijski zapisi iz zadnjeg %1$d dana</string>
+			<key>few</key>
+			<string>Medijski zapisi iz zadnja %1$d dana</string>
+			<key>many</key>
+			<string>Medijski zapisi iz zadnjih %1$d dana</string>
+			<key>other</key>
+			<string>Medijski zapisi iz zadnjih %1$d dana</string>
+		</dict>
+	</dict>
+	<key>CHOOSE_BACKUP_PLAN_DOWNGRADE_CONFIRMATION_ACTION_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Sve vaše poruke i medijski sadržaji iz posljednjeg %1$d dana bit će uključeni u vašu sigurnosnu kopiju ako promijenite plan.</string>
+			<key>few</key>
+			<string>Sve vaše poruke i medijski sadržaji iz posljednja %1$d dana bit će uključeni u vašu sigurnosnu kopiju ako promijenite plan.</string>
+			<key>many</key>
+			<string>Sve vaše poruke i medijski sadržaji iz posljednjih %1$d dana bit će uključeni u vašu sigurnosnu kopiju ako promijenite plan.</string>
+			<key>other</key>
+			<string>Sve vaše poruke i medijski sadržaji iz posljednjih %1$d dana bit će uključeni u vašu sigurnosnu kopiju ako promijenite plan.</string>
+		</dict>
+	</dict>
+	<key>CHOOSE_BACKUP_PLAN_FREE_PLAN_SUBTITLE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Poruke + medijski zapisi iz zadnjeg %1$d dana</string>
+			<key>few</key>
+			<string>Poruke + medijski zapisi iz zadnja %1$d dana</string>
+			<key>many</key>
+			<string>Poruke + medijski zapisi iz zadnjih %1$d dana</string>
+			<key>other</key>
+			<string>Poruke + medijski zapisi iz zadnjih %1$d dana</string>
+		</dict>
+	</dict>
 	<key>CONVERSATION_DELETE_CONFIRMATIONS_ALERT_TITLE_%d</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -610,26 +690,6 @@
 			<string>Poruku je moguće uređivati samo %1$d puta.</string>
 			<key>other</key>
 			<string>Poruku je moguće uređivati samo %1$d puta.</string>
-		</dict>
-	</dict>
-	<key>FORWARD_MESSAGE_FIRST_FORWARD_PROCEED_%d</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@text@</string>
-		<key>text</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
-			<key>one</key>
-			<string>Pošalji %1$d poruku</string>
-			<key>few</key>
-			<string>Pošalji %1$d poruke</string>
-			<key>many</key>
-			<string>Pošalji %1$d poruka</string>
-			<key>other</key>
-			<string>Pošalji %1$d poruka</string>
 		</dict>
 	</dict>
 	<key>GROUPS_TOO_MANY_MEMBERS_ALERT_MESSAGE_%d</key>
@@ -1212,6 +1272,26 @@
 			<string>Da bi uređaj &quot;%2$@&quot; ostao povezan, otvorite Signal na tom uređaju unutar %1$d dana.</string>
 		</dict>
 	</dict>
+	<key>LINK_DEVICE_CONFIRMATION_ALERT_TRANSFER_SUBTITLE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Prenesite svoje poruke i medijske zapise iz zadnjeg %1$d dana</string>
+			<key>few</key>
+			<string>Prenesite svoje poruke i medijske zapise iz zadnja %1$d dana</string>
+			<key>many</key>
+			<string>Prenesite svoje poruke i medijske zapise iz zadnjih %1$d dana</string>
+			<key>other</key>
+			<string>Prenesite svoje poruke i medijske zapise iz zadnjih %1$d dana</string>
+		</dict>
+	</dict>
 	<key>MANY_GROUPS_IN_COMMON_%d</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -1330,26 +1410,6 @@
 			<string>Proslijedi %1$d</string>
 			<key>other</key>
 			<string>Proslijedi %1$d</string>
-		</dict>
-	</dict>
-	<key>MESSAGES_VIEW_GROUP_N_MEMBERS_BLOCKED_%d</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@caption@</string>
-		<key>caption</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
-			<key>one</key>
-			<string>Blokirali ste %1$d člana ove grupe</string>
-			<key>few</key>
-			<string>Blokirali ste %1$d člana ove grupe</string>
-			<key>many</key>
-			<string>Blokirali ste %1$d članova ove grupe</string>
-			<key>other</key>
-			<string>Blokirali ste %1$d članova ove grupe</string>
 		</dict>
 	</dict>
 	<key>MESSAGE_ACTIONS_TOOLBAR_CAPTION_%d</key>
@@ -1672,6 +1732,26 @@
 			<string>Opozvati %1$d pozivnica koje je poslao korisnik &quot;%2$@&quot;?</string>
 		</dict>
 	</dict>
+	<key>POLL_VOTE_COUNT</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d glas</string>
+			<key>few</key>
+			<string>%1$d glasa</string>
+			<key>many</key>
+			<string>%1$d glasova</string>
+			<key>other</key>
+			<string>%1$d glasova</string>
+		</dict>
+	</dict>
 	<key>PRIVATE_STORY_VIEWERS_%d</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -1910,6 +1990,86 @@
 			<string>još %1$ld</string>
 			<key>other</key>
 			<string>još %1$ld</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_AUDIO_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Ova glasovna poruka nije prenesena s vašeg telefona kad je ovaj uređaj povezan. Datoteke i medijske zapise starije od %1$d dana u trenutku povezivanja uređaja nije moguće sinkronizirati.</string>
+			<key>few</key>
+			<string>Ova glasovna poruka nije prenesena s vašeg telefona kad je ovaj uređaj povezan. Datoteke i medijske zapise starije od %1$d dana u trenutku povezivanja uređaja nije moguće sinkronizirati.</string>
+			<key>many</key>
+			<string>Ova glasovna poruka nije prenesena s vašeg telefona kad je ovaj uređaj povezan. Datoteke i medijske zapise starije od %1$d dana u trenutku povezivanja uređaja nije moguće sinkronizirati.</string>
+			<key>other</key>
+			<string>Ova glasovna poruka nije prenesena s vašeg telefona kad je ovaj uređaj povezan. Datoteke i medijske zapise starije od %1$d dana u trenutku povezivanja uređaja nije moguće sinkronizirati.</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_FILE_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Ova datoteka nije prenesena s vašeg telefona kad je ovaj uređaj povezan. Datoteke i medijske zapise starije od %1$d dana u trenutku povezivanja uređaja nije moguće sinkronizirati.</string>
+			<key>few</key>
+			<string>Ova datoteka nije prenesena s vašeg telefona kad je ovaj uređaj povezan. Datoteke i medijske zapise starije od %1$d dana u trenutku povezivanja uređaja nije moguće sinkronizirati.</string>
+			<key>many</key>
+			<string>Ova datoteka nije prenesena s vašeg telefona kad je ovaj uređaj povezan. Datoteke i medijske zapise starije od %1$d dana u trenutku povezivanja uređaja nije moguće sinkronizirati.</string>
+			<key>other</key>
+			<string>Ova datoteka nije prenesena s vašeg telefona kad je ovaj uređaj povezan. Datoteke i medijske zapise starije od %1$d dana u trenutku povezivanja uređaja nije moguće sinkronizirati.</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_OVERSIZE_TEXT_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Cijeli tekst ove poruke nije prenesen s vašeg telefona kad je ovaj uređaj povezan. Datoteke i medijske zapise starije od %1$d dana u trenutku povezivanja uređaja nije moguće sinkronizirati.</string>
+			<key>few</key>
+			<string>Cijeli tekst ove poruke nije prenesen s vašeg telefona kad je ovaj uređaj povezan. Datoteke i medijske zapise starije od %1$d dana u trenutku povezivanja uređaja nije moguće sinkronizirati.</string>
+			<key>many</key>
+			<string>Cijeli tekst ove poruke nije prenesen s vašeg telefona kad je ovaj uređaj povezan. Datoteke i medijske zapise starije od %1$d dana u trenutku povezivanja uređaja nije moguće sinkronizirati.</string>
+			<key>other</key>
+			<string>Cijeli tekst ove poruke nije prenesen s vašeg telefona kad je ovaj uređaj povezan. Datoteke i medijske zapise starije od %1$d dana u trenutku povezivanja uređaja nije moguće sinkronizirati.</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_STICKER_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Ova naljepnica nije prenesena s vašeg telefona kad je ovaj uređaj povezan. Datoteke i medijske zapise starije od %1$d dana u trenutku povezivanja uređaja nije moguće sinkronizirati.</string>
+			<key>few</key>
+			<string>Ova naljepnica nije prenesena s vašeg telefona kad je ovaj uređaj povezan. Datoteke i medijske zapise starije od %1$d dana u trenutku povezivanja uređaja nije moguće sinkronizirati.</string>
+			<key>many</key>
+			<string>Ova naljepnica nije prenesena s vašeg telefona kad je ovaj uređaj povezan. Datoteke i medijske zapise starije od %1$d dana u trenutku povezivanja uređaja nije moguće sinkronizirati.</string>
+			<key>other</key>
+			<string>Ova naljepnica nije prenesena s vašeg telefona kad je ovaj uređaj povezan. Datoteke i medijske zapise starije od %1$d dana u trenutku povezivanja uređaja nije moguće sinkronizirati.</string>
 		</dict>
 	</dict>
 	<key>USERNAME_SELECTION_TOO_SHORT_ERROR_MESSAGE_%d</key>

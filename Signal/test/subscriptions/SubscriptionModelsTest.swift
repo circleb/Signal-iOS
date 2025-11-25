@@ -23,14 +23,11 @@ class SubscriptionChargeFailureTest: XCTestCase {
 
 class SubscriptionTest: XCTestCase {
     let subscriptionDict: [String: Any] = {
-        let endOfCurrentPeriodRawValue: Double = 1618881836
-        let billingCycleAnchorRawValue: Double = 1587345836
         return [
             "level": 123,
             "currency": "USD",
             "amount": 500,
-            "endOfCurrentPeriod": endOfCurrentPeriodRawValue,
-            "billingCycleAnchor": billingCycleAnchorRawValue,
+            "endOfCurrentPeriod": TimeInterval(1618881836),
             "active": true,
             "cancelAtPeriodEnd": false,
             "status": "active",
@@ -46,8 +43,7 @@ class SubscriptionTest: XCTestCase {
 
         XCTAssertEqual(subscription.level, 123)
         XCTAssertEqual(subscription.amount, FiatMoney(currencyCode: "USD", value: 5))
-        XCTAssertEqual(subscription.endOfCurrentPeriod, 1618881836)
-        XCTAssertEqual(subscription.billingCycleAnchor, 1587345836)
+        XCTAssertEqual(subscription.endOfCurrentPeriod, Date(timeIntervalSince1970: 1618881836))
         XCTAssertTrue(subscription.active)
         XCTAssertFalse(subscription.cancelAtEndOfPeriod)
         XCTAssertEqual(subscription.status, .active)
@@ -61,7 +57,7 @@ class SubscriptionTest: XCTestCase {
         let subscription = try Subscription(subscriptionDict: subscriptionDictWithUnexpectedStatus,
                                             chargeFailureDict: nil)
 
-        XCTAssertEqual(subscription.status, .unknown)
+        XCTAssertEqual(subscription.status, .unrecognized(rawValue: "unexpected!!"))
         XCTAssertNil(subscription.chargeFailure)
     }
 
@@ -112,10 +108,9 @@ class BadgeIdsTest: XCTestCase {
     }
 }
 
-class SubscriptionManagerDonationConfigurationTest: XCTestCase {
-    private typealias JSON = [String: Any]
-    private typealias DonationConfiguration = DonationSubscriptionManager.DonationConfiguration
+// MARK: -
 
+class DonationSubscriptionConfigurationTest: XCTestCase {
     private enum CurrencyFixtures {
         static let minimumAmount: Int = 5
 
@@ -137,8 +132,8 @@ class SubscriptionManagerDonationConfigurationTest: XCTestCase {
             levelTwo: UInt? = LevelFixtures.levelTwo,
             levelTwoAmount: Int = levelTwoAmount,
             supportedPaymentMethods: [String] = supportedPaymentMethods
-        ) -> JSON {
-            var result: JSON = [
+        ) -> [String: Any] {
+            var result: [String: Any] = [
                 "minimum": minimumAmount,
                 "supportedPaymentMethods": supportedPaymentMethods
             ]
@@ -176,7 +171,7 @@ class SubscriptionManagerDonationConfigurationTest: XCTestCase {
     }
 
     private enum LevelFixtures {
-        private static let badgeJson: JSON = [
+        private static let badgeJson: [String: Any] = [
             "id": "test-badge-1",
             "category": "donor",
             "name": "Test Badge 1",
@@ -198,7 +193,7 @@ class SubscriptionManagerDonationConfigurationTest: XCTestCase {
                 levelOne,
                 levelTwo
             ]
-        ) -> JSON {
+        ) -> [String: Any] {
             levels.reduce(into: [:]) { partialResult, level in
                 partialResult["\(level)"] = [
                     "badge": badgeJson
@@ -207,11 +202,11 @@ class SubscriptionManagerDonationConfigurationTest: XCTestCase {
         }
     }
 
-    private enum DonationConfigurationFixtures {
+    private enum DonationSubscriptionConfigurationFixtures {
         static func withDefaultValues(
-            currenciesJson: JSON = CurrencyFixtures.withDefaultValues(),
-            levelsJson: JSON = LevelFixtures.withDefaultValues()
-        ) -> JSON {
+            currenciesJson: [String: Any] = CurrencyFixtures.withDefaultValues(),
+            levelsJson: [String: Any] = LevelFixtures.withDefaultValues()
+        ) -> [String: Any] {
             [
                 "sepaMaximumEuros": 10000,
                 "currencies": [
@@ -227,8 +222,8 @@ class SubscriptionManagerDonationConfigurationTest: XCTestCase {
     }
 
     func testParseValidDonationConfig() throws {
-        let config = try DonationConfiguration.from(
-            configurationServiceResponse: DonationConfigurationFixtures.withDefaultValues()
+        let config = try DonationSubscriptionConfiguration.from(
+            responseBodyDict: DonationSubscriptionConfigurationFixtures.withDefaultValues()
         )
 
         XCTAssertEqual(config.boost.level, LevelFixtures.boostLevel)
@@ -250,84 +245,84 @@ class SubscriptionManagerDonationConfigurationTest: XCTestCase {
         XCTAssertEqual(secondSubscriptionLevel.badge, LevelFixtures.badge)
         XCTAssertEqual(secondSubscriptionLevel.amounts.usd, CurrencyFixtures.levelTwoAmount.asUsd)
 
-        XCTAssertEqual(config.paymentMethods.supportedPaymentMethods(forCurrencyCode: "USD"), [.paypal, .applePay, .creditOrDebitCard])
+        XCTAssertEqual(config.paymentMethods.supportedPaymentMethodsByCurrency["USD"], [.paypal, .applePay, .creditOrDebitCard])
     }
 
     func testParseConfigMissingThings() {
-        let missingBoost = DonationConfigurationFixtures.withDefaultValues(
+        let missingBoost = DonationSubscriptionConfigurationFixtures.withDefaultValues(
             levelsJson: LevelFixtures.withDefaultValues(
                 levels: [LevelFixtures.giftLevel, LevelFixtures.levelOne, LevelFixtures.levelTwo]
             )
         )
 
-        let missingGift = DonationConfigurationFixtures.withDefaultValues(
+        let missingGift = DonationSubscriptionConfigurationFixtures.withDefaultValues(
             levelsJson: LevelFixtures.withDefaultValues(
                 levels: [LevelFixtures.boostLevel, LevelFixtures.levelOne, LevelFixtures.levelTwo]
             )
         )
 
-        let missingBoostLevel = DonationConfigurationFixtures.withDefaultValues(
+        let missingBoostLevel = DonationSubscriptionConfigurationFixtures.withDefaultValues(
             currenciesJson: CurrencyFixtures.withDefaultValues(
                 boostLevel: nil
             )
         )
 
-        let missingGiftLevel = DonationConfigurationFixtures.withDefaultValues(
+        let missingGiftLevel = DonationSubscriptionConfigurationFixtures.withDefaultValues(
             currenciesJson: CurrencyFixtures.withDefaultValues(
                 giftLevel: nil
             )
         )
 
-        let missingSubscriptionLevel = DonationConfigurationFixtures.withDefaultValues(
+        let missingSubscriptionLevel = DonationSubscriptionConfigurationFixtures.withDefaultValues(
             currenciesJson: CurrencyFixtures.withDefaultValues(
                 levelOne: nil
             )
         )
 
         expect(
-            try DonationConfiguration.from(configurationServiceResponse: missingBoost),
+            try DonationSubscriptionConfiguration.from(responseBodyDict: missingBoost),
             throwsParseError: .missingBoostBadge
         )
         expect(
-            try DonationConfiguration.from(configurationServiceResponse: missingGift),
+            try DonationSubscriptionConfiguration.from(responseBodyDict: missingGift),
             throwsParseError: .missingGiftBadge
         )
         expect(
-            try DonationConfiguration.from(configurationServiceResponse: missingBoostLevel),
+            try DonationSubscriptionConfiguration.from(responseBodyDict: missingBoostLevel),
             throwsParseError: .missingBoostPresetAmounts
         )
         expect(
-            try DonationConfiguration.from(configurationServiceResponse: missingGiftLevel),
+            try DonationSubscriptionConfiguration.from(responseBodyDict: missingGiftLevel),
             throwsParseError: .missingGiftPresetAmount
         )
         expect(
-            try DonationConfiguration.from(configurationServiceResponse: missingSubscriptionLevel),
+            try DonationSubscriptionConfiguration.from(responseBodyDict: missingSubscriptionLevel),
             throwsParseError: .missingAmountForLevel(LevelFixtures.levelOne)
         )
     }
 
     func testParseConfigWithUnrecognizedPaymentMethod() throws {
-        let unexpectedPaymentMethod = DonationConfigurationFixtures.withDefaultValues(
+        let unexpectedPaymentMethod = DonationSubscriptionConfigurationFixtures.withDefaultValues(
             currenciesJson: CurrencyFixtures.withDefaultValues(
                 supportedPaymentMethods: CurrencyFixtures.supportedPaymentMethods + ["cash money"]
             )
         )
 
-        _ = try DonationConfiguration.from(configurationServiceResponse: unexpectedPaymentMethod)
+        _ = try DonationSubscriptionConfiguration.from(responseBodyDict: unexpectedPaymentMethod)
     }
 
     // MARK: Utilities
 
     private func expect(
-        _ expression: @autoclosure () throws -> DonationConfiguration,
-        throwsParseError expectedParseError: DonationConfiguration.ParseError
+        _ expression: @autoclosure () throws -> DonationSubscriptionConfiguration,
+        throwsParseError expectedParseError: DonationSubscriptionConfiguration.ParseError
     ) {
         do {
             let config = try expression()
             XCTFail("Unexpectedly parsed successfully: \(config)")
         } catch let error {
             if
-                let parseError = error as? DonationConfiguration.ParseError,
+                let parseError = error as? DonationSubscriptionConfiguration.ParseError,
                 expectedParseError == parseError
             {
                 return

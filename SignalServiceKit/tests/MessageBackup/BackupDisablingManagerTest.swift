@@ -11,29 +11,34 @@ import Testing
 struct BackupDisablingManagerTest {
     @Test
     func testPreviousFailurePersistsUntilFutureSuccess() async throws {
+        let mockAccountEntropyPoolManager = MockAccountEntropyPoolManager()
+        let mockAuthCredentialStore = AuthCredentialStore(dateProvider: { Date() })
         let mockBackupAttachmentDownloadQueueStatusManager = MockBackupAttachmentDownloadQueueStatusManager()
-        let mockBackupIdManager = MockBackupIdManager()
+        let mockBackupCDNCredentialStore = BackupCDNCredentialStore()
+        let mockBackupKeyService = MockBackupKeyService()
+        let mockBackupAttachmentCoordinator = MockBackupAttachmentCoordinator()
         let mockBackupPlanManager = MockBackupPlanManager()
-        let mockBackupListMediaManager = MockBackupListMediaManager()
         let mockDB = InMemoryDB()
+        let mockBackupSettingsStore = BackupSettingsStore()
         let mockTSAccountManager = MockTSAccountManager()
 
         let disablingManager = BackupDisablingManager(
-            authCredentialStore: AuthCredentialStore(),
+            accountEntropyPoolManager: mockAccountEntropyPoolManager,
+            authCredentialStore: mockAuthCredentialStore,
+            backupAttachmentCoordinator: mockBackupAttachmentCoordinator,
             backupAttachmentDownloadQueueStatusManager: mockBackupAttachmentDownloadQueueStatusManager,
-            backupCDNCredentialStore: BackupCDNCredentialStore(),
-            backupIdManager: mockBackupIdManager,
-            backupListMediaManager: mockBackupListMediaManager,
+            backupCDNCredentialStore: mockBackupCDNCredentialStore,
+            backupKeyService: mockBackupKeyService,
             backupPlanManager: mockBackupPlanManager,
-            backupSettingsStore: BackupSettingsStore(),
+            backupSettingsStore: mockBackupSettingsStore,
             db: mockDB,
             tsAccountManager: mockTSAccountManager
         )
 
         struct DeleteBackupError: Error {}
-        mockBackupIdManager.deleteBackupIdMock = { throw DeleteBackupError() }
+        mockBackupKeyService.deleteBackupKeyMock = { throw DeleteBackupError() }
 
-        _ = await disablingManager.startDisablingBackups()
+        _ = await disablingManager.startDisablingBackups(aepSideEffect: nil)
         await disablingManager.disableRemotelyIfNecessary()
         mockDB.read { tx in
             #expect(disablingManager.disableRemotelyFailed(tx: tx))
@@ -44,8 +49,8 @@ struct BackupDisablingManagerTest {
             #expect(!disablingManager.disableRemotelyFailed(tx: tx))
         }
 
-        mockBackupIdManager.deleteBackupIdMock = { }
-        _ = await disablingManager.startDisablingBackups()
+        mockBackupKeyService.deleteBackupKeyMock = { }
+        _ = await disablingManager.startDisablingBackups(aepSideEffect: nil)
         await disablingManager.disableRemotelyIfNecessary()
         mockDB.read { tx in
             #expect(!disablingManager.disableRemotelyFailed(tx: tx))

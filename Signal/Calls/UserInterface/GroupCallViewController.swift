@@ -67,38 +67,17 @@ final class GroupCallViewController: UIViewController {
         }
     }
 
-    /// A container view which allows taps on the child view's subviews, but
-    /// passes through taps on the child view itself.
-    ///
-    /// - Add the child view using `add(passthroughView:)`
-    /// - Pins the child view edges to this view's edges
-    /// - Used with a `UIHostingController`, it passes touches on the background
-    /// through while still allowing interaction with the SwiftUI content
-    private class PassthroughContainerView: UIView {
-        private weak var passthroughView: UIView?
-
-        func add(passthroughView: UIView) {
-            self.passthroughView = passthroughView
-            self.addSubview(passthroughView)
-            passthroughView.autoPinEdgesToSuperviewEdges()
-        }
-
-        private var previousHit: (timestamp: TimeInterval, point: CGPoint, view: UIView?)?
+    /// A container view which allows taps in the given height range, but
+    /// passes through taps outside of it.
+    private class ApprovalStackContainerView: UIView {
+        var stackHeight: CGFloat = 0
 
         override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
-            var view = super.hitTest(point, with: event)
-
-            let isSameEventAsPreviousHitTest = previousHit?.timestamp == event?.timestamp && previousHit?.point == point
-            let previousHitWasNotPassedThrough = previousHit?.view != nil
-
-            if
-                view == passthroughView,
-                !(isSameEventAsPreviousHitTest && previousHitWasNotPassedThrough)
-            {
-                view = nil
+            let isPointInStack = (self.height - point.y) <= stackHeight
+            if isPointInStack {
+                return super.hitTest(point, with: event)
             }
-            self.previousHit = event.map { ($0.timestamp, point, view) }
-            return view
+            return nil
         }
     }
 
@@ -127,6 +106,8 @@ final class GroupCallViewController: UIViewController {
         return viewModel
     }()
 
+    private let approvalStackContainer = ApprovalStackContainerView()
+
     /// The `UIHostingController` with the approval request views in a stack.
     private lazy var approvalStack = UIHostingController(rootView: VStack {
         Spacer()
@@ -137,6 +118,7 @@ final class GroupCallViewController: UIViewController {
             },
             didChangeHeight: { [weak self] height in
                 self?.approvalStackHeightConstraint?.constant = height
+                self?.approvalStackContainer.stackHeight = height
                 self?.updateCallUI(shouldAnimateViewFrames: true)
             }
         )
@@ -355,8 +337,8 @@ final class GroupCallViewController: UIViewController {
     }
 
     static func presentLobby(forGroupId groupId: GroupIdentifier, videoMuted: Bool = false) {
-        self._presentLobby { viewController, modalViewController in
-            let result = await self._prepareLobby(
+        self._presentLobby { viewController, modalViewController -> (() -> Void)? in
+            return await self._prepareLobby(
                 from: viewController,
                 modalViewController: modalViewController,
                 shouldAskForCameraPermission: !videoMuted,
@@ -365,11 +347,6 @@ final class GroupCallViewController: UIViewController {
                     return callService.buildAndConnectGroupCall(for: groupId, isVideoMuted: videoMuted)
                 }
             )
-            await SSKEnvironment.shared.databaseStorageRef.awaitableWrite { tx in
-                // Dismiss the group call tooltip
-                SSKEnvironment.shared.preferencesRef.setWasGroupCallTooltipShown(tx: tx)
-            }
-            return result
         }
     }
 
@@ -502,9 +479,9 @@ final class GroupCallViewController: UIViewController {
             // Approvals
             self.addChild(self.approvalStack)
 
-            let passthroughView = PassthroughContainerView()
-            passthroughView.add(passthroughView: self.approvalStack.view)
-            self.view.addSubview(passthroughView)
+            approvalStackContainer.addSubview(self.approvalStack.view)
+            self.approvalStack.view.autoPinEdgesToSuperviewEdges()
+            self.view.addSubview(approvalStackContainer)
             self.approvalStack.view.backgroundColor = .clear
             self.approvalStack.didMove(toParent: self)
 
@@ -515,10 +492,10 @@ final class GroupCallViewController: UIViewController {
             self.bottomVStack.addArrangedSubview(self.approvalStackHeightView)
             self.approvalStackHeightConstraint = self.approvalStackHeightView
                 .autoSetDimension(.height, toSize: 0)
-            self.pinWidthWithBottomSheetMaxWidth(passthroughView)
-            passthroughView.autoHCenterInSuperview()
-            passthroughView.autoSetDimension(.height, toSize: 300)
-            passthroughView.autoPinEdge(.bottom, to: .bottom, of: self.approvalStackHeightView)
+            self.pinWidthWithBottomSheetMaxWidth(approvalStackContainer)
+            approvalStackContainer.autoHCenterInSuperview()
+            approvalStackContainer.autoSetDimension(.height, toSize: 300)
+            approvalStackContainer.autoPinEdge(.bottom, to: .bottom, of: self.approvalStackHeightView)
         }
 
         videoOverflowContainer.addSubview(self.videoOverflow)
@@ -1685,7 +1662,6 @@ extension GroupCallViewController: CallViewControllerWindowReference {
             addressesToConfirm: addressesToAlert,
             confirmationText: approveText,
             cancelText: denyText,
-            theme: .translucentDark
         ) { [weak self] didApprove in
             if let self, didApprove {
                 self.presentSafetyNumberChangeSheetIfNecessary(untrustedThreshold: newUntrustedThreshold, completion: completion)
@@ -1693,6 +1669,7 @@ extension GroupCallViewController: CallViewControllerWindowReference {
                 completion(false)
             }
         }
+        sheet.overrideUserInterfaceStyle = .dark
         sheet.allowsDismissal = localDeviceHasNotJoined
         presenter.present(sheet, animated: true, completion: nil)
     }
@@ -2064,7 +2041,8 @@ extension GroupCallViewController: CallControlsDelegate {
 
 extension GroupCallViewController: CallMemberErrorPresenter {
     func presentErrorSheet(title: String, message: String) {
-        let actionSheet = ActionSheetController(title: title, message: message, theme: .translucentDark)
+        let actionSheet = ActionSheetController(title: title, message: message)
+        actionSheet.overrideUserInterfaceStyle = .dark
         actionSheet.addAction(ActionSheetAction(title: CommonStrings.okButton))
         presentActionSheet(actionSheet)
     }

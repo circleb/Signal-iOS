@@ -336,7 +336,7 @@ public class MessageSenderJobQueue {
             if CurrentAppContext().isMainApp {
                 do {
                     let jobRecords = try await jobRecordFinder.loadRunnableJobs(updateRunnableJobRecord: { jobRecord, tx in
-                        self.didMarkAsReady(oldJobRecord: jobRecord, transaction: SDSDB.shimOnlyBridge(tx))
+                        self.didMarkAsReady(oldJobRecord: jobRecord, transaction: tx)
                     })
                     let jobRecordUniqueIds = Set(jobRecords.lazy.map(\.uniqueId))
                     self.state.update {
@@ -462,7 +462,10 @@ public class MessageSenderJobQueue {
             if !operation.job.isInMemoryOnly {
                 operation.job.record.anyRemove(transaction: tx)
             }
-            if case .failure(let error) = result {
+            switch result {
+            case .success(()):
+                operation.message.updateWithSendSuccess(tx: tx)
+            case .failure(let error):
                 operation.message.updateWithAllSendingRecipientsMarkedAsFailed(error: error, tx: tx)
             }
         }
@@ -483,24 +486,40 @@ public class MessageSenderJobQueue {
         let maxRetries = 110
         while true {
             assert(!Task.isCancelled, "Cancellation isn't supported.")
-            do {
-                operation.clearExternalRetryTriggers()
-                try await SSKEnvironment.shared.messageSenderRef.sendMessage(operation.message)
+            operation.clearExternalRetryTriggers()
+            let result = await SSKEnvironment.shared.messageSenderRef.sendMessage(operation.message)
+            let errors: [any Error]
+            let arbitraryError: any Error
+            switch result {
+            case .success:
                 return
-            } catch where error.isRetryable && !error.isFatalError && attemptCount < maxRetries {
-                attemptCount += 1
-                if !operation.job.isInMemoryOnly {
-                    await SSKEnvironment.shared.databaseStorageRef.awaitableWrite { tx in
-                        operation.job.record.addFailure(tx: tx)
-                    }
+            case .overallFailure(let error):
+                errors = [error]
+                arbitraryError = error
+            case .recipientsFailure(let failure):
+                errors = failure.recipientErrors.map(\.error)
+                arbitraryError = failure.arbitraryError
+            }
+            var retryableError: (any Error)?
+            var externalRetryTriggers: ExternalRetryTriggers = []
+            var suggestedRetryDelay: TimeInterval = 0
+            var accountCheckerRetryDelay: TimeInterval = 0
+            for error in errors {
+                // Some errors should never be retried. Because group send is
+                // all-or-nothing, this means we need to fail the entire operation even
+                // when retries may work for other recipients.
+                if error.isFatalError {
+                    throw error
                 }
-                var externalRetryTriggers: ExternalRetryTriggers = []
+                // Keep track of the first retryable error we encounter -- we'd prefer to
+                // throw a retryable error rather than one that's not retryable.
+                if MessageSender.isRetryableError(error) {
+                    retryableError = retryableError ?? error
+                }
                 // If there's a network failure, this is an external error, so we want to
                 // retry as soon as we reconnect.
                 if error.isNetworkFailure {
                     externalRetryTriggers.insert(.chatConnectionOpened)
-                    // TODO: Remove this after REST is gone -- it'll no longer be relevant.
-                    externalRetryTriggers.insert(.networkBecameReachable)
                 }
                 // If there's a timeout, we interrupted the request ourselves, and sending
                 // the same request again on a new connection will typically result in the
@@ -510,11 +529,55 @@ public class MessageSenderJobQueue {
                 if error.isTimeout {
                     externalRetryTriggers.insert(.networkBecameReachable)
                 }
-                try? await withCooperativeTimeout(
-                    seconds: OWSOperation.retryIntervalForExponentialBackoff(failureCount: attemptCount, maxAverageBackoff: 14.1 * .minute),
-                    operation: { try await operation.waitForAnyExternalRetryTrigger(fromExternalRetryTriggers: externalRetryTriggers) }
-                )
+                // If there's a Retry-After header, pick the largest one. That's when we
+                // expect we'll be able to complete the entire send successfully.
+                if let retryAfterDelay = error.httpResponseHeaders?.retryAfterTimeInterval {
+                    suggestedRetryDelay = max(suggestedRetryDelay, retryAfterDelay)
+                }
+                // If there's a Retry-After from the AccountChecker, we want to wait for
+                // the sum of the Retry-Afters. (This avoids pathological O(n^2) behavior.)
+                if let rateLimitError = error as? AccountChecker.RateLimitError {
+                    accountCheckerRetryDelay += rateLimitError.retryAfter
+                }
             }
+            guard let retryableError else {
+                throw arbitraryError
+            }
+            guard attemptCount < maxRetries else {
+                throw retryableError
+            }
+            attemptCount += 1
+            if !operation.job.isInMemoryOnly {
+                await SSKEnvironment.shared.databaseStorageRef.awaitableWrite { tx in
+                    operation.job.record.addFailure(tx: tx)
+                }
+            }
+            // Determine the minimum amount of backoff.
+            let maxAverageBackoff: TimeInterval = 14.1 * .minute
+            let exponentialRetryDelay: TimeInterval = OWSOperation.retryIntervalForExponentialBackoff(
+                failureCount: attemptCount,
+                maxAverageBackoff: maxAverageBackoff,
+            )
+            // We pick the largest of the values -- we don't want Retry-After headers
+            // to be able to trigger tight retry loops on the client, so we maintain a
+            // minimum of exponential backoff.
+            let retryDelay = max(
+                exponentialRetryDelay,
+                min(maxAverageBackoff, suggestedRetryDelay),
+                min(maxAverageBackoff, accountCheckerRetryDelay),
+            )
+            var httpBlurb = ""
+            if suggestedRetryDelay > 0 {
+                httpBlurb += " (retry-after: \(String(format: "%.1f", suggestedRetryDelay))s)"
+            }
+            if accountCheckerRetryDelay > 0 {
+                httpBlurb += " (account-checker-retry-after: \(String(format: "%.1f", accountCheckerRetryDelay))s)"
+            }
+            Logger.warn("Resending \(operation.message.description) after \(String(format: "%.1f", retryDelay))s\(httpBlurb)")
+            try? await withCooperativeTimeout(
+                seconds: retryDelay,
+                operation: { try await operation.waitForAnyExternalRetryTrigger(fromExternalRetryTriggers: externalRetryTriggers) }
+            )
         }
     }
 

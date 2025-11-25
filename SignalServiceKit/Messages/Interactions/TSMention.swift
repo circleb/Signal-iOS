@@ -32,7 +32,6 @@ public final class TSMention: NSObject, SDSCodableModel, Decodable {
     public let uniqueThreadId: String
     public let aciString: String
     public let creationDate: Date
-    public var address: SignalServiceAddress { SignalServiceAddress(aciString: aciString) }
 
     public init(uniqueMessageId: String, uniqueThreadId: String, aci: Aci) {
         self.uniqueId = UUID().uuidString
@@ -70,15 +69,5 @@ public final class TSMention: NSObject, SDSCodableModel, Decodable {
         try container.encode(uniqueThreadId, forKey: .uniqueThreadId)
         try container.encode(aciString, forKey: .aciString)
         try container.encode(creationDate, forKey: .creationTimestamp)
-    }
-
-    @objc
-    public static func anyEnumerateObjc(
-        transaction: DBReadTransaction,
-        batched: Bool,
-        block: @escaping (TSMention, UnsafeMutablePointer<ObjCBool>) -> Void
-    ) {
-        let batchingPreference: BatchingPreference = batched ? .batched() : .unbatched
-        anyEnumerate(transaction: transaction, batchingPreference: batchingPreference, block: block)
     }
 }

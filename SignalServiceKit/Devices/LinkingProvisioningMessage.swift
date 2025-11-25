@@ -25,8 +25,8 @@ public struct LinkingProvisioningMessage {
     public let aciIdentityKeyPair: IdentityKeyPair
     public let pniIdentityKeyPair: IdentityKeyPair
     public let profileKey: Aes256Key
-    public let mrbk: BackupKey
-    public let ephemeralBackupKey: BackupKey?
+    public let mrbk: MediaRootBackupKey
+    public let ephemeralBackupKey: MessageRootBackupKey?
     public let areReadReceiptsEnabled: Bool
     public let provisioningCode: String
     public let provisioningUserAgent: String?
@@ -40,8 +40,8 @@ public struct LinkingProvisioningMessage {
         aciIdentityKeyPair: IdentityKeyPair,
         pniIdentityKeyPair: IdentityKeyPair,
         profileKey: Aes256Key,
-        mrbk: BackupKey,
-        ephemeralBackupKey: BackupKey?,
+        mrbk: MediaRootBackupKey,
+        ephemeralBackupKey: MessageRootBackupKey?,
         areReadReceiptsEnabled: Bool,
         provisioningCode: String,
         provisioningUserAgent: String? = Constants.userAgent,
@@ -93,23 +93,26 @@ public struct LinkingProvisioningMessage {
         self.phoneNumber = phoneNumber
 
         self.aci = try {
-            guard
-                let aciString = proto.aci,
-                let aci = Aci.parseFrom(aciString: aciString)
-            else {
+            guard let aci = Aci.parseFrom(serviceIdBinary: proto.aciBinary, serviceIdString: proto.aci) else {
                 throw ProvisioningError.invalidProvisionMessage("invalid ACI from provisioning message")
             }
             return aci
         }()
 
         self.pni = try {
-            guard
-                let pniString = proto.pni,
-                let pni = Pni.parseFrom(ambiguousString: pniString)
-            else {
-                throw ProvisioningError.invalidProvisionMessage("invalid PNI from provisioning message")
+            if let pniBinary = proto.pniBinary {
+                guard let pniUuid = UUID(data: pniBinary) else {
+                    throw ProvisioningError.invalidProvisionMessage("invalid PNI from provisioning message")
+                }
+                return Pni(fromUUID: pniUuid)
             }
-            return pni
+            if let pniString = proto.pni {
+                guard let pni = Pni.parseFrom(ambiguousString: pniString) else {
+                    throw ProvisioningError.invalidProvisionMessage("invalid PNI from provisioning message")
+                }
+                return pni
+            }
+            throw ProvisioningError.invalidProvisionMessage("invalid PNI from provisioning message")
         }()
 
         if
@@ -126,9 +129,15 @@ public struct LinkingProvisioningMessage {
         guard let mrbkBytes = proto.mediaRootBackupKey else {
             throw ProvisioningError.invalidProvisionMessage("missing media key from provisioning message")
         }
-        self.mrbk = try BackupKey(contents: mrbkBytes)
+        self.mrbk = try MediaRootBackupKey(backupKey: BackupKey(contents: mrbkBytes))
 
-        self.ephemeralBackupKey = try proto.ephemeralBackupKey.map({ try BackupKey.init(contents: $0) })
+        let aci = aci
+        self.ephemeralBackupKey = try proto.ephemeralBackupKey.map {
+            return MessageRootBackupKey(
+                backupKey: try BackupKey(contents: $0),
+                aci: aci
+            )
+        }
     }
 
     public func buildEncryptedMessageBody(theirPublicKey: PublicKey) throws -> Data {
@@ -144,12 +153,22 @@ public struct LinkingProvisioningMessage {
         messageBuilder.setReadReceipts(areReadReceiptsEnabled)
         messageBuilder.setProvisioningVersion(Constants.provisioningVersion)
         messageBuilder.setNumber(phoneNumber)
-        messageBuilder.setAci(aci.rawUUID.uuidString.lowercased())
-        messageBuilder.setPni(pni.rawUUID.uuidString.lowercased())
+        if BuildFlags.serviceIdStrings {
+            messageBuilder.setAci(aci.rawUUID.uuidString.lowercased())
+        }
+        if BuildFlags.serviceIdBinaryProvisioning {
+            messageBuilder.setAciBinary(aci.rawUUID.data)
+        }
+        if BuildFlags.serviceIdStrings {
+            messageBuilder.setPni(pni.rawUUID.uuidString.lowercased())
+        }
+        if BuildFlags.serviceIdBinaryProvisioning {
+            messageBuilder.setPniBinary(pni.rawUUID.data)
+        }
 
         switch rootKey {
         case .accountEntropyPool(let accountEntropyPool):
-            messageBuilder.setAccountEntropyPool(accountEntropyPool.rawData)
+            messageBuilder.setAccountEntropyPool(accountEntropyPool.rawString)
             messageBuilder.setMasterKey(accountEntropyPool.getMasterKey().rawData)
         case .masterKey(let masterKey):
             messageBuilder.setMasterKey(masterKey.rawData)

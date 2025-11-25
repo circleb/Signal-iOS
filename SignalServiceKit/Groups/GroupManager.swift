@@ -33,8 +33,7 @@ public class GroupManager: NSObject {
     // Epoch 5: Promote pending PNI members
     public static let changeProtoEpoch: UInt32 = 5
 
-    // This matches kOversizeTextMessageSizeThreshold.
-    public static let maxEmbeddedChangeProtoLength: UInt = 2 * 1024
+    public static let maxEmbeddedChangeProtoLength: UInt = UInt(OWSMediaUtils.kOversizeTextMessageSizeThresholdBytes)
 
     // MARK: - Group IDs
 
@@ -179,6 +178,7 @@ public class GroupManager: NSObject {
                 groupModel: groupModel,
                 disappearingMessageToken: disappearingMessageToken,
                 groupUpdateSource: .localUser(originalSource: .aci(localIdentifiers.aci)),
+                infoMessagePolicy: .insert,
                 localIdentifiers: localIdentifiers,
                 spamReportingMetadata: .createdByLocalAction,
                 transaction: tx
@@ -241,11 +241,11 @@ public class GroupManager: NSObject {
         let groupModel = try builder.buildAsV2()
 
         // Just create it in the database, don't create it on the service.
-        return try remoteUpsertExistingGroupForTests(
+        return remoteUpsertExistingGroupForTests(
             groupModel: groupModel,
             disappearingMessageToken: nil,
             groupUpdateSource: .localUser(originalSource: .aci(localIdentifiers.aci)),
-            infoMessagePolicy: shouldInsertInfoMessage ? .always : .never,
+            infoMessagePolicy: shouldInsertInfoMessage ? .insert : .doNotInsert,
             localIdentifiers: localIdentifiers,
             transaction: transaction
         )
@@ -256,11 +256,11 @@ public class GroupManager: NSObject {
         groupModel: TSGroupModelV2,
         disappearingMessageToken: DisappearingMessageToken?,
         groupUpdateSource: GroupUpdateSource,
-        infoMessagePolicy: InfoMessagePolicy = .always,
+        infoMessagePolicy: InfoMessagePolicy = .insert,
         localIdentifiers: LocalIdentifiers,
         transaction: DBWriteTransaction
-    ) throws -> TSGroupThread {
-        return try self.tryToUpsertExistingGroupThreadInDatabaseAndCreateInfoMessage(
+    ) -> TSGroupThread {
+        return self.tryToUpsertExistingGroupThreadInDatabaseAndCreateInfoMessage(
             newGroupModel: groupModel,
             newDisappearingMessageToken: disappearingMessageToken,
             newlyLearnedPniToAciAssociations: [:],
@@ -429,18 +429,20 @@ public class GroupManager: NSObject {
         groupThread: TSGroupThread,
         replacementAdminAci: Aci? = nil,
         waitForMessageProcessing: Bool = false,
+        isDeletingAccount: Bool = false,
         tx: DBWriteTransaction
-    ) -> Promise<Void> {
+    ) -> Promise<[Promise<Void>]> {
         return SSKEnvironment.shared.localUserLeaveGroupJobQueueRef.addJob(
             groupThread: groupThread,
             replacementAdminAci: replacementAdminAci,
             waitForMessageProcessing: waitForMessageProcessing,
+            isDeletingAccount: isDeletingAccount,
             tx: tx
         )
     }
 
     public static func leaveGroupOrDeclineInviteAsyncWithoutUI(groupThread: TSGroupThread, tx: DBWriteTransaction) {
-        guard groupThread.isLocalUserMemberOfAnyKind else {
+        guard groupThread.groupModel.groupMembership.isLocalUserMemberOfAnyKind else {
             owsFailDebug("unexpectedly trying to leave group for which we're not a member.")
             return
         }
@@ -452,7 +454,7 @@ public class GroupManager: NSObject {
                     return self.localLeaveGroupOrDeclineInvite(groupThread: groupThread, tx: tx)
                 }
                 do {
-                    try await leavePromise.awaitable()
+                    _ = try await leavePromise.awaitable()
                 } catch {
                     owsFailDebug("Couldn't leave group: \(error)")
                 }
@@ -687,13 +689,13 @@ public class GroupManager: NSObject {
                 //
                 // newDisappearingMessageToken is nil because we don't want to change DM
                 // state.
-                try updateExistingGroupThreadInDatabaseAndCreateInfoMessage(
+                updateExistingGroupThreadInDatabaseAndCreateInfoMessage(
                     groupThread: groupThread,
                     newGroupModel: newGroupModel,
                     newDisappearingMessageToken: nil,
                     newlyLearnedPniToAciAssociations: [:],
                     groupUpdateSource: .unknown,
-                    infoMessagePolicy: .always,
+                    infoMessagePolicy: .insert,
                     localIdentifiers: localIdentifiers,
                     spamReportingMetadata: .createdByLocalAction,
                     transaction: tx
@@ -706,13 +708,17 @@ public class GroupManager: NSObject {
 
     // MARK: - Messages
 
-    public static func sendGroupUpdateMessage(groupId: GroupIdentifier, isUrgent: Bool = false, groupChangeProtoData: Data? = nil) async {
-        await SSKEnvironment.shared.databaseStorageRef.awaitableWrite { transaction in
+    public static func sendGroupUpdateMessage(
+        groupId: GroupIdentifier,
+        isUrgent: Bool = false,
+        isDeletingAccount: Bool = false,
+        groupChangeProtoData: Data? = nil,
+    ) async -> Promise<Void> {
+        return await SSKEnvironment.shared.databaseStorageRef.awaitableWrite { (transaction) -> Promise<Void> in
             let dmConfigurationStore = DependenciesBridge.shared.disappearingMessagesConfigurationStore
 
             guard let thread = TSGroupThread.fetch(forGroupId: groupId, tx: transaction) else {
-                owsFailDebug("Couldn't send group update message to missing thread.")
-                return
+                return Promise(error: OWSAssertionError("couldn't send group update message to missing thread"))
             }
 
             let message = OutgoingGroupUpdateMessage(
@@ -722,6 +728,7 @@ public class GroupManager: NSObject {
                 groupChangeProtoData: groupChangeProtoData,
                 additionalRecipients: Self.invitedMembers(in: thread),
                 isUrgent: isUrgent,
+                isDeletingAccount: isDeletingAccount,
                 transaction: transaction
             )
             // "changeActionsProtoData" is _not_ an attachment, it is just put on
@@ -730,7 +737,7 @@ public class GroupManager: NSObject {
                 transientMessageWithoutAttachments: message
             )
 
-            SSKEnvironment.shared.messageSenderJobQueueRef.add(message: preparedMessage, transaction: transaction)
+            return SSKEnvironment.shared.messageSenderJobQueueRef.add(.promise, message: preparedMessage, transaction: transaction)
         }
     }
 
@@ -778,18 +785,16 @@ public class GroupManager: NSObject {
     // MARK: - Group Database
 
     public enum InfoMessagePolicy {
-        case always
-        case insertsOnly
-        case updatesOnly
-        case never
+        case insert
+        case doNotInsert
     }
 
     // If disappearingMessageToken is nil, don't update the disappearing messages configuration.
-    public static func insertGroupThreadInDatabaseAndCreateInfoMessage(
+    private static func insertGroupThreadInDatabaseAndCreateInfoMessage(
         groupModel: TSGroupModelV2,
         disappearingMessageToken: DisappearingMessageToken?,
         groupUpdateSource: GroupUpdateSource,
-        infoMessagePolicy: InfoMessagePolicy = .always,
+        infoMessagePolicy: InfoMessagePolicy,
         localIdentifiers: LocalIdentifiers,
         spamReportingMetadata: GroupUpdateSpamReportingMetadata,
         transaction: DBWriteTransaction
@@ -819,7 +824,7 @@ public class GroupManager: NSObject {
         )
 
         switch infoMessagePolicy {
-        case .always, .insertsOnly:
+        case .insert:
             insertGroupUpdateInfoMessageForNewGroup(
                 localIdentifiers: localIdentifiers,
                 spamReportingMetadata: spamReportingMetadata,
@@ -829,7 +834,7 @@ public class GroupManager: NSObject {
                 groupUpdateSource: groupUpdateSource,
                 transaction: transaction
             )
-        default:
+        case .doNotInsert:
             break
         }
 
@@ -853,18 +858,18 @@ public class GroupManager: NSObject {
         newlyLearnedPniToAciAssociations: [Pni: Aci],
         groupUpdateSource: GroupUpdateSource,
         didAddLocalUserToV2Group: Bool,
-        infoMessagePolicy: InfoMessagePolicy = .always,
+        infoMessagePolicy: InfoMessagePolicy,
         localIdentifiers: LocalIdentifiers,
         spamReportingMetadata: GroupUpdateSpamReportingMetadata,
         transaction: DBWriteTransaction
-    ) throws -> TSGroupThread {
+    ) -> TSGroupThread {
         if DebugFlags.internalLogging {
             let groupId = try? newGroupModel.secretParams().getPublicParams().getGroupIdentifier()
             Logger.info("Upserting thread for \(groupId as Optional); didAddLocalUser? \(didAddLocalUserToV2Group); groupUpdateSource: \(groupUpdateSource)")
         }
 
         if let groupThread = TSGroupThread.fetch(groupId: newGroupModel.groupId, transaction: transaction) {
-            try updateExistingGroupThreadInDatabaseAndCreateInfoMessage(
+            updateExistingGroupThreadInDatabaseAndCreateInfoMessage(
                 groupThread: groupThread,
                 newGroupModel: newGroupModel,
                 newDisappearingMessageToken: newDisappearingMessageToken,
@@ -897,6 +902,12 @@ public class GroupManager: NSObject {
                 Logger.info("Inserting thread for \(groupId as Optional); shouldAttributeAuthor? \(shouldAttributeAuthor)")
             }
 
+            insertRecipients(
+                addedMembers: newGroupModel.groupMembership.allMembersOfAnyKindServiceIds,
+                localIdentifiers: localIdentifiers,
+                tx: transaction,
+            )
+
             return insertGroupThreadInDatabaseAndCreateInfoMessage(
                 groupModel: newGroupModel,
                 disappearingMessageToken: newDisappearingMessageToken,
@@ -922,11 +933,11 @@ public class GroupManager: NSObject {
         newDisappearingMessageToken: DisappearingMessageToken?,
         newlyLearnedPniToAciAssociations: [Pni: Aci],
         groupUpdateSource: GroupUpdateSource,
-        infoMessagePolicy: InfoMessagePolicy = .always,
+        infoMessagePolicy: InfoMessagePolicy = .insert,
         localIdentifiers: LocalIdentifiers,
         spamReportingMetadata: GroupUpdateSpamReportingMetadata,
         transaction: DBWriteTransaction
-    ) throws {
+    ) {
         guard
             let newGroupModel = newGroupModel as? TSGroupModelV2,
             let oldGroupModel = groupThread.groupModel as? TSGroupModelV2
@@ -951,6 +962,17 @@ public class GroupManager: NSObject {
             updateDMResult = (
                 oldConfiguration: dmConfiguration,
                 newConfiguration: dmConfiguration
+            )
+        }
+
+        do {
+            let oldMembers = oldGroupModel.membership.allMembersOfAnyKindServiceIds
+            let newMembers = newGroupModel.membership.allMembersOfAnyKindServiceIds
+
+            insertRecipients(
+                addedMembers: newMembers.subtracting(oldMembers),
+                localIdentifiers: localIdentifiers,
+                tx: transaction,
             )
         }
 
@@ -1054,9 +1076,9 @@ public class GroupManager: NSObject {
 
         let shouldInsertInfoMessages: Bool
         switch infoMessagePolicy {
-        case .always, .updatesOnly:
+        case .insert:
             shouldInsertInfoMessages = true
-        case .never, .insertsOnly:
+        case .doNotInsert:
             shouldInsertInfoMessages = false
         }
 
@@ -1106,6 +1128,20 @@ public class GroupManager: NSObject {
             tx: tx
         )
         return !mutualGroupThreads.isEmpty
+    }
+
+    private static func insertRecipients(addedMembers: Set<ServiceId>, localIdentifiers: LocalIdentifiers, tx: DBWriteTransaction) {
+        let recipientFetcher = DependenciesBridge.shared.recipientFetcher
+        let recipientManager = DependenciesBridge.shared.recipientManager
+        for addedMember in addedMembers {
+            if localIdentifiers.contains(serviceId: addedMember) {
+                continue
+            }
+            var (inserted, recipient) = recipientFetcher.fetchOrCreateImpl(serviceId: addedMember, tx: tx)
+            if inserted {
+                recipientManager.markAsRegisteredAndSave(&recipient, shouldUpdateStorageService: true, tx: tx)
+            }
+        }
     }
 
     // MARK: - Storage Service

@@ -6,9 +6,9 @@
 import Foundation
 @testable import SignalServiceKit
 
-typealias PerformTSRequestBlock = ((TSRequest, Bool) async throws -> any HTTPResponse)
-typealias PerformRequestBlock = ((URLRequest) async throws -> any HTTPResponse)
-typealias PerformUploadBlock = ((URLRequest, URL, OWSProgressSource?) async throws -> any HTTPResponse)
+typealias PerformTSRequestBlock = ((TSRequest) async throws -> HTTPResponse)
+typealias PerformRequestBlock = ((URLRequest) async throws -> HTTPResponse)
+typealias PerformUploadBlock = ((URLRequest, Data, OWSProgressSource?) async throws -> HTTPResponse)
 
 enum MockRequestType {
     case uploadForm(PerformTSRequestBlock)
@@ -66,6 +66,9 @@ enum CDNEndpoint: UInt32, CaseIterable {
 }
 
 class AttachmentUploadManagerMockHelper {
+    let mockAccountKeyStore = AccountKeyStore(
+        backupSettingsStore: BackupSettingsStore(),
+    )
     var mockDate = Date()
     lazy var mockDateProvider = { return self.mockDate }
     var mockDB = InMemoryDB()
@@ -80,7 +83,6 @@ class AttachmentUploadManagerMockHelper {
     lazy var mockAttachmentUploadStore = AttachmentUploadStoreMock(attachmentStore: mockAttachmentStore)
     var mockAttachmentThumbnailService = MockAttachmentThumbnailService()
     var mockAttachmentEncrypter = AttachmentUploadManagerImpl.Mocks.AttachmentEncrypter()
-    var mockBackupKeyMaterial = AttachmentUploadManagerImpl.Mocks.BackupKeyMaterial()
     var mockBackupRequestManager = AttachmentUploadManagerImpl.Mocks.BackupRequestManager()
     var mockRemoteConfigProvider = MockRemoteConfigProvider()
     var mockSleepTimer = AttachmentUploadManagerImpl.Mocks.SleepTimer()
@@ -125,14 +127,17 @@ class AttachmentUploadManagerMockHelper {
         mockServiceManager.mockUrlSessionBuilder = { (info: SignalServiceInfo, endpoint: OWSURLSessionEndpoint, config: URLSessionConfiguration? ) in
             return self.mockURLSession
         }
+        mockServiceManager.mockCDNUrlSessionBuilder = { _ in
+            return self.mockURLSession
+        }
 
-        mockNetworkManager.performRequestBlock = { request, canUseWebSocket in
+        mockNetworkManager.performRequestBlock = { request in
             let item = self.authFormRequestBlock.removeFirst()
             guard case let .uploadForm(authDataTaskBlock) = item else {
                 return .init(error: OWSAssertionError("Mock request missing"))
             }
             self.capturedRequests.append(.uploadForm(request))
-            return Promise.wrapAsync { try await authDataTaskBlock(request, canUseWebSocket) }
+            return Promise.wrapAsync { try await authDataTaskBlock(request) }
         }
 
         mockURLSession.performRequestBlock = { request in
@@ -148,12 +153,12 @@ class AttachmentUploadManagerMockHelper {
             }
         }
 
-        mockURLSession.performUploadFileBlock = { request, url, _, progress in
+        mockURLSession.performUploadDataBlock = { request, data, progress in
             guard case let .uploadTask(requestBlock) = self.activeUploadRequestMocks.removeFirst() else {
                 throw OWSAssertionError("Mock request missing")
             }
             self.capturedRequests.append(.uploadTask(request))
-            return try await requestBlock(request, url, progress)
+            return try await requestBlock(request, data, progress)
         }
     }
 
@@ -193,9 +198,9 @@ class AttachmentUploadManagerMockHelper {
             cdnKey: UUID().uuidString,
             cdnNumber: cdn.rawValue
         )
-        authFormRequestBlock.append(.uploadForm({ request, _ in
+        authFormRequestBlock.append(.uploadForm({ request in
             self.activeUploadRequestMocks = self.authToUploadRequestMockMap[authString] ?? .init()
-            return HTTPResponseImpl(
+            return HTTPResponse(
                 requestUrl: request.url,
                 status: statusCode,
                 headers: HttpHeaders(),
@@ -225,7 +230,7 @@ class AttachmentUploadManagerMockHelper {
                 let fetchedUploadLocation = "https://upload/fetchedUploadLocation/\(UUID().uuidString)"
                 enqueue(auth: auth, request: .uploadLocation({ request in
                     let headers = [ "Location": fetchedUploadLocation ]
-                    return HTTPResponseImpl(
+                    return HTTPResponse(
                         requestUrl: request.url!,
                         status: statusCode,
                         headers: HttpHeaders(httpHeaders: headers, overwriteOnConflict: true),
@@ -259,7 +264,9 @@ class AttachmentUploadManagerMockHelper {
 
                 switch type {
                 case .progress(let count):
-                    headers["Range"] = "bytes=0-\(count)"
+                    // CDN2 has behavior where the range is returned, not the number of bytes uploaded
+                    // So we need to adjust this so `count` can mean consistent things across tests.
+                    headers["Range"] = "bytes=0-\(count - 1)"
                 case .newUpload:
                     break
                 case .missingRange:
@@ -272,7 +279,7 @@ class AttachmentUploadManagerMockHelper {
                     statusCode = 201 // This could also be a 200
                 }
 
-                return HTTPResponseImpl(
+                return HTTPResponse(
                     requestUrl: request.url!,
                     status: statusCode,
                     headers: HttpHeaders(httpHeaders: headers, overwriteOnConflict: true),
@@ -299,7 +306,7 @@ class AttachmentUploadManagerMockHelper {
                     statusCode = 403
                 }
 
-                return HTTPResponseImpl(
+                return HTTPResponse(
                     requestUrl: request.url!,
                     status: statusCode,
                     headers: HttpHeaders(httpHeaders: headers, overwriteOnConflict: true),
@@ -327,15 +334,14 @@ class AttachmentUploadManagerMockHelper {
             case .networkError:
                 throw OWSHTTPError.networkFailure(.genericFailure)
             case .failure(let code):
-                throw OWSHTTPError.forServiceResponse(
+                throw OWSHTTPError.serviceResponse(.init(
                     requestUrl: URL(string: location)!,
                     responseStatus: code,
                     responseHeaders: HttpHeaders(),
-                    responseError: nil,
                     responseData: nil
-                )
+                ))
             case .success:
-                return HTTPResponseImpl(
+                return HTTPResponse(
                     requestUrl: request.url!,
                     status: 200,
                     headers: HttpHeaders(),

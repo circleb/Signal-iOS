@@ -11,6 +11,14 @@ public struct SystemContact {
         static let maxPhoneNumbers = 50
     }
 
+    public static var contactKeys: [CNKeyDescriptor] {
+        return [
+            CNContactFormatter.descriptorForRequiredKeys(for: .fullName),
+            CNContactPhoneNumbersKey as CNKeyDescriptor,
+            CNContactEmailAddressesKey as CNKeyDescriptor,
+        ]
+    }
+
     public let cnContactId: String
     public let firstName: String
     public let lastName: String
@@ -20,10 +28,6 @@ public struct SystemContact {
     public let emailAddresses: [String]
 
     public init(cnContact: CNContact, didFetchEmailAddresses: Bool = true) {
-        if cnContact.phoneNumbers.count > Constants.maxPhoneNumbers {
-            Logger.warn("Ignoring phone numbers from contact with more than \(Constants.maxPhoneNumbers)")
-        }
-
         var phoneNumbers = [(String, String?)]()
         for phoneNumber in cnContact.phoneNumbers.prefix(Constants.maxPhoneNumbers) {
             phoneNumbers.append((

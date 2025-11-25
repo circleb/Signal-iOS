@@ -16,8 +16,6 @@ final class ShareAppExtensionContext: NSObject {
 
     let appLaunchTime = Date()
 
-    let appForegroundTime = Date()
-
     private var notificationCenterObservers = [NSObjectProtocol]()
 
     static private let isRTL: Bool = {
@@ -183,9 +181,4 @@ extension ShareAppExtensionContext: AppContext {
     var hasUI: Bool { true }
 
     var debugLogsDirPath: String { DebugLogger.shareExtensionDebugLogsDirPath }
-
-    @MainActor
-    func resetAppDataAndExit() -> Never {
-        owsFail("Not main app.")
-    }
 }

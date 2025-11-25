@@ -46,15 +46,9 @@ class OWSContactsManagerTest: SignalBaseTest {
     }
 
     private func makeAndInsertRecipient(address: SignalServiceAddress) -> SignalRecipient {
-        let recipient = SignalRecipient(
-            aci: address.aci,
-            pni: nil,
-            phoneNumber: address.e164
-        )
-        self.dbV2.write { tx in
-            mockRecipientDatabaseTable.insertRecipient(recipient, transaction: tx)
+        return self.dbV2.write { tx in
+            return try! SignalRecipient.insertRecord(aci: address.aci, phoneNumber: address.e164, tx: tx)
         }
-        return recipient
     }
 
     private func createRecipients(_ serviceIds: [ServiceId]) {
@@ -62,8 +56,9 @@ class OWSContactsManagerTest: SignalBaseTest {
         let recipientManager = DependenciesBridge.shared.recipientManager
         self.dbV2.write { tx in
             for serviceId in serviceIds {
+                var recipient = recipientFetcher.fetchOrCreate(serviceId: serviceId, tx: tx)
                 recipientManager.markAsRegisteredAndSave(
-                    recipientFetcher.fetchOrCreate(serviceId: serviceId, tx: tx),
+                    &recipient,
                     shouldUpdateStorageService: false,
                     tx: tx
                 )

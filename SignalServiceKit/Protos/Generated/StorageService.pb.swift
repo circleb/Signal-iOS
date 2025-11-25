@@ -151,7 +151,7 @@ enum StorageServiceProtos_AvatarColor: SwiftProtobuf.Enum, Swift.CaseIterable {
 
 }
 
-struct StorageServiceProtos_StorageItem: @unchecked Sendable {
+struct StorageServiceProtos_StorageItem: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -180,7 +180,7 @@ struct StorageServiceProtos_StorageItems: Sendable {
   init() {}
 }
 
-struct StorageServiceProtos_StorageManifest: @unchecked Sendable {
+struct StorageServiceProtos_StorageManifest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -196,7 +196,7 @@ struct StorageServiceProtos_StorageManifest: @unchecked Sendable {
   init() {}
 }
 
-struct StorageServiceProtos_ReadOperation: @unchecked Sendable {
+struct StorageServiceProtos_ReadOperation: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -208,7 +208,7 @@ struct StorageServiceProtos_ReadOperation: @unchecked Sendable {
   init() {}
 }
 
-struct StorageServiceProtos_WriteOperation: @unchecked Sendable {
+struct StorageServiceProtos_WriteOperation: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -235,7 +235,7 @@ struct StorageServiceProtos_WriteOperation: @unchecked Sendable {
   fileprivate var _manifest: StorageServiceProtos_StorageManifest? = nil
 }
 
-struct StorageServiceProtos_ManifestRecord: @unchecked Sendable {
+struct StorageServiceProtos_ManifestRecord: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -251,7 +251,7 @@ struct StorageServiceProtos_ManifestRecord: @unchecked Sendable {
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  struct Key: @unchecked Sendable {
+  struct Key: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -522,6 +522,18 @@ struct StorageServiceProtos_ContactRecord: @unchecked Sendable {
   /// Clears the value of `avatarColor`. Subsequent reads from it will return its default value.
   mutating func clearAvatarColor() {_uniqueStorage()._avatarColor = nil}
 
+  /// 16-byte UUID
+  var aciBinary: Data {
+    get {return _storage._aciBinary}
+    set {_uniqueStorage()._aciBinary = newValue}
+  }
+
+  /// 16-byte UUID
+  var pniBinary: Data {
+    get {return _storage._pniBinary}
+    set {_uniqueStorage()._pniBinary = newValue}
+  }
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   enum IdentityState: SwiftProtobuf.Enum, Swift.CaseIterable {
@@ -581,7 +593,7 @@ struct StorageServiceProtos_ContactRecord: @unchecked Sendable {
   fileprivate var _storage = _StorageClass.defaultInstance
 }
 
-struct StorageServiceProtos_GroupV1Record: @unchecked Sendable {
+struct StorageServiceProtos_GroupV1Record: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -594,7 +606,7 @@ struct StorageServiceProtos_GroupV1Record: @unchecked Sendable {
   init() {}
 }
 
-struct StorageServiceProtos_GroupV2Record: @unchecked Sendable {
+struct StorageServiceProtos_GroupV2Record: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -849,6 +861,15 @@ struct StorageServiceProtos_AccountRecord: @unchecked Sendable {
   /// Clears the value of `usernameLink`. Subsequent reads from it will return its default value.
   mutating func clearUsernameLink() {_uniqueStorage()._usernameLink = nil}
 
+  var backupTier: UInt64 {
+    get {return _storage._backupTier ?? 0}
+    set {_uniqueStorage()._backupTier = newValue}
+  }
+  /// Returns true if `backupTier` has been explicitly set.
+  var hasBackupTier: Bool {return _storage._backupTier != nil}
+  /// Clears the value of `backupTier`. Subsequent reads from it will return its default value.
+  mutating func clearBackupTier() {_uniqueStorage()._backupTier = nil}
+
   var backupSubscriberData: StorageServiceProtos_AccountRecord.IAPSubscriberData {
     get {return _storage._backupSubscriberData ?? StorageServiceProtos_AccountRecord.IAPSubscriberData()}
     set {_uniqueStorage()._backupSubscriberData = newValue}
@@ -907,7 +928,7 @@ struct StorageServiceProtos_AccountRecord: @unchecked Sendable {
 
   }
 
-  struct PinnedConversation: @unchecked Sendable {
+  struct PinnedConversation: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -940,7 +961,7 @@ struct StorageServiceProtos_AccountRecord: @unchecked Sendable {
 
     var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    enum OneOf_Identifier: Equatable, @unchecked Sendable {
+    enum OneOf_Identifier: Equatable, Sendable {
       case contact(StorageServiceProtos_AccountRecord.PinnedConversation.Contact)
       case legacyGroupID(Data)
       case groupMasterKey(Data)
@@ -956,6 +977,9 @@ struct StorageServiceProtos_AccountRecord: @unchecked Sendable {
 
       var e164: String = String()
 
+      /// service ID binary (i.e. 16 byte UUID for ACI, 1 byte prefix + 16 byte UUID for PNI)
+      var serviceIDBinary: Data = Data()
+
       var unknownFields = SwiftProtobuf.UnknownStorage()
 
       init() {}
@@ -964,7 +988,7 @@ struct StorageServiceProtos_AccountRecord: @unchecked Sendable {
     init() {}
   }
 
-  struct Payments: @unchecked Sendable {
+  struct Payments: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -978,7 +1002,7 @@ struct StorageServiceProtos_AccountRecord: @unchecked Sendable {
     init() {}
   }
 
-  struct UsernameLink: @unchecked Sendable {
+  struct UsernameLink: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1059,7 +1083,7 @@ struct StorageServiceProtos_AccountRecord: @unchecked Sendable {
     init() {}
   }
 
-  struct IAPSubscriberData: @unchecked Sendable {
+  struct IAPSubscriberData: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1104,7 +1128,7 @@ struct StorageServiceProtos_AccountRecord: @unchecked Sendable {
   fileprivate var _storage = _StorageClass.defaultInstance
 }
 
-struct StorageServiceProtos_StoryDistributionListRecord: @unchecked Sendable {
+struct StorageServiceProtos_StoryDistributionListRecord: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -1121,12 +1145,15 @@ struct StorageServiceProtos_StoryDistributionListRecord: @unchecked Sendable {
 
   var isBlockList: Bool = false
 
+  /// service ID binary (i.e. 16 byte UUID for ACI, 1 byte prefix + 16 byte UUID for PNI)
+  var recipientServiceIdsBinary: [Data] = []
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
 }
 
-struct StorageServiceProtos_CallLinkRecord: @unchecked Sendable {
+struct StorageServiceProtos_CallLinkRecord: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -1150,36 +1177,16 @@ struct StorageServiceProtos_CallLinkRecord: @unchecked Sendable {
 fileprivate let _protobuf_package = "StorageServiceProtos"
 
 extension StorageServiceProtos_OptionalBool: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "UNSET"),
-    1: .same(proto: "TRUE"),
-    2: .same(proto: "FALSE"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNSET\0\u{1}TRUE\0\u{1}FALSE\0")
 }
 
 extension StorageServiceProtos_AvatarColor: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "A100"),
-    1: .same(proto: "A110"),
-    2: .same(proto: "A120"),
-    3: .same(proto: "A130"),
-    4: .same(proto: "A140"),
-    5: .same(proto: "A150"),
-    6: .same(proto: "A160"),
-    7: .same(proto: "A170"),
-    8: .same(proto: "A180"),
-    9: .same(proto: "A190"),
-    10: .same(proto: "A200"),
-    11: .same(proto: "A210"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0A100\0\u{1}A110\0\u{1}A120\0\u{1}A130\0\u{1}A140\0\u{1}A150\0\u{1}A160\0\u{1}A170\0\u{1}A180\0\u{1}A190\0\u{1}A200\0\u{1}A210\0")
 }
 
 extension StorageServiceProtos_StorageItem: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".StorageItem"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "key"),
-    2: .same(proto: "value"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}key\0\u{1}value\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1214,9 +1221,7 @@ extension StorageServiceProtos_StorageItem: SwiftProtobuf.Message, SwiftProtobuf
 
 extension StorageServiceProtos_StorageItems: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".StorageItems"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "items"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}items\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1246,10 +1251,7 @@ extension StorageServiceProtos_StorageItems: SwiftProtobuf.Message, SwiftProtobu
 
 extension StorageServiceProtos_StorageManifest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".StorageManifest"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "version"),
-    2: .same(proto: "value"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}version\0\u{1}value\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1284,9 +1286,7 @@ extension StorageServiceProtos_StorageManifest: SwiftProtobuf.Message, SwiftProt
 
 extension StorageServiceProtos_ReadOperation: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".ReadOperation"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "readKey"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}readKey\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1316,12 +1316,7 @@ extension StorageServiceProtos_ReadOperation: SwiftProtobuf.Message, SwiftProtob
 
 extension StorageServiceProtos_WriteOperation: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".WriteOperation"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "manifest"),
-    2: .same(proto: "insertItem"),
-    3: .same(proto: "deleteKey"),
-    4: .same(proto: "deleteAll"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}manifest\0\u{1}insertItem\0\u{1}deleteKey\0\u{1}deleteAll\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1370,12 +1365,7 @@ extension StorageServiceProtos_WriteOperation: SwiftProtobuf.Message, SwiftProto
 
 extension StorageServiceProtos_ManifestRecord: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".ManifestRecord"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "version"),
-    3: .same(proto: "sourceDevice"),
-    2: .same(proto: "keys"),
-    4: .same(proto: "recordIkm"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}version\0\u{1}keys\0\u{1}sourceDevice\0\u{1}recordIkm\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1420,10 +1410,7 @@ extension StorageServiceProtos_ManifestRecord: SwiftProtobuf.Message, SwiftProto
 
 extension StorageServiceProtos_ManifestRecord.Key: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = StorageServiceProtos_ManifestRecord.protoMessageName + ".Key"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "data"),
-    2: .same(proto: "type"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}data\0\u{1}type\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1457,27 +1444,12 @@ extension StorageServiceProtos_ManifestRecord.Key: SwiftProtobuf.Message, SwiftP
 }
 
 extension StorageServiceProtos_ManifestRecord.Key.TypeEnum: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "UNKNOWN"),
-    1: .same(proto: "CONTACT"),
-    2: .same(proto: "GROUPV1"),
-    3: .same(proto: "GROUPV2"),
-    4: .same(proto: "ACCOUNT"),
-    5: .same(proto: "STORY_DISTRIBUTION_LIST"),
-    7: .same(proto: "CALL_LINK"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNKNOWN\0\u{1}CONTACT\0\u{1}GROUPV1\0\u{1}GROUPV2\0\u{1}ACCOUNT\0\u{1}STORY_DISTRIBUTION_LIST\0\u{2}\u{2}CALL_LINK\0")
 }
 
 extension StorageServiceProtos_StorageRecord: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".StorageRecord"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "contact"),
-    2: .same(proto: "groupV1"),
-    3: .same(proto: "groupV2"),
-    4: .same(proto: "account"),
-    5: .same(proto: "storyDistributionList"),
-    7: .same(proto: "callLink"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}contact\0\u{1}groupV1\0\u{1}groupV2\0\u{1}account\0\u{1}storyDistributionList\0\u{2}\u{2}callLink\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1612,31 +1584,7 @@ extension StorageServiceProtos_StorageRecord: SwiftProtobuf.Message, SwiftProtob
 
 extension StorageServiceProtos_ContactRecord: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".ContactRecord"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "aci"),
-    2: .same(proto: "e164"),
-    15: .same(proto: "pni"),
-    3: .same(proto: "profileKey"),
-    4: .same(proto: "identityKey"),
-    5: .same(proto: "identityState"),
-    6: .same(proto: "givenName"),
-    7: .same(proto: "familyName"),
-    8: .same(proto: "username"),
-    9: .same(proto: "blocked"),
-    10: .same(proto: "whitelisted"),
-    11: .same(proto: "archived"),
-    12: .same(proto: "markedUnread"),
-    13: .same(proto: "mutedUntilTimestamp"),
-    14: .same(proto: "hideStory"),
-    16: .same(proto: "unregisteredAtTimestamp"),
-    17: .same(proto: "systemGivenName"),
-    18: .same(proto: "systemFamilyName"),
-    19: .same(proto: "systemNickname"),
-    20: .same(proto: "hidden"),
-    22: .same(proto: "nickname"),
-    23: .same(proto: "note"),
-    24: .same(proto: "avatarColor"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}aci\0\u{1}e164\0\u{1}profileKey\0\u{1}identityKey\0\u{1}identityState\0\u{1}givenName\0\u{1}familyName\0\u{1}username\0\u{1}blocked\0\u{1}whitelisted\0\u{1}archived\0\u{1}markedUnread\0\u{1}mutedUntilTimestamp\0\u{1}hideStory\0\u{1}pni\0\u{1}unregisteredAtTimestamp\0\u{1}systemGivenName\0\u{1}systemFamilyName\0\u{1}systemNickname\0\u{1}hidden\0\u{2}\u{2}nickname\0\u{1}note\0\u{1}avatarColor\0\u{1}aciBinary\0\u{1}pniBinary\0")
 
   fileprivate class _StorageClass {
     var _aci: String = String()
@@ -1662,6 +1610,8 @@ extension StorageServiceProtos_ContactRecord: SwiftProtobuf.Message, SwiftProtob
     var _nickname: StorageServiceProtos_ContactRecord.Name? = nil
     var _note: String = String()
     var _avatarColor: StorageServiceProtos_AvatarColor? = nil
+    var _aciBinary: Data = Data()
+    var _pniBinary: Data = Data()
 
       // This property is used as the initial default value for new instances of the type.
       // The type itself is protecting the reference to its storage via CoW semantics.
@@ -1695,6 +1645,8 @@ extension StorageServiceProtos_ContactRecord: SwiftProtobuf.Message, SwiftProtob
       _nickname = source._nickname
       _note = source._note
       _avatarColor = source._avatarColor
+      _aciBinary = source._aciBinary
+      _pniBinary = source._pniBinary
     }
   }
 
@@ -1736,6 +1688,8 @@ extension StorageServiceProtos_ContactRecord: SwiftProtobuf.Message, SwiftProtob
         case 22: try { try decoder.decodeSingularMessageField(value: &_storage._nickname) }()
         case 23: try { try decoder.decodeSingularStringField(value: &_storage._note) }()
         case 24: try { try decoder.decodeSingularEnumField(value: &_storage._avatarColor) }()
+        case 25: try { try decoder.decodeSingularBytesField(value: &_storage._aciBinary) }()
+        case 26: try { try decoder.decodeSingularBytesField(value: &_storage._pniBinary) }()
         default: break
         }
       }
@@ -1817,6 +1771,12 @@ extension StorageServiceProtos_ContactRecord: SwiftProtobuf.Message, SwiftProtob
       try { if let v = _storage._avatarColor {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 24)
       } }()
+      if !_storage._aciBinary.isEmpty {
+        try visitor.visitSingularBytesField(value: _storage._aciBinary, fieldNumber: 25)
+      }
+      if !_storage._pniBinary.isEmpty {
+        try visitor.visitSingularBytesField(value: _storage._pniBinary, fieldNumber: 26)
+      }
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -1849,6 +1809,8 @@ extension StorageServiceProtos_ContactRecord: SwiftProtobuf.Message, SwiftProtob
         if _storage._nickname != rhs_storage._nickname {return false}
         if _storage._note != rhs_storage._note {return false}
         if _storage._avatarColor != rhs_storage._avatarColor {return false}
+        if _storage._aciBinary != rhs_storage._aciBinary {return false}
+        if _storage._pniBinary != rhs_storage._pniBinary {return false}
         return true
       }
       if !storagesAreEqual {return false}
@@ -1859,19 +1821,12 @@ extension StorageServiceProtos_ContactRecord: SwiftProtobuf.Message, SwiftProtob
 }
 
 extension StorageServiceProtos_ContactRecord.IdentityState: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "DEFAULT"),
-    1: .same(proto: "VERIFIED"),
-    2: .same(proto: "UNVERIFIED"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0DEFAULT\0\u{1}VERIFIED\0\u{1}UNVERIFIED\0")
 }
 
 extension StorageServiceProtos_ContactRecord.Name: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = StorageServiceProtos_ContactRecord.protoMessageName + ".Name"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "given"),
-    2: .same(proto: "family"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}given\0\u{1}family\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1906,12 +1861,7 @@ extension StorageServiceProtos_ContactRecord.Name: SwiftProtobuf.Message, SwiftP
 
 extension StorageServiceProtos_GroupV1Record: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".GroupV1Record"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(
-      reservedNames: [],
-      reservedRanges: [2..<7],
-      numberNameMappings: [
-        1: .same(proto: "id"),
-  ])
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0\u{c}\u{2}\u{1}\u{c}\u{3}\u{1}\u{c}\u{4}\u{1}\u{c}\u{5}\u{1}\u{c}\u{6}\u{1}")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1941,18 +1891,7 @@ extension StorageServiceProtos_GroupV1Record: SwiftProtobuf.Message, SwiftProtob
 
 extension StorageServiceProtos_GroupV2Record: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".GroupV2Record"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "masterKey"),
-    2: .same(proto: "blocked"),
-    3: .same(proto: "whitelisted"),
-    4: .same(proto: "archived"),
-    5: .same(proto: "markedUnread"),
-    6: .same(proto: "mutedUntilTimestamp"),
-    7: .same(proto: "dontNotifyForMentionsIfMuted"),
-    8: .same(proto: "hideStory"),
-    10: .same(proto: "storySendMode"),
-    11: .same(proto: "avatarColor"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}masterKey\0\u{1}blocked\0\u{1}whitelisted\0\u{1}archived\0\u{1}markedUnread\0\u{1}mutedUntilTimestamp\0\u{1}dontNotifyForMentionsIfMuted\0\u{1}hideStory\0\u{2}\u{2}storySendMode\0\u{1}avatarColor\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2030,54 +1969,12 @@ extension StorageServiceProtos_GroupV2Record: SwiftProtobuf.Message, SwiftProtob
 }
 
 extension StorageServiceProtos_GroupV2Record.StorySendMode: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "DEFAULT"),
-    1: .same(proto: "DISABLED"),
-    2: .same(proto: "ENABLED"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0DEFAULT\0\u{1}DISABLED\0\u{1}ENABLED\0")
 }
 
 extension StorageServiceProtos_AccountRecord: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".AccountRecord"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(
-      reservedNames: [],
-      reservedRanges: [18..<19, 28..<29, 32..<33, 36..<39],
-      numberNameMappings: [
-        1: .same(proto: "profileKey"),
-        2: .same(proto: "givenName"),
-        3: .same(proto: "familyName"),
-        4: .same(proto: "avatarUrl"),
-        5: .same(proto: "noteToSelfArchived"),
-        6: .same(proto: "readReceipts"),
-        7: .same(proto: "sealedSenderIndicators"),
-        8: .same(proto: "typingIndicators"),
-        9: .same(proto: "proxiedLinkPreviews"),
-        10: .same(proto: "noteToSelfMarkedUnread"),
-        11: .same(proto: "linkPreviews"),
-        12: .same(proto: "phoneNumberSharingMode"),
-        13: .same(proto: "notDiscoverableByPhoneNumber"),
-        14: .same(proto: "pinnedConversations"),
-        15: .same(proto: "preferContactAvatars"),
-        16: .same(proto: "payments"),
-        17: .same(proto: "universalExpireTimer"),
-        19: .same(proto: "e164"),
-        20: .same(proto: "preferredReactionEmoji"),
-        21: .same(proto: "donorSubscriberID"),
-        22: .same(proto: "donorSubscriberCurrencyCode"),
-        23: .same(proto: "displayBadgesOnProfile"),
-        24: .same(proto: "donorSubscriptionManuallyCancelled"),
-        25: .same(proto: "keepMutedChatsArchived"),
-        26: .same(proto: "myStoryPrivacyHasBeenSet"),
-        27: .same(proto: "viewedOnboardingStory"),
-        29: .same(proto: "storiesDisabled"),
-        30: .same(proto: "storyViewReceiptsEnabled"),
-        31: .same(proto: "readOnboardingStory"),
-        33: .same(proto: "username"),
-        34: .same(proto: "completedUsernameOnboarding"),
-        35: .same(proto: "usernameLink"),
-        41: .same(proto: "backupSubscriberData"),
-        42: .same(proto: "avatarColor"),
-  ])
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}profileKey\0\u{1}givenName\0\u{1}familyName\0\u{1}avatarUrl\0\u{1}noteToSelfArchived\0\u{1}readReceipts\0\u{1}sealedSenderIndicators\0\u{1}typingIndicators\0\u{1}proxiedLinkPreviews\0\u{1}noteToSelfMarkedUnread\0\u{1}linkPreviews\0\u{1}phoneNumberSharingMode\0\u{1}notDiscoverableByPhoneNumber\0\u{1}pinnedConversations\0\u{1}preferContactAvatars\0\u{1}payments\0\u{1}universalExpireTimer\0\u{2}\u{2}e164\0\u{1}preferredReactionEmoji\0\u{1}donorSubscriberID\0\u{1}donorSubscriberCurrencyCode\0\u{1}displayBadgesOnProfile\0\u{1}donorSubscriptionManuallyCancelled\0\u{1}keepMutedChatsArchived\0\u{1}myStoryPrivacyHasBeenSet\0\u{1}viewedOnboardingStory\0\u{2}\u{2}storiesDisabled\0\u{1}storyViewReceiptsEnabled\0\u{1}readOnboardingStory\0\u{2}\u{2}username\0\u{1}completedUsernameOnboarding\0\u{1}usernameLink\0\u{2}\u{5}backupTier\0\u{1}backupSubscriberData\0\u{1}avatarColor\0\u{c}\u{12}\u{1}\u{c}\u{1c}\u{1}\u{c} \u{1}\u{c}$\u{1}\u{c}%\u{1}\u{c}&\u{1}\u{c}'\u{1}")
 
   fileprivate class _StorageClass {
     var _profileKey: Data = Data()
@@ -2112,6 +2009,7 @@ extension StorageServiceProtos_AccountRecord: SwiftProtobuf.Message, SwiftProtob
     var _username: String = String()
     var _completedUsernameOnboarding: Bool = false
     var _usernameLink: StorageServiceProtos_AccountRecord.UsernameLink? = nil
+    var _backupTier: UInt64? = nil
     var _backupSubscriberData: StorageServiceProtos_AccountRecord.IAPSubscriberData? = nil
     var _avatarColor: StorageServiceProtos_AvatarColor? = nil
 
@@ -2156,6 +2054,7 @@ extension StorageServiceProtos_AccountRecord: SwiftProtobuf.Message, SwiftProtob
       _username = source._username
       _completedUsernameOnboarding = source._completedUsernameOnboarding
       _usernameLink = source._usernameLink
+      _backupTier = source._backupTier
       _backupSubscriberData = source._backupSubscriberData
       _avatarColor = source._avatarColor
     }
@@ -2208,6 +2107,7 @@ extension StorageServiceProtos_AccountRecord: SwiftProtobuf.Message, SwiftProtob
         case 33: try { try decoder.decodeSingularStringField(value: &_storage._username) }()
         case 34: try { try decoder.decodeSingularBoolField(value: &_storage._completedUsernameOnboarding) }()
         case 35: try { try decoder.decodeSingularMessageField(value: &_storage._usernameLink) }()
+        case 40: try { try decoder.decodeSingularUInt64Field(value: &_storage._backupTier) }()
         case 41: try { try decoder.decodeSingularMessageField(value: &_storage._backupSubscriberData) }()
         case 42: try { try decoder.decodeSingularEnumField(value: &_storage._avatarColor) }()
         default: break
@@ -2318,6 +2218,9 @@ extension StorageServiceProtos_AccountRecord: SwiftProtobuf.Message, SwiftProtob
       try { if let v = _storage._usernameLink {
         try visitor.visitSingularMessageField(value: v, fieldNumber: 35)
       } }()
+      try { if let v = _storage._backupTier {
+        try visitor.visitSingularUInt64Field(value: v, fieldNumber: 40)
+      } }()
       try { if let v = _storage._backupSubscriberData {
         try visitor.visitSingularMessageField(value: v, fieldNumber: 41)
       } }()
@@ -2365,6 +2268,7 @@ extension StorageServiceProtos_AccountRecord: SwiftProtobuf.Message, SwiftProtob
         if _storage._username != rhs_storage._username {return false}
         if _storage._completedUsernameOnboarding != rhs_storage._completedUsernameOnboarding {return false}
         if _storage._usernameLink != rhs_storage._usernameLink {return false}
+        if _storage._backupTier != rhs_storage._backupTier {return false}
         if _storage._backupSubscriberData != rhs_storage._backupSubscriberData {return false}
         if _storage._avatarColor != rhs_storage._avatarColor {return false}
         return true
@@ -2377,20 +2281,12 @@ extension StorageServiceProtos_AccountRecord: SwiftProtobuf.Message, SwiftProtob
 }
 
 extension StorageServiceProtos_AccountRecord.PhoneNumberSharingMode: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "UNKNOWN"),
-    1: .same(proto: "EVERYBODY"),
-    2: .same(proto: "NOBODY"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNKNOWN\0\u{1}EVERYBODY\0\u{1}NOBODY\0")
 }
 
 extension StorageServiceProtos_AccountRecord.PinnedConversation: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = StorageServiceProtos_AccountRecord.protoMessageName + ".PinnedConversation"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "contact"),
-    3: .same(proto: "legacyGroupId"),
-    4: .same(proto: "groupMasterKey"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}contact\0\u{2}\u{2}legacyGroupId\0\u{1}groupMasterKey\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2464,10 +2360,7 @@ extension StorageServiceProtos_AccountRecord.PinnedConversation: SwiftProtobuf.M
 
 extension StorageServiceProtos_AccountRecord.PinnedConversation.Contact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = StorageServiceProtos_AccountRecord.PinnedConversation.protoMessageName + ".Contact"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "serviceId"),
-    2: .same(proto: "e164"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}serviceId\0\u{1}e164\0\u{1}serviceIdBinary\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2477,6 +2370,7 @@ extension StorageServiceProtos_AccountRecord.PinnedConversation.Contact: SwiftPr
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularStringField(value: &self.serviceID) }()
       case 2: try { try decoder.decodeSingularStringField(value: &self.e164) }()
+      case 3: try { try decoder.decodeSingularBytesField(value: &self.serviceIDBinary) }()
       default: break
       }
     }
@@ -2489,12 +2383,16 @@ extension StorageServiceProtos_AccountRecord.PinnedConversation.Contact: SwiftPr
     if !self.e164.isEmpty {
       try visitor.visitSingularStringField(value: self.e164, fieldNumber: 2)
     }
+    if !self.serviceIDBinary.isEmpty {
+      try visitor.visitSingularBytesField(value: self.serviceIDBinary, fieldNumber: 3)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: StorageServiceProtos_AccountRecord.PinnedConversation.Contact, rhs: StorageServiceProtos_AccountRecord.PinnedConversation.Contact) -> Bool {
     if lhs.serviceID != rhs.serviceID {return false}
     if lhs.e164 != rhs.e164 {return false}
+    if lhs.serviceIDBinary != rhs.serviceIDBinary {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -2502,10 +2400,7 @@ extension StorageServiceProtos_AccountRecord.PinnedConversation.Contact: SwiftPr
 
 extension StorageServiceProtos_AccountRecord.Payments: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = StorageServiceProtos_AccountRecord.protoMessageName + ".Payments"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "enabled"),
-    2: .same(proto: "paymentsEntropy"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}enabled\0\u{1}paymentsEntropy\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2540,11 +2435,7 @@ extension StorageServiceProtos_AccountRecord.Payments: SwiftProtobuf.Message, Sw
 
 extension StorageServiceProtos_AccountRecord.UsernameLink: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = StorageServiceProtos_AccountRecord.protoMessageName + ".UsernameLink"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "entropy"),
-    2: .same(proto: "serverId"),
-    3: .same(proto: "color"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}entropy\0\u{1}serverId\0\u{1}color\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2583,26 +2474,12 @@ extension StorageServiceProtos_AccountRecord.UsernameLink: SwiftProtobuf.Message
 }
 
 extension StorageServiceProtos_AccountRecord.UsernameLink.Color: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "UNKNOWN"),
-    1: .same(proto: "BLUE"),
-    2: .same(proto: "WHITE"),
-    3: .same(proto: "GREY"),
-    4: .same(proto: "OLIVE"),
-    5: .same(proto: "GREEN"),
-    6: .same(proto: "ORANGE"),
-    7: .same(proto: "PINK"),
-    8: .same(proto: "PURPLE"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNKNOWN\0\u{1}BLUE\0\u{1}WHITE\0\u{1}GREY\0\u{1}OLIVE\0\u{1}GREEN\0\u{1}ORANGE\0\u{1}PINK\0\u{1}PURPLE\0")
 }
 
 extension StorageServiceProtos_AccountRecord.IAPSubscriberData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = StorageServiceProtos_AccountRecord.protoMessageName + ".IAPSubscriberData"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "subscriberId"),
-    2: .same(proto: "purchaseToken"),
-    3: .same(proto: "originalTransactionId"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}subscriberId\0\u{1}purchaseToken\0\u{1}originalTransactionId\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2664,14 +2541,7 @@ extension StorageServiceProtos_AccountRecord.IAPSubscriberData: SwiftProtobuf.Me
 
 extension StorageServiceProtos_StoryDistributionListRecord: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".StoryDistributionListRecord"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "identifier"),
-    2: .same(proto: "name"),
-    3: .same(proto: "recipientServiceIds"),
-    4: .same(proto: "deletedAtTimestamp"),
-    5: .same(proto: "allowsReplies"),
-    6: .same(proto: "isBlockList"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}identifier\0\u{1}name\0\u{1}recipientServiceIds\0\u{1}deletedAtTimestamp\0\u{1}allowsReplies\0\u{1}isBlockList\0\u{1}recipientServiceIdsBinary\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2685,6 +2555,7 @@ extension StorageServiceProtos_StoryDistributionListRecord: SwiftProtobuf.Messag
       case 4: try { try decoder.decodeSingularUInt64Field(value: &self.deletedAtTimestamp) }()
       case 5: try { try decoder.decodeSingularBoolField(value: &self.allowsReplies) }()
       case 6: try { try decoder.decodeSingularBoolField(value: &self.isBlockList) }()
+      case 7: try { try decoder.decodeRepeatedBytesField(value: &self.recipientServiceIdsBinary) }()
       default: break
       }
     }
@@ -2709,6 +2580,9 @@ extension StorageServiceProtos_StoryDistributionListRecord: SwiftProtobuf.Messag
     if self.isBlockList != false {
       try visitor.visitSingularBoolField(value: self.isBlockList, fieldNumber: 6)
     }
+    if !self.recipientServiceIdsBinary.isEmpty {
+      try visitor.visitRepeatedBytesField(value: self.recipientServiceIdsBinary, fieldNumber: 7)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -2719,6 +2593,7 @@ extension StorageServiceProtos_StoryDistributionListRecord: SwiftProtobuf.Messag
     if lhs.deletedAtTimestamp != rhs.deletedAtTimestamp {return false}
     if lhs.allowsReplies != rhs.allowsReplies {return false}
     if lhs.isBlockList != rhs.isBlockList {return false}
+    if lhs.recipientServiceIdsBinary != rhs.recipientServiceIdsBinary {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -2726,11 +2601,7 @@ extension StorageServiceProtos_StoryDistributionListRecord: SwiftProtobuf.Messag
 
 extension StorageServiceProtos_CallLinkRecord: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".CallLinkRecord"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "rootKey"),
-    2: .same(proto: "adminPasskey"),
-    3: .same(proto: "deletedAtTimestampMs"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}rootKey\0\u{1}adminPasskey\0\u{1}deletedAtTimestampMs\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {

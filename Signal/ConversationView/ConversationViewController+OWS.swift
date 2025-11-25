@@ -77,12 +77,8 @@ extension ConversationViewController {
     internal func updateContentInsets() {
         AssertIsOnMainThread()
 
-        guard !isMeasuringKeyboardHeight, !isSwitchingKeyboard else {
-            return
-        }
-
         // Don't update the content insets if an interactive pop is in progress
-        guard let navigationController = self.navigationController else {
+        guard let navigationController else {
             return
         }
         if let interactivePopGestureRecognizer = navigationController.interactivePopGestureRecognizer {
@@ -99,11 +95,8 @@ extension ConversationViewController {
         let oldInsets = collectionView.contentInset
         var newInsets = oldInsets
 
-        let keyboardOverlap = inputAccessoryPlaceholder.keyboardOverlap
-        newInsets.bottom = (keyboardOverlap +
-                                bottomBar.height -
-                                view.safeAreaInsets.bottom)
-        newInsets.top = (bannerView?.height ?? 0)
+        newInsets.bottom = bottomBarContainer.frame.height - collectionView.safeAreaInsets.bottom
+        newInsets.top = (bannerStackView?.height ?? 0)
 
         let wasScrolledToBottom = self.isScrolledToBottom
 
@@ -122,12 +115,15 @@ extension ConversationViewController {
             self.collectionView.scrollIndicatorInsets = newInsets
         }
 
+        // If content inset didn't change, no need to update content offset.
+        guard didChangeInsets else { return }
+
+        // UIKit updates collection view's scroll position when user drags with the keyboard
+        // We don't need to do anything.
+        guard !collectionView.isDragging else { return }
+
         // Adjust content offset to prevent the presented keyboard from obscuring content.
-        if !didChangeInsets {
-            // Do nothing.
-            //
-            // If content inset didn't change, no need to update content offset.
-        } else if !hasAppearedAndHasAppliedFirstLoad {
+        if !hasAppearedAndHasAppliedFirstLoad {
             // Do nothing.
         } else if isPresentingContextMenu {
             // Do nothing
@@ -167,10 +163,7 @@ extension ConversationViewController {
                                      comment: "Label for button to learn more about message requests."),
             style: .default,
             handler: { _ in
-                // TODO: Finalize this behavior.
-                let url = URL(string: "https://support.signal.org/hc/articles/360007459591")!
-                UIApplication.shared.open(url, options: [:])
-
+                CurrentAppContext().open(URL.Support.profilesAndMessageRequests, completion: nil)
             }
         ))
         actionSheet.addAction(OWSActionSheets.cancelAction)
@@ -209,10 +202,9 @@ extension ConversationViewController {
         actionSheet.addAction(
             ActionSheetAction(
                 title: CommonStrings.learnMore,
-                accessibilityIdentifier: "learn_more",
                 style: .default
             ) { _ in
-                UIApplication.shared.open(URL(string: "https://support.signal.org/hc/articles/4404859745690")!)
+                CurrentAppContext().open(URL.Support.deliveryIssue, completion: nil)
             }
         )
         presentActionSheet(actionSheet)
@@ -222,8 +214,10 @@ extension ConversationViewController {
 // MARK: - ForwardMessageDelegate
 
 extension ConversationViewController: ForwardMessageDelegate {
-    public func forwardMessageFlowDidComplete(items: [ForwardMessageItem],
-                                              recipientThreads: [TSThread]) {
+    func forwardMessageFlowDidComplete(
+        items: [ForwardMessageItem],
+        recipientThreads: [TSThread],
+    ) {
         AssertIsOnMainThread()
 
         self.uiMode = .normal
@@ -235,7 +229,7 @@ extension ConversationViewController: ForwardMessageDelegate {
         }
     }
 
-    public func forwardMessageFlowDidCancel() {
+    func forwardMessageFlowDidCancel() {
         self.dismiss(animated: true)
     }
 }
@@ -468,13 +462,13 @@ extension ConversationViewController: MessageEditHistoryViewDelegate {
 
 extension ConversationViewController: LongTextViewDelegate {
 
-    public func longTextViewMessageWasDeleted(_ longTextViewController: LongTextViewController) {
+    func longTextViewMessageWasDeleted(_ longTextViewController: LongTextViewController) {
         Logger.info("")
 
         navigationController?.popToViewController(self, animated: true)
     }
 
-    public func expandTruncatedTextOrPresentLongTextView(_ itemViewModel: CVItemViewModelImpl) {
+    func expandTruncatedTextOrPresentLongTextView(_ itemViewModel: CVItemViewModelImpl) {
         AssertIsOnMainThread()
 
         guard let displayableBodyText = itemViewModel.displayableBodyText else {

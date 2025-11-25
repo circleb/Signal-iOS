@@ -23,7 +23,7 @@ extension ConversationViewController {
         let attributedName = NSMutableAttributedString(
             string: threadViewModel.name,
             attributes: [
-                .foregroundColor: Theme.primaryTextColor
+                .foregroundColor: UIColor.Signal.label,
             ]
         )
 
@@ -51,35 +51,46 @@ extension ConversationViewController {
         headerView.delegate = self
         navigationItem.titleView = headerView
 
-        if shouldUseDebugUI() {
-            headerView.addGestureRecognizer(UILongPressGestureRecognizer(
-                target: self,
-                action: #selector(navigationTitleLongPressed)
-            ))
-        }
+#if USE_DEBUG_UI
+        headerView.addGestureRecognizer(UILongPressGestureRecognizer(
+            target: self,
+            action: #selector(navigationTitleLongPressed)
+        ))
+#endif
 
         updateNavigationBarSubtitleLabel()
     }
 
+#if USE_DEBUG_UI
     @objc
     private func navigationTitleLongPressed(_ gestureRecognizer: UIGestureRecognizer) {
         AssertIsOnMainThread()
 
         if gestureRecognizer.state == .began {
-            showDebugUIForThread(thread, fromViewController: self)
+            DebugUITableViewController.presentDebugUI(
+                fromViewController: self,
+                thread: thread
+            )
         }
     }
+#endif
 
     public var unreadCountViewDiameter: CGFloat { 16 }
 
     public func updateBarButtonItems() {
         AssertIsOnMainThread()
 
-        // Don't include "Back" text on view controllers pushed above us, just use the arrow.
-        navigationItem.backBarButtonItem = UIBarButtonItem(title: "",
-                                                           style: .plain,
-                                                           target: nil,
-                                                           action: nil)
+        if #available(iOS 26, *), BuildFlags.iOS26SDKIsAvailable {
+            // iOS 26 already doesn't show back button text
+        } else {
+            // Don't include "Back" text on view controllers pushed above us, just use the arrow.
+            navigationItem.backBarButtonItem = UIBarButtonItem(
+                title: "",
+                style: .plain,
+                target: nil,
+                action: nil
+            )
+        }
 
         navigationItem.hidesBackButton = false
         navigationItem.leftBarButtonItem = nil
@@ -121,6 +132,12 @@ extension ConversationViewController {
                         )
                         pill.buttonText = self.isCurrentCallForThread ? returnString : CallStrings.joinCallPillButtonTitle
                         videoCallButton.customView = pill
+#if compiler(>=6.2)
+                        if #available(iOS 26.0, *) {
+                            videoCallButton.tintColor = UIColor.Signal.green
+                            videoCallButton.style = .prominent
+                        }
+#endif
                     } else {
                         videoCallButton.image = Theme.iconImage(.buttonVideoCall)
                         videoCallButton.target = self
@@ -167,7 +184,6 @@ extension ConversationViewController {
             }
 
             navigationItem.rightBarButtonItems = barButtons
-            showGroupCallTooltipIfNecessary()
             return
         }
     }
@@ -183,9 +199,15 @@ extension ConversationViewController {
 
         let subtitleText = NSMutableAttributedString()
         let subtitleFont = self.headerView.subtitleFont
+        // Use higher-contrast color for the blurred iOS 26 nav bars
+        let fontColor: UIColor = if #available(iOS 26, *), BuildFlags.iOS26SDKIsAvailable {
+            UIColor.Signal.label
+        } else {
+            Theme.navbarTitleColor.withAlphaComponent(0.9)
+        }
         let attributes: [NSAttributedString.Key: Any] = [
             .font: subtitleFont,
-            .foregroundColor: Theme.navbarTitleColor.withAlphaComponent(0.9)
+            .foregroundColor: fontColor,
         ]
         let hairSpace = "\u{200a}"
         let thinSpace = "\u{2009}"
@@ -247,7 +269,6 @@ extension ConversationViewController {
     }
 
     func buildInputToolbar(
-        conversationStyle: ConversationStyle,
         messageDraft: MessageBody?,
         draftReply: ThreadReplyInfo?,
         voiceMemoDraft: VoiceMessageInterruptedDraft?,

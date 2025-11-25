@@ -8,8 +8,22 @@ import SignalUI
 
 class DeleteAccountConfirmationViewController: OWSTableViewController2 {
     private var country: PhoneNumberCountry!
-    private let nationalNumberTextField = UITextField()
-    private let nameLabel = UILabel()
+
+    private lazy var nationalNumberTextField: UITextField = {
+        let textField = UITextField()
+        textField.returnKeyType = .done
+        textField.autocorrectionType = .no
+        textField.spellCheckingType = .no
+        textField.keyboardType = .phonePad
+        textField.textColor = .Signal.label
+        textField.delegate = self
+        return textField
+    }()
+    private let nameLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .Signal.label
+        return label
+    }()
 
     // Don't allow swipe to dismiss
     override var isModalInPresentation: Bool {
@@ -24,23 +38,21 @@ class DeleteAccountConfirmationViewController: OWSTableViewController2 {
         super.init()
     }
 
-    override func loadView() {
-        view = UIView()
-
-        nationalNumberTextField.returnKeyType = .done
-        nationalNumberTextField.autocorrectionType = .no
-        nationalNumberTextField.spellCheckingType = .no
-        nationalNumberTextField.delegate = self
-    }
-
     override func viewDidLoad() {
-        shouldAvoidKeyboard = true
-
         super.viewDidLoad()
+
+        shouldAvoidKeyboard = true
 
         navigationItem.leftBarButtonItem = .cancelButton(dismissingFrom: self)
         navigationItem.rightBarButtonItem = .init(title: CommonStrings.deleteButton, style: .done, target: self, action: #selector(didTapDelete))
-        navigationItem.rightBarButtonItem?.setTitleTextAttributes([.foregroundColor: UIColor.ows_accentRed], for: .normal)
+        if #available(iOS 26, *) {
+            navigationItem.rightBarButtonItem?.tintColor = .Signal.red
+        } else {
+            navigationItem.rightBarButtonItem?.setTitleTextAttributes(
+                [.foregroundColor: UIColor.Signal.red],
+                for: .normal
+            )
+        }
 
         populateDefaultCountryCode()
     }
@@ -48,13 +60,6 @@ class DeleteAccountConfirmationViewController: OWSTableViewController2 {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         nationalNumberTextField.becomeFirstResponder()
-    }
-
-    override func themeDidChange() {
-        super.themeDidChange()
-        nameLabel.textColor = Theme.primaryTextColor
-        nationalNumberTextField.textColor = Theme.primaryTextColor
-        updateTableContents()
     }
 
     func updateTableContents() {
@@ -82,8 +87,7 @@ class DeleteAccountConfirmationViewController: OWSTableViewController2 {
             accessoryText: "\(country.plusPrefixedCallingCode) (\(country.countryCode))",
             actionBlock: { [weak self] in
                 guard let self = self else { return }
-                let countryCodeController = CountryCodeViewController()
-                countryCodeController.countryCodeDelegate = self
+                let countryCodeController = CountryCodeViewController(delegate: self)
                 self.present(OWSNavigationController(rootViewController: countryCodeController), animated: true)
             }
         ))
@@ -109,25 +113,15 @@ class DeleteAccountConfirmationViewController: OWSTableViewController2 {
         imageView.autoPinEdge(toSuperviewEdge: .bottom, withInset: 12)
         imageView.autoHCenterInSuperview()
 
-        let titleLabel = UILabel()
-        titleLabel.font = UIFont.dynamicTypeTitle2.semibold()
-        titleLabel.textColor = Theme.primaryTextColor
-        titleLabel.textAlignment = .center
-        titleLabel.text = OWSLocalizedString(
+        let titleLabel = UILabel.titleLabelForRegistration(text: OWSLocalizedString(
             "DELETE_ACCOUNT_CONFIRMATION_TITLE",
             comment: "Title for the 'delete account' confirmation view."
-        )
+        ))
 
-        let descriptionLabel = UILabel()
-        descriptionLabel.numberOfLines = 0
-        descriptionLabel.lineBreakMode = .byWordWrapping
-        descriptionLabel.font = .dynamicTypeSubheadline
-        descriptionLabel.textColor = Theme.secondaryTextAndIconColor
-        descriptionLabel.textAlignment = .center
-        descriptionLabel.text = OWSLocalizedString(
+        let descriptionLabel = UILabel.explanationLabelForRegistration(text: OWSLocalizedString(
             "DELETE_ACCOUNT_CONFIRMATION_DESCRIPTION",
             comment: "Description for the 'delete account' confirmation view."
-        )
+        ))
 
         let headerView = UIStackView(arrangedSubviews: [
             imageContainer,
@@ -152,13 +146,12 @@ class DeleteAccountConfirmationViewController: OWSTableViewController2 {
             "DELETE_ACCOUNT_CONFIRMATION_PHONE_NUMBER_TITLE",
             comment: "Title for the 'phone number' row of the 'delete account confirmation' view controller."
         )
-        nameLabel.textColor = Theme.primaryTextColor
+        nameLabel.textColor = .Signal.label
         nameLabel.font = OWSTableItem.primaryLabelFont
         nameLabel.adjustsFontForContentSizeCategory = true
         nameLabel.lineBreakMode = .byTruncatingTail
         nameLabel.autoSetDimension(.height, toSize: 24, relation: .greaterThanOrEqual)
 
-        nationalNumberTextField.textColor = Theme.primaryTextColor
         nationalNumberTextField.font = OWSTableItem.accessoryLabelFont
         nationalNumberTextField.placeholder = TextFieldFormatting.exampleNationalNumber(
             forCountryCode: country.countryCode,
@@ -310,10 +303,15 @@ class DeleteAccountConfirmationViewController: OWSTableViewController2 {
             progressView.startAnimating { overlayView.alpha = 1 }
 
             do {
-                try await self.deleteDonationSubscriptionIfNecessary()
-                try await self.unregisterAccount()
+                try await { () async throws -> Never in
+                    try await self.deleteDonationSubscriptionIfNecessary()
+                    try await self.deleteBackupIfNecessary()
+                    try await self.leaveGroups()
+                    try await self.unregisterAccount()
+                    resetAppDataAndExit()
+                }()
             } catch {
-                owsFailDebug("Failed to unregister \(error)")
+                owsFailDebug("Failed to delete account! \(error)")
 
                 progressView.stopAnimating(success: false) {
                     overlayView.alpha = 0
@@ -332,6 +330,46 @@ class DeleteAccountConfirmationViewController: OWSTableViewController2 {
         }
     }
 
+    private func deleteBackupIfNecessary() async throws {
+        let backupKeyService = DependenciesBridge.shared.backupKeyService
+        let backupSettingsStore = BackupSettingsStore()
+        let db = DependenciesBridge.shared.db
+        let logger = PrefixedLogger(prefix: "[Backups]")
+        let tsAccountManager = DependenciesBridge.shared.tsAccountManager
+
+        let (localIdentifiers, currentBackupPlan): (
+            LocalIdentifiers?,
+            BackupPlan,
+        ) = db.read { tx in
+            return (
+                tsAccountManager.localIdentifiers(tx: tx),
+                backupSettingsStore.backupPlan(tx: tx),
+            )
+        }
+
+        guard let localIdentifiers else {
+            return
+        }
+
+        switch currentBackupPlan {
+        case .disabled:
+            logger.info("Backups disabled: skipping delete.")
+            return
+        case .disabling:
+            // If we're disabling then BackupDisablingManager is actively trying
+            // to delete our remote backup, too. Might as well try here too.
+            break
+        case .free, .paid, .paidExpiringSoon, .paidAsTester:
+            break
+        }
+
+        logger.info("Attempting to delete Backups!")
+        try await backupKeyService.deleteBackupKey(
+            localIdentifiers: localIdentifiers,
+            auth: .implicit(),
+        )
+    }
+
     private func deleteDonationSubscriptionIfNecessary() async throws {
         let activeSubscriptionId = SSKEnvironment.shared.databaseStorageRef.read {
             DonationSubscriptionManager.getSubscriberID(transaction: $0)
@@ -343,12 +381,63 @@ class DeleteAccountConfirmationViewController: OWSTableViewController2 {
         return try await DonationSubscriptionManager.cancelSubscription(for: activeSubscriptionId)
     }
 
-    private func unregisterAccount() async throws -> Never {
+    private func leaveGroups() async throws {
+        let databaseStorage = SSKEnvironment.shared.databaseStorageRef
+
+        var sendUpdatePromises = [Promise<Void>]()
+        for uniqueId in databaseStorage.read(block: ThreadFinder().fetchUniqueIds(tx:)) {
+            let leavePromise = await databaseStorage.awaitableWrite { (tx) -> Promise<[Promise<Void>]> in
+                guard
+                    let thread = TSThread.anyFetch(uniqueId: uniqueId, transaction: tx),
+                    let groupThread = thread as? TSGroupThread,
+                    groupThread.isGroupV2Thread,
+                    let groupModel = groupThread.groupModel as? TSGroupModelV2
+                else {
+                    return .value([])
+                }
+                if groupModel.groupMembership.isLocalUserRequestingMember {
+                    return Promise.wrapAsync {
+                        try await GroupManager.cancelRequestToJoin(groupModel: groupModel)
+                        // There's no messages to send when canceling a join request because we
+                        // don't know who's in the the group/who needs to be notified.
+                        return []
+                    }
+                } else {
+                    return GroupManager.localLeaveGroupOrDeclineInvite(
+                        groupThread: groupThread,
+                        isDeletingAccount: true,
+                        tx: tx,
+                    )
+                }
+            }
+            do {
+                sendUpdatePromises.append(contentsOf: try await leavePromise.awaitable())
+            } catch GroupsV2Error.groupBlocked, GroupsV2Error.localUserNotInGroup {
+                // Can't do anything about these groups; ignore the errors.
+            }
+        }
+        for sendUpdatePromise in sendUpdatePromises {
+            do {
+                try await sendUpdatePromise.awaitable()
+            } catch {
+                Logger.warn("Couldn't send group update, but we've already left, so ignoring: \(error)")
+            }
+        }
+    }
+
+    private func unregisterAccount() async throws {
         Logger.info("Unregistering...")
         try await DependenciesBridge.shared.registrationStateChangeManager.unregisterFromService()
     }
 
-    var hasEnteredLocalNumber: Bool {
+    private func resetAppDataAndExit() -> Never {
+        let keyFetcher = SSKEnvironment.shared.databaseStorageRef.keyFetcher
+        SignalApp.resetAppDataAndExit(keyFetcher: keyFetcher)
+    }
+
+    // MARK: -
+
+    private var hasEnteredLocalNumber: Bool {
         let tsAccountManager = DependenciesBridge.shared.tsAccountManager
         guard let localNumber = tsAccountManager.localIdentifiersWithMaybeSneakyTransaction?.phoneNumber else {
             owsFailDebug("local number unexpectedly nil")
@@ -365,6 +454,8 @@ class DeleteAccountConfirmationViewController: OWSTableViewController2 {
         return localNumber == parsedNumber?.e164
     }
 }
+
+// MARK: - CountryCodeViewControllerDelegate
 
 extension DeleteAccountConfirmationViewController: CountryCodeViewControllerDelegate {
     public func countryCodeViewController(_ vc: CountryCodeViewController, didSelectCountry country: PhoneNumberCountry) {
@@ -392,6 +483,8 @@ extension DeleteAccountConfirmationViewController: CountryCodeViewControllerDele
         updateTableContents()
     }
 }
+
+// MARK: - UITextFieldDelegate
 
 extension DeleteAccountConfirmationViewController: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {

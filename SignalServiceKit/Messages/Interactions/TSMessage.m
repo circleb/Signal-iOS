@@ -57,6 +57,8 @@ static const NSUInteger OWSMessageSchemaVersion = 4;
 // This property is only intended to be used by GRDB queries.
 @property (nonatomic, readonly) BOOL storedShouldStartExpireTimer;
 
+@property (nonatomic) BOOL isPoll;
+
 @end
 
 #pragma mark -
@@ -77,8 +79,6 @@ static const NSUInteger OWSMessageSchemaVersion = 4;
     if (messageBuilder.messageBody.length > 0) {
         _body = messageBuilder.messageBody;
         _bodyRanges = messageBuilder.bodyRanges;
-    } else if (messageBuilder.messageBody != nil) {
-        OWSFailDebug(@"Empty message body.");
     }
     _deprecated_attachmentIds = nil;
     _editState = messageBuilder.editState;
@@ -101,6 +101,7 @@ static const NSUInteger OWSMessageSchemaVersion = 4;
     _linkPreview = messageBuilder.linkPreview;
     _messageSticker = messageBuilder.messageSticker;
     _giftBadge = messageBuilder.giftBadge;
+    _isPoll = messageBuilder.isPoll;
 
     return self;
 }
@@ -129,6 +130,7 @@ static const NSUInteger OWSMessageSchemaVersion = 4;
                 expiresInSeconds:(unsigned int)expiresInSeconds
                        giftBadge:(nullable OWSGiftBadge *)giftBadge
                isGroupStoryReply:(BOOL)isGroupStoryReply
+                          isPoll:(BOOL)isPoll
   isSmsMessageRestoredFromBackup:(BOOL)isSmsMessageRestoredFromBackup
               isViewOnceComplete:(BOOL)isViewOnceComplete
                isViewOnceMessage:(BOOL)isViewOnceMessage
@@ -163,6 +165,7 @@ static const NSUInteger OWSMessageSchemaVersion = 4;
     _expiresInSeconds = expiresInSeconds;
     _giftBadge = giftBadge;
     _isGroupStoryReply = isGroupStoryReply;
+    _isPoll = isPoll;
     _isSmsMessageRestoredFromBackup = isSmsMessageRestoredFromBackup;
     _isViewOnceComplete = isViewOnceComplete;
     _isViewOnceMessage = isViewOnceMessage;
@@ -393,6 +396,10 @@ static const NSUInteger OWSMessageSchemaVersion = 4;
 
 - (nullable NSString *)body
 {
+    if (self.isPoll) {
+        return _body;
+    }
+
     return _body.filterStringForDisplay;
 }
 
@@ -441,6 +448,13 @@ static const NSUInteger OWSMessageSchemaVersion = 4;
 
     [self anyUpdateMessageWithTransaction:transaction
                                     block:^(TSMessage *message) { message.contactShare = contactShare; }];
+}
+
+- (void)updateWithIsPoll:(BOOL)isPoll transaction:(DBWriteTransaction *)transaction
+{
+    OWSAssertDebug(transaction);
+
+    [self anyUpdateMessageWithTransaction:transaction block:^(TSMessage *message) { message.isPoll = isPoll; }];
 }
 
 #ifdef TESTABLE_BUILD

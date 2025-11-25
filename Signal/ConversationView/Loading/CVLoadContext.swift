@@ -5,6 +5,7 @@
 
 import SignalServiceKit
 import SignalUI
+import LibSignalClient
 
 // Conversation view loads have been decomposed into a series
 // of discrete phases. There's a bunch of common state used
@@ -18,9 +19,10 @@ struct CVLoadContext: CVItemBuildingContext {
     let viewStateSnapshot: CVViewStateSnapshot
     let spoilerState: SpoilerRenderState
     let messageLoader: MessageLoader
-    let prevRenderState: CVRenderState
+    let prevRenderState: CVRenderState?
     let transaction: DBReadTransaction
     let avatarBuilder: CVAvatarBuilder
+    let localAci: Aci
 
     init(
         loadRequest: CVLoadRequest,
@@ -29,6 +31,7 @@ struct CVLoadContext: CVItemBuildingContext {
         spoilerState: SpoilerRenderState,
         messageLoader: MessageLoader,
         prevRenderState: CVRenderState,
+        localAci: Aci,
         transaction: DBReadTransaction
     ) {
         self.loadRequest = loadRequest
@@ -39,6 +42,7 @@ struct CVLoadContext: CVItemBuildingContext {
         self.prevRenderState = prevRenderState
         self.transaction = transaction
         self.avatarBuilder = CVAvatarBuilder(transaction: transaction)
+        self.localAci = localAci
     }
 
     // Convenience Accessors
@@ -58,6 +62,8 @@ protocol CVItemBuildingContext {
     var viewStateSnapshot: CVViewStateSnapshot { get }
     var transaction: DBReadTransaction { get }
     var avatarBuilder: CVAvatarBuilder { get }
+    var localAci: Aci { get }
+    var prevRenderState: CVRenderState? { get }
 }
 
 // MARK: -
@@ -73,10 +79,12 @@ extension CVItemBuildingContext {
 // MARK: -
 
 struct CVItemBuildingContextImpl: CVItemBuildingContext {
+    let prevRenderState: CVRenderState?
     let threadViewModel: ThreadViewModel
     let viewStateSnapshot: CVViewStateSnapshot
     let transaction: DBReadTransaction
     let avatarBuilder: CVAvatarBuilder
+    let localAci: Aci
 }
 
 // MARK: -
@@ -97,4 +105,5 @@ extension CVItemBuilding {
     var mediaCache: CVMediaCache { itemBuildingContext.mediaCache }
     var transaction: DBReadTransaction { itemBuildingContext.transaction }
     var avatarBuilder: CVAvatarBuilder { itemBuildingContext.avatarBuilder }
+    var localAci: Aci { itemBuildingContext.localAci }
 }

@@ -123,8 +123,7 @@ public class OutgoingMessageFactory: Factory {
             thread: threadCreator(transaction),
             timestamp: timestampBuilder(),
             receivedAtTimestamp: receivedAtTimestampBuilder(),
-            messageBody: messageBodyBuilder(),
-            bodyRanges: bodyRangesBuilder(),
+            messageBody: validatedMessageBodyBuilder(transaction),
             editState: editStateBuilder(),
             expiresInSeconds: expiresInSecondsBuilder(),
             expireTimerVersion: expireTimerVersionBuilder(),
@@ -144,7 +143,8 @@ public class OutgoingMessageFactory: Factory {
             contactShare: contactShareBuilder(),
             linkPreview: linkPreviewBuilder(),
             messageSticker: messageStickerBuilder(),
-            giftBadge: giftBadgeBuilder()
+            giftBadge: giftBadgeBuilder(),
+            isPoll: isPollBuilder()
         ).build(transaction: transaction)
         return message
     }
@@ -170,6 +170,13 @@ public class OutgoingMessageFactory: Factory {
 
     public var receivedAtTimestampBuilder: () -> UInt64 = {
         return NSDate.ows_millisecondTimeStamp()
+    }
+
+    public lazy var validatedMessageBodyBuilder: (_ tx: DBWriteTransaction) -> ValidatedInlineMessageBody = { tx in
+        DependenciesBridge.shared.attachmentContentValidator.truncatedMessageBodyForInlining(
+            MessageBody(text: self.messageBodyBuilder(), ranges: self.bodyRangesBuilder()),
+            tx: tx
+        )
     }
 
     public var messageBodyBuilder: () -> String = {
@@ -248,6 +255,10 @@ public class OutgoingMessageFactory: Factory {
         return nil
     }
 
+    public var isPollBuilder: () -> Bool = {
+        return false
+    }
+
     // MARK: Delivery Receipts
 
     public func buildDeliveryReceipt() -> OWSReceiptsForSenderMessage {
@@ -285,8 +296,7 @@ public class IncomingMessageFactory: Factory {
             receivedAtTimestamp: receivedAtTimestampBuilder(),
             authorAci: authorAciBuilder(thread),
             authorE164: nil,
-            messageBody: messageBodyBuilder(),
-            bodyRanges: bodyRangesBuilder(),
+            messageBody: validatedMessageBodyBuilder(transaction),
             editState: editStateBuilder(),
             expiresInSeconds: expiresInSecondsBuilder(),
             expireTimerVersion: expireTimerVersionBuilder(),
@@ -308,7 +318,8 @@ public class IncomingMessageFactory: Factory {
             linkPreview: linkPreviewBuilder(),
             messageSticker: messageStickerBuilder(),
             giftBadge: giftBadgeBuilder(),
-            paymentNotification: paymentNotificationBuilder()
+            paymentNotification: paymentNotificationBuilder(),
+            isPoll: isPollBuilder()
         )
         let item = builder.build()
         item.anyInsert(transaction: transaction)
@@ -329,6 +340,13 @@ public class IncomingMessageFactory: Factory {
 
     public var receivedAtTimestampBuilder: () -> UInt64 = {
         return NSDate.ows_millisecondTimeStamp()
+    }
+
+    public lazy var validatedMessageBodyBuilder: (_ tx: DBWriteTransaction) -> ValidatedInlineMessageBody = { tx in
+        DependenciesBridge.shared.attachmentContentValidator.truncatedMessageBodyForInlining(
+            MessageBody(text: self.messageBodyBuilder(), ranges: self.bodyRangesBuilder()),
+            tx: tx
+        )
     }
 
     public var messageBodyBuilder: () -> String = {
@@ -425,6 +443,10 @@ public class IncomingMessageFactory: Factory {
     public var paymentNotificationBuilder: () -> TSPaymentNotification? = {
         return nil
     }
+
+    public var isPollBuilder: () -> Bool = {
+        return false
+    }
 }
 
 public class ConversationFactory {
@@ -440,36 +462,43 @@ public class ConversationFactory {
         outgoingFactory.threadCreator = threadCreator
         let message = outgoingFactory.create(transaction: transaction)
 
-        SSKEnvironment.shared.databaseStorageRef.asyncWrite { asyncTransaction in
-            let unpreparedMessage = UnpreparedOutgoingMessage.forMessage(
-                message,
-                unsavedBodyMediaAttachments: bodyAttachmentDataSources
+        Task {
+            let messageBody = try! await DependenciesBridge.shared.attachmentContentValidator.prepareOversizeTextIfNeeded(
+                MessageBody(text: outgoingFactory.messageBodyBuilder(), ranges: outgoingFactory.bodyRangesBuilder())
             )
-            _ = try! unpreparedMessage.prepare(tx: asyncTransaction)
 
-            for attachment in message.allAttachments(transaction: asyncTransaction) {
-                guard let stream = attachment.asStream() else {
-                    continue
+            await SSKEnvironment.shared.databaseStorageRef.awaitableWrite { asyncTransaction in
+                let unpreparedMessage = UnpreparedOutgoingMessage.forMessage(
+                    message,
+                    body: messageBody,
+                    unsavedBodyMediaAttachments: bodyAttachmentDataSources
+                )
+                _ = try! unpreparedMessage.prepare(tx: asyncTransaction)
+
+                for attachment in message.allAttachments(transaction: asyncTransaction) {
+                    guard let stream = attachment.asStream() else {
+                        continue
+                    }
+                    let transitTierInfo = Attachment.TransitTierInfo(
+                        cdnNumber: 3,
+                        cdnKey: "1234",
+                        uploadTimestamp: 1,
+                        encryptionKey: Randomness.generateRandomBytes(16),
+                        unencryptedByteCount: 16,
+                        integrityCheck: .digestSHA256Ciphertext(Randomness.generateRandomBytes(16)),
+                        // TODO: [Attachment Streaming] support incremental mac
+                        incrementalMacInfo: nil,
+                        lastDownloadAttemptTimestamp: nil
+                    )
+                    try! (DependenciesBridge.shared.attachmentStore as? AttachmentUploadStore)?.markUploadedToTransitTier(
+                        attachmentStream: stream,
+                        info: transitTierInfo,
+                        tx: asyncTransaction
+                    )
                 }
-                let transitTierInfo = Attachment.TransitTierInfo(
-                    cdnNumber: 3,
-                    cdnKey: "1234",
-                    uploadTimestamp: 1,
-                    encryptionKey: Randomness.generateRandomBytes(16),
-                    unencryptedByteCount: 16,
-                    integrityCheck: .digestSHA256Ciphertext(Randomness.generateRandomBytes(16)),
-                    // TODO: [Attachment Streaming] support incremental mac
-                    incrementalMacInfo: nil,
-                    lastDownloadAttemptTimestamp: nil
-                )
-                try! (DependenciesBridge.shared.attachmentStore as? AttachmentUploadStore)?.markUploadedToTransitTier(
-                    attachmentStream: stream,
-                    info: transitTierInfo,
-                    tx: asyncTransaction
-                )
-            }
 
-            message.updateWithFakeMessageState(.sent, tx: asyncTransaction)
+                message.updateWithFakeMessageState(.sent, tx: asyncTransaction)
+            }
         }
 
         return message

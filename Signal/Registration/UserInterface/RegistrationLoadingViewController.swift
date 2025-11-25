@@ -6,12 +6,12 @@
 import SignalServiceKit
 import SignalUI
 
-class RegistrationLoadingViewController: OWSViewController {
+class RegistrationLoadingViewController: OWSViewController, OWSNavigationChildController {
     enum RegistrationLoadingMode {
         case generic
         case submittingPhoneNumber(e164: String)
         case submittingVerificationCode
-        case restoringBackup
+        case restoringBackup(BackupProgressModal)
     }
 
     public init(mode: RegistrationLoadingMode) {
@@ -38,6 +38,8 @@ class RegistrationLoadingViewController: OWSViewController {
         }())
 
         super.init()
+
+        navigationItem.hidesBackButton = true
     }
 
     @available(*, unavailable)
@@ -45,13 +47,30 @@ class RegistrationLoadingViewController: OWSViewController {
         owsFail("This should not be called")
     }
 
+    // MARK: OWSNavigationChildController
+
+    public var preferredNavigationBarStyle: OWSNavigationBarStyle { .solid }
+
+    public var navbarBackgroundColorOverride: UIColor? { .clear }
+
+    public var prefersNavigationBarHidden: Bool { true }
+
     // MARK: - Rendering
 
     private let spinnerView: AnimatedProgressView
 
     public override func viewDidLoad() {
         super.viewDidLoad()
-        initialRender()
+
+        view.backgroundColor = .Signal.background
+
+        spinnerView.alpha = 1
+        view.addSubview(spinnerView)
+        spinnerView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            spinnerView.centerXAnchor.constraint(equalTo: contentLayoutGuide.centerXAnchor),
+            spinnerView.centerYAnchor.constraint(equalTo: contentLayoutGuide.centerYAnchor),
+        ])
     }
 
     public override func viewWillAppear(_ animated: Bool) {
@@ -59,25 +78,5 @@ class RegistrationLoadingViewController: OWSViewController {
         if spinnerView.isAnimating.negated {
             spinnerView.startAnimating()
         }
-    }
-
-    public override func themeDidChange() {
-        super.themeDidChange()
-        render()
-    }
-
-    private func initialRender() {
-        navigationItem.setHidesBackButton(true, animated: false)
-
-        spinnerView.alpha = 1
-
-        view.addSubview(spinnerView)
-        spinnerView.autoCenterInSuperviewMargins()
-
-        render()
-    }
-
-    private func render() {
-        view.backgroundColor = Theme.backgroundColor
     }
 }

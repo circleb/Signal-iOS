@@ -3,6 +3,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+import GRDB
+
 extension BackupArchive {
     public struct LocalRecipientId: BackupArchive.LoggableId {
         public var typeLogString: String { "Local Recipient" }
@@ -78,6 +80,13 @@ public class BackupArchiveLocalRecipientArchiver: BackupArchiveProtoStreamWriter
         }
     }
 
+    func fetchLocalRecipientRowId(
+        localIdentifiers: LocalIdentifiers,
+        tx: DBReadTransaction
+    ) -> SignalRecipient.RowId? {
+        return recipientStore.fetchRecipient(localIdentifiers: localIdentifiers, tx: tx)?.id
+    }
+
     /// Restore a single ``BackupProto/Recipient`` frame for the local recipient.
     public func restoreSelfRecipient(
         _ selfRecipientProto: BackupProto_Self,
@@ -86,16 +95,20 @@ public class BackupArchiveLocalRecipientArchiver: BackupArchiveProtoStreamWriter
     ) -> BackupArchive.RestoreLocalRecipientResult {
         context[recipient.recipientId] = .localAddress
 
-        let localSignalRecipient = SignalRecipient(
-            aci: context.localIdentifiers.aci,
-            pni: context.localIdentifiers.pni,
-            phoneNumber: E164(context.localIdentifiers.phoneNumber)
-        )
-        do {
-            try recipientStore.insertRecipient(localSignalRecipient, tx: context.tx)
+        let localSignalRecipient: SignalRecipient
+        do throws(GRDB.DatabaseError) {
+            localSignalRecipient = try SignalRecipient.insertRecord(
+                aci: context.localIdentifiers.aci,
+                phoneNumber: E164(context.localIdentifiers.phoneNumber),
+                pni: context.localIdentifiers.pni,
+                tx: context.tx,
+            )
+            recipientStore.didInsertRecipient(localSignalRecipient, tx: context.tx)
         } catch {
             return .failure([.restoreFrameError(.databaseInsertionFailed(error), recipient.recipientId)])
         }
+
+        context.localSignalRecipientRowId = localSignalRecipient.id
 
         if
             selfRecipientProto.hasAvatarColor,
@@ -104,7 +117,7 @@ public class BackupArchiveLocalRecipientArchiver: BackupArchiveProtoStreamWriter
             do {
                 try avatarDefaultColorManager.persistDefaultColor(
                     defaultColor,
-                    recipientRowId: localSignalRecipient.id!,
+                    recipientRowId: localSignalRecipient.id,
                     tx: context.tx
                 )
             } catch {

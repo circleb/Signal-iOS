@@ -13,7 +13,7 @@ public class CLVBackupDownloadProgressView {
         var downloadQueueStatus: BackupAttachmentDownloadQueueStatus?
         var backupPlan: BackupPlan?
         var didDismissDownloadCompleteBanner: Bool?
-        var totalPendingBackupAttachmentDownloadByteCount: UInt64?
+        var downloadCompleteBannerByteCount: UInt64?
         var downloadProgress: OWSProgress?
         var downloadProgressObserver: BackupAttachmentDownloadProgress.Observer?
 
@@ -27,13 +27,17 @@ public class CLVBackupDownloadProgressView {
             self.backupPlan = BackupSettingsStore().backupPlan(tx: tx)
             self.didDismissDownloadCompleteBanner = backupAttachmentDownloadStore
                 .getDidDismissDownloadCompleteBanner(tx: tx)
-            self.totalPendingBackupAttachmentDownloadByteCount =
-                try? backupAttachmentDownloadStore.computeEstimatedRemainingByteCount(tx: tx)
+            self.downloadCompleteBannerByteCount =
+                backupAttachmentDownloadStore.getDownloadCompleteBannerByteCount(tx: tx)
 
         }
     }
 
-    public let backupDownloadProgressViewCell = UITableViewCell()
+    public let backupDownloadProgressViewCell: UITableViewCell = {
+        let cell = UITableViewCell()
+        cell.backgroundColor = .Signal.background
+        return cell
+    }()
 
     fileprivate let backupAttachmentDownloadProgressView: BackupAttachmentDownloadProgressView
 
@@ -43,23 +47,26 @@ public class CLVBackupDownloadProgressView {
         }
     }
 
-    private let backupAttachmentDownloadManager: BackupAttachmentDownloadManager
     private let backupAttachmentDownloadQueueStatusReporter: BackupAttachmentDownloadQueueStatusReporter
     private let backupAttachmentDownloadStore: BackupAttachmentDownloadStore
     private let backupSettingsStore: BackupSettingsStore
     private let db: DB
+    private let deviceSleepManager: DeviceSleepManager
 
     init() {
         AssertIsOnMainThread()
 
-        self.backupAttachmentDownloadManager = DependenciesBridge.shared.backupAttachmentDownloadManager
+        guard let deviceSleepManager = DependenciesBridge.shared.deviceSleepManager else {
+            owsFail("Unexpectedly missing device sleep manager in main app!")
+        }
+
         self.backupAttachmentDownloadQueueStatusReporter = DependenciesBridge.shared.backupAttachmentDownloadQueueStatusReporter
         self.backupAttachmentDownloadStore = DependenciesBridge.shared.backupAttachmentDownloadStore
         self.backupSettingsStore = BackupSettingsStore()
         self.db = DependenciesBridge.shared.db
+        self.deviceSleepManager = deviceSleepManager
 
         backupAttachmentDownloadProgressView = BackupAttachmentDownloadProgressView(
-            backupAttachmentDownloadManager: backupAttachmentDownloadManager,
             backupAttachmentDownloadQueueStatusReporter: backupAttachmentDownloadQueueStatusReporter,
             backupAttachmentDownloadStore: backupAttachmentDownloadStore,
             backupSettingsStore: backupSettingsStore,
@@ -86,6 +93,7 @@ public class CLVBackupDownloadProgressView {
         }
     }
 
+    @MainActor
     func update(viewState: CLVBackupDownloadProgressView.State) {
         let state = Self.downloadProgressState(
             viewState: viewState,
@@ -101,14 +109,52 @@ public class CLVBackupDownloadProgressView {
             },
             backupAttachmentDownloadQueueStatusReporter: backupAttachmentDownloadQueueStatusReporter
         )
+
         let oldState = backupAttachmentDownloadProgressView.state
         backupAttachmentDownloadProgressView.state = state
+
         if (oldState == nil) != (state == nil) {
             DispatchQueue.main.async { [weak self] in
                 self?.chatListViewController?.loadCoordinator.loadIfNecessary()
             }
         }
+
+        manageDeviceSleepBlock(state: state)
     }
+
+    // MARK: -
+
+    @MainActor
+    func willAppear() {
+        manageDeviceSleepBlock(state: backupAttachmentDownloadProgressView.state)
+    }
+
+    @MainActor
+    func didDisappear() {
+        // Force-drop the sleep block if we're disappearing.
+        manageDeviceSleepBlock(state: nil)
+    }
+
+    // MARK: -
+
+    private var deviceSleepBlock: DeviceSleepBlockObject?
+
+    @MainActor
+    private func manageDeviceSleepBlock(state: BackupAttachmentDownloadProgressView.State?) {
+        switch state {
+        case nil, .complete:
+            if let deviceSleepBlock {
+                deviceSleepManager.removeBlock(blockObject: deviceSleepBlock)
+            }
+        case .restoring, .wifiNotReachable, .paused, .outOfDiskSpace:
+            if deviceSleepBlock == nil {
+                deviceSleepBlock = DeviceSleepBlockObject(blockReason: "BackupAttachmentDownloadProgressView")
+                deviceSleepManager.addBlock(blockObject: deviceSleepBlock!)
+            }
+        }
+    }
+
+    // MARK: -
 
     static func measureHeight(
         viewState: CLVBackupDownloadProgressView.State,
@@ -138,10 +184,12 @@ public class CLVBackupDownloadProgressView {
             break
         }
         switch viewState.downloadQueueStatus {
-        case .none, .notRegisteredAndReady, .suspended:
+        case .none, .notRegisteredAndReady, .suspended, .appBackgrounded:
             return nil
         case .lowBattery:
             return .paused(reason: .lowBattery)
+        case .lowPowerMode:
+            return .paused(reason: .lowPowerMode)
         case .lowDiskSpace:
             let minRequiredDiskSpace = backupAttachmentDownloadQueueStatusReporter
                 .minimumRequiredDiskSpaceToCompleteDownloads()
@@ -160,7 +208,7 @@ public class CLVBackupDownloadProgressView {
         case .empty:
             if
                 viewState.didDismissDownloadCompleteBanner == false,
-                let downloadSize = viewState.totalPendingBackupAttachmentDownloadByteCount
+                let downloadSize = viewState.downloadCompleteBannerByteCount
             {
                 return .complete(size: downloadSize, dismissAction: completeDismissAction)
             } else {
@@ -169,6 +217,97 @@ public class CLVBackupDownloadProgressView {
         }
     }
 }
+
+// MARK: -
+
+extension ChatListViewController {
+    func handleBackupDownloadProgressViewTapped() {
+        let db = DependenciesBridge.shared.db
+        let tsAccountManager = DependenciesBridge.shared.tsAccountManager
+
+        let isPrimaryDevice = db.read { tx in
+            tsAccountManager.registrationState(tx: tx).isPrimaryDevice ?? false
+        }
+
+        if isPrimaryDevice {
+            showAppSettings(mode: .backups)
+        } else {
+            showCancelBackupDownloadsHeroSheet()
+        }
+    }
+
+    private func showCancelBackupDownloadsHeroSheet() {
+        let cancelDownloadsSheet = HeroSheetViewController(
+            hero: .image(.backupsLogo),
+            title: OWSLocalizedString(
+                "RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_1_TITLE",
+                comment: "Title for a sheet allowing users to cancel an in-progress media restore.",
+            ),
+            body: OWSLocalizedString(
+                "RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_1_BODY",
+                comment: "Body for a sheet allowing users to cancel an in-progress media restore.",
+            ),
+            primaryButton: .dismissing(title: OWSLocalizedString(
+                "RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_1_PRIMARY_BUTTON",
+                comment: "Button for a sheet allowing users to cancel an in-progress media restore.",
+            )),
+            secondaryButton: HeroSheetViewController.Button(
+                title: OWSLocalizedString(
+                    "RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_1_SECONDARY_BUTTON",
+                    comment: "Button for a sheet allowing users to cancel an in-progress media restore.",
+                ),
+                style: .secondaryDestructive,
+                action: .custom({ sheet in
+                    sheet.dismiss(animated: true) { [weak self] in
+                        self?.showCancelBackupDownloadsConfirmationActionSheet()
+                    }
+                }),
+            ),
+        )
+
+        present(cancelDownloadsSheet, animated: true)
+    }
+
+    private func showCancelBackupDownloadsConfirmationActionSheet() {
+        let backupSettingsStore = BackupSettingsStore()
+        let db = DependenciesBridge.shared.db
+
+        let confirmationActionSheet = ActionSheetController(
+            title: OWSLocalizedString(
+                "RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_2_TITLE",
+                comment: "Title for a sheet allowing users to cancel an in-progress media restore.",
+            ),
+            message: OWSLocalizedString(
+                "RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_2_MESSAGE",
+                comment: "Message for a sheet allowing users to cancel an in-progress media restore.",
+            ),
+        )
+        confirmationActionSheet.addAction(ActionSheetAction(
+            title: OWSLocalizedString(
+                "RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_2_PRIMARY_BUTTON",
+                comment: "Button for a sheet allowing users to cancel an in-progress media restore.",
+            ),
+            style: .default,
+        ))
+        confirmationActionSheet.addAction(ActionSheetAction(
+            title: OWSLocalizedString(
+                "RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_2_SECONDARY_BUTTON",
+                comment: "Button for a sheet allowing users to cancel an in-progress media restore.",
+            ),
+            style: .destructive,
+            handler: { _ in
+                db.write { tx in
+                    backupSettingsStore.setIsBackupDownloadQueueSuspended(true, tx: tx)
+                }
+            },
+        ))
+
+        confirmationActionSheet.isCancelable = true
+        presentActionSheet(confirmationActionSheet)
+    }
+}
+
+// MARK: -
 
 private class BackupAttachmentDownloadProgressView: UIView {
 
@@ -182,6 +321,7 @@ private class BackupAttachmentDownloadProgressView: UIView {
         public enum PauseReason {
             case notReachable
             case lowBattery
+            case lowPowerMode
         }
     }
 
@@ -203,20 +343,17 @@ private class BackupAttachmentDownloadProgressView: UIView {
         fatalError("init(frame:) has not been implemented")
     }
 
-    private let backupAttachmentDownloadManager: BackupAttachmentDownloadManager
-    private let backupAttachmentDownloadQueueStatusReporter: BackupAttachmentDownloadQueueStatusReporter
-    private let backupAttachmentDownloadStore: BackupAttachmentDownloadStore
-    private let backupSettingsStore: BackupSettingsStore
-    private let db: DB
+    private let backupAttachmentDownloadQueueStatusReporter: BackupAttachmentDownloadQueueStatusReporter!
+    private let backupAttachmentDownloadStore: BackupAttachmentDownloadStore!
+    private let backupSettingsStore: BackupSettingsStore!
+    private let db: DB!
 
     init(
-        backupAttachmentDownloadManager: BackupAttachmentDownloadManager,
         backupAttachmentDownloadQueueStatusReporter: BackupAttachmentDownloadQueueStatusReporter,
         backupAttachmentDownloadStore: BackupAttachmentDownloadStore,
         backupSettingsStore: BackupSettingsStore,
         db: DB
     ) {
-        self.backupAttachmentDownloadManager = backupAttachmentDownloadManager
         self.backupAttachmentDownloadQueueStatusReporter = backupAttachmentDownloadQueueStatusReporter
         self.backupAttachmentDownloadStore = backupAttachmentDownloadStore
         self.backupSettingsStore = backupSettingsStore
@@ -229,6 +366,19 @@ private class BackupAttachmentDownloadProgressView: UIView {
             name: .themeDidChange,
             object: nil
         )
+
+        initialRender()
+    }
+
+    fileprivate init(forPreview: (), state: State) {
+        self.backupAttachmentDownloadQueueStatusReporter = nil
+        self.backupAttachmentDownloadStore = nil
+        self.backupSettingsStore = nil
+        self.db = nil
+
+        self.state = state
+
+        super.init(frame: .zero)
 
         initialRender()
     }
@@ -662,6 +812,11 @@ private class BackupAttachmentDownloadProgressView: UIView {
                     "RESTORING_MEDIA_BANNER_PAUSED_BATTERY_SUBTITLE",
                     comment: "Subtitle shown on chat list banner for restoring media from a backup when paused because the device has low battery"
                 )
+            case .lowPowerMode:
+                OWSLocalizedString(
+                    "RESTORING_MEDIA_BANNER_PAUSED_LOW_POWER_MODE_SUBTITLE",
+                    comment: "Subtitle shown on chat list banner for restoring media from a backup when paused because the device is in low power mode"
+                )
             case .notReachable:
                 OWSLocalizedString(
                     "RESTORING_MEDIA_BANNER_PAUSED_NOT_REACHABLE_SUBTITLE",
@@ -728,7 +883,7 @@ private class BackupAttachmentDownloadProgressView: UIView {
     }
 
     private static func formatByteSize(_ byteSize: UInt64) -> String {
-        return OWSFormat.formatFileSize(UInt(byteSize), maximumFractionalDigits: 0)
+        return OWSByteCountFormatStyle().format(byteSize)
     }
 
     private func didTapResume() {
@@ -738,7 +893,7 @@ private class BackupAttachmentDownloadProgressView: UIView {
         case .wifiNotReachable:
             Task {
                 await db.awaitableWrite { tx in
-                    backupSettingsStore.setShouldAllowBackupDownloadsOnCellular(tx: tx)
+                    backupSettingsStore.setShouldAllowBackupDownloadsOnCellular(true, tx: tx)
                 }
             }
         }
@@ -753,7 +908,7 @@ private class BackupAttachmentDownloadProgressView: UIView {
             var sheet: HeroSheetViewController?
             sheet = HeroSheetViewController(
                 hero: .circleIcon(
-                    icon: UIImage(named: "backup-error-display-bold")!.withRenderingMode(.alwaysTemplate),
+                    icon: .backupErrorDisplayBold,
                     iconSize: 40,
                     tintColor: UIColor.Signal.orange,
                     backgroundColor: UIColor.color(rgbHex: 0xF9E4B6)
@@ -832,7 +987,7 @@ private class BackupAttachmentDownloadProgressView: UIView {
                 Task {
                     // Wipe this proactively so we don't briefly flash the completed state.
                     self?.chatListViewController?.viewState.backupDownloadProgressViewState
-                        .totalPendingBackupAttachmentDownloadByteCount = nil
+                        .downloadCompleteBannerByteCount = nil
                     await self?.db.awaitableWrite { tx in
                         self?.backupSettingsStore.setIsBackupDownloadQueueSuspended(true, tx: tx)
                     }
@@ -850,7 +1005,7 @@ private class BackupAttachmentDownloadProgressView: UIView {
             style: .default,
             handler: { _ in
                 CurrentAppContext().open(
-                    URL(string: "https://support.signal.org/hc/articles/360007059752")!,
+                    URL.Support.backups,
                     completion: nil
                 )
             }
@@ -869,7 +1024,7 @@ private class BackupAttachmentDownloadProgressView: UIView {
         static let iconSize: CGFloat = 24
 
         static var titleLabelFont: UIFont { .dynamicTypeSubheadlineClamped.bold() }
-        static var subtitleLabelFont: UIFont { .dynamicTypeSubheadlineClamped }
+        static var subtitleLabelFont: UIFont { .dynamicTypeSubheadlineClamped.monospaced() }
 
         static var diskSpaceLabelFont: UIFont { .dynamicTypeSubheadlineClamped }
 
@@ -948,3 +1103,44 @@ private class BackupAttachmentDownloadProgressView: UIView {
         }
     }
 }
+
+// MARK: -
+
+#if DEBUG
+
+private class BackupDownloadProgressPreviewViewController: UIViewController {
+    private let state: BackupAttachmentDownloadProgressView.State
+
+    init(state: BackupAttachmentDownloadProgressView.State) {
+        self.state = state
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        let progressView = BackupAttachmentDownloadProgressView(
+            forPreview: (),
+            state: state
+        )
+        view.addSubview(progressView)
+        progressView.autoPinEdges(toSuperviewMarginsExcludingEdge: .bottom)
+    }
+}
+
+@available(iOS 17, *)
+#Preview("Restoring") {
+    return BackupDownloadProgressPreviewViewController(state: .restoring(progress: OWSProgress(
+        completedUnitCount: 1_600_800,
+        totalUnitCount: 2_400_300_000,
+    )))
+}
+
+@available(iOS 17, *)
+#Preview("Low Power") {
+    return BackupDownloadProgressPreviewViewController(state: .paused(reason: .lowPowerMode))
+}
+
+#endif

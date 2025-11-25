@@ -103,7 +103,7 @@ public class PaymentsViewPassphraseSplashViewController: OWSViewController {
 
         let explanationLabel = PaymentsViewUtils.buildTextWithLearnMoreLinkTextView(
             text: self.style.explanationText,
-            font: .dynamicTypeBody2Clamped,
+            font: .dynamicTypeSubheadlineClamped,
             learnMoreUrl: self.style.explanationUrl)
         explanationLabel.textAlignment = .center
 
@@ -121,7 +121,7 @@ public class PaymentsViewPassphraseSplashViewController: OWSViewController {
 
         let nextButton = OWSFlatButton.insetButton(
             title: CommonStrings.nextButton,
-            font: UIFont.dynamicTypeBody.semibold(),
+            font: UIFont.dynamicTypeHeadline,
             titleColor: .white,
             backgroundColor: .ows_accentBlue,
             target: self,
@@ -133,7 +133,7 @@ public class PaymentsViewPassphraseSplashViewController: OWSViewController {
 
         let cancelButton = OWSFlatButton.insetButton(
             title: CommonStrings.notNowButton,
-            font: UIFont.dynamicTypeBody.semibold(),
+            font: UIFont.dynamicTypeHeadline,
             titleColor: .ows_accentBlue,
             backgroundColor: .clear,
             target: self,
@@ -253,8 +253,8 @@ extension PaymentsViewPassphraseSplashViewController.Style {
         }
     }
 
-    var explanationUrl: String {
-        return "https://support.signal.org/hc/articles/360057625692#payments_wallet_view_passphrase"
+    var explanationUrl: URL {
+        return URL.Support.Payments.walletViewPassphrase
     }
 
     var shouldConfirmCancel: Bool {

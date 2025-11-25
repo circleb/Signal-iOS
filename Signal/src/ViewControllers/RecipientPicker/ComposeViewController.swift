@@ -20,16 +20,11 @@ class ComposeViewController: RecipientPickerContainerViewController {
         recipientPicker.shouldShowNewGroup = true
         recipientPicker.groupsToShow = .groupsThatUserIsMemberOfWhenSearching
         recipientPicker.shouldHideLocalRecipient = false
-
         recipientPicker.delegate = self
-        addChild(recipientPicker)
-        view.addSubview(recipientPicker.view)
-        recipientPicker.view.autoPin(toTopLayoutGuideOf: self, withInset: 0)
-        recipientPicker.view.autoPinEdge(toSuperviewEdge: .leading)
-        recipientPicker.view.autoPinEdge(toSuperviewEdge: .trailing)
-        recipientPicker.view.autoPinEdge(toSuperviewEdge: .bottom)
 
-        navigationItem.leftBarButtonItem = .cancelButton(dismissingFrom: self)
+        addRecipientPicker()
+
+        navigationItem.rightBarButtonItem = .cancelButton(dismissingFrom: self)
     }
 
     /// Presents the conversation for the given address and dismisses this

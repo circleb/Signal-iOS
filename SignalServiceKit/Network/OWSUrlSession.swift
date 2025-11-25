@@ -59,6 +59,8 @@ public class OWSURLSession: OWSURLSessionProtocol {
         }
     }
 
+    private let onFailureCallback: ((any Error) -> Void)?
+
     // Note: not all protocol methods can be made visible to objc, but those
     // that can be are declared so here. Objc callers must use this implementation
     // directly and not touch the protocol.
@@ -93,7 +95,8 @@ public class OWSURLSession: OWSURLSessionProtocol {
         endpoint: OWSURLSessionEndpoint,
         configuration: URLSessionConfiguration,
         maxResponseSize: Int?,
-        canUseSignalProxy: Bool
+        canUseSignalProxy: Bool,
+        onFailureCallback: ((any Error) -> Void)?,
     ) {
         if canUseSignalProxy {
             configuration.connectionProxyDictionary = SignalProxy.connectionProxyDictionary
@@ -103,6 +106,7 @@ public class OWSURLSession: OWSURLSessionProtocol {
         self.configuration = configuration
         self.maxResponseSize = maxResponseSize
         self.canUseSignalProxy = canUseSignalProxy
+        self.onFailureCallback = onFailureCallback
 
         // Ensure this is set so that we don't try to create it in deinit().
         _ = self.delegateBox
@@ -152,7 +156,7 @@ public class OWSURLSession: OWSURLSessionProtocol {
         request: URLRequest,
         requestData: Data,
         progress: OWSProgressSource?
-    ) async throws -> any HTTPResponse {
+    ) async throws -> HTTPResponse {
         return try await performUpload(
             request: request,
             ignoreAppExpiry: false,
@@ -175,9 +179,9 @@ public class OWSURLSession: OWSURLSessionProtocol {
         )
     }
 
-    public func performRequest(request: URLRequest, ignoreAppExpiry: Bool) async throws -> any HTTPResponse {
+    public func performRequest(request: URLRequest, ignoreAppExpiry: Bool) async throws -> HTTPResponse {
         if !ignoreAppExpiry && DependenciesBridge.shared.appExpiry.isExpired(now: Date()) {
-            throw OWSGenericError("App is expired.")
+            throw AppExpiredError()
         }
 
         let request = prepareRequest(request: request)
@@ -252,9 +256,12 @@ public class OWSURLSession: OWSURLSessionProtocol {
 
     private let configuration: URLSessionConfiguration
 
-    private lazy var session: URLSession = {
-        URLSession(configuration: configuration, delegate: delegateBox, delegateQueue: Self.operationQueue)
-    }()
+    private let _session = AtomicValue<URLSession?>(nil, lock: .init())
+    private var session: URLSession {
+        return _session.map {
+            return $0 ?? URLSession(configuration: configuration, delegate: delegateBox, delegateQueue: Self.operationQueue)
+        }!
+    }
 
     private let maxResponseSize: Int?
 
@@ -291,7 +298,7 @@ public class OWSURLSession: OWSURLSessionProtocol {
 
     private func handleDataResult(urlResponse: URLResponse?, responseData: Data, originalRequest: URLRequest?, requestConfig: RequestConfig) async throws -> HTTPResponse {
         let httpUrlResponse = try await handleResult(urlResponse: urlResponse, responseData: responseData, originalRequest: originalRequest, requestConfig: requestConfig)
-        return HTTPResponseImpl.build(requestUrl: requestConfig.requestUrl, httpUrlResponse: httpUrlResponse, bodyData: responseData)
+        return HTTPResponse(requestUrl: requestConfig.requestUrl, httpUrlResponse: httpUrlResponse, bodyData: responseData)
     }
 
     private func handleDownloadResult(urlResponse: URLResponse?, downloadUrl: URL, originalRequest: URLRequest?, requestConfig: RequestConfig) async throws -> OWSUrlDownloadResponse {
@@ -334,25 +341,18 @@ public class OWSURLSession: OWSURLSessionProtocol {
                 if statusCode > 0 {
                     let requestUrl = requestConfig.requestUrl
                     let responseHeaders = HttpHeaders(response: httpUrlResponse)
-                    throw OWSHTTPError.forServiceResponse(
+                    throw OWSHTTPError.serviceResponse(.init(
                         requestUrl: requestUrl,
                         responseStatus: statusCode,
                         responseHeaders: responseHeaders,
-                        responseError: nil,
                         responseData: responseData
-                    )
+                    ))
                 } else {
                     owsFailDebug("Missing status code.")
                     throw OWSHTTPError.networkFailure(.invalidResponseStatus)
                 }
             }
         }
-
-#if TESTABLE_BUILD
-        if DebugFlags.logCurlOnSuccess, let originalRequest {
-            HTTPUtils.logCurl(for: originalRequest)
-        }
-#endif
 
         return httpUrlResponse
     }
@@ -401,15 +401,14 @@ public class OWSURLSession: OWSURLSessionProtocol {
 
     // MARK: - Issuing Requests
 
-    public func performRequest(_ rawRequest: TSRequest) async throws -> any HTTPResponse {
+    public func performRequest(_ rawRequest: TSRequest) async throws -> HTTPResponse {
         let appExpiry = DependenciesBridge.shared.appExpiry
         guard !appExpiry.isExpired(now: Date()) else {
-            Logger.warn("App is expired.")
-            throw OWSHTTPError.invalidAppState
+            throw AppExpiredError()
         }
 
         var httpHeaders = rawRequest.headers
-        rawRequest.applyAuth(to: &httpHeaders, willSendViaWebSocket: false)
+        try rawRequest.applyAuth(to: &httpHeaders, socketAuth: nil)
 
         let method: HTTPMethod
         do {
@@ -478,7 +477,7 @@ public class OWSURLSession: OWSURLSessionProtocol {
         taskBlock: () -> URLSessionUploadTask
     ) async throws -> HTTPResponse {
         if !ignoreAppExpiry && DependenciesBridge.shared.appExpiry.isExpired(now: Date()) {
-            throw OWSGenericError("App is expired.")
+            throw AppExpiredError()
         }
 
         let request = prepareRequest(request: request)
@@ -508,7 +507,7 @@ public class OWSURLSession: OWSURLSessionProtocol {
     ) async throws -> OWSUrlDownloadResponse {
         let appExpiry = DependenciesBridge.shared.appExpiry
         if appExpiry.isExpired(now: Date()) {
-            throw OWSGenericError("App is expired.")
+            throw AppExpiredError()
         }
 
         let requestConfig = self.requestConfig(requestUrl: requestUrl)
@@ -631,6 +630,7 @@ public class OWSURLSession: OWSURLSessionProtocol {
         }
         taskState.reject(error: error, task: task)
         task.cancel()
+        onFailureCallback?(error)
     }
 
     // MARK: -
@@ -717,11 +717,14 @@ extension OWSURLSession {
 
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
         if let maxResponseSize {
-            guard let fileSize = OWSFileSystem.fileSize(of: location) else {
-                taskDidFail(downloadTask, error: OWSAssertionError("Unknown download size."))
+            let fileSize: UInt64
+            do {
+                fileSize = try OWSFileSystem.fileSize(of: location)
+            } catch {
+                taskDidFail(downloadTask, error: error)
                 return
             }
-            guard fileSize.intValue <= maxResponseSize else {
+            guard fileSize <= maxResponseSize else {
                 taskDidFail(downloadTask, error: OWSURLSessionError.responseTooLarge)
                 return
             }

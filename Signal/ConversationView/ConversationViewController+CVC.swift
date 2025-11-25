@@ -261,7 +261,6 @@ extension ConversationViewController: CVLoadCoordinatorDelegate {
         }
 
         self.updateLastKnownDistanceFromBottom()
-        self.updateInputToolbarLayout()
         self.showMessageRequestDialogIfRequired()
         self.configureScrollDownButtons()
 
@@ -773,17 +772,15 @@ extension ConversationViewController: CVLoadCoordinatorDelegate {
     public func updateConversationStyle() -> Bool {
         AssertIsOnMainThread()
 
-        let oldConversationStyle = self.conversationStyle
         let newConversationStyle = buildConversationStyle()
 
-        let didChange = !newConversationStyle.isEqualForCellRendering(oldConversationStyle)
-        if !didChange {
+        guard newConversationStyle != conversationStyle else {
             return false
         }
 
         self.conversationStyle = newConversationStyle
 
-        if let inputToolbar = inputToolbar {
+        if let inputToolbar {
             inputToolbar.update(conversationStyle: newConversationStyle)
         }
 

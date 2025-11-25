@@ -329,11 +329,11 @@ public final class StoryMessage: NSObject, SDSCodableModel, Decodable {
         }
 
         let manifest = StoryManifest.outgoing(recipientStates: Dictionary(uniqueKeysWithValues: try proto.storyMessageRecipients.map { recipient in
-            guard
-                let serviceIdString = recipient.destinationServiceID,
-                let serviceId = try? ServiceId.parseFrom(serviceIdString: serviceIdString)
-            else {
-                throw OWSAssertionError("Invalid ServiceId on story recipient \(String(describing: recipient.destinationServiceID))")
+            guard let serviceId = ServiceId.parseFrom(
+                serviceIdBinary: recipient.destinationServiceIDBinary,
+                serviceIdString: recipient.destinationServiceID,
+            ) else {
+                throw OWSAssertionError("Invalid ServiceId on story recipient")
             }
 
             return (
@@ -642,10 +642,10 @@ public final class StoryMessage: NSObject, SDSCodableModel, Decodable {
             var newRecipientStates = [ServiceId: StoryRecipientState]()
 
             for recipient in recipients {
-                guard
-                    let serviceIdString = recipient.destinationServiceID,
-                    let serviceId = try? ServiceId.parseFrom(serviceIdString: serviceIdString)
-                else {
+                guard let serviceId = ServiceId.parseFrom(
+                    serviceIdBinary: recipient.destinationServiceIDBinary,
+                    serviceIdString: recipient.destinationServiceID,
+                ) else {
                     owsFailDebug("Missing UUID for story recipient")
                     continue
                 }
@@ -939,7 +939,7 @@ public final class StoryMessage: NSObject, SDSCodableModel, Decodable {
         // Only send to recipients in the "failed" state
         for (serviceId, state) in recipientStates {
             guard state.sendingState != .failed else { continue }
-            messages.forEach { $0.updateWithSkippedRecipient(SignalServiceAddress(serviceId), transaction: transaction) }
+            messages.forEach { $0.updateWithSkippedRecipients([SignalServiceAddress(serviceId)], tx: transaction) }
         }
 
         messages.forEach { message in
@@ -1030,7 +1030,7 @@ public enum StoryManifest {
 
 private enum CodableStoryManifest: Codable {
     case incoming(receivedState: StoryReceivedState)
-    case outgoing(recipientStates: [ServiceIdUppercaseString: StoryRecipientState])
+    case outgoing(recipientStates: [ServiceIdUppercaseString<ServiceId>: StoryRecipientState])
 
     init(_ storyManifest: StoryManifest) {
         switch storyManifest {

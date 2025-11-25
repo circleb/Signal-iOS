@@ -152,7 +152,7 @@ class SignalRecipientTest: SSKBaseTest {
             let messageBuilder: TSIncomingMessageBuilder = .withDefaultValues(
                 thread: oldThread,
                 authorAci: aci,
-                messageBody: "Test 123"
+                messageBody: AttachmentContentValidatorMock.mockValidatedBody("Test 123")
             )
             let oldMessage = messageBuilder.build()
             oldMessage.anyInsert(transaction: transaction)
@@ -239,7 +239,7 @@ class SignalRecipientTest: SSKBaseTest {
             let messageBuilder: TSIncomingMessageBuilder = .withDefaultValues(
                 thread: oldThread,
                 authorAci: oldAci,
-                messageBody: "Test 123"
+                messageBody: AttachmentContentValidatorMock.mockValidatedBody("Test 123")
             )
             let oldMessage = messageBuilder.build()
             oldMessage.anyInsert(transaction: transaction)
@@ -316,8 +316,10 @@ class SignalRecipientTest: SSKBaseTest {
                     transaction: tx
                 )
             }()
+
             // Delete the group members that were created automatically.
-            TSGroupMember.anyRemoveAllWithInstantiation(transaction: tx)
+            try! TSGroupMember.deleteAll(tx.database)
+
             // And construct the TSGroupMember members using the specific identifiers
             // that were provided.
             for address in addresses {
@@ -614,66 +616,6 @@ class SignalRecipientTest: SSKBaseTest {
         ])
     }
 
-    func testDeDupe() throws {
-        let databaseQueue = DatabaseQueue()
-        let deviceIdsObjC = NSOrderedSet(array: [NSNumber]())
-        let encodedDevices = SDSCodableModelLegacySerializer().serializeAsLegacySDSData(property: deviceIdsObjC)
-        try databaseQueue.write { db in
-            try db.execute(
-                sql: """
-                CREATE
-                    TABLE
-                        IF NOT EXISTS "model_SignalRecipient" (
-                            "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL
-                            ,"recordType" INTEGER NOT NULL
-                            ,"uniqueId" TEXT NOT NULL UNIQUE
-                                ON CONFLICT FAIL
-                            ,"devices" BLOB NOT NULL
-                            ,"recipientPhoneNumber" TEXT
-                            ,"recipientUUID" TEXT
-                        )
-                ;
-                """
-            )
-            let aci1 = Aci.randomForTesting()
-            let aci2 = Aci.randomForTesting()
-            try db.execute(
-                sql: "INSERT INTO model_SignalRecipient (recordType, uniqueId, recipientUUID, devices) VALUES (?, ?, ?, ?)",
-                arguments: [
-                    SDSRecordType.signalRecipient.rawValue,
-                    UUID().uuidString,
-                    aci1.serviceIdUppercaseString,
-                    encodedDevices,
-                ],
-            )
-            try db.execute(
-                sql: "INSERT INTO model_SignalRecipient (recordType, uniqueId, recipientUUID, devices) VALUES (?, ?, ?, ?)",
-                arguments: [
-                    SDSRecordType.signalRecipient.rawValue,
-                    UUID().uuidString,
-                    aci1.serviceIdUppercaseString,
-                    encodedDevices,
-                ],
-            )
-            try db.execute(
-                sql: "INSERT INTO model_SignalRecipient (recordType, uniqueId, recipientUUID, devices) VALUES (?, ?, ?, ?)",
-                arguments: [
-                    SDSRecordType.signalRecipient.rawValue,
-                    UUID().uuidString,
-                    aci2.serviceIdUppercaseString,
-                    encodedDevices,
-                ],
-            )
-            do {
-                let tx = DBWriteTransaction(database: db)
-                defer { tx.finalizeTransaction() }
-                dedupeSignalRecipients(transaction: tx)
-            }
-            let recipientCount = try Int64.fetchOne(db, sql: "SELECT COUNT(*) FROM model_SignalRecipient")
-            XCTAssertEqual(recipientCount, 2)
-        }
-    }
-
     // MARK: - Helpers
 
     @discardableResult
@@ -700,7 +642,7 @@ class SignalRecipientTest: SSKBaseTest {
 
 final class SignalRecipient2Test: XCTestCase {
     private enum Constants {
-        static let emptyDevices = "62706c6973743030d4010203040506070a582476657273696f6e592461726368697665725424746f7058246f626a6563747312000186a05f100f4e534b657965644172636869766572d1080954726f6f748001a30b0c0f55246e756c6cd10d0e5624636c6173738002d2101112135a24636c6173736e616d655824636c61737365735c4e534f726465726564536574a214155c4e534f726465726564536574584e534f626a65637408111a24293237494c5153575d6067696e79828f929f00000000000001010000000000000016000000000000000000000000000000a8"
+        static let emptyDevices = ""
     }
 
     func testDecodeStableRow() throws {
@@ -713,7 +655,7 @@ final class SignalRecipient2Test: XCTestCase {
                     18,
                     31,
                     '00000000-0000-4000-8000-00000000000A',
-                    X'62706c6973743030d4010203040506070a582476657273696f6e592461726368697665725424746f7058246f626a6563747312000186a05f100f4e534b657965644172636869766572d1080954726f6f748001a80b0c191a1b1c1d1e55246e756c6cd60d0e0f1011121314151617185624636c6173735b4e532e6f626a6563742e315b4e532e6f626a6563742e345b4e532e6f626a6563742e305b4e532e6f626a6563742e335b4e532e6f626a6563742e3280078003800680028005800410011002100510041006d21f2021225a24636c6173736e616d655824636c61737365735c4e534f726465726564536574a223245c4e534f726465726564536574584e534f626a65637400080011001a00240029003200370049004c00510053005c0062006f00760082008e009a00a600b200b400b600b800ba00bc00be00c000c200c400c600c800cd00d800e100ee00f100fe0000000000000201000000000000002500000000000000000000000000000107',
+                    X'0102050406',
                     '+16505550100',
                     '00000000-0000-4000-8000-000000000000',
                     NULL
@@ -780,20 +722,14 @@ final class SignalRecipient2Test: XCTestCase {
     func testEncodePni() throws {
         let inMemoryDB = InMemoryDB()
         let pni = Pni.constantForTesting("PNI:30000000-5000-4000-8000-3000000000A9")
-        inMemoryDB.insert(record: SignalRecipient(aci: nil, pni: pni, phoneNumber: nil))
+        try inMemoryDB.write { tx in
+            _ = try SignalRecipient.insertRecord(pni: pni, tx: tx)
+        }
         inMemoryDB.read { tx in
             let db = tx.database
             let rawPniValue = try! String.fetchOne(db, sql: #"SELECT "pni" FROM "model_SignalRecipient""#)!
             XCTAssertEqual(rawPniValue, pni.serviceIdUppercaseString)
         }
-    }
-
-    func testEqualityAndHashing() {
-        let someRecipient = SignalRecipient(aci: Aci.randomForTesting(), pni: nil, phoneNumber: nil, deviceIds: [1, 2].map { DeviceId(validating: $0)! })
-        let copiedRecipient = someRecipient.copyRecipient()
-        XCTAssertEqual(copiedRecipient, someRecipient)
-        XCTAssertEqual(copiedRecipient.hashValue, someRecipient.hashValue)
-        XCTAssertEqual(Set([someRecipient, copiedRecipient]).count, 1)
     }
 
     func testUnregisteredTimestamps() {
@@ -810,16 +746,16 @@ final class SignalRecipient2Test: XCTestCase {
             storageServiceManager: FakeStorageServiceManager()
         )
         mockDb.write { tx in
-            let recipient = recipientFetcher.fetchOrCreate(serviceId: aci, tx: tx)
+            var recipient = recipientFetcher.fetchOrCreate(serviceId: aci, tx: tx)
             XCTAssertNotNil(recipient.unregisteredAtTimestamp)
 
-            recipientManager.markAsRegisteredAndSave(recipient, shouldUpdateStorageService: false, tx: tx)
+            recipientManager.markAsRegisteredAndSave(&recipient, shouldUpdateStorageService: false, tx: tx)
             XCTAssertNil(recipientTable.fetchRecipient(serviceId: aci, transaction: tx)!.unregisteredAtTimestamp)
 
-            recipientManager.markAsUnregisteredAndSave(recipient, unregisteredAt: .now, shouldUpdateStorageService: false, tx: tx)
+            recipientManager.markAsUnregisteredAndSave(&recipient, unregisteredAt: .now, shouldUpdateStorageService: false, tx: tx)
             XCTAssertGreaterThan(recipientTable.fetchRecipient(serviceId: aci, transaction: tx)!.unregisteredAtTimestamp!, 0)
 
-            recipientManager.markAsRegisteredAndSave(recipient, shouldUpdateStorageService: false, tx: tx)
+            recipientManager.markAsRegisteredAndSave(&recipient, shouldUpdateStorageService: false, tx: tx)
             XCTAssertNil(recipientTable.fetchRecipient(serviceId: aci, transaction: tx)!.unregisteredAtTimestamp)
         }
     }
@@ -857,11 +793,78 @@ final class SignalRecipient2Test: XCTestCase {
         )
         mockDb.write { tx in
             for testCase in testCases {
-                let recipient = recipientFetcher.fetchOrCreate(serviceId: Aci.randomForTesting(), tx: tx)
-                recipientManager.setDeviceIds(Set(testCase.initialDeviceIds.map { DeviceId(validating: $0)! }), for: recipient, shouldUpdateStorageService: false)
-                recipientManager.markAsRegisteredAndSave(recipient, deviceId: DeviceId(validating: testCase.addedDeviceId)!, shouldUpdateStorageService: false, tx: tx)
+                var recipient = recipientFetcher.fetchOrCreate(serviceId: Aci.randomForTesting(), tx: tx)
+                recipientManager.setDeviceIds(Set(testCase.initialDeviceIds.map { DeviceId(validating: $0)! }), for: &recipient, shouldUpdateStorageService: false)
+                recipientManager.markAsRegisteredAndSave(&recipient, deviceId: DeviceId(validating: testCase.addedDeviceId)!, shouldUpdateStorageService: false, tx: tx)
                 XCTAssertEqual(Set(recipient.deviceIds), Set(testCase.expectedDeviceIds.map { DeviceId(validating: $0)! }), "\(testCase)")
             }
+        }
+    }
+
+    func testDeDupe() throws {
+        let databaseQueue = DatabaseQueue()
+        try databaseQueue.write { db in
+            try db.execute(
+                sql: """
+                CREATE
+                    TABLE
+                        IF NOT EXISTS "model_SignalRecipient" (
+                            "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL
+                            ,"recipientPhoneNumber" TEXT
+                            ,"recipientUUID" TEXT
+                        )
+                ;
+                """
+            )
+            let aci1 = Aci.constantForTesting("00000000-0000-4000-8000-00000000000A")
+            let aci2 = Aci.constantForTesting("00000000-0000-4000-8000-00000000000B")
+            let aci3 = Aci.constantForTesting("00000000-0000-4000-8000-00000000000C")
+            let phoneNumber1 = "+16505550101"
+            let phoneNumber2 = "+16505550102"
+            let phoneNumber3 = "+16505550103"
+            try db.execute(
+                sql: "INSERT INTO model_SignalRecipient (recipientUUID) VALUES (?)",
+                arguments: [aci1.serviceIdUppercaseString],
+            )
+            try db.execute(
+                sql: "INSERT INTO model_SignalRecipient (recipientUUID, recipientPhoneNumber) VALUES (?, ?)",
+                arguments: [aci1.serviceIdUppercaseString, phoneNumber1],
+            )
+            try db.execute(
+                sql: "INSERT INTO model_SignalRecipient (recipientPhoneNumber) VALUES (?)",
+                arguments: [phoneNumber1],
+            )
+            try db.execute(
+                sql: "INSERT INTO model_SignalRecipient (recipientUUID, recipientPhoneNumber) VALUES (?, ?)",
+                arguments: [aci2.serviceIdUppercaseString, phoneNumber2],
+            )
+            try db.execute(
+                sql: "INSERT INTO model_SignalRecipient (recipientUUID) VALUES (?)",
+                arguments: [aci2.serviceIdUppercaseString],
+            )
+            try db.execute(
+                sql: "INSERT INTO model_SignalRecipient (recipientUUID, recipientPhoneNumber) VALUES (?, ?)",
+                arguments: [aci3.serviceIdUppercaseString, phoneNumber2],
+            )
+            try db.execute(
+                sql: "INSERT INTO model_SignalRecipient (recipientPhoneNumber) VALUES (?)",
+                arguments: [phoneNumber3],
+            )
+            try db.execute(
+                sql: "INSERT INTO model_SignalRecipient (recipientPhoneNumber) VALUES (?)",
+                arguments: [phoneNumber3],
+            )
+            do {
+                let tx = DBWriteTransaction(database: db)
+                defer { tx.finalizeTransaction() }
+                try GRDBSchemaMigrator.dedupeSignalRecipients(tx: tx)
+            }
+            let recipientIds = try Int64.fetchAll(db, sql: "SELECT id FROM model_SignalRecipient")
+            XCTAssertEqual(recipientIds, [1, 4, 6, 7])
+            let phoneNumbers = try (String?).fetchAll(db, sql: "SELECT recipientPhoneNumber FROM model_SignalRecipient ORDER BY id")
+            XCTAssertEqual(phoneNumbers, [nil, phoneNumber2, nil, phoneNumber3])
+            let aciStrings = try (String?).fetchAll(db, sql: "SELECT recipientUUID FROM model_SignalRecipient ORDER BY id")
+            XCTAssertEqual(aciStrings, [aci1.serviceIdUppercaseString, aci2.serviceIdUppercaseString, aci3.serviceIdUppercaseString, nil])
         }
     }
 }

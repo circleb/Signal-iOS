@@ -106,6 +106,7 @@ NS_ASSUME_NONNULL_BEGIN
      receivedQuotedAttachmentInfo:(nullable OWSAttachmentInfo *)attachmentInfo
                       isGiftBadge:(BOOL)isGiftBadge
           isTargetMessageViewOnce:(BOOL)isTargetMessageViewOnce
+                           isPoll:(BOOL)isPoll
 {
     OWSAssertDebug(authorAddress.isValid);
 
@@ -122,6 +123,7 @@ NS_ASSUME_NONNULL_BEGIN
     _quotedAttachment = attachmentInfo;
     _isGiftBadge = isGiftBadge;
     _isTargetMessageViewOnce = isTargetMessageViewOnce;
+    _isPoll = isPoll;
 
     return self;
 }
@@ -134,6 +136,7 @@ NS_ASSUME_NONNULL_BEGIN
        quotedAttachmentForSending:(nullable OWSAttachmentInfo *)attachmentInfo
                       isGiftBadge:(BOOL)isGiftBadge
           isTargetMessageViewOnce:(BOOL)isTargetMessageViewOnce
+                           isPoll:(BOOL)isPoll
 {
     OWSAssertDebug(authorAddress.isValid);
 
@@ -150,6 +153,7 @@ NS_ASSUME_NONNULL_BEGIN
     _quotedAttachment = attachmentInfo;
     _isGiftBadge = isGiftBadge;
     _isTargetMessageViewOnce = isTargetMessageViewOnce;
+    _isPoll = isPoll;
 
     return self;
 }
@@ -189,6 +193,7 @@ NS_ASSUME_NONNULL_BEGIN
                                              quotedAttachmentInfo:(nullable OWSAttachmentInfo *)attachmentInfo
                                                       isGiftBadge:(BOOL)isGiftBadge
                                           isTargetMessageViewOnce:(BOOL)isTargetMessageViewOnce
+                                                           isPoll:(BOOL)isPoll
 {
     OWSAssertDebug(authorAddress.isValid);
 
@@ -202,7 +207,8 @@ NS_ASSUME_NONNULL_BEGIN
                                            bodySource:bodySource
                          receivedQuotedAttachmentInfo:attachmentInfo
                                           isGiftBadge:isGiftBadge
-                              isTargetMessageViewOnce:isTargetMessageViewOnce];
+                              isTargetMessageViewOnce:isTargetMessageViewOnce
+                                               isPoll:isPoll];
 }
 
 - (nullable NSNumber *)getTimestampValue

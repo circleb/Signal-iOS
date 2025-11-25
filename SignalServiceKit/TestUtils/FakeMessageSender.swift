@@ -12,16 +12,23 @@ class FakeMessageSender: MessageSender {
     public var sentMessages = [TSOutgoingMessage]()
     public var sendMessageWasCalledBlock: ((TSOutgoingMessage) -> Void)?
 
-    init() {
-        super.init(groupSendEndorsementStore: GroupSendEndorsementStoreImpl())
+    init(accountChecker: AccountChecker) {
+        super.init(accountChecker: accountChecker, groupSendEndorsementStore: GroupSendEndorsementStoreImpl())
     }
 
-    override func sendMessage(_ preparedMessage: PreparedOutgoingMessage) async throws {
-        try await preparedMessage.send { message in
-            sentMessages.append(message)
-            sendMessageWasCalledBlock?(message)
+    override func sendMessage(_ preparedMessage: PreparedOutgoingMessage) async -> MessageSender.SendResult {
+        do {
+            try await preparedMessage.send { message in
+                sentMessages.append(message)
+                sendMessageWasCalledBlock?(message)
+            }
+        } catch {
+            return .overallFailure(error)
         }
-        if let stubbedFailingError = stubbedFailingErrors.removeFirst() { throw stubbedFailingError }
+        if let stubbedFailingError = stubbedFailingErrors.removeFirst() {
+            return .overallFailure(stubbedFailingError)
+        }
+        return .success
     }
 }
 

@@ -312,10 +312,13 @@ class UsernameSelectionViewController: OWSViewController, OWSNavigationChildCont
         wrapperScrollView.addSubview(usernameErrorTextView)
         wrapperScrollView.addSubview(usernameFooterTextView)
 
-        wrapperScrollView.autoPinTopToSuperviewMargin()
-        wrapperScrollView.autoPinLeadingToSuperviewMargin()
-        wrapperScrollView.autoPinTrailingToSuperviewMargin()
-        wrapperScrollView.autoPinEdge(.bottom, to: .bottom, of: keyboardLayoutGuideViewSafeArea)
+        wrapperScrollView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            wrapperScrollView.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
+            wrapperScrollView.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
+            wrapperScrollView.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
+            wrapperScrollView.bottomAnchor.constraint(equalTo: keyboardLayoutGuide.topAnchor),
+        ])
 
         let contentLayoutGuide = wrapperScrollView.contentLayoutGuide
 
@@ -505,8 +508,8 @@ private extension UsernameSelectionViewController {
             case .reservationFailed:
                 return CommonStrings.somethingWentWrongTryAgainLaterError
             case .tooShort:
-                return String(
-                    format: OWSLocalizedString(
+                return String.localizedStringWithFormat(
+                    OWSLocalizedString(
                         "USERNAME_SELECTION_TOO_SHORT_ERROR_MESSAGE_%d",
                         tableName: "PluralAware",
                         comment: "An error message shown when the user has typed a username that is below the minimum character limit. Embeds {{ %d the minimum character count }}."

@@ -124,7 +124,7 @@ public class QuotedMessageView: ManualStackViewWithLayer {
         var quotedAuthorFont: UIFont { UIFont.dynamicTypeSubheadlineClamped.semibold() }
         var quotedAuthorColor: UIColor { conversationStyle.quotedReplyAuthorColor() }
         var quotedTextColor: UIColor { conversationStyle.quotedReplyTextColor() }
-        var quotedTextFont: UIFont { UIFont.dynamicTypeBody2 }
+        var quotedTextFont: UIFont { UIFont.dynamicTypeSubheadline }
         var fileTypeTextColor: UIColor { conversationStyle.quotedReplyAttachmentColor() }
         var fileTypeFont: UIFont { quotedTextFont.italic() }
         var filenameTextColor: UIColor { conversationStyle.quotedReplyAttachmentColor() }
@@ -285,7 +285,19 @@ public class QuotedMessageView: ManualStackViewWithLayer {
 
             switch displayTextValue {
             case .text(let text):
-                labelText = .text(text)
+                if state.quotedReplyModel.originalContent.isPoll {
+                    let pollIcon = SignalSymbol.poll.attributedString(
+                        dynamicTypeBaseSize: quotedTextFont.pointSize
+                    ) + " "
+                    let pollPrefix = OWSLocalizedString(
+                        "POLL_LABEL",
+                        comment: "Label specifying the message type as a poll"
+                    ) + ": "
+
+                    labelText = .attributedText(pollIcon + NSAttributedString(string: pollPrefix + text))
+                } else {
+                    labelText = .text(text)
+                }
                 textAlignment = text.naturalTextAlignment
             case .attributedText(let attributedText):
                 let mutableText = NSMutableAttributedString(attributedString: attributedText)

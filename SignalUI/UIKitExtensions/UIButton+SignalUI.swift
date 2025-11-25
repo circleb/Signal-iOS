@@ -5,6 +5,23 @@
 
 import SignalServiceKit
 
+// MARK: - NSDirectionalEdgeInsets
+
+private extension NSDirectionalEdgeInsets {
+    static var largeButtonContentInsets: NSDirectionalEdgeInsets {
+        NSDirectionalEdgeInsets(hMargin: 16, vMargin: 15)
+    }
+
+    static var mediumButtonContentInsets: NSDirectionalEdgeInsets {
+        NSDirectionalEdgeInsets(hMargin: 16, vMargin: 12)
+    }
+
+    static var smallButtonContentInsets: NSDirectionalEdgeInsets {
+        NSDirectionalEdgeInsets(hMargin: 12, vMargin: 8)
+    }
+
+}
+
 // MARK: - UIButton
 
 public extension UIButton {
@@ -85,9 +102,34 @@ public extension UIButton {
             self.setImage(image, for: .normal)
         }
     }
+
+    func enableMultilineLabel() {
+        guard let titleLabel else { return }
+
+        configuration?.titleAlignment = .center
+        configuration?.titleLineBreakMode = .byWordWrapping
+
+        titleLabel.numberOfLines = 0
+        titleLabel.lineBreakMode = .byWordWrapping
+        titleLabel.textAlignment = .center
+
+        configurationUpdateHandler = { button in
+            button.titleLabel?.numberOfLines = 0
+            button.titleLabel?.lineBreakMode = .byWordWrapping
+        }
+    }
+
+    func enclosedInVerticalStackView(isFullWidthButton: Bool) -> UIStackView {
+        return [self].enclosedInVerticalStackView(isFullWidthButtons: isFullWidthButton)
+    }
 }
 
-// MARK: - UIButton.Configuration
+public extension Array where Element == UIButton {
+
+    func enclosedInVerticalStackView(isFullWidthButtons: Bool) -> UIStackView {
+        return UIStackView.verticalButtonStack(buttons: self, isFullWidthButtons: isFullWidthButtons)
+    }
+}
 
 extension UIConfigurationTextAttributesTransformer {
     /// Assign to a text attributes transformer (e.g., `UIButton.Configuration.titleTextAttributesTransformer`)
@@ -103,6 +145,121 @@ extension UIConfigurationTextAttributesTransformer {
             attributes.font = defaultFont
             return attributes
         }
+    }
+}
+
+public extension UIButton.Configuration {
+
+    private mutating func applyCorners() {
+        if #available(iOS 26, *) {
+            cornerStyle = .capsule
+            return
+        }
+        cornerStyle = .fixed
+        background.cornerRadius = 14
+    }
+
+    private static func basePrimary() -> Self {
+        var configuration: UIButton.Configuration
+#if compiler(>=6.2)
+        if #available(iOS 26, *) {
+            configuration = .prominentGlass()
+        } else {
+            configuration = .borderedProminent()
+        }
+#else
+        configuration = .borderedProminent()
+#endif
+        configuration.titleAlignment = .center
+        configuration.titleTextAttributesTransformer = .defaultFont(.dynamicTypeHeadlineClamped)
+        configuration.baseBackgroundColor = .Signal.accent
+        configuration.applyCorners()
+        return configuration
+    }
+
+    private static func baseSecondary() -> Self {
+        var configuration: UIButton.Configuration
+#if compiler(>=6.2)
+        if #available(iOS 26, *) {
+            configuration = .prominentGlass()
+            configuration.baseForegroundColor = .Signal.label
+        } else {
+            configuration = .plain()
+            configuration.baseForegroundColor = .Signal.accent
+        }
+#else
+        configuration = .plain()
+        configuration.baseForegroundColor = .Signal.accent
+#endif
+        configuration.titleAlignment = .center
+        configuration.titleTextAttributesTransformer = .defaultFont(.dynamicTypeHeadlineClamped)
+        configuration.baseBackgroundColor = .clear
+        configuration.applyCorners()
+        return configuration
+    }
+
+    static func largePrimary(title: String) -> Self {
+        var configuration = basePrimary()
+        configuration.title = title
+        configuration.contentInsets = .largeButtonContentInsets
+        return configuration
+    }
+
+    static func largeSecondary(title: String) -> Self {
+        var configuration = baseSecondary()
+        configuration.title = title
+        configuration.contentInsets = .largeButtonContentInsets
+        if #unavailable(iOS 26) {
+            // Smaller height when button doesn't have visible shape looks better.
+            configuration.contentInsets.top = 8
+            configuration.contentInsets.bottom = 8
+        }
+        return configuration
+    }
+
+    static func mediumSecondary(title: String) -> Self {
+        var configuration = baseSecondary()
+        configuration.title = title
+        configuration.contentInsets = .mediumButtonContentInsets
+        if #unavailable(iOS 26) {
+            // Smaller height when button doesn't have visible shape looks better.
+            configuration.contentInsets.top = 8
+            configuration.contentInsets.bottom = 8
+        }
+        return configuration
+    }
+
+    static func mediumBorderless(title: String) -> Self {
+        var configuration = UIButton.Configuration.borderless()
+        configuration.title = title
+        configuration.titleAlignment = .center
+        configuration.titleTextAttributesTransformer = .defaultFont(.dynamicTypeHeadlineClamped)
+        configuration.contentInsets = .mediumButtonContentInsets
+        configuration.baseForegroundColor = .Signal.accent
+        configuration.baseBackgroundColor = .clear
+        return configuration
+    }
+
+    static func smallBorderless(title: String) -> Self {
+        var configuration = UIButton.Configuration.borderless()
+        configuration.title = title
+        configuration.titleAlignment = .center
+        configuration.titleTextAttributesTransformer = .defaultFont(.dynamicTypeSubheadlineClamped.semibold())
+        configuration.contentInsets = .smallButtonContentInsets
+        configuration.baseForegroundColor = .Signal.accent
+        configuration.baseBackgroundColor = .clear
+        return configuration
+    }
+
+    static func smallSecondary(title: String) -> Self {
+        var configuration = UIButton.Configuration.gray()
+        configuration.title = title
+        configuration.titleAlignment = .center
+        configuration.titleTextAttributesTransformer = .defaultFont(.dynamicTypeSubheadlineClamped.medium())
+        configuration.contentInsets = .smallButtonContentInsets
+        configuration.baseForegroundColor = .Signal.label
+        configuration.background.backgroundColor = .Signal.secondaryFill
+        return configuration
     }
 }
 
@@ -317,8 +474,27 @@ public extension UIBarButtonItem {
         animated: Bool = true,
         completion: (() -> Void)? = nil
     ) -> UIBarButtonItem {
-        Self.doneButton { [weak viewController] in
+        let systemItem: SystemItem = if #available(iOS 26, *), BuildFlags.iOS26SDKIsAvailable {
+            .close
+        } else {
+            .done
+        }
+        return Self.systemItem(systemItem) { [weak viewController] in
             viewController?.dismiss(animated: animated, completion: completion)
+        }
+    }
+
+    static func setButton(action: @escaping () -> Void) -> UIBarButtonItem {
+        if #available(iOS 26, *) {
+            // iOS 26 done buttons appear as a big blue checkmark
+            return .systemItem(.done, action: action)
+        } else {
+            // For iOS 18 and older, we want to use the text "Set"
+            return .button(
+                title: CommonStrings.setButton,
+                style: .done,
+                action: action
+            )
         }
     }
 

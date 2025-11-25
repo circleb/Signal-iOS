@@ -15,16 +15,26 @@ public class StickerKeyboard: CustomKeyboard {
     private let headerView = StickerPacksToolbar()
     private lazy var stickerPickerPageView = StickerPickerPageView(delegate: self)
 
-    public override init() {
+    public init(delegate: StickerKeyboardDelegate?) {
+        self.delegate = delegate
+
         super.init()
 
-        backgroundColor = Theme.backgroundColor
+        let topInset: CGFloat
+        if #available(iOS 26, *), BuildFlags.iOS26SDKIsAvailable {
+            topInset = 24
+            backgroundColor = .clear
+        } else {
+            topInset = 0
+            backgroundColor = .Signal.background
+        }
 
         let stackView = UIStackView(arrangedSubviews: [ headerView, stickerPickerPageView ])
         contentView.addSubview(stackView)
         stackView.axis = .vertical
         stackView.alignment = .fill
-        stackView.autoPinEdgesToSuperviewEdges()
+        stackView.autoPinEdges(toSuperviewEdgesExcludingEdge: .top)
+        stackView.autoPinEdge(toSuperviewEdge: .top, withInset: topInset)
 
         headerView.delegate = self
     }

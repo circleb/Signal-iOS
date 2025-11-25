@@ -103,6 +103,7 @@ public class OWSTableItem {
         withText: String,
         maxNameLines: Int? = nil,
         accessoryText: String? = nil,
+        addBetaLabel: Bool = false,
         actionBlock: (() -> Void)? = nil
     ) -> OWSTableItem {
         return item(
@@ -111,6 +112,7 @@ public class OWSTableItem {
             maxNameLines: maxNameLines,
             accessoryText: accessoryText,
             accessoryType: .disclosureIndicator,
+            addBetaLabel: addBetaLabel,
             actionBlock: actionBlock
         )
     }
@@ -284,14 +286,10 @@ public class OWSTableItem {
     }
 
     public class func configureCell(_ cell: UITableViewCell) {
-        cell.selectedBackgroundView = UIView()
         cell.backgroundColor = Theme.backgroundColor
         cell.selectedBackgroundView?.backgroundColor = Theme.tableCell2SelectedBackgroundColor
-        cell.multipleSelectionBackgroundView?.backgroundColor = Theme.tableCell2MultiSelectedBackgroundColor
-        configureCellLabels(cell)
-    }
+        cell.multipleSelectionBackgroundView?.backgroundColor = Theme.tableCell2SelectedBackgroundColor
 
-    private class func configureCellLabels(_ cell: UITableViewCell) {
         cell.textLabel?.font = self.primaryLabelFont
         cell.textLabel?.textColor = Theme.primaryTextColor
         cell.detailTextLabel?.textColor = Theme.secondaryTextAndIconColor
@@ -357,6 +355,7 @@ public extension OWSTableItem {
         accessoryType: UITableViewCell.AccessoryType = .none,
         accessoryContentView: UIView? = nil,
         accessibilityIdentifier: String? = nil,
+        addBetaLabel: Bool = false,
         actionBlock: (() -> Void)? = nil
     ) -> OWSTableItem {
         return OWSTableItem(
@@ -371,7 +370,8 @@ public extension OWSTableItem {
                     accessoryText: accessoryText,
                     accessoryType: accessoryType,
                     accessoryContentView: accessoryContentView,
-                    accessibilityIdentifier: accessibilityIdentifier
+                    accessibilityIdentifier: accessibilityIdentifier,
+                    addBetaLabel: addBetaLabel
                 )
             },
             actionBlock: actionBlock
@@ -390,7 +390,8 @@ public extension OWSTableItem {
         accessoryType: UITableViewCell.AccessoryType = .none,
         accessoryContentView: UIView? = nil,
         customColor: UIColor? = nil,
-        accessibilityIdentifier: String? = nil
+        accessibilityIdentifier: String? = nil,
+        addBetaLabel: Bool = false
     ) -> UITableViewCell {
         var imageView: UIImageView?
         if let icon = icon {
@@ -410,7 +411,8 @@ public extension OWSTableItem {
             accessoryType: accessoryType,
             accessoryContentView: accessoryContentView,
             customColor: customColor,
-            accessibilityIdentifier: accessibilityIdentifier
+            accessibilityIdentifier: accessibilityIdentifier,
+            addBetaLabel: addBetaLabel
         )
     }
 
@@ -457,7 +459,8 @@ public extension OWSTableItem {
         accessoryType: UITableViewCell.AccessoryType = .none,
         accessoryContentView: UIView? = nil,
         customColor: UIColor? = nil,
-        accessibilityIdentifier: String? = nil
+        accessibilityIdentifier: String? = nil,
+        addBetaLabel: Bool = false
     ) -> UITableViewCell {
         let cell = OWSTableItem.newCell()
         cell.preservesSuperviewLayoutMargins = true
@@ -517,6 +520,39 @@ public extension OWSTableItem {
             subviews.append(labels)
         }
 
+        if addBetaLabel {
+            if accessoryText != nil {
+                owsFailDebug("Beta label doesn't play nice with accessory text")
+            }
+
+            nameLabel.setCompressionResistanceHorizontalHigh()
+
+            let betaLabel = UILabel()
+            betaLabel.font = .dynamicTypeFootnoteClamped.bold()
+            betaLabel.text = CommonStrings.betaLabel
+
+            betaLabel.textColor = UIColor.Signal.label
+            betaLabel.textAlignment = .center
+            betaLabel.adjustsFontForContentSizeCategory = true
+            betaLabel.translatesAutoresizingMaskIntoConstraints = false
+
+            // Use a container for the grey background so it adjusts
+            // for different text length when localized.
+            let betaContainer = UIView()
+            betaContainer.backgroundColor = UIColor.Signal.secondaryFill
+            betaContainer.layer.cornerRadius = 12
+            betaContainer.addSubview(betaLabel)
+
+            NSLayoutConstraint.activate([
+                betaLabel.leadingAnchor.constraint(equalTo: betaContainer.leadingAnchor, constant: 8),
+                betaLabel.trailingAnchor.constraint(equalTo: betaContainer.trailingAnchor, constant: -8),
+                betaLabel.topAnchor.constraint(equalTo: betaContainer.topAnchor, constant: 4),
+                betaLabel.bottomAnchor.constraint(equalTo: betaContainer.bottomAnchor, constant: -4)
+            ])
+
+            subviews.append(betaContainer)
+        }
+
         if let customColor = customColor {
             nameLabel.textColor = customColor
         }
@@ -557,7 +593,18 @@ public extension OWSTableItem {
         contentRow.autoSetDimension(.height, toSize: iconSize, relation: .greaterThanOrEqual)
 
         cell.contentView.addSubview(contentRow)
-        contentRow.autoPinEdgesToSuperviewMargins()
+        if addBetaLabel {
+            contentRow.setCustomSpacing(6, after: nameLabel)
+
+            NSLayoutConstraint.activate([
+                contentRow.leadingAnchor.constraint(equalTo: cell.contentView.layoutMarginsGuide.leadingAnchor),
+                contentRow.topAnchor.constraint(equalTo: cell.contentView.topAnchor, constant: 12),
+                contentRow.bottomAnchor.constraint(equalTo: cell.contentView.bottomAnchor, constant: -12),
+                contentRow.trailingAnchor.constraint(lessThanOrEqualTo: cell.contentView.layoutMarginsGuide.trailingAnchor)
+            ])
+        } else {
+            contentRow.autoPinEdgesToSuperviewMargins()
+        }
 
         cell.accessibilityIdentifier = accessibilityIdentifier
         cell.accessoryType = accessoryType

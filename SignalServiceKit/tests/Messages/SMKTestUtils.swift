@@ -4,8 +4,9 @@
 //
 
 import Foundation
-import SignalServiceKit
 import LibSignalClient
+
+@testable import SignalServiceKit
 
 class MockClient {
     var protocolAddress: ProtocolAddress { ProtocolAddress(aci, deviceId: deviceId) }
@@ -54,13 +55,15 @@ class MockClient {
         senderKeyStore = protocolStore
     }
 
-    func createSecretSessionCipher() throws -> SMKSecretSessionCipher {
-        return try SMKSecretSessionCipher(sessionStore: sessionStore,
-                                          preKeyStore: preKeyStore,
-                                          signedPreKeyStore: signedPreKeyStore,
-                                          kyberPreKeyStore: kyberPreKeyStore,
-                                          identityStore: identityStore,
-                                          senderKeyStore: senderKeyStore)
+    func createSecretSessionCipher() -> SMKSecretSessionCipher {
+        return SMKSecretSessionCipher(
+            sessionStore: sessionStore,
+            preKeyStore: preKeyStore,
+            signedPreKeyStore: signedPreKeyStore,
+            kyberPreKeyStore: kyberPreKeyStore,
+            identityStore: identityStore,
+            senderKeyStore: senderKeyStore
+        )
     }
 
     func generateMockPreKey() -> LibSignalClient.PreKeyRecord {
@@ -131,12 +134,13 @@ class MockClient {
         // SessionBuilder aliceSessionBuilder = new SessionBuilder(aliceStore, new SignalProtocolAddress("+14152222222", 1));
         // aliceSessionBuilder.process(bobBundle);
         let bobProtocolAddress = bobMockClient.protocolAddress
-        try! processPreKeyBundle(bobBundle,
-                                 for: bobProtocolAddress,
-                                 sessionStore: sessionStore,
-                                 identityStore: identityStore,
-                                 context: NullContext(),
-                                 usePqRatchet: true)
+        try! processPreKeyBundle(
+            bobBundle,
+            for: bobProtocolAddress,
+            sessionStore: sessionStore,
+            identityStore: identityStore,
+            context: NullContext(),
+        )
 
         // bobStore.storeSignedPreKey(2, bobSignedPreKey);
         // bobStore.storePreKey(1, new PreKeyRecord(1, bobPreKey));

@@ -16,7 +16,7 @@ class StoriesViewController: OWSViewController, StoryListDataSourceDelegate, Hom
 
     private lazy var emptyStateLabel: UILabel = {
         let label = UILabel()
-        label.textColor = Theme.secondaryTextAndIconColor
+        label.textColor = .Signal.secondaryLabel
         label.font = .dynamicTypeBody
         label.numberOfLines = 0
         label.textAlignment = .center
@@ -53,11 +53,19 @@ class StoriesViewController: OWSViewController, StoryListDataSourceDelegate, Hom
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        view.addSubview(tableView)
-        tableView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .bottom)
-        tableView.autoPinEdge(.bottom, to: .bottom, of: keyboardLayoutGuideViewSafeArea)
+        view.backgroundColor = .Signal.background
+        tableView.backgroundColor = .Signal.background
+
         tableView.delegate = self
         tableView.dataSource = self
+        view.addSubview(tableView)
+        tableView.autoPinHeight(toHeightOf: view)
+        tableViewHorizontalEdgeConstraints = [
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            view.trailingAnchor.constraint(equalTo: tableView.trailingAnchor),
+        ]
+        NSLayoutConstraint.activate(tableViewHorizontalEdgeConstraints)
+        updateTableViewPaddingIfNeeded()
 
         // Search
         searchController.searchResultsUpdater = self
@@ -148,14 +156,12 @@ class StoriesViewController: OWSViewController, StoryListDataSourceDelegate, Hom
         }
     }
 
-    override func themeDidChange() {
-        super.themeDidChange()
-        applyTheme()
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        updateTableViewPaddingIfNeeded()
     }
 
     private func applyTheme() {
-        emptyStateLabel.textColor = Theme.secondaryTextAndIconColor
-
         for indexPath in self.tableView.indexPathsForVisibleRows ?? [] {
             switch Section(rawValue: indexPath.section) {
             case .myStory:
@@ -183,19 +189,43 @@ class StoriesViewController: OWSViewController, StoryListDataSourceDelegate, Hom
             }
         }
 
-        view.backgroundColor = Theme.backgroundColor
-        tableView.backgroundColor = Theme.backgroundColor
-
         updateNavigationBar()
+    }
+
+    /// Set to `true` when list is displayed in split view controller's "sidebar" on iOS 26 and later.
+    /// Setting this to `true` would add an extra padding on both sides of the table view.
+    /// This value is also passed down to table view cells that make their own layout choices based on the value.
+    private var useSidebarStoryListCellAppearance = false {
+        didSet {
+            guard oldValue != useSidebarStoryListCellAppearance else { return }
+            tableViewHorizontalEdgeConstraints.forEach {
+                $0.constant = useSidebarStoryListCellAppearance ? 16 : 0
+            }
+            tableView.reloadData()
+        }
+    }
+
+    private var tableViewHorizontalEdgeConstraints: [NSLayoutConstraint] = []
+
+    /// iOS 26+: checks if this VC is displayed in the collapsed split view controller and updates `useSidebarCallListCellAppearance` accordingly.
+    /// Does nothing on prior iOS versions.
+    private func updateTableViewPaddingIfNeeded() {
+        guard #available(iOS 26, *) else { return }
+
+        if let splitViewController = splitViewController, !splitViewController.isCollapsed {
+            useSidebarStoryListCellAppearance = true
+        } else {
+            useSidebarStoryListCellAppearance = false
+        }
     }
 
     @objc
     private func profileDidChange() { updateNavigationBar() }
 
-    private func updateNavigationBar() {
+    func updateNavigationBar() {
         navigationItem.leftBarButtonItem = createSettingsBarButtonItem(
             databaseStorage: SSKEnvironment.shared.databaseStorageRef,
-            buildActions: { settingsAction -> [UIAction] in
+            buildActions: { settingsAction -> [UIMenuElement] in
                 return [
                     UIAction(
                         title: OWSLocalizedString(
@@ -337,12 +367,13 @@ extension StoriesViewController: CameraFirstCaptureDelegate {
 extension StoriesViewController: UITableViewDelegate {
 
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-        guard
-            searchController.isActive,
-            searchController.searchBar.text.isEmptyOrNil
-        else { return }
-        tableView.contentOffset.y += 1
-        searchController.isActive = false
+        guard searchController.isActive else { return }
+        if searchController.searchBar.text.isEmptyOrNil {
+            tableView.contentOffset.y += 1
+            searchController.isActive = false
+        } else {
+            searchController.searchBar.resignFirstResponder()
+        }
     }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -515,6 +546,7 @@ extension StoriesViewController: UITableViewDataSource {
                 owsFailDebug("Missing my story model")
                 return cell
             }
+            cell.useSidebarAppearance = useSidebarStoryListCellAppearance
             cell.configure(with: myStoryModel, spoilerState: spoilerState) { [weak self] in self?.showCameraView() }
             return cell
         case .hiddenStories:
@@ -534,6 +566,7 @@ extension StoriesViewController: UITableViewDataSource {
                 owsFailDebug("Missing model for story")
                 return cell
             }
+            cell.useSidebarAppearance = useSidebarStoryListCellAppearance
             cell.configure(with: model, spoilerState: spoilerState)
             return cell
         case .none:

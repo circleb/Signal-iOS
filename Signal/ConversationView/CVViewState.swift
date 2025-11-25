@@ -23,11 +23,9 @@ public class CVViewState: NSObject {
     public var inputToolbar: ConversationInputToolbar?
     public let headerView = ConversationHeaderView()
 
-    public let inputAccessoryPlaceholder = InputAccessoryViewPlaceholder()
-    public var bottomBar = UIView.container()
-    public var bottomBarBottomConstraint: NSLayoutConstraint?
+    public var bottomBarContainer = UIView.container()
     public var requestView: UIView?
-    public var bannerView: UIView?
+    public var bannerStackView: UIView?
     public var groupNameCollisionFinder: GroupMembershipNameCollisionFinder?
 
     public var isDismissingInteractively = false
@@ -92,17 +90,13 @@ public class CVViewState: NSObject {
 
     public var userHasScrolled = false
 
-    public var groupCallTooltip: GroupCallTooltip?
-    public var groupCallTooltipTailReferenceView: UIView?
-    public var didAlreadyShowGroupCallTooltipEnoughTimes: Bool
-    public var hasIncrementedGroupCallTooltipShownCount = false
     public var groupCallBarButtonItem: UIBarButtonItem?
 
     public var lastMessageSentDate: Date?
 
-    public let scrollDownButton = ConversationScrollButton(iconName: "chevron-down-20")
+    public let scrollDownButton = ConversationScrollButton(iconName: "chevron-down")
     public var isHidingScrollDownButton = false
-    public let scrollToNextMentionButton = ConversationScrollButton(iconName: "at-display")
+    public let scrollToNextMentionButton = ConversationScrollButton(iconName: "at")
     public var isHidingScrollToNextMentionButton = false
     public var scrollUpdateTimer: Timer?
     public var isWaitingForDeceleration = false
@@ -118,12 +112,13 @@ public class CVViewState: NSObject {
 
     // MARK: - Gestures
 
+    public var collectionViewGestureRecongnizersConfigured = false
     public let collectionViewTapGestureRecognizer = SingleOrDoubleTapGestureRecognizer()
     public let collectionViewLongPressGestureRecognizer = UILongPressGestureRecognizer()
     public let collectionViewContextMenuGestureRecognizer = UILongPressGestureRecognizer()
-    public var collectionViewContextMenuSecondaryClickRecognizer: UITapGestureRecognizer?
-
+    public var collectionViewContextMenuSecondaryClickRecognizer = UITapGestureRecognizer()
     public let collectionViewPanGestureRecognizer = UIPanGestureRecognizer()
+
     public var collectionViewActiveContextMenuInteraction: ChatHistoryContextMenuInteraction?
     public var longPressHandler: CVLongPressHandler?
     public var panHandler: CVPanHandler?
@@ -161,13 +156,11 @@ public class CVViewState: NSObject {
     public init(
         threadUniqueId: String,
         conversationStyle: ConversationStyle,
-        didAlreadyShowGroupCallTooltipEnoughTimes: Bool,
         chatColor: ColorOrGradientSetting,
         wallpaperViewBuilder: WallpaperViewBuilder?
     ) {
         self.threadUniqueId = threadUniqueId
         self.conversationStyle = conversationStyle
-        self.didAlreadyShowGroupCallTooltipEnoughTimes = didAlreadyShowGroupCallTooltipEnoughTimes
         self.chatColor = chatColor
         self.wallpaperViewBuilder = wallpaperViewBuilder
     }
@@ -197,17 +190,8 @@ extension ConversationViewController {
         set { viewState.inputToolbar = newValue }
     }
 
-    var inputAccessoryPlaceholder: InputAccessoryViewPlaceholder {
-        viewState.inputAccessoryPlaceholder
-    }
-
-    var bottomBar: UIView {
-        viewState.bottomBar
-    }
-
-    var bottomBarBottomConstraint: NSLayoutConstraint? {
-        get { viewState.bottomBarBottomConstraint }
-        set { viewState.bottomBarBottomConstraint = newValue }
+    var bottomBarContainer: UIView {
+        viewState.bottomBarContainer
     }
 
     var requestView: UIView? {
@@ -215,9 +199,9 @@ extension ConversationViewController {
         set { viewState.requestView = newValue }
     }
 
-    var bannerView: UIView? {
-        get { viewState.bannerView }
-        set { viewState.bannerView = newValue }
+    var bannerStackView: UIView? {
+        get { viewState.bannerStackView }
+        set { viewState.bannerStackView = newValue }
     }
 
     var isDismissingInteractively: Bool {
@@ -271,14 +255,6 @@ extension ConversationViewController {
         set { viewState.isDarkThemeEnabled = newValue }
     }
 
-    var isMeasuringKeyboardHeight: Bool { inputToolbar?.isMeasuringKeyboardHeight ?? false }
-
-    var isSwitchingKeyboard: Bool {
-        // See comment in `ConversationInputToolbar.isSwitchingKeyboard`.
-        guard #available(iOS 17, *) else { return false }
-        return inputToolbar?.isSwitchingKeyboard ?? false
-    }
-
     var mediaCache: CVMediaCache { viewState.mediaCache }
 
     var groupCallBarButtonItem: UIBarButtonItem? {
@@ -298,6 +274,11 @@ extension ConversationViewController {
 
     // MARK: - Gestures
 
+    var collectionViewGestureRecongnizersConfigured: Bool {
+        get { viewState.collectionViewGestureRecongnizersConfigured }
+        set { viewState.collectionViewGestureRecongnizersConfigured = newValue }
+    }
+
     var collectionViewTapGestureRecognizer: SingleOrDoubleTapGestureRecognizer {
         viewState.collectionViewTapGestureRecognizer
     }
@@ -307,12 +288,9 @@ extension ConversationViewController {
     var collectionViewContextMenuGestureRecognizer: UILongPressGestureRecognizer {
         viewState.collectionViewContextMenuGestureRecognizer
     }
-    var collectionViewContextMenuSecondaryClickRecognizer: UITapGestureRecognizer? {
-        get { viewState.collectionViewContextMenuSecondaryClickRecognizer }
-        set { viewState.collectionViewContextMenuSecondaryClickRecognizer = newValue }
-
+    var collectionViewContextMenuSecondaryClickRecognizer: UITapGestureRecognizer {
+        viewState.collectionViewContextMenuSecondaryClickRecognizer
     }
-
     var collectionViewPanGestureRecognizer: UIPanGestureRecognizer {
         viewState.collectionViewPanGestureRecognizer
     }

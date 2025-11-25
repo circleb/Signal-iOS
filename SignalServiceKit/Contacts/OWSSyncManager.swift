@@ -17,7 +17,7 @@ public class OWSSyncManager {
         KeyValueStore(collection: "kTSStorageManagerOWSSyncManagerCollection")
     }
 
-    private let contactSyncQueue = SerialTaskQueue()
+    private let contactSyncQueue = ConcurrentTaskQueue(concurrentLimit: 1)
 
     fileprivate let appReadiness: AppReadiness
 
@@ -31,7 +31,9 @@ public class OWSSyncManager {
                 if TSAccountManagerObjcBridge.isPrimaryDeviceWithMaybeTransaction {
                     // syncAllContactsIfNecessary will skip if nothing has changed,
                     // so this won't yield redundant traffic.
-                    self.syncAllContactsIfNecessary()
+                    Task {
+                        try await self.syncAllContactsIfNecessary()
+                    }
                 } else {
                     self.sendAllSyncRequestMessagesIfNecessary().catch { (_ error: Error) in
                         Logger.error("Error: \(error).")
@@ -52,19 +54,25 @@ public class OWSSyncManager {
     @objc
     private func signalAccountsDidChange(_ notification: AnyObject) {
         AssertIsOnMainThread()
-        syncAllContactsIfNecessary()
+        Task {
+            try await self.syncAllContactsIfNecessary()
+        }
     }
 
     @objc
     private func registrationStateDidChange(_ notification: AnyObject) {
         AssertIsOnMainThread()
-        syncAllContactsIfNecessary()
+        Task {
+            try await self.syncAllContactsIfNecessary()
+        }
     }
 
     @objc
     private func willEnterForeground(_ notification: AnyObject) {
         AssertIsOnMainThread()
-        _ = syncAllContactsIfFullSyncRequested()
+        Task {
+            try await self.syncAllContactsIfFullSyncRequested()
+        }
     }
 }
 
@@ -217,7 +225,7 @@ extension OWSSyncManager: SyncManagerProtocol, SyncManagerProtocolSwift {
 
         let syncKeysMessage = OWSSyncKeysMessage(
             localThread: thread,
-            accountEntropyPool: accountEntropyPool?.rawData,
+            accountEntropyPool: accountEntropyPool?.rawString,
             masterKey: masterKey?.rawData,
             mediaRootBackupKey: mrbk.serialize(),
             transaction: tx
@@ -243,8 +251,8 @@ extension OWSSyncManager: SyncManagerProtocol, SyncManagerProtocolSwift {
             switch error {
             case .missingMasterKey:
                 Logger.warn("Key sync messages missing master key")
-            case .missingMediaRootBackupKey:
-                Logger.warn("Key sync messages missing media root backup key")
+            case .missingOrInvalidMRBK:
+                Logger.warn("Key sync messages missing or invalid media root backup key")
             }
         }
 
@@ -284,11 +292,14 @@ extension OWSSyncManager: SyncManagerProtocol, SyncManagerProtocolSwift {
         _ syncMessage: SSKProtoSyncMessageMessageRequestResponse,
         transaction: DBWriteTransaction
     ) {
-        guard let thread: TSThread = {
+        guard let thread = { () -> TSThread? in
             if let groupId = syncMessage.groupID {
                 return TSGroupThread.fetch(groupId: groupId, transaction: transaction)
             }
-            if let threadAci = Aci.parseFrom(aciString: syncMessage.threadAci) {
+            if let threadAci = Aci.parseFrom(
+                serviceIdBinary: syncMessage.threadAciBinary,
+                serviceIdString: syncMessage.threadAci,
+            ) {
                 return TSContactThread.getWithContactAddress(SignalServiceAddress(threadAci), transaction: transaction)
             }
             return nil
@@ -388,19 +399,19 @@ extension OWSSyncManager: SyncManagerProtocol, SyncManagerProtocolSwift {
 
     // MARK: - Contact Sync
 
-    public func syncAllContacts() -> Promise<Void> {
+    public func syncAllContacts() async throws {
         owsAssertDebug(canSendContactSyncMessage())
-        return syncContacts(mode: .allSignalAccounts)
+        try await syncContacts(mode: .allSignalAccounts)
     }
 
-    func syncAllContactsIfNecessary() {
+    fileprivate func syncAllContactsIfNecessary() async throws {
         owsAssertDebug(CurrentAppContext().isMainApp)
-        _ = syncContacts(mode: .allSignalAccountsIfChanged)
+        try await syncContacts(mode: .allSignalAccountsIfChanged)
     }
 
-    public func syncAllContactsIfFullSyncRequested() -> Promise<Void> {
+    public func syncAllContactsIfFullSyncRequested() async throws {
         owsAssertDebug(CurrentAppContext().isMainApp)
-        return syncContacts(mode: .allSignalAccountsIfFullSyncRequested)
+        try await syncContacts(mode: .allSignalAccountsIfFullSyncRequested)
     }
 
     private enum ContactSyncMode {
@@ -420,29 +431,26 @@ extension OWSSyncManager: SyncManagerProtocol, SyncManagerProtocolSwift {
         return true
     }
 
-    private func syncContacts(mode: ContactSyncMode) -> Promise<Void> {
-        if DebugFlags.dontSendContactOrGroupSyncMessages.get() {
-            Logger.info("Skipping contact sync message.")
-            return .value(())
-        }
-
+    private func syncContacts(mode: ContactSyncMode) async throws {
         guard canSendContactSyncMessage() else {
-            return Promise(error: OWSGenericError("Not ready to sync contacts."))
+            throw OWSGenericError("Not ready to sync contacts.")
         }
 
-        let syncTask = contactSyncQueue.enqueue {
-            return try await self._syncContacts(mode: mode)
+        try await contactSyncQueue.run {
+            try await self._syncContacts(mode: mode)
         }
-
-        return Promise.wrapAsync { try await syncTask.value }
     }
 
     private func _syncContacts(mode: ContactSyncMode) async throws {
+        let logger = PrefixedLogger(prefix: "ContactSync:\(mode)")
+
         // Don't bother sending sync messages with the same data as the last
         // successfully sent contact sync message.
         let opportunistic = mode == .allSignalAccountsIfChanged
 
         if CurrentAppContext().isNSE {
+            logger.warn("Skipping: in NSE.")
+
             // If a full sync is specifically requested in the NSE, mark it so that the
             // main app can send that request the next time in runs.
             if mode == .allSignalAccounts {
@@ -450,8 +458,6 @@ extension OWSSyncManager: SyncManagerProtocol, SyncManagerProtocolSwift {
                     Self.keyValueStore.setString(UUID().uuidString, key: Constants.fullSyncRequestIdKey, transaction: tx)
                 }
             }
-            // If a full sync sync is requested in NSE, ignore it. Opportunistic syncs
-            // shouldn't be requested, but this guards against cases where they are.
             return
         }
 
@@ -469,6 +475,7 @@ extension OWSSyncManager: SyncManagerProtocol, SyncManagerProtocolSwift {
         // Don't bother building the message if nobody will receive it. If a new
         // device is linked, they will request a re-send.
         guard hasAnyLinkedDevice else {
+            logger.warn("Skipping: no linked devices.")
             return
         }
 
@@ -478,6 +485,7 @@ extension OWSSyncManager: SyncManagerProtocol, SyncManagerProtocolSwift {
 
         let result = try SSKEnvironment.shared.databaseStorageRef.read { tx in try buildContactSyncMessage(in: thread, mode: mode, tx: tx) }
         guard let result else {
+            logger.warn("Skipping: no buildContactSyncMessageResult.")
             return
         }
 
@@ -494,6 +502,7 @@ extension OWSSyncManager: SyncManagerProtocol, SyncManagerProtocolSwift {
         // someone is waiting to receive this message.
         if opportunistic, result.fullSyncRequestId == nil, messageHash == result.previousMessageHash {
             // Ignore redundant contacts sync message.
+            logger.warn("Skipping: redundant.")
             return
         }
 
@@ -518,6 +527,8 @@ extension OWSSyncManager: SyncManagerProtocol, SyncManagerProtocolSwift {
             Self.keyValueStore.setData(messageHash, key: Constants.lastContactSyncKey, transaction: tx)
             self.clearFullSyncRequestId(ifMatches: result.fullSyncRequestId, tx: tx)
         }
+
+        logger.info("Sent!")
     }
 
     private struct BuildContactSyncMessageResult {

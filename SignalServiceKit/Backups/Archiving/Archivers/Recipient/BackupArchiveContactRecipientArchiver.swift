@@ -135,7 +135,6 @@ public class BackupArchiveContactRecipientArchiver: BackupArchiveProtoStreamWrit
             else {
                 /// Skip recipients with no identifiers, but don't add to the
                 /// list of errors.
-                Logger.warn("Skipping empty SignalRecipient!")
                 return
             }
 
@@ -202,7 +201,7 @@ public class BackupArchiveContactRecipientArchiver: BackupArchiveProtoStreamWrit
                     for: recipient,
                     tx: context.tx
                 ),
-                isBlocked: blockedRecipientIds.contains(recipient.id!),
+                isBlocked: blockedRecipientIds.contains(recipient.id),
                 isWhitelisted: whitelistedAddresses.contains(recipient.address),
                 isStoryHidden: isStoryHidden,
                 visibility: { () -> BackupProto_Contact.Visibility in
@@ -260,7 +259,7 @@ public class BackupArchiveContactRecipientArchiver: BackupArchiveProtoStreamWrit
                 )
             )
 
-            writeToStream(contact: contact, contactAddress: contactAddress, contactDbRowId: recipient.id!, frameBencher: frameBencher)
+            writeToStream(contact: contact, contactAddress: contactAddress, contactDbRowId: recipient.id, frameBencher: frameBencher)
         }
 
         do {
@@ -331,7 +330,6 @@ public class BackupArchiveContactRecipientArchiver: BackupArchiveProtoStreamWrit
                 else {
                     /// Skip profiles with no identifiers, but don't add to the
                     /// list of errors.
-                    Logger.warn("Skipping empty OWSUserProfile!")
                     return
                 }
 
@@ -652,18 +650,39 @@ public class BackupArchiveContactRecipientArchiver: BackupArchiveProtoStreamWrit
             break
         }
 
+        let deviceIds: [DeviceId]
+        if isRegistered {
+            // If we think they are registered, just add the primary device id.
+            // When we try and send a message, the server will tell us about
+            // any other device ids.
+            // ...The server would tell us too if we sent an empty deviceIds array,
+            // so there's not really a material difference.
+            deviceIds = [.primary]
+        } else {
+            // Otherwise (including if we don't know if they're registered),
+            // use an empty device IDs array. This doesn't make any difference,
+            // the server will give us the deviceIds anyway and unregisteredAtTimestamp
+            // is the thing that actually drives unregistered state, but
+            // this is at least a better representation of what we know.
+            deviceIds = []
+        }
+
         let recipientProto = recipient
-        let recipient: SignalRecipient = .fromBackup(
-            backupContactAddress,
-            isRegistered: isRegistered,
-            unregisteredAtTimestamp: unregisteredTimestamp
-        )
-        do {
-            try recipientStore.insertRecipient(recipient, tx: context.tx)
+        let recipient: SignalRecipient
+        do throws(GRDB.DatabaseError) {
+            recipient = try SignalRecipient.insertRecord(
+                aci: backupContactAddress.aci,
+                phoneNumber: backupContactAddress.e164,
+                pni: backupContactAddress.pni,
+                deviceIds: deviceIds,
+                unregisteredAtTimestamp: unregisteredTimestamp,
+                tx: context.tx,
+            )
+            recipientStore.didInsertRecipient(recipient, tx: context.tx)
         } catch {
             return .failure([.restoreFrameError(.databaseInsertionFailed(error), recipientProto.recipientId)])
         }
-        context.setRecipientDbRowId(recipient.id!, forBackupRecipientId: recipientProto.recipientId)
+        context.setRecipientDbRowId(recipient.id, forBackupRecipientId: recipientProto.recipientId)
 
         /// No Backup code should be relying on the SSA cache, but once we've
         /// finished restoring and launched we want the cache to have accurate
@@ -722,17 +741,13 @@ public class BackupArchiveContactRecipientArchiver: BackupArchiveProtoStreamWrit
         let nicknameGivenName = contactProto.nickname.given.nilIfEmpty
         let nicknameFamilyName = contactProto.nickname.family.nilIfEmpty
         let nicknameNote = contactProto.note.nilIfEmpty
-        if
-            nicknameGivenName != nil
-            || nicknameFamilyName != nil
-            || nicknameNote != nil,
+        if nicknameGivenName != nil || nicknameFamilyName != nil || nicknameNote != nil {
             let nicknameRecord = NicknameRecord(
                 recipient: recipient,
                 givenName: nicknameGivenName,
                 familyName: nicknameFamilyName,
                 note: nicknameNote
             )
-        {
             self.nicknameManager.createOrUpdate(
                 nicknameRecord: nicknameRecord,
                 updateStorageServiceFor: nil,
@@ -830,7 +845,7 @@ public class BackupArchiveContactRecipientArchiver: BackupArchiveProtoStreamWrit
             do {
                 try avatarDefaultColorManager.persistDefaultColor(
                     defaultAvatarColor,
-                    recipientRowId: recipient.id!,
+                    recipientRowId: recipient.id,
                     tx: context.tx
                 )
             } catch let error {

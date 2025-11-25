@@ -14,11 +14,13 @@ extension BackupArchive {
         public typealias BlockingManager = _MessageBackup_BlockingManagerShim
         public typealias ContactManager = _MessageBackup_ContactManagerShim
         public typealias DonationSubscriptionManager = _MessageBackup_DonationSubscriptionManagerShim
+        public typealias ImageQuality = _MessageBackup_ImageQualityLevelShim
         public typealias OWS2FAManager = _MessageBackup_OWS2FAManagerShim
         public typealias Preferences = _MessageBackup_PreferencesShim
         public typealias ProfileManager = _MessageBackup_ProfileManagerShim
         public typealias ReactionManager = _MessageBackup_ReactionManagerShim
         public typealias ReceiptManager = _MessageBackup_ReceiptManagerShim
+        public typealias ScreenLock = _MessageBackup_ScreenLockShim
         public typealias SSKPreferences = _MessageBackup_SSKPreferencesShim
         public typealias StoryManager = _MessageBackup_StoryManagerShim
         public typealias SystemStoryManager = _MessageBackup_SystemStoryManagerShim
@@ -30,11 +32,13 @@ extension BackupArchive {
         public typealias BlockingManager = _MessageBackup_BlockingManagerWrapper
         public typealias ContactManager = _MessageBackup_ContactManagerWrapper
         public typealias DonationSubscriptionManager = _MessageBackup_DonationSubscriptionManagerWrapper
+        public typealias ImageQuality = _MessageBackup_ImageQualityLevelWrapper
         public typealias OWS2FAManager = _MessageBackup_OWS2FAManagerWrapper
         public typealias Preferences = _MessageBackup_PreferencesWrapper
         public typealias ProfileManager = _MessageBackup_ProfileManagerWrapper
         public typealias ReactionManager = _MessageBackup_ReactionManagerWrapper
         public typealias ReceiptManager = _MessageBackup_ReceiptManagerWrapper
+        public typealias ScreenLock = _MessageBackup_ScreenLockWrapper
         public typealias SSKPreferences = _MessageBackup_SSKPreferencesWrapper
         public typealias StoryManager = _MessageBackup_StoryManagerWrapper
         public typealias SystemStoryManager = _MessageBackup_SystemStoryManagerWrapper
@@ -63,19 +67,19 @@ public class _MessageBackup_BlockingManagerWrapper: _MessageBackup_BlockingManag
     }
 
     public func blockedRecipientIds(tx: DBReadTransaction) throws -> Set<SignalRecipient.RowId> {
-        return try blockingManager.blockedRecipientIds(tx: SDSDB.shimOnlyBridge(tx))
+        return try blockingManager.blockedRecipientIds(tx: tx)
     }
 
     public func blockedGroupIds(tx: DBReadTransaction) throws -> [Data] {
-        return try blockingManager.blockedGroupIds(transaction: SDSDB.shimOnlyBridge(tx))
+        return try blockingManager.blockedGroupIds(transaction: tx)
     }
 
     public func addBlockedAddress(_ address: SignalServiceAddress, tx: DBWriteTransaction) {
-        blockingManager.addBlockedAddress(address, blockMode: .restoreFromBackup, transaction: SDSDB.shimOnlyBridge(tx))
+        blockingManager.addBlockedAddress(address, blockMode: .restoreFromBackup, transaction: tx)
     }
 
     public func addBlockedGroupId(_ groupId: Data, tx: DBWriteTransaction) {
-        blockingManager.addBlockedGroupId(groupId, blockMode: .restoreFromBackup, transaction: SDSDB.shimOnlyBridge(tx))
+        blockingManager.addBlockedGroupId(groupId, blockMode: .restoreFromBackup, transaction: tx)
     }
 }
 
@@ -95,15 +99,15 @@ public class _MessageBackup_ContactManagerWrapper: _MessageBackup_ContactManager
     }
 
     public func displayName(_ address: SignalServiceAddress, tx: DBWriteTransaction) -> String {
-        return contactManager.displayName(for: address, tx: SDSDB.shimOnlyBridge(tx)).resolvedValue()
+        return contactManager.displayName(for: address, tx: tx).resolvedValue()
     }
 
     public func fetchSignalAccount(_ address: SignalServiceAddress, tx: DBReadTransaction) -> SignalAccount? {
-        return contactManager.fetchSignalAccount(for: address, transaction: SDSDB.shimOnlyBridge(tx))
+        return contactManager.fetchSignalAccount(for: address, transaction: tx)
     }
 
     public func insertSignalAccount(_ account: SignalAccount, tx: DBWriteTransaction) {
-        account.anyInsert(transaction: SDSDB.shimOnlyBridge(tx))
+        account.anyInsert(transaction: tx)
     }
 }
 
@@ -122,34 +126,51 @@ public protocol _MessageBackup_DonationSubscriptionManagerShim {
 
 public class _MessageBackup_DonationSubscriptionManagerWrapper: _MessageBackup_DonationSubscriptionManagerShim {
     public func displayBadgesOnProfile(tx: DBReadTransaction) -> Bool {
-        DonationSubscriptionManager.displayBadgesOnProfile(transaction: SDSDB.shimOnlyBridge(tx))
+        DonationSubscriptionManager.displayBadgesOnProfile(transaction: tx)
     }
     public func setDisplayBadgesOnProfile(value: Bool, tx: DBWriteTransaction) {
-        DonationSubscriptionManager.setDisplayBadgesOnProfile(value, updateStorageService: false, transaction: SDSDB.shimOnlyBridge(tx))
+        DonationSubscriptionManager.setDisplayBadgesOnProfile(value, updateStorageService: false, transaction: tx)
     }
 
     public func getSubscriberID(tx: DBReadTransaction) -> Data? {
-        DonationSubscriptionManager.getSubscriberID(transaction: SDSDB.shimOnlyBridge(tx))
+        DonationSubscriptionManager.getSubscriberID(transaction: tx)
     }
 
     public func setSubscriberID(subscriberID: Data, tx: DBWriteTransaction) {
-        DonationSubscriptionManager.setSubscriberID(subscriberID, transaction: SDSDB.shimOnlyBridge(tx))
+        DonationSubscriptionManager.setSubscriberID(subscriberID, transaction: tx)
     }
 
     public func getSubscriberCurrencyCode(tx: DBReadTransaction) -> String? {
-        DonationSubscriptionManager.getSubscriberCurrencyCode(transaction: SDSDB.shimOnlyBridge(tx))
+        DonationSubscriptionManager.getSubscriberCurrencyCode(transaction: tx)
     }
 
     public func setSubscriberCurrencyCode(currencyCode: Currency.Code?, tx: DBWriteTransaction) {
-        DonationSubscriptionManager.setSubscriberCurrencyCode(currencyCode, transaction: SDSDB.shimOnlyBridge(tx))
+        DonationSubscriptionManager.setSubscriberCurrencyCode(currencyCode, transaction: tx)
     }
 
     public func userManuallyCancelledSubscription(tx: DBReadTransaction) -> Bool {
-        DonationSubscriptionManager.userManuallyCancelledSubscription(transaction: SDSDB.shimOnlyBridge(tx))
+        DonationSubscriptionManager.userManuallyCancelledSubscription(transaction: tx)
     }
 
     public func setUserManuallyCancelledSubscription(value: Bool, tx: DBWriteTransaction) {
-        DonationSubscriptionManager.setUserManuallyCancelledSubscription(value, updateStorageService: false, transaction: SDSDB.shimOnlyBridge(tx))
+        DonationSubscriptionManager.setUserManuallyCancelledSubscription(value, updateStorageService: false, transaction: tx)
+    }
+}
+
+// MARK: - ImageQuality
+
+public protocol _MessageBackup_ImageQualityLevelShim {
+    func setUserSelectedHighQuality(_ isHighQuality: Bool, tx: DBWriteTransaction)
+    func resolvedQuality(tx: DBReadTransaction) -> ImageQualityLevel
+}
+
+public class _MessageBackup_ImageQualityLevelWrapper: _MessageBackup_ImageQualityLevelShim {
+    public func setUserSelectedHighQuality(_ isHighQuality: Bool, tx: DBWriteTransaction) {
+        ImageQualityLevel.setUserSelectedHighQuality(isHighQuality, tx: tx)
+    }
+
+    public func resolvedQuality(tx: DBReadTransaction) -> ImageQualityLevel {
+        ImageQualityLevel.resolvedQuality(tx: tx)
     }
 }
 
@@ -158,6 +179,9 @@ public class _MessageBackup_DonationSubscriptionManagerWrapper: _MessageBackup_D
 public protocol _MessageBackup_OWS2FAManagerShim {
     func getPin(tx: DBReadTransaction) -> String?
     func restorePinFromBackup(_ pin: String, tx: DBWriteTransaction)
+    func areRemindersEnabled(tx: DBReadTransaction) -> Bool
+    func setAreRemindersEnabled(_ areRemindersEnabled: Bool, tx: DBWriteTransaction)
+    func resetDefaultRepetitionIntervalForBackupRestore(tx: DBWriteTransaction)
 }
 
 public class _MessageBackup_OWS2FAManagerWrapper: _MessageBackup_OWS2FAManagerShim {
@@ -174,6 +198,18 @@ public class _MessageBackup_OWS2FAManagerWrapper: _MessageBackup_OWS2FAManagerSh
     public func restorePinFromBackup(_ pin: String, tx: DBWriteTransaction) {
         ows2FAManager.restorePinFromBackup(pin, transaction: tx)
     }
+
+    public func areRemindersEnabled(tx: DBReadTransaction) -> Bool {
+        ows2FAManager.areRemindersEnabled(transaction: tx)
+    }
+
+    public func setAreRemindersEnabled(_ areRemindersEnabled: Bool, tx: DBWriteTransaction) {
+        ows2FAManager.setAreRemindersEnabled(areRemindersEnabled, transaction: tx)
+    }
+
+    public func resetDefaultRepetitionIntervalForBackupRestore(tx: DBWriteTransaction) {
+        ows2FAManager.setDefaultRepetitionIntervalForBackupRestore(transaction: tx)
+    }
 }
 
 // MARK: - Preferences
@@ -181,7 +217,6 @@ public class _MessageBackup_OWS2FAManagerWrapper: _MessageBackup_OWS2FAManagerSh
 public protocol _MessageBackup_PreferencesShim {
     func shouldShowUnidentifiedDeliveryIndicators(tx: DBReadTransaction) -> Bool
     func setShouldShowUnidentifiedDeliveryIndicators(value: Bool, tx: DBWriteTransaction)
-    func setWasGroupCallTooltipShown(tx: DBWriteTransaction)
 }
 
 public class _MessageBackup_PreferencesWrapper: _MessageBackup_PreferencesShim {
@@ -191,15 +226,11 @@ public class _MessageBackup_PreferencesWrapper: _MessageBackup_PreferencesShim {
     }
 
     public func shouldShowUnidentifiedDeliveryIndicators(tx: DBReadTransaction) -> Bool {
-        preferences.shouldShowUnidentifiedDeliveryIndicators(transaction: SDSDB.shimOnlyBridge(tx))
+        preferences.shouldShowUnidentifiedDeliveryIndicators(transaction: tx)
     }
 
     public func setShouldShowUnidentifiedDeliveryIndicators(value: Bool, tx: DBWriteTransaction) {
-        preferences.setShouldShowUnidentifiedDeliveryIndicators(value, transaction: SDSDB.shimOnlyBridge(tx))
-    }
-
-    public func setWasGroupCallTooltipShown(tx: DBWriteTransaction) {
-        preferences.setWasGroupCallTooltipShown(tx: SDSDB.shimOnlyBridge(tx))
+        preferences.setShouldShowUnidentifiedDeliveryIndicators(value, transaction: tx)
     }
 }
 
@@ -225,6 +256,8 @@ public protocol _MessageBackup_ProfileManagerShim {
         givenName: String,
         familyName: String?,
         avatarUrlPath: String?,
+        bio: String?,
+        bioEmoji: String?,
         profileKey: Aes256Key,
         tx: DBWriteTransaction
     )
@@ -246,32 +279,32 @@ public class _MessageBackup_ProfileManagerWrapper: _MessageBackup_ProfileManager
     }
 
     public func enumerateUserProfiles(tx: DBReadTransaction, block: (OWSUserProfile) -> Void) {
-        OWSUserProfile.anyEnumerate(transaction: SDSDB.shimOnlyBridge(tx)) { profile, _ in
+        OWSUserProfile.anyEnumerate(transaction: tx) { profile, _ in
             block(profile)
         }
     }
 
     public func getUserProfile(for address: SignalServiceAddress, tx: DBReadTransaction) -> OWSUserProfile? {
-        profileManager.userProfile(for: address, tx: SDSDB.shimOnlyBridge(tx))
+        profileManager.userProfile(for: address, tx: tx)
     }
 
     public func getUserProfileForLocalUser(tx: DBReadTransaction) -> OWSUserProfile? {
-        return OWSUserProfile.getUserProfileForLocalUser(tx: SDSDB.shimOnlyBridge(tx))
+        return OWSUserProfile.getUserProfileForLocalUser(tx: tx)
     }
 
     public func allWhitelistedAddresses(tx: DBReadTransaction) -> [SignalServiceAddress] {
-        profileManager.allWhitelistedAddresses(tx: SDSDB.shimOnlyBridge(tx))
+        profileManager.allWhitelistedAddresses(tx: tx)
     }
 
     public func isGroupId(inProfileWhitelist groupId: Data, tx: DBReadTransaction) -> Bool {
-        profileManager.isGroupId(inProfileWhitelist: groupId, transaction: SDSDB.shimOnlyBridge(tx))
+        profileManager.isGroupId(inProfileWhitelist: groupId, transaction: tx)
     }
 
     public func addToWhitelist(_ address: SignalServiceAddress, tx: DBWriteTransaction) {
         profileManager.addUser(
             toProfileWhitelist: address,
             userProfileWriter: .backupRestore,
-            transaction: SDSDB.shimOnlyBridge(tx)
+            transaction: tx
         )
     }
 
@@ -279,7 +312,7 @@ public class _MessageBackup_ProfileManagerWrapper: _MessageBackup_ProfileManager
         profileManager.addThread(
             toProfileWhitelist: thread,
             userProfileWriter: .backupRestore,
-            transaction: SDSDB.shimOnlyBridge(tx)
+            transaction: tx
         )
     }
 
@@ -287,26 +320,28 @@ public class _MessageBackup_ProfileManagerWrapper: _MessageBackup_ProfileManager
         givenName: String,
         familyName: String?,
         avatarUrlPath: String?,
+        bio: String?,
+        bioEmoji: String?,
         profileKey: Aes256Key,
         tx: DBWriteTransaction
     ) {
-        let sdsTx = SDSDB.shimOnlyBridge(tx)
-
         /// We can't simply insert a local-user profile here, because
         /// `OWSProfileManager` will create one itself during its `warmCaches`
         /// initialization dance. So, we'll grab the one that was created and
         /// simply overwrite its fields.
         let localUserProfile = OWSUserProfile.getOrBuildUserProfileForLocalUser(
             userProfileWriter: .backupRestore,
-            tx: sdsTx
+            tx: tx
         )
 
         localUserProfile.upsertWithNoSideEffects(
             givenName: givenName,
             familyName: familyName,
             avatarUrlPath: avatarUrlPath,
+            bio: bio,
+            bioEmoji: bioEmoji,
             profileKey: profileKey,
-            tx: sdsTx
+            tx: tx
         )
     }
 
@@ -321,24 +356,23 @@ public class _MessageBackup_ProfileManagerWrapper: _MessageBackup_ProfileManager
             owsFailDebug("Cannot use this method for the local user's profile!")
             return
         }
-
-        let sdsTx: DBWriteTransaction = SDSDB.shimOnlyBridge(tx)
-
         /// We can't simply insert a profile here, because we might have created
         /// a profile through another flow (e.g., by setting a "missing" profile
         /// key).
         let profile = OWSUserProfile.getOrBuildUserProfile(
             for: insertableAddress,
             userProfileWriter: .backupRestore,
-            tx: sdsTx
+            tx: tx
         )
 
         profile.upsertWithNoSideEffects(
             givenName: givenName,
             familyName: familyName,
             avatarUrlPath: nil,
+            bio: nil,
+            bioEmoji: nil,
             profileKey: profileKey,
-            tx: sdsTx
+            tx: tx
         )
     }
 }
@@ -352,10 +386,10 @@ public protocol _MessageBackup_ReactionManagerShim {
 
 public class _MessageBackup_ReactionManagerWrapper: _MessageBackup_ReactionManagerShim {
     public func customEmojiSet(tx: DBReadTransaction) -> [String]? {
-        ReactionManager.customEmojiSet(transaction: SDSDB.shimOnlyBridge(tx))
+        ReactionManager.customEmojiSet(transaction: tx)
     }
     public func setCustomEmojiSet(emojis: [String]?, tx: DBWriteTransaction) {
-        ReactionManager.setCustomEmojiSet(emojis, transaction: SDSDB.shimOnlyBridge(tx))
+        ReactionManager.setCustomEmojiSet(emojis, transaction: tx)
     }
 }
 
@@ -372,11 +406,38 @@ public class _MessageBackup_ReceiptManagerWrapper: _MessageBackup_ReceiptManager
     }
 
     public func areReadReceiptsEnabled(tx: DBReadTransaction) -> Bool {
-        OWSReceiptManager.areReadReceiptsEnabled(transaction: SDSDB.shimOnlyBridge(tx))
+        OWSReceiptManager.areReadReceiptsEnabled(transaction: tx)
     }
 
     public func setAreReadReceiptsEnabled(value: Bool, tx: DBWriteTransaction) {
-        receiptManager.setAreReadReceiptsEnabled(value, transaction: SDSDB.shimOnlyBridge(tx))
+        receiptManager.setAreReadReceiptsEnabled(value, transaction: tx)
+    }
+}
+
+// MARK: - ScreenLock
+
+public protocol _MessageBackup_ScreenLockShim {
+    func isScreenLockEnabled(tx: DBReadTransaction) -> Bool
+    func setIsScreenLockEnabled(_ value: Bool, tx: DBWriteTransaction)
+    func screenLockTimeout(tx: DBReadTransaction) -> TimeInterval
+    func setScreenLockTimeout(_ timeout: TimeInterval, tx: DBWriteTransaction)
+}
+
+public class _MessageBackup_ScreenLockWrapper: _MessageBackup_ScreenLockShim {
+    public func isScreenLockEnabled(tx: DBReadTransaction) -> Bool {
+        return ScreenLock.shared.isScreenLockEnabled(tx: tx)
+    }
+
+    public func setIsScreenLockEnabled(_ value: Bool, tx: DBWriteTransaction) {
+        ScreenLock.shared.setIsScreenLockEnabled(value, tx: tx)
+    }
+
+    public func screenLockTimeout(tx: DBReadTransaction) -> TimeInterval {
+        return ScreenLock.shared.screenLockTimeout(tx: tx)
+    }
+
+    public func setScreenLockTimeout(_ timeout: TimeInterval, tx: DBWriteTransaction) {
+        ScreenLock.shared.setScreenLockTimeout(timeout, tx: tx)
     }
 }
 
@@ -393,22 +454,22 @@ public protocol _MessageBackup_SSKPreferencesShim {
 
 public class _MessageBackup_SSKPreferencesWrapper: _MessageBackup_SSKPreferencesShim {
     public func preferContactAvatars(tx: DBReadTransaction) -> Bool {
-        SSKPreferences.preferContactAvatars(transaction: SDSDB.shimOnlyBridge(tx))
+        SSKPreferences.preferContactAvatars(transaction: tx)
     }
     public func setPreferContactAvatars(value: Bool, tx: DBWriteTransaction) {
-        SSKPreferences.setPreferContactAvatars(value, updateStorageService: false, transaction: SDSDB.shimOnlyBridge(tx))
+        SSKPreferences.setPreferContactAvatars(value, updateStorageService: false, transaction: tx)
     }
 
     public func shouldKeepMutedChatsArchived(tx: DBReadTransaction) -> Bool {
-        SSKPreferences.shouldKeepMutedChatsArchived(transaction: SDSDB.shimOnlyBridge(tx))
+        SSKPreferences.shouldKeepMutedChatsArchived(transaction: tx)
     }
 
     public func setShouldKeepMutedChatsArchived(value: Bool, tx: DBWriteTransaction) {
-        SSKPreferences.setShouldKeepMutedChatsArchived(value, transaction: SDSDB.shimOnlyBridge(tx))
+        SSKPreferences.setShouldKeepMutedChatsArchived(value, transaction: tx)
     }
 
     public func setHasSavedThread(_ newValue: Bool, tx: DBWriteTransaction) {
-        SSKPreferences.setHasSavedThread(newValue, transaction: SDSDB.shimOnlyBridge(tx))
+        SSKPreferences.setHasSavedThread(newValue, transaction: tx)
     }
 }
 
@@ -425,22 +486,22 @@ public protocol _MessageBackup_StoryManagerShim {
 
 public class _MessageBackup_StoryManagerWrapper: _MessageBackup_StoryManagerShim {
     public func hasSetMyStoriesPrivacy(tx: DBReadTransaction) -> Bool {
-        StoryManager.hasSetMyStoriesPrivacy(transaction: SDSDB.shimOnlyBridge(tx))
+        StoryManager.hasSetMyStoriesPrivacy(transaction: tx)
     }
     public func setHasSetMyStoriesPrivacy(value: Bool, tx: DBWriteTransaction) {
-        StoryManager.setHasSetMyStoriesPrivacy(value, shouldUpdateStorageService: false, transaction: SDSDB.shimOnlyBridge(tx))
+        StoryManager.setHasSetMyStoriesPrivacy(value, shouldUpdateStorageService: false, transaction: tx)
     }
     public func areStoriesEnabled(tx: DBReadTransaction) -> Bool {
-        StoryManager.areStoriesEnabled(transaction: SDSDB.shimOnlyBridge(tx))
+        StoryManager.areStoriesEnabled(transaction: tx)
     }
     public func setAreStoriesEnabled(value: Bool, tx: DBWriteTransaction) {
-        StoryManager.setAreStoriesEnabled(value, shouldUpdateStorageService: false, transaction: SDSDB.shimOnlyBridge(tx))
+        StoryManager.setAreStoriesEnabled(value, shouldUpdateStorageService: false, transaction: tx)
     }
     public func areViewReceiptsEnabled(tx: DBReadTransaction) -> Bool {
-        StoryManager.areViewReceiptsEnabled(transaction: SDSDB.shimOnlyBridge(tx))
+        StoryManager.areViewReceiptsEnabled(transaction: tx)
     }
     public func setAreViewReceiptsEnabled(value: Bool, tx: DBWriteTransaction) {
-        StoryManager.setAreViewReceiptsEnabled(value, shouldUpdateStorageService: false, transaction: SDSDB.shimOnlyBridge(tx))
+        StoryManager.setAreViewReceiptsEnabled(value, shouldUpdateStorageService: false, transaction: tx)
     }
 }
 
@@ -459,7 +520,7 @@ public class _MessageBackup_SystemStoryManagerWrapper: _MessageBackup_SystemStor
         self.systemStoryManager = systemStoryManager
     }
     public func isOnboardingStoryViewed(tx: DBReadTransaction) -> Bool {
-        systemStoryManager.isOnboardingStoryViewed(transaction: SDSDB.shimOnlyBridge(tx))
+        systemStoryManager.isOnboardingStoryViewed(transaction: tx)
     }
     public func setHasViewedOnboardingStory(value: Bool, tx: DBWriteTransaction) {
         guard value else {
@@ -472,10 +533,10 @@ public class _MessageBackup_SystemStoryManagerWrapper: _MessageBackup_SystemStor
             timestamp: 0,
             shouldUpdateStorageService: false
         )
-        try? systemStoryManager.setHasViewedOnboardingStory(source: source, transaction: SDSDB.shimOnlyBridge(tx))
+        try? systemStoryManager.setHasViewedOnboardingStory(source: source, transaction: tx)
     }
     public func hasSeenGroupStoryEducationSheet(tx: DBReadTransaction) -> Bool {
-        systemStoryManager.isGroupStoryEducationSheetViewed(tx: SDSDB.shimOnlyBridge(tx))
+        systemStoryManager.isGroupStoryEducationSheetViewed(tx: tx)
     }
     public func setHasSeenGroupStoryEducationSheet(value: Bool, tx: DBWriteTransaction) {
         guard value else {
@@ -484,7 +545,7 @@ public class _MessageBackup_SystemStoryManagerWrapper: _MessageBackup_SystemStor
             return
         }
 
-        systemStoryManager.setGroupStoryEducationSheetViewed(tx: SDSDB.shimOnlyBridge(tx))
+        systemStoryManager.setGroupStoryEducationSheetViewed(tx: tx)
     }
 }
 
@@ -505,7 +566,7 @@ public class _MessageBackup_TypingIndicatorsWrapper: _MessageBackup_TypingIndica
     }
 
     public func setTypingIndicatorsEnabled(value: Bool, tx: DBWriteTransaction) {
-        typingIndicators.setTypingIndicatorsEnabled(value: value, transaction: SDSDB.shimOnlyBridge(tx))
+        typingIndicators.setTypingIndicatorsEnabled(value: value, transaction: tx)
     }
 }
 
@@ -514,6 +575,8 @@ public class _MessageBackup_TypingIndicatorsWrapper: _MessageBackup_TypingIndica
 public protocol _MessageBackup_UDManagerShim {
     func phoneNumberSharingMode(tx: DBReadTransaction) -> PhoneNumberSharingMode?
     func setPhoneNumberSharingMode(mode: PhoneNumberSharingMode, tx: DBWriteTransaction)
+    func shouldAllowUnrestrictedAccessLocal(tx: DBReadTransaction) -> Bool
+    func setShouldAllowUnrestrictedAccessLocal(_ value: Bool, tx: DBWriteTransaction)
 }
 
 public class _MessageBackup_UDManagerWrapper: _MessageBackup_UDManagerShim {
@@ -525,6 +588,13 @@ public class _MessageBackup_UDManagerWrapper: _MessageBackup_UDManagerShim {
         udManager.phoneNumberSharingMode(tx: tx)
     }
     public func setPhoneNumberSharingMode(mode: PhoneNumberSharingMode, tx: DBWriteTransaction) {
-        udManager.setPhoneNumberSharingMode(mode, updateStorageServiceAndProfile: false, tx: SDSDB.shimOnlyBridge(tx))
+        udManager.setPhoneNumberSharingMode(mode, updateStorageServiceAndProfile: false, tx: tx)
+    }
+    public func shouldAllowUnrestrictedAccessLocal(tx: DBReadTransaction) -> Bool {
+        udManager.shouldAllowUnrestrictedAccessLocal(transaction: tx)
+    }
+
+    public func setShouldAllowUnrestrictedAccessLocal(_ value: Bool, tx: DBWriteTransaction) {
+        udManager.setShouldAllowUnrestrictedAccessLocal(value, tx: tx)
     }
 }

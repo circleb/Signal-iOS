@@ -190,7 +190,6 @@ class ImageEditorViewController: OWSViewController {
     var discardTextEditsOnEditingEnd = false
     var currentTextItem: (textItem: ImageEditorTextItem, isNewItem: Bool)?
     var pinchFontSizeStart: CGFloat = ImageEditorTextItem.defaultFontSize
-    var textViewContainerBottomConstraint: NSLayoutConstraint? // to bottom of self.view
     lazy var textViewContainer: UIView = {
         let view = UIView(frame: view.bounds)
         view.preservesSuperviewLayoutMargins = true
@@ -226,6 +225,8 @@ class ImageEditorViewController: OWSViewController {
     }
 
     override func viewDidLoad() {
+        super.viewDidLoad()
+
         view.backgroundColor = .black
 
         imageEditorView.configureSubviews()
@@ -279,12 +280,6 @@ class ImageEditorViewController: OWSViewController {
             }
             self.startEditingTextOnViewAppear = false
         }
-    }
-
-    override func keyboardFrameDidChange(_ newFrame: CGRect, animationDuration: TimeInterval, animationOptions: UIView.AnimationOptions) {
-        super.keyboardFrameDidChange(newFrame, animationDuration: animationDuration, animationOptions: animationOptions)
-
-        updateTextViewContainerBottomLayoutConstraint(forKeyboardFrame: newFrame)
     }
 
     override var prefersStatusBarHidden: Bool {
@@ -456,7 +451,8 @@ extension ImageEditorViewController {
                                                     comment: "Media Editor: Message for the 'Discard Changes' confirmation prompt.")
         let discardChangesButton = OWSLocalizedString("MEDIA_EDITOR_DISCARD_ALL_BUTTON",
                                                       comment: "Media Editor: Title for the button in 'Discard Changes' confirmation prompt.")
-        let actionSheet = ActionSheetController(title: actionSheetTitle, message: actionSheetMessage, theme: .translucentDark)
+        let actionSheet = ActionSheetController(title: actionSheetTitle, message: actionSheetMessage)
+        actionSheet.overrideUserInterfaceStyle = .dark
         actionSheet.addAction(ActionSheetAction(title: discardChangesButton, style: .destructive, handler: { _ in
             self.clearAll()
             if let completionHandler = completionHandler {
@@ -522,7 +518,7 @@ extension ImageEditorViewController {
         if UIAccessibility.isReduceTransparencyEnabled {
             stickerPicker = StickerPickerSheet(backgroundColor: Theme.darkThemeBackgroundColor)
         } else {
-            stickerPicker = StickerPickerSheet(blurEffect: .init(style: .dark))
+            stickerPicker = StickerPickerSheet(visualEffect: UIBlurEffect(style: .dark))
         }
 
         stickerPicker.pickerDelegate = self

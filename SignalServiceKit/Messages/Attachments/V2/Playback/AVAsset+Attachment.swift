@@ -13,22 +13,22 @@ extension AVAsset {
     ) throws -> AVAsset {
         return try .fromEncryptedFile(
             at: attachment.fileURL,
-            encryptionKey: attachment.attachment.encryptionKey,
+            attachmentKey: AttachmentKey(combinedKey: attachment.attachment.encryptionKey),
             plaintextLength: attachment.info.unencryptedByteCount,
             mimeType: attachment.mimeType
         )
     }
 
-    public static func fromEncryptedFile(
+    static func fromEncryptedFile(
         at fileURL: URL,
-        encryptionKey: Data,
+        attachmentKey: AttachmentKey,
         plaintextLength: UInt32,
         mimeType: String
     ) throws -> AVAsset {
         func createAsset(mimeTypeOverride: String? = nil) throws -> AVAsset {
             return try AVAsset._fromEncryptedFile(
                 at: fileURL,
-                encryptionKey: encryptionKey,
+                attachmentKey: attachmentKey,
                 plaintextLength: plaintextLength,
                 mimeType: mimeTypeOverride ?? mimeType
             )
@@ -51,14 +51,14 @@ extension AVAsset {
 
     private static func _fromEncryptedFile(
         at fileURL: URL,
-        encryptionKey: Data,
+        attachmentKey: AttachmentKey,
         plaintextLength: UInt32,
         mimeType: String
     ) throws -> AVAsset {
         let fileHandle = try Cryptography.encryptedAttachmentFileHandle(
             at: fileURL,
-            plaintextLength: plaintextLength,
-            encryptionKey: encryptionKey
+            plaintextLength: UInt64(safeCast: plaintextLength),
+            attachmentKey: attachmentKey,
         )
 
         guard let utiType = MimeTypeUtil.utiTypeForMimeType(mimeType) else {
@@ -140,7 +140,7 @@ extension AVAsset {
             return true
         }
 
-        private static let chunkSize: UInt32 = 4096
+        private static let chunkSize = 4096
 
         private func handleDataRequest(for loadingRequest: AVAssetResourceLoadingRequest) -> Bool {
             guard
@@ -149,10 +149,10 @@ extension AVAsset {
                 return false
             }
 
-            let requestedOffset = UInt32(dataRequest.requestedOffset)
-            var requestedLength = UInt32(dataRequest.requestedLength)
+            let requestedOffset = UInt64(dataRequest.requestedOffset)
+            var requestedLength = dataRequest.requestedLength
             if dataRequest.requestsAllDataToEndOfResource {
-                requestedLength = fileHandle.plaintextLength - requestedOffset
+                requestedLength = Int(fileHandle.plaintextLength - requestedOffset)
             }
 
             do {
@@ -164,12 +164,12 @@ extension AVAsset {
                 return true
             }
 
-            var bytesReadSoFar: UInt32 = 0
+            var bytesReadSoFar = 0
             do {
                 while bytesReadSoFar < requestedLength {
                     let lengthToRead = min(Self.chunkSize, requestedLength - bytesReadSoFar)
                     let data = try fileHandle.read(upToCount: lengthToRead)
-                    bytesReadSoFar += UInt32(data.byteLength)
+                    bytesReadSoFar += data.count
                     dataRequest.respond(with: data)
                 }
             } catch let error {

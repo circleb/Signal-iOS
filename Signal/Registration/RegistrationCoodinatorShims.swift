@@ -15,12 +15,10 @@ extension RegistrationCoordinatorImpl {
         public typealias ContactsStore = _RegistrationCoordinator_CNContactsStoreShim
         typealias DeviceTransferService = _RegistrationCoordinator_DeviceTransferServiceShim
         public typealias ExperienceManager = _RegistrationCoordinator_ExperienceManagerShim
-        public typealias FeatureFlags = _RegistrationCoordinator_FeatureFlagsShim
         public typealias IdentityManager = _RegistrationCoordinator_IdentityManagerShim
         public typealias MessagePipelineSupervisor = _RegistrationCoordinator_MessagePipelineSupervisorShim
         public typealias MessageProcessor = _RegistrationCoordinator_MessageProcessorShim
         public typealias OWS2FAManager = _RegistrationCoordinator_OWS2FAManagerShim
-        public typealias PreKeyManager = _RegistrationCoordinator_PreKeyManagerShim
         public typealias ProfileManager = _RegistrationCoordinator_ProfileManagerShim
         public typealias PushRegistrationManager = _RegistrationCoordinator_PushRegistrationManagerShim
         typealias QuickRestoreManager = _RegistrationCoordinator_QuickRestoreManagerShim
@@ -35,12 +33,10 @@ extension RegistrationCoordinatorImpl {
         public typealias ContactsStore = _RegistrationCoordinator_CNContactsStoreWrapper
         typealias DeviceTransferService = _RegistrationCoordinator_DeviceTransferServiceWrapper
         public typealias ExperienceManager = _RegistrationCoordinator_ExperienceManagerWrapper
-        public typealias FeatureFlags = _RegistrationCoordinator_FeatureFlagsWrapper
         public typealias IdentityManager = _RegistrationCoordinator_IdentityManagerWrapper
         public typealias MessagePipelineSupervisor = _RegistrationCoordinator_MessagePipelineSupervisorWrapper
         public typealias MessageProcessor = _RegistrationCoordinator_MessageProcessorWrapper
         public typealias OWS2FAManager = _RegistrationCoordinator_OWS2FAManagerWrapper
-        public typealias PreKeyManager = _RegistrationCoordinator_PreKeyManagerWrapper
         public typealias ProfileManager = _RegistrationCoordinator_ProfileManagerWrapper
         public typealias PushRegistrationManager = _RegistrationCoordinator_PushRegistrationManagerWrapper
         typealias QuickRestoreManager = _RegistrationCoordinator_QuickRestoreManagerWrapper
@@ -73,32 +69,32 @@ public class _RegistrationCoordinator_ContactsManagerWrapper: _RegistrationCoord
 
 public protocol _RegistrationCoordinator_CNContactsStoreShim {
 
-    func needsContactsAuthorization() -> Guarantee<Bool>
+    func needsContactsAuthorization() -> Bool
 
-    func requestContactsAuthorization() -> Guarantee<Void>
+    func requestContactsAuthorization() async
 }
 
 public class _RegistrationCoordinator_CNContactsStoreWrapper: _RegistrationCoordinator_CNContactsStoreShim {
 
     public init() {}
 
-    public func needsContactsAuthorization() -> Guarantee<Bool> {
-        return .value(CNContactStore.authorizationStatus(for: .contacts) == .notDetermined)
+    public func needsContactsAuthorization() -> Bool {
+        return CNContactStore.authorizationStatus(for: .contacts) == .notDetermined
     }
 
-    public func requestContactsAuthorization() -> Guarantee<Void> {
-        let (guarantee, future) = Guarantee<Void>.pending()
-        CNContactStore().requestAccess(for: CNEntityType.contacts) { (granted, error) -> Void in
-            if granted {
-                Logger.info("User granted contacts permission")
-            } else {
-                // Unfortunately, we can't easily disambiguate "not granted" and
-                // "other error".
-                Logger.warn("User denied contacts permission or there was an error. Error: \(String(describing: error))")
+    public func requestContactsAuthorization() async {
+        await withCheckedContinuation { continuation in
+            CNContactStore().requestAccess(for: CNEntityType.contacts) { (granted, error) -> Void in
+                if granted {
+                    Logger.info("User granted contacts permission")
+                } else {
+                    // Unfortunately, we can't easily disambiguate "not granted" and
+                    // "other error".
+                    Logger.warn("User denied contacts permission or there was an error. Error: \(String(describing: error))")
+                }
+                continuation.resume()
             }
-            future.resolve()
         }
-        return guarantee
     }
 }
 
@@ -109,6 +105,7 @@ protocol _RegistrationCoordinator_DeviceTransferServiceShim {
     func addObserver(_ observer: DeviceTransferServiceObserver)
     func removeObserver(_ observer: DeviceTransferServiceObserver)
     func stopAcceptingTransfersFromOldDevices()
+    func cancelTransferFromOldDevice()
 }
 
 class _RegistrationCoordinator_DeviceTransferServiceWrapper: _RegistrationCoordinator_DeviceTransferServiceShim {
@@ -132,6 +129,10 @@ class _RegistrationCoordinator_DeviceTransferServiceWrapper: _RegistrationCoordi
     func stopAcceptingTransfersFromOldDevices() {
         deviceTransferService.stopAcceptingTransfersFromOldDevices()
     }
+
+    func cancelTransferFromOldDevice() {
+        deviceTransferService.cancelTransferFromOldDevice()
+    }
 }
 
 // MARK: - ExperienceManager
@@ -148,27 +149,15 @@ public class _RegistrationCoordinator_ExperienceManagerWrapper: _RegistrationCoo
     public init() {}
 
     public func clearIntroducingPinsExperience(_ tx: DBWriteTransaction) {
-        ExperienceUpgradeManager.clearExperienceUpgrade(.introducingPins, transaction: SDSDB.shimOnlyBridge(tx))
+        ExperienceUpgradeManager.clearExperienceUpgrade(.introducingPins, transaction: tx)
     }
 
     public func enableAllGetStartedCards(_ tx: DBWriteTransaction) {
-        GetStartedBannerViewController.enableAllCards(writeTx: SDSDB.shimOnlyBridge(tx))
+        GetStartedBannerViewController.enableAllCards(writeTx: tx)
     }
 }
 
-// MARK: - FeatureFlags
-
-public protocol _RegistrationCoordinator_FeatureFlagsShim {
-
-    var backupSupported: Bool { get }
-}
-
-public class _RegistrationCoordinator_FeatureFlagsWrapper: _RegistrationCoordinator_FeatureFlagsShim {
-
-    public init() {}
-
-    public var backupSupported: Bool { FeatureFlags.Backups.supported }
-}
+// MARK: - IdentityManager
 
 public protocol _RegistrationCoordinator_IdentityManagerShim {
     func setIdentityKeyPair(_ keyPair: ECKeyPair?, for identity: OWSIdentity, tx: DBWriteTransaction)
@@ -246,7 +235,7 @@ public protocol _RegistrationCoordinator_OWS2FAManagerShim {
 
     func isReglockEnabled(_ tx: DBReadTransaction) -> Bool
 
-    func markPinEnabled(_ pin: String, _ tx: DBWriteTransaction)
+    func markPinEnabled(pin: String, resetReminderInterval: Bool, tx: DBWriteTransaction)
 
     func markRegistrationLockEnabled(_  tx: DBWriteTransaction)
 }
@@ -257,74 +246,27 @@ public class _RegistrationCoordinator_OWS2FAManagerWrapper: _RegistrationCoordin
     public init(_ manager: OWS2FAManager) { self.manager = manager }
 
     public func pinCode(_ tx: DBReadTransaction) -> String? {
-        return manager.pinCode(transaction: SDSDB.shimOnlyBridge(tx))
+        return manager.pinCode(transaction: tx)
     }
 
     public func clearLocalPinCode(_ tx: DBWriteTransaction) {
-        return manager.clearLocalPinCode(transaction: SDSDB.shimOnlyBridge(tx))
+        return manager.clearLocalPinCode(transaction: tx)
     }
 
     public func isReglockEnabled(_ tx: DBReadTransaction) -> Bool {
-        return manager.isRegistrationLockV2Enabled(transaction: SDSDB.shimOnlyBridge(tx))
+        return manager.isRegistrationLockV2Enabled(transaction: tx)
     }
 
-    public func markPinEnabled(_ pin: String, _ tx: DBWriteTransaction) {
-        manager.markEnabled(pin: pin, transaction: SDSDB.shimOnlyBridge(tx))
+    public func markPinEnabled(pin: String, resetReminderInterval: Bool, tx: DBWriteTransaction) {
+        manager.markEnabled(
+            pin: pin,
+            resetReminderInterval: resetReminderInterval,
+            transaction: tx
+        )
     }
 
     public func markRegistrationLockEnabled(_ tx: DBWriteTransaction) {
-        manager.markRegistrationLockV2Enabled(transaction: SDSDB.shimOnlyBridge(tx))
-    }
-}
-
-// MARK: - PreKeyManager
-
-// TODO: Remove this layer of abstraction; it's no longer necessary.
-public protocol _RegistrationCoordinator_PreKeyManagerShim {
-
-    func createPreKeysForRegistration() -> Promise<RegistrationPreKeyUploadBundles>
-
-    func finalizeRegistrationPreKeys(
-        _ prekeyBundles: RegistrationPreKeyUploadBundles,
-        uploadDidSucceed: Bool
-    ) -> Promise<Void>
-
-    func rotateOneTimePreKeysForRegistration(auth: ChatServiceAuth) -> Promise<Void>
-}
-
-public class _RegistrationCoordinator_PreKeyManagerWrapper: _RegistrationCoordinator_PreKeyManagerShim {
-
-    private let preKeyManager: PreKeyManager
-
-    public init(_ preKeyManager: PreKeyManager) {
-        self.preKeyManager = preKeyManager
-    }
-
-    public func createPreKeysForRegistration() -> Promise<RegistrationPreKeyUploadBundles> {
-        let preKeyManager = self.preKeyManager
-        return Promise.wrapAsync {
-            return try await preKeyManager.createPreKeysForRegistration().value
-        }
-    }
-
-    public func finalizeRegistrationPreKeys(
-        _ prekeyBundles: RegistrationPreKeyUploadBundles,
-        uploadDidSucceed: Bool
-    ) -> Promise<Void> {
-        let preKeyManager = self.preKeyManager
-        return Promise.wrapAsync {
-            return try await preKeyManager.finalizeRegistrationPreKeys(
-                prekeyBundles,
-                uploadDidSucceed: uploadDidSucceed
-            ).value
-        }
-    }
-
-    public func rotateOneTimePreKeysForRegistration(auth: ChatServiceAuth) -> Promise<Void> {
-        let preKeyManager = self.preKeyManager
-        return Promise.wrapAsync {
-            return try await preKeyManager.rotateOneTimePreKeysForRegistration(auth: auth).value
-        }
+        manager.markRegistrationLockV2Enabled(transaction: tx)
     }
 }
 
@@ -354,7 +296,7 @@ public class _RegistrationCoordinator_ProfileManagerWrapper: _RegistrationCoordi
     public init(_ manager: ProfileManager) { self.manager = manager }
 
     public func localUserProfile(tx: DBReadTransaction) -> OWSUserProfile? {
-        return manager.localUserProfile(tx: SDSDB.shimOnlyBridge(tx))
+        return manager.localUserProfile(tx: tx)
     }
 
     public func updateLocalProfile(
@@ -374,7 +316,7 @@ public class _RegistrationCoordinator_ProfileManagerWrapper: _RegistrationCoordi
             unsavedRotatedProfileKey: nil,
             userProfileWriter: .registration,
             authedAccount: authedAccount,
-            tx: SDSDB.shimOnlyBridge(tx)
+            tx: tx
         )
     }
 
@@ -383,7 +325,7 @@ public class _RegistrationCoordinator_ProfileManagerWrapper: _RegistrationCoordi
             await DependenciesBridge.shared.db.awaitableWrite { tx in
                 _ = manager.reuploadLocalProfile(
                     unsavedRotatedProfileKey: nil,
-                    mustReuploadAvatar: false,
+                    mustReuploadAvatar: true,
                     authedAccount: authedAccount,
                     tx: tx
                 )
@@ -412,13 +354,13 @@ extension Registration {
 
 public protocol _RegistrationCoordinator_PushRegistrationManagerShim {
 
-    func needsNotificationAuthorization() -> Guarantee<Bool>
+    func needsNotificationAuthorization() async -> Bool
 
-    func registerUserNotificationSettings() -> Guarantee<Void>
+    func registerUserNotificationSettings() async
 
-    func requestPushToken() -> Guarantee<Registration.RequestPushTokensResult>
+    func requestPushToken() async -> Registration.RequestPushTokensResult
 
-    func receivePreAuthChallengeToken() -> Guarantee<String>
+    func receivePreAuthChallengeToken() async -> String
 
     func clearPreAuthChallengeToken()
 }
@@ -428,33 +370,29 @@ public class _RegistrationCoordinator_PushRegistrationManagerWrapper: _Registrat
     private let manager: PushRegistrationManager
     public init(_ manager: PushRegistrationManager) { self.manager = manager }
 
-    public func needsNotificationAuthorization() -> Guarantee<Bool> {
-        return manager.needsNotificationAuthorization()
+    public func needsNotificationAuthorization() async -> Bool {
+        return await manager.needsNotificationAuthorization()
     }
 
-    public func registerUserNotificationSettings() -> Guarantee<Void> {
-        return Guarantee.wrapAsync { [manager] in
-            await manager.registerUserNotificationSettings()
+    public func registerUserNotificationSettings() async {
+        await manager.registerUserNotificationSettings()
+    }
+
+    public func requestPushToken() async -> Registration.RequestPushTokensResult {
+        do {
+            let result = try await manager.requestPushTokens(forceRotation: false, timeOutEventually: true)
+            return .success(result)
+        } catch PushRegistrationError.pushNotSupported(let description) {
+            return .pushUnsupported(description: description)
+        } catch PushRegistrationError.timeout {
+            return .timeout
+        } catch {
+            return .genericError(error)
         }
     }
 
-    public func requestPushToken() -> Guarantee<Registration.RequestPushTokensResult> {
-        return manager.requestPushTokens(forceRotation: false, timeOutEventually: true)
-            .map(on: SyncScheduler()) { .success($0) }
-            .recover(on: SyncScheduler()) { error in
-                switch error {
-                case PushRegistrationError.pushNotSupported(let description):
-                    return .value(.pushUnsupported(description: description))
-                case PushRegistrationError.timeout:
-                    return .value(.timeout)
-                default:
-                    return .value(.genericError(error))
-                }
-            }
-    }
-
-    public func receivePreAuthChallengeToken() -> Guarantee<String> {
-        return manager.receivePreAuthChallengeToken()
+    public func receivePreAuthChallengeToken() async -> String {
+        return await manager.receivePreAuthChallengeToken()
     }
 
     public func clearPreAuthChallengeToken() {
@@ -476,11 +414,11 @@ public class _RegistrationCoordinator_ReceiptManagerWrapper: _RegistrationCoordi
     public init(_ manager: OWSReceiptManager) { self.manager = manager }
 
     public func setAreReadReceiptsEnabled(_ areEnabled: Bool, _ tx: DBWriteTransaction) {
-        manager.setAreReadReceiptsEnabled(areEnabled, transaction: SDSDB.shimOnlyBridge(tx))
+        manager.setAreReadReceiptsEnabled(areEnabled, transaction: tx)
     }
 
     public func setAreStoryViewedReceiptsEnabled(_ areEnabled: Bool, _ tx: DBWriteTransaction) {
-        StoryManager.setAreViewReceiptsEnabled(areEnabled, transaction: SDSDB.shimOnlyBridge(tx))
+        StoryManager.setAreViewReceiptsEnabled(areEnabled, transaction: tx)
     }
 }
 
@@ -509,7 +447,7 @@ class _RegistrationCoordinator_QuickRestoreManagerWrapper: _RegistrationCoordina
 
 // MARK: - StorageService
 public protocol _RegistrationCoordinator_StorageServiceManagerShim {
-    func rotateManifest(mode: StorageServiceManagerManifestRotationMode, authedDevice: AuthedDevice) -> Promise<Void>
+    func rotateManifest(mode: StorageServiceManagerManifestRotationMode, authedDevice: AuthedDevice) async throws
     func restoreOrCreateManifestIfNecessary(authedDevice: AuthedDevice, masterKeySource: StorageService.MasterKeySource) -> Promise<Void>
     func backupPendingChanges(authedDevice: AuthedDevice)
     func recordPendingLocalAccountUpdates()
@@ -522,10 +460,8 @@ public class _RegistrationCoordinator_StorageServiceManagerWrapper: _Registratio
     public func rotateManifest(
         mode: StorageServiceManagerManifestRotationMode,
         authedDevice: AuthedDevice
-    ) -> Promise<Void> {
-        Promise.wrapAsync {
-            try await self.manager.rotateManifest(mode: mode, authedDevice: authedDevice)
-        }
+    ) async throws {
+        try await self.manager.rotateManifest(mode: mode, authedDevice: authedDevice)
     }
 
     public func restoreOrCreateManifestIfNecessary(
@@ -578,14 +514,14 @@ public class _RegistrationCoordinator_UDManagerWrapper: _RegistrationCoordinator
     public init(_ manager: OWSUDManager) { self.manager = manager }
 
     public func shouldAllowUnrestrictedAccessLocal(transaction: DBReadTransaction) -> Bool {
-        return manager.shouldAllowUnrestrictedAccessLocal(transaction: SDSDB.shimOnlyBridge(transaction))
+        return manager.shouldAllowUnrestrictedAccessLocal(transaction: transaction)
     }
 }
 
 // MARK: - UsernameApiClient
 
 public protocol _RegistrationCoordinator_UsernameApiClientShim {
-    func confirmReservedUsername(reservedUsername: Usernames.HashedUsername, encryptedUsernameForLink: Data, chatServiceAuth: ChatServiceAuth) -> Promise<Usernames.ApiClientConfirmationResult>
+    func confirmReservedUsername(reservedUsername: Usernames.HashedUsername, encryptedUsernameForLink: Data, chatServiceAuth: ChatServiceAuth) async throws -> Usernames.ApiClientConfirmationResult
 }
 
 public class _RegistrationCoordinator_UsernameApiClientWrapper: _RegistrationCoordinator_UsernameApiClientShim {
@@ -593,9 +529,7 @@ public class _RegistrationCoordinator_UsernameApiClientWrapper: _RegistrationCoo
     private let usernameApiClient: any UsernameApiClient
     public init(_ usernameApiClient: any UsernameApiClient) { self.usernameApiClient = usernameApiClient }
 
-    public func confirmReservedUsername(reservedUsername: Usernames.HashedUsername, encryptedUsernameForLink: Data, chatServiceAuth: ChatServiceAuth) -> Promise<Usernames.ApiClientConfirmationResult> {
-        return Promise.wrapAsync {
-            return try await self.usernameApiClient.confirmReservedUsername(reservedUsername: reservedUsername, encryptedUsernameForLink: encryptedUsernameForLink, chatServiceAuth: chatServiceAuth)
-        }
+    public func confirmReservedUsername(reservedUsername: Usernames.HashedUsername, encryptedUsernameForLink: Data, chatServiceAuth: ChatServiceAuth) async throws -> Usernames.ApiClientConfirmationResult {
+        return try await self.usernameApiClient.confirmReservedUsername(reservedUsername: reservedUsername, encryptedUsernameForLink: encryptedUsernameForLink, chatServiceAuth: chatServiceAuth)
     }
 }

@@ -12,14 +12,20 @@ public extension UInt32 {
     /// The millisecond time in seconds, or `nil` if the resulting value would
     /// overflow `UInt32`.
     static func msToSecs(_ millis: UInt64) -> UInt32? {
-        let secs: UInt64 = millis / UInt64.secondInMs
-
-        if secs <= UInt32.max {
-            return UInt32(secs)
-        } else {
-            return nil
-        }
+        return UInt32(exactly: millis / UInt64.secondInMs)
     }
+}
+
+// MARK: - Safe Casts
+
+// Casts that can't fail and will complain if they become unsafe or redundant.
+
+extension UInt64 {
+    public init(safeCast source: UInt) { self = UInt64(source) }
+    public init(safeCast source: UInt8) { self = UInt64(source) }
+    public init(safeCast source: UInt16) { self = UInt64(source) }
+    public init(safeCast source: UInt32) { self = UInt64(source) }
+    // It's safe to cast a UInt64 from a UInt64, but we shouldn't.
 }
 
 // MARK: -

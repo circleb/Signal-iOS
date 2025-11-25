@@ -52,13 +52,13 @@ extension Upload.CDN0.Form {
 extension Upload.CDN0 {
     public static func upload(data: Data, uploadForm: Upload.CDN0.Form) async throws -> String {
         if DependenciesBridge.shared.appExpiry.isExpired(now: Date()) {
-            throw OWSGenericError("App is expired.")
+            throw AppExpiredError()
         }
 
         let dataFileUrl = OWSFileSystem.temporaryFileUrl(isAvailableWhileDeviceLocked: true)
         try data.write(to: dataFileUrl)
 
-        let cdn0UrlSession = SSKEnvironment.shared.signalServiceRef.urlSessionForCdn(cdnNumber: 0, maxResponseSize: nil)
+        let cdn0UrlSession = await SSKEnvironment.shared.signalServiceRef.sharedUrlSessionForCdn(cdnNumber: 0, maxResponseSize: nil)
         // urlPath is "" for all endpoints that still use CDN0
         let request = try cdn0UrlSession.endpoint.buildRequest("", method: .post)
 

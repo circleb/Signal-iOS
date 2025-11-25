@@ -20,7 +20,7 @@ public protocol AudioMessageViewDelegate: AnyObject {
     func beginCellAnimation(maximumDuration: TimeInterval) -> EndCellAnimation
 }
 
-public protocol CVComponentDelegate: AnyObject, AudioMessageViewDelegate {
+public protocol CVComponentDelegate: AnyObject, AudioMessageViewDelegate, CVPollVoteDelegate {
 
     func enqueueReload()
 
@@ -65,6 +65,12 @@ public protocol CVComponentDelegate: AnyObject, AudioMessageViewDelegate {
         shouldAllowReply: Bool
     )
 
+    func didLongPressPoll(
+        _ cell: CVCell,
+        itemViewModel: CVItemViewModelImpl,
+        shouldAllowReply: Bool
+    )
+
     func didChangeLongPress(_ itemViewModel: CVItemViewModelImpl)
 
     func didEndLongPress(_ itemViewModel: CVItemViewModelImpl)
@@ -93,6 +99,8 @@ public protocol CVComponentDelegate: AnyObject, AudioMessageViewDelegate {
     var hasPendingMessageRequest: Bool { get }
 
     func didTapTruncatedTextMessage(_ itemViewModel: CVItemViewModelImpl)
+
+    // MARK: -
 
     func didTapUndownloadableMedia()
 
@@ -248,6 +256,11 @@ public protocol CVComponentDelegate: AnyObject, AudioMessageViewDelegate {
     func didTapMessageRequestAcceptedOptions()
 
     func didTapJoinCallLinkCall(callLink: CallLink)
+
+    // MARK: - Polls
+
+    func didTapViewVotes(poll: OWSPoll)
+    func didTapViewPoll(pollInteractionUniqueId: String)
 }
 
 // MARK: -
@@ -291,6 +304,8 @@ struct CVMessageAction: Equatable {
         case didTapReportSpamLearnMore
         case didTapMessageRequestAcceptedOptions
         case didTapJoinCallLinkCall(callLink: CallLink)
+        case didTapViewVotes(poll: OWSPoll)
+        case didTapViewPoll(pollInteractionUniqueId: String)
 
         func perform(delegate: CVComponentDelegate) {
             switch self {
@@ -352,6 +367,10 @@ struct CVMessageAction: Equatable {
                 delegate.didTapMessageRequestAcceptedOptions()
             case .didTapJoinCallLinkCall(let callLink):
                 delegate.didTapJoinCallLinkCall(callLink: callLink)
+            case .didTapViewVotes(let poll):
+                delegate.didTapViewVotes(poll: poll)
+            case .didTapViewPoll(let pollInteractionUniqueId):
+                delegate.didTapViewPoll(pollInteractionUniqueId: pollInteractionUniqueId)
             }
         }
     }

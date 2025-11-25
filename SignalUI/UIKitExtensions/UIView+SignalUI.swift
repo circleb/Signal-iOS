@@ -142,8 +142,18 @@ public extension UIView {
         layer.borderWidth = 1
     }
 
-    func addRedBorder() {
+    @discardableResult
+    func addRedBorder() -> Self {
         addBorder(with: .red)
+        return self
+    }
+
+    func addCircleBadge(color: UIColor) {
+        let badge = OWSLayerView.circleView(size: 12)
+        badge.backgroundColor = color
+        self.addSubview(badge)
+        badge.autoPinEdge(toSuperviewEdge: .top, withInset: -3)
+        badge.autoPinEdge(toSuperviewEdge: .trailing, withInset: -3)
     }
 }
 
@@ -286,6 +296,7 @@ public extension UIView {
         return addBottomStroke(color: .ows_middleGray, strokeWidth: .hairlineWidth)
     }
 
+    @discardableResult
     func addBottomStroke(color: UIColor, strokeWidth: CGFloat) -> UIView {
         let strokeView = UIView()
         strokeView.backgroundColor = color

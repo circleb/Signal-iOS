@@ -14,7 +14,7 @@ public class DonationUtilities {
     public static func supportedDonationPaymentMethods(
         forDonationMode donationMode: DonationMode,
         usingCurrency currencyCode: Currency.Code,
-        withConfiguration configuration: DonationSubscriptionManager.DonationConfiguration.PaymentMethodsConfiguration,
+        withConfiguration configuration: DonationSubscriptionConfiguration.PaymentMethodsConfiguration,
         localNumber: String?
     ) -> Set<DonationPaymentMethod> {
         let generallySupportedMethods = supportedDonationPaymentMethods(
@@ -22,9 +22,8 @@ public class DonationUtilities {
             localNumber: localNumber
         )
 
-        let currencySupportedMethods = configuration.supportedPaymentMethods(
-            forCurrencyCode: currencyCode
-        )
+        let currencySupportedMethods = configuration
+            .supportedPaymentMethodsByCurrency[currencyCode, default: []]
 
         return generallySupportedMethods.intersection(currencySupportedMethods)
     }
@@ -152,18 +151,31 @@ public class DonationUtilities {
     /// Can the user donate in the given donation mode?
     public static func canDonate(
         inMode donationMode: DonationMode,
-        localNumber: String?
+        tsAccountManager: TSAccountManager,
     ) -> Bool {
-        !supportedDonationPaymentMethods(
+        let registrationState = tsAccountManager.registrationStateWithMaybeSneakyTransaction
+        let localNumber = tsAccountManager.localIdentifiersWithMaybeSneakyTransaction?.phoneNumber
+
+        guard registrationState.isRegistered else {
+            // Don't allow donations if unregistered.
+            return false
+        }
+
+        return !supportedDonationPaymentMethods(
             forDonationMode: donationMode,
             localNumber: localNumber
         ).isEmpty
     }
 
     /// Can the user donate in any donation mode?
-    public static func canDonateInAnyWay(localNumber: String?) -> Bool {
+    public static func canDonateInAnyWay(
+        tsAccountManager: TSAccountManager,
+    ) -> Bool {
         DonationMode.allCases.contains { mode in
-            canDonate(inMode: mode, localNumber: localNumber)
+            canDonate(
+                inMode: mode,
+                tsAccountManager: tsAccountManager,
+            )
         }
     }
 

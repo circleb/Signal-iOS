@@ -49,24 +49,28 @@ class ProfileBioViewController: OWSTableViewController2 {
         self.profileDelegate = profileDelegate
 
         super.init()
-
-        self.bioTextField.text = bio
-        self.bioEmojiLabel.text = bioEmoji
-
-        self.shouldAvoidKeyboard = true
     }
 
     // MARK: -
 
-    public override func loadView() {
-        view = UIView()
-        createViews()
-    }
-
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        bioTextField.text = originalBio
+        bioEmojiLabel.text = originalBioEmoji
+
+        shouldAvoidKeyboard = true
+        createViews()
         defaultSeparatorInsetLeading = Self.cellHInnerMargin + Self.bioButtonHeight + OWSTableItem.iconSpacing
+
+        navigationItem.leftBarButtonItem = .cancelButton(
+            dismissingFrom: self,
+            hasUnsavedChanges: { [weak self] in self?.hasUnsavedChanges }
+        )
+
+        navigationItem.rightBarButtonItem = .setButton { [weak self] in
+            self?.didTapDone()
+        }
 
         updateNavigation()
         updateTableContents()
@@ -101,20 +105,9 @@ class ProfileBioViewController: OWSTableViewController2 {
             title = OWSLocalizedString("PROFILE_BIO_VIEW_TITLE", comment: "Title for the profile bio view.")
         }
 
-        navigationItem.leftBarButtonItem = .cancelButton(
-            dismissingFrom: self,
-            hasUnsavedChanges: { [weak self] in self?.hasUnsavedChanges }
-        )
-
         cancelButton.isHiddenInStackView = normalizedProfileBio?.isEmpty != false && normalizedProfileBioEmoji?.isEmpty != false
 
-        if hasUnsavedChanges {
-            navigationItem.rightBarButtonItem = .doneButton { [weak self] in
-                self?.didTapDone()
-            }
-        } else {
-            navigationItem.rightBarButtonItem = nil
-        }
+        navigationItem.rightBarButtonItem?.isEnabled = hasUnsavedChanges
     }
 
     private func setEmoji(emoji: String?) {

@@ -177,7 +177,7 @@ public struct TypedItemProvider {
                 defaultTypeIdentifier: UTType.data.identifier
             )
 
-            return try await compressVideoIfNecessary(
+            return try await _buildFileAttachment(
                 dataSource: dataSource,
                 dataUTI: dataUTI,
                 progress: progress
@@ -191,11 +191,11 @@ public struct TypedItemProvider {
         case .contact:
             let contactData = try await loadDataRepresentation()
             let dataSource = DataSourceValue(contactData, utiType: itemType.typeIdentifier)
-            let attachment = SignalAttachment.attachment(dataSource: dataSource, dataUTI: itemType.typeIdentifier)
-            attachment.isConvertibleToContactShare = true
-            if let attachmentError = attachment.error {
-                throw attachmentError
+            guard let dataSource else {
+                throw SignalAttachmentError.missingData
             }
+            let attachment = try SignalAttachment.genericAttachment(dataSource: dataSource, dataUTI: itemType.typeIdentifier)
+            attachment.isConvertibleToContactShare = true
             return attachment
         case .plainText, .text:
             let text: NSString = try await loadObjectWithKeyedUnarchiverFallback(
@@ -206,16 +206,16 @@ public struct TypedItemProvider {
         case .pkPass:
             let pkPass = try await loadDataRepresentation()
             let dataSource = DataSourceValue(pkPass, utiType: itemType.typeIdentifier)
-            let attachment = SignalAttachment.attachment(dataSource: dataSource, dataUTI: itemType.typeIdentifier)
-            if let attachmentError = attachment.error {
-                throw attachmentError
+            guard let dataSource else {
+                throw SignalAttachmentError.missingData
             }
+            let attachment = try SignalAttachment.genericAttachment(dataSource: dataSource, dataUTI: itemType.typeIdentifier)
             return attachment
         }
     }
 
     private nonisolated func buildFileAttachment(progress: Progress?) async throws -> SignalAttachment {
-        let (dataSource, dataUTI): (DataSource, String) = try await withCheckedThrowingContinuation { continuation in
+        let (dataSource, dataUTI): (DataSourcePath, String) = try await withCheckedThrowingContinuation { continuation in
             let typeIdentifier = itemType.typeIdentifier
             _ = itemProvider.loadFileRepresentation(forTypeIdentifier: typeIdentifier)  { fileUrl, error in
                 if let error {
@@ -225,7 +225,6 @@ public struct TypedItemProvider {
                         continuation.resume(throwing: ItemProviderError.fileUrlWasBplist)
                     } else {
                         do {
-                            // NOTE: Compression here rather than creating an additional temp file would be nice but blocking this completion handler for video encoding is probably not a good way to go.
                             continuation.resume(returning: try Self.copyFileUrl(fileUrl: fileUrl, defaultTypeIdentifier: typeIdentifier))
                         } catch {
                             continuation.resume(throwing: error)
@@ -237,7 +236,7 @@ public struct TypedItemProvider {
             }
         }
 
-        return try await compressVideoIfNecessary(dataSource: dataSource, dataUTI: dataUTI, progress: progress)
+        return try await _buildFileAttachment(dataSource: dataSource, dataUTI: dataUTI, progress: progress)
     }
 
     private nonisolated func loadDataRepresentation(
@@ -301,10 +300,7 @@ public struct TypedItemProvider {
 
     private nonisolated static func createAttachment(withText text: String) throws -> SignalAttachment {
         let dataSource = DataSourceValue(oversizeText: text)
-        let attachment = SignalAttachment.attachment(dataSource: dataSource, dataUTI: UTType.text.identifier)
-        if let attachmentError = attachment.error {
-            throw attachmentError
-        }
+        let attachment = try SignalAttachment.genericAttachment(dataSource: dataSource, dataUTI: UTType.text.identifier)
         attachment.isConvertibleToTextMessage = true
         return attachment
     }
@@ -315,17 +311,16 @@ public struct TypedItemProvider {
         }
         let type = UTType.png
         let dataSource = DataSourceValue(imagePng, utiType: type.identifier)
-        let attachment = SignalAttachment.attachment(dataSource: dataSource, dataUTI: type.identifier)
-        if let attachmentError = attachment.error {
-            throw attachmentError
+        guard let dataSource else {
+            throw SignalAttachmentError.missingData
         }
-        return attachment
+        return try SignalAttachment.imageAttachment(dataSource: dataSource, dataUTI: type.identifier)
     }
 
     private nonisolated static func copyFileUrl(
         fileUrl: URL,
         defaultTypeIdentifier: String
-    ) throws -> (DataSource, dataUTI: String) {
+    ) throws -> (DataSourcePath, dataUTI: String) {
         guard fileUrl.isFileURL else {
             throw OWSAssertionError("Unexpectedly not a file URL: \(fileUrl)")
         }
@@ -341,43 +336,27 @@ public struct TypedItemProvider {
         return (dataSource, dataUTI)
     }
 
-    private nonisolated func compressVideoIfNecessary(
-        dataSource: DataSource,
+    private nonisolated func _buildFileAttachment(
+        dataSource: DataSourcePath,
         dataUTI: String,
         progress: Progress?
     ) async throws -> SignalAttachment {
-        if SignalAttachment.isVideoThatNeedsCompression(
-            dataSource: dataSource,
-            dataUTI: dataUTI
-        ) {
+        if SignalAttachment.videoUTISet.contains(dataUTI) {
             // TODO: Move waiting for this export to the end of the share flow rather than up front
             var progressPoller: ProgressPoller?
             defer {
                 progressPoller?.stopPolling()
             }
-            let compressedAttachment = try await SignalAttachment.compressVideoAsMp4(
+            return try await SignalAttachment.compressVideoAsMp4(
                 dataSource: dataSource,
-                dataUTI: dataUTI,
                 sessionCallback: { exportSession in
                     guard let progress else { return }
                     progressPoller = ProgressPoller(progress: progress, pollInterval: 0.1, fractionCompleted: { return exportSession.progress })
                     progressPoller?.startPolling()
                 }
             )
-
-            if let attachmentError = compressedAttachment.error {
-                throw attachmentError
-            }
-
-            return compressedAttachment
         } else {
-            let attachment = SignalAttachment.attachment(dataSource: dataSource, dataUTI: dataUTI)
-
-            if let attachmentError = attachment.error {
-                throw attachmentError
-            }
-
-            return attachment
+            return try SignalAttachment.attachment(dataSource: dataSource, dataUTI: dataUTI)
         }
     }
 }

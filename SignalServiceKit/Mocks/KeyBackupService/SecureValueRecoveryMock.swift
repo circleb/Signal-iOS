@@ -9,11 +9,6 @@ import Foundation
 
 public class SecureValueRecoveryMock: SecureValueRecovery {
 
-    public var hasAccountEntropyPool = false
-    public func hasAccountEntropyPool(transaction: DBReadTransaction) -> Bool {
-        return hasAccountEntropyPool
-    }
-
     public init() {}
 
     public var hasMasterKey = false
@@ -32,12 +27,6 @@ public class SecureValueRecoveryMock: SecureValueRecovery {
 
     public func currentPinType(transaction: DBReadTransaction) -> SVR.PinType? {
         return currentPinType
-    }
-
-    public var verifyPinHandler: (String) -> Bool = { _ in return true }
-
-    public func verifyPin(_ pin: String, resultHandler: @escaping (Bool) -> Void) {
-        resultHandler(verifyPinHandler(pin))
     }
 
     public var reglockToken: String?
@@ -94,12 +83,6 @@ public class SecureValueRecoveryMock: SecureValueRecovery {
         syncedMasterKey = masterKey
     }
 
-    public var hasHadBackupKeyRequestFail = false
-
-    public func hasBackupKeyRequestFailed(transaction: DBReadTransaction) -> Bool {
-        return hasHadBackupKeyRequestFail
-    }
-
     public var doesHavePendingRestoration = false
 
     public func hasPendingRestoration(transaction: DBReadTransaction) -> Bool {
@@ -114,28 +97,8 @@ public class SecureValueRecoveryMock: SecureValueRecovery {
         doesHavePendingRestoration = false
     }
 
-    public var useDeviceLocalMasterKeyMock: ((_ authedAccount: AuthedAccount) -> Void)?
-
-    public func useDeviceLocalMasterKey(
-        _ masterKey: MasterKey,
-        disablePIN: Bool,
-        authedAccount: AuthedAccount,
-        transaction: DBWriteTransaction
-    ) {
-        useDeviceLocalMasterKeyMock?(authedAccount)
-        hasMasterKey = true
-    }
-
-    public var useDeviceLocalAccountEntropyPoolMock: ((_ authedAccount: AuthedAccount) -> Void)?
-    public func useDeviceLocalAccountEntropyPool(
-        _ accountEntropyPool: AccountEntropyPool,
-        disablePIN: Bool,
-        authedAccount: AuthedAccount,
-        transaction: DBWriteTransaction
-    ) {
-        useDeviceLocalAccountEntropyPoolMock?(authedAccount)
-        hasAccountEntropyPool = true
-        hasMasterKey = true
+    public func handleMasterKeyUpdated(newMasterKey: MasterKey, disablePIN: Bool, tx: DBWriteTransaction) {
+        // Do nothing
     }
 }
 

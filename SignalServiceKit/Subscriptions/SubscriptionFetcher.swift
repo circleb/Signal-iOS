@@ -28,10 +28,7 @@ public struct SubscriptionFetcher {
 
         switch response.responseStatusCode {
         case 200:
-            guard
-                let responseJson = response.responseBodyJson,
-                let parser = ParamParser(responseObject: responseJson)
-            else {
+            guard let parser = response.responseBodyParamParser else {
                 throw OWSAssertionError("Missing or invalid response body!")
             }
 
@@ -60,7 +57,7 @@ private extension TSRequest {
             parameters: nil
         )
         result.auth = .anonymous
-        result.applyRedactionStrategy(.redactURLForSuccessResponses())
+        result.applyRedactionStrategy(.redactURL())
         return result
     }
 }
@@ -78,7 +75,7 @@ public struct Subscription: Equatable {
         public let code: String?
 
         init(jsonDictionary: [String: Any]) {
-            code = try? ParamParser(dictionary: jsonDictionary).optional(key: "code")
+            code = try? ParamParser(jsonDictionary).optional(key: "code")
         }
     }
 
@@ -92,21 +89,17 @@ public struct Subscription: Equatable {
     /// Signal servers get a callback when a subscription is going to renew. If
     /// the user hasn't performed a "subscription keep-alive in ~30-45 days, the
     /// server will, upon getting that callback, cancel the subscription.
-    public enum SubscriptionStatus: String {
-        case unknown
-        case incomplete = "incomplete"
-        case unpaid = "unpaid"
-
+    public enum SubscriptionStatus: Equatable {
         /// Indicates the subscription has been paid successfully for the
         /// current period, and all is well.
-        case active = "active"
+        case active
 
         /// Indicates the subscription has been unrecoverably canceled. This may
         /// be due to terminal failures while renewing (in which case the charge
         /// failure should be populated), or due to inactivity (in which case
         /// there will be no charge failure, as Signal servers canceled the
         /// subscription artificially).
-        case canceled = "canceled"
+        case canceled
 
         /// Indicates the subscription failed to renew, but the payment
         /// processor is planning to retry the renewal. If the future renewal
@@ -116,13 +109,24 @@ public struct Subscription: Equatable {
         /// - Note
         /// Retries are not predictable, but are expected to happen on the scale
         /// of days, for up to circa two weeks.
-        case pastDue = "past_due"
+        case pastDue
+
+        /// An unrecognized status.
+        case unrecognized(rawValue: String)
+
+        init(rawValue: String) {
+            switch rawValue {
+            case "active": self = .active
+            case "canceled": self = .canceled
+            case "past_due": self = .pastDue
+            default: self = .unrecognized(rawValue: rawValue)
+            }
+        }
     }
 
     public let level: UInt
     public let amount: FiatMoney
-    public let endOfCurrentPeriod: TimeInterval
-    public let billingCycleAnchor: TimeInterval
+    public let endOfCurrentPeriod: Date
     public let active: Bool
     public let cancelAtEndOfPeriod: Bool
     public let status: SubscriptionStatus
@@ -146,7 +150,6 @@ public struct Subscription: Equatable {
         [
             "Subscription",
             "End of current period: \(endOfCurrentPeriod)",
-            "Billing cycle anchor: \(billingCycleAnchor)",
             "Cancel at end of period?: \(cancelAtEndOfPeriod)",
             "Status: \(status)",
             "Charge failure: \(chargeFailure.debugDescription)"
@@ -154,7 +157,7 @@ public struct Subscription: Equatable {
     }
 
     public init(subscriptionDict: [String: Any], chargeFailureDict: [String: Any]?) throws {
-        let params = ParamParser(dictionary: subscriptionDict)
+        let params = ParamParser(subscriptionDict)
         level = try params.required(key: "level")
         let currencyCode: Currency.Code = try {
             let raw: String = try params.required(key: "currency")
@@ -172,11 +175,11 @@ public struct Subscription: Equatable {
                 }
             }()
         )
-        endOfCurrentPeriod = try params.required(key: "endOfCurrentPeriod")
-        billingCycleAnchor = try params.required(key: "billingCycleAnchor")
+        let _endOfCurrentPeriod: TimeInterval = try params.required(key: "endOfCurrentPeriod")
+        endOfCurrentPeriod = Date(timeIntervalSince1970: _endOfCurrentPeriod)
         active = try params.required(key: "active")
         cancelAtEndOfPeriod = try params.required(key: "cancelAtPeriodEnd")
-        status = SubscriptionStatus(rawValue: try params.required(key: "status")) ?? .unknown
+        status = SubscriptionStatus(rawValue: try params.required(key: "status"))
 
         let processorString: String = try params.required(key: "processor")
         if let donationPaymentProcessor = DonationPaymentProcessor(rawValue: processorString) {

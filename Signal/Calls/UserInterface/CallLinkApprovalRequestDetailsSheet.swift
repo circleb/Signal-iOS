@@ -55,7 +55,7 @@ class CallLinkApprovalRequestDetailsSheet: OWSTableSheetViewController {
 
     // MARK: Table contents
 
-    override func updateTableContents(shouldReload: Bool = true) {
+    override func tableContents() -> OWSTableContents {
         let contents = OWSTableContents()
 
         contents.add(.init(
@@ -91,7 +91,7 @@ class CallLinkApprovalRequestDetailsSheet: OWSTableSheetViewController {
             headerView: self.buildHeader()
         ))
 
-        tableViewController.setContents(contents, shouldReload: shouldReload)
+        return contents
     }
 
     // MARK: Header
@@ -104,9 +104,9 @@ class CallLinkApprovalRequestDetailsSheet: OWSTableSheetViewController {
         vStack.isLayoutMarginsRelativeArrangement = true
         vStack.layoutMargins = .init(
             top: 20,
-            left: tableViewController.cellHOuterLeftMargin,
+            left: 0,
             bottom: 36,
-            right: tableViewController.cellHOuterRightMargin
+            right: 0
         )
 
         // [CallLink] TODO: This should expand to a full-screen preview when tapped
@@ -117,20 +117,20 @@ class CallLinkApprovalRequestDetailsSheet: OWSTableSheetViewController {
         )
 
         let (contactTitle, mutualThreads): (NSAttributedString, [TSGroupThread]) = self.deps.db.read { tx in
-            avatarView.update(SDSDB.shimOnlyBridge(tx)) { config in
+            avatarView.update(tx) { config in
                 config.dataSource = .address(self.approvalRequest.address)
             }
 
             let isSystemContact = self.deps.contactsManager.fetchSignalAccount(
                 for: self.approvalRequest.address,
-                transaction: SDSDB.shimOnlyBridge(tx)
+                transaction: tx
             ) != nil
 
             let mutualThreads = TSGroupThread.groupThreads(
                 with: self.approvalRequest.address,
-                transaction: SDSDB.shimOnlyBridge(tx)
+                transaction: tx
             )
-            .filter(\.isLocalUserFullMember)
+            .filter(\.groupModel.groupMembership.isLocalUserFullMember)
             .filter(\.shouldThreadBeVisible)
 
             let contactTitle = ConversationHeaderBuilder.threadAttributedString(
@@ -138,7 +138,7 @@ class CallLinkApprovalRequestDetailsSheet: OWSTableSheetViewController {
                 isNoteToSelf: false,
                 isSystemContact: isSystemContact,
                 canTap: true,
-                tx: SDSDB.shimOnlyBridge(tx)
+                tx: tx
             )
 
             return (contactTitle, mutualThreads)
@@ -157,7 +157,7 @@ class CallLinkApprovalRequestDetailsSheet: OWSTableSheetViewController {
 
         let mutualGroupsLabel = UILabel()
         mutualGroupsLabel.text = ProfileDetailLabel.mutualGroupsString(isInGroupContext: false, mutualGroups: mutualThreads)
-        mutualGroupsLabel.font = .dynamicTypeBody2
+        mutualGroupsLabel.font = .dynamicTypeSubheadline
         mutualGroupsLabel.textColor = UIColor.Signal.secondaryLabel
 
         vStack.addArrangedSubview(mutualGroupsLabel)

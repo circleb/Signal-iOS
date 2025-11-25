@@ -134,11 +134,13 @@ open class MockRegistrationStateChangeManager: RegistrationStateChangeManager {
         setIsDeregisteredOrDelinkedMock(isDeregisteredOrDelinked)
     }
 
-    public var unregisterFromServiceMock: () async throws -> Never = { fatalError() }
+    public var unregisterFromServiceMock: () async throws -> Void = { fatalError() }
 
-    open func unregisterFromService() async throws -> Never {
+    open func unregisterFromService() async throws {
         try await unregisterFromServiceMock()
     }
+
+    public func unlinkLocalDevice(localDeviceId: LocalDeviceId, auth: ChatServiceAuth) async throws { fatalError() }
 }
 
 #endif

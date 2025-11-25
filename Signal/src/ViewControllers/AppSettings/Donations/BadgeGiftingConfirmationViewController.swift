@@ -7,7 +7,7 @@ import SignalServiceKit
 import SignalUI
 
 class BadgeGiftingConfirmationViewController: OWSTableViewController2 {
-    typealias PaymentMethodsConfiguration = DonationSubscriptionManager.DonationConfiguration.PaymentMethodsConfiguration
+    typealias PaymentMethodsConfiguration = DonationSubscriptionConfiguration.PaymentMethodsConfiguration
 
     // MARK: - View state
 
@@ -31,13 +31,11 @@ class BadgeGiftingConfirmationViewController: OWSTableViewController2 {
         self.price = price
         self.paymentMethodsConfiguration = paymentMethodsConfiguration
         self.thread = thread
+
+        super.init()
     }
 
-    // MARK: - Callbacks
-
     public override func viewDidLoad() {
-        self.shouldAvoidKeyboard = true
-
         super.viewDidLoad()
 
         DependenciesBridge.shared.databaseChangeObserver.appendDatabaseChangeDelegate(self)
@@ -47,16 +45,13 @@ class BadgeGiftingConfirmationViewController: OWSTableViewController2 {
             comment: "Users can donate on a friend's behalf. This is the title on the screen where users confirm the donation, and can write a message for the friend."
         )
 
+        shouldAvoidKeyboard = true
         updateTableContents()
-        setUpBottomFooter()
 
-        tableView.keyboardDismissMode = .onDrag
+        tableView.keyboardDismissMode = .interactive
     }
 
-    public override func themeDidChange() {
-        super.themeDidChange()
-        setUpBottomFooter()
-    }
+    // MARK: - Callbacks
 
     func didCompleteDonation() {
         SignalApp.shared.presentConversationForThread(
@@ -123,7 +118,7 @@ class BadgeGiftingConfirmationViewController: OWSTableViewController2 {
 
     private lazy var avatarViewDataSource: ConversationAvatarDataSource = .thread(self.thread)
 
-    lazy var messageTextView: TextViewWithPlaceholder = {
+    private lazy var messageTextView: TextViewWithPlaceholder = {
         let view = TextViewWithPlaceholder()
         view.placeholderText = OWSLocalizedString(
             "DONATE_ON_BEHALF_OF_A_FRIEND_ADDITIONAL_MESSAGE_PLACEHOLDER",
@@ -163,9 +158,8 @@ class BadgeGiftingConfirmationViewController: OWSTableViewController2 {
         }
 
         let badgeSection = OWSTableSection()
-        badgeSection.add(.init(customCellBlock: { [weak self] in
-            guard let self = self else { return UITableViewCell() }
-            let cell = AppSettingsViewsUtil.newCell(cellOuterInsets: self.cellOuterInsets)
+        badgeSection.add(.init(customCellBlock: {
+            let cell = AppSettingsViewsUtil.newCell()
 
             let badgeCellView = GiftBadgeCellView(badge: badge, price: price)
             cell.contentView.addSubview(badgeCellView)
@@ -175,9 +169,8 @@ class BadgeGiftingConfirmationViewController: OWSTableViewController2 {
         }))
 
         let recipientSection = OWSTableSection()
-        recipientSection.add(.init(customCellBlock: { [weak self] in
-            guard let self = self else { return UITableViewCell() }
-            let cell = AppSettingsViewsUtil.newCell(cellOuterInsets: self.cellOuterInsets)
+        recipientSection.add(.init(customCellBlock: {
+            let cell = AppSettingsViewsUtil.newCell()
 
             let nameLabel = UILabel()
             nameLabel.text = recipientName
@@ -202,7 +195,7 @@ class BadgeGiftingConfirmationViewController: OWSTableViewController2 {
                     seconds: disappearingMessagesDuration,
                     useShortFormat: true
                 )
-                disappearingMessagesTimerLabelView.font = .dynamicTypeBody2
+                disappearingMessagesTimerLabelView.font = .dynamicTypeSubheadline
                 disappearingMessagesTimerLabelView.textAlignment = .center
                 disappearingMessagesTimerLabelView.minimumScaleFactor = 0.8
 
@@ -223,17 +216,17 @@ class BadgeGiftingConfirmationViewController: OWSTableViewController2 {
 
         let messageInfoSection = OWSTableSection()
         messageInfoSection.hasBackground = false
-        messageInfoSection.add(.init(customCellBlock: { [weak self] in
-            guard let self = self else { return UITableViewCell() }
-            let cell = AppSettingsViewsUtil.newCell(cellOuterInsets: self.cellOuterInsets)
+        messageInfoSection.add(.init(customCellBlock: {
+            let cell = AppSettingsViewsUtil.newCell()
+            cell.layoutMargins = .zero
 
             let messageInfoLabel = UILabel()
             messageInfoLabel.text = OWSLocalizedString(
                 "DONATE_ON_BEHALF_OF_A_FRIEND_ADDITIONAL_MESSAGE_INFO",
                 comment: "Users can donate on a friend's behalf and can optionally add a message. This is tells users about that optional message."
             )
-            messageInfoLabel.font = .dynamicTypeBody2
-            messageInfoLabel.textColor = Theme.primaryTextColor
+            messageInfoLabel.font = .dynamicTypeSubheadline
+            messageInfoLabel.textColor = .Signal.label
             messageInfoLabel.numberOfLines = 0
             cell.contentView.addSubview(messageInfoLabel)
             messageInfoLabel.autoPinEdgesToSuperviewMargins()
@@ -254,13 +247,13 @@ class BadgeGiftingConfirmationViewController: OWSTableViewController2 {
         if disappearingMessagesDuration != 0 {
             let disappearingMessagesInfoSection = OWSTableSection()
             disappearingMessagesInfoSection.hasBackground = false
-            disappearingMessagesInfoSection.add(.init(customCellBlock: { [weak self] in
-                guard let self else { return UITableViewCell() }
-                let cell = AppSettingsViewsUtil.newCell(cellOuterInsets: self.cellOuterInsets)
+            disappearingMessagesInfoSection.add(.init(customCellBlock: {
+                let cell = AppSettingsViewsUtil.newCell()
+                cell.layoutMargins = .zero
 
                 let disappearingMessagesInfoLabel = UILabel()
-                disappearingMessagesInfoLabel.font = .dynamicTypeBody2
-                disappearingMessagesInfoLabel.textColor = Theme.secondaryTextAndIconColor
+                disappearingMessagesInfoLabel.font = .dynamicTypeSubheadline
+                disappearingMessagesInfoLabel.textColor = .Signal.secondaryLabel
                 disappearingMessagesInfoLabel.numberOfLines = 0
 
                 let format = OWSLocalizedString(
@@ -288,23 +281,12 @@ class BadgeGiftingConfirmationViewController: OWSTableViewController2 {
 
     // MARK: - Footer
 
-    private let bottomFooterStackView = UIStackView()
-
     open override var bottomFooter: UIView? {
-        get { bottomFooterStackView }
+        get { bottomFooterContainer }
         set {}
     }
 
-    private func setUpBottomFooter() {
-        bottomFooterStackView.axis = .vertical
-        bottomFooterStackView.alignment = .center
-        bottomFooterStackView.layer.backgroundColor = self.tableBackgroundColor.cgColor
-        bottomFooterStackView.spacing = 16
-        bottomFooterStackView.isLayoutMarginsRelativeArrangement = true
-        bottomFooterStackView.preservesSuperviewLayoutMargins = true
-        bottomFooterStackView.layoutMargins = UIEdgeInsets(top: 0, leading: 16, bottom: 16, trailing: 16)
-        bottomFooterStackView.removeAllSubviews()
-
+    private lazy var bottomFooterContainer: UIView = {
         let amountView: UIStackView = {
             let descriptionLabel = UILabel()
             descriptionLabel.text = OWSLocalizedString(
@@ -312,36 +294,51 @@ class BadgeGiftingConfirmationViewController: OWSTableViewController2 {
                 comment: "Users can donate on a friend's behalf. This tells users that this will be a one-time donation."
             )
             descriptionLabel.font = .dynamicTypeBody
+            descriptionLabel.textColor = .Signal.label
             descriptionLabel.numberOfLines = 0
 
             let priceLabel = UILabel()
             priceLabel.text = CurrencyFormatter.format(money: price)
-            priceLabel.font = .dynamicTypeBody.semibold()
-            priceLabel.numberOfLines = 0
+            priceLabel.font = .dynamicTypeHeadline
+            priceLabel.textColor = .Signal.label
+            priceLabel.numberOfLines = 1
 
             let view = UIStackView(arrangedSubviews: [descriptionLabel, priceLabel])
             view.axis = .horizontal
             view.distribution = .equalSpacing
-            view.layoutMargins = cellOuterInsets
-            view.isLayoutMarginsRelativeArrangement = true
+            view.autoSetDimension(.height, toSize: 48)
 
             return view
         }()
 
-        let continueButton = OWSButton(title: CommonStrings.continueButton) { [weak self] in
-            self?.checkRecipientAndPresentChoosePaymentMethodSheet()
-        }
-        continueButton.dimsWhenHighlighted = true
-        continueButton.layer.cornerRadius = 8
-        continueButton.backgroundColor = .ows_accentBlue
-        continueButton.titleLabel?.font = UIFont.dynamicTypeBody.semibold()
+        let continueButton = UIButton(
+            configuration: .largePrimary(title: CommonStrings.continueButton),
+            primaryAction: UIAction { [weak self] _ in
+                self?.checkRecipientAndPresentChoosePaymentMethodSheet()
+            }
+        )
 
-        for view in [amountView, continueButton] {
-            bottomFooterStackView.addArrangedSubview(view)
-            view.autoSetDimension(.height, toSize: 48, relation: .greaterThanOrEqual)
-            view.autoPinWidthToSuperview(withMargin: 23)
-        }
-    }
+        let stackView = UIStackView(arrangedSubviews: [
+            amountView,
+            continueButton.enclosedInVerticalStackView(isFullWidthButton: true),
+        ])
+        stackView.axis = .vertical
+        stackView.alignment = .fill
+        stackView.spacing = 16
+
+        let view = UIView()
+        view.preservesSuperviewLayoutMargins = true
+        view.addSubview(stackView)
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            stackView.topAnchor.constraint(equalTo: view.topAnchor),
+            stackView.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
+            stackView.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
+            stackView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
+
+        return view
+    }()
 }
 
 // MARK: - Database observer delegate

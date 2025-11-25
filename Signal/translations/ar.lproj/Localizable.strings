@@ -70,6 +70,12 @@
 /* Label for button that lets you send a message to a contact. */
 "ACTION_SEND_MESSAGE" = "إرسال رسالة";
 
+/* Message shown in an action sheet when a generic error occurs. */
+"ACTION_SHEET_DISPLAYABLE_ERROR_GENERIC_ERROR" = "حدث خطأ ما. يُرجى التواصل مع فريق الدعم.";
+
+/* Message shown in an action sheet when a network error occurs. */
+"ACTION_SHEET_DISPLAYABLE_ERROR_NETWORK_ERROR" = "حدث خطأ ما. تحقَّق من اتصالك بالشبكة ثم حاوِل مرّة أخرى.";
+
 /* A label for 'tap to download' buttons. */
 "ACTION_TAP_TO_DOWNLOAD" = "انقر للتنزيل";
 
@@ -234,6 +240,15 @@
 
 /* Error indicating that the app could not restore transferred data. */
 "APP_LAUNCH_FAILURE_RESTORE_FAILED_TITLE" = "تعذّر إتمام عملية النقل";
+
+/* Action in an action sheet offering to wipe all app data. */
+"APP_LAUNCH_FAILURE_WIPE_APP_DATA_ACTION_TITLE" = "إعادة تعيين بيانات التطبيق";
+
+/* Message for an action sheet confirming the user wants to wipe all app data. */
+"APP_LAUNCH_FAILURE_WIPE_APP_DATA_CONFIRMATION_MESSAGE" = "سيتمُّ حذف كل بيانات التطبيق بشكل نهائي. هذه الخطوة ضرورية فقط إذا كُنتَ غير قادر على تشغيل التطبيق.";
+
+/* Title for an action sheet confirming the user wants to wipe all app data. */
+"APP_LAUNCH_FAILURE_WIPE_APP_DATA_CONFIRMATION_TITLE" = "هل ترغبُ بإعادة تعيين كل بيانات التطبيق؟";
 
 /* Text prompting user to edit their profile name. */
 "APP_SETTINGS_EDIT_PROFILE_NAME_PROMPT" = "أدخِل اسمك";
@@ -418,6 +433,9 @@
 /* A button to open the photo picker from the Attachment Keyboard */
 "ATTACHMENT_KEYBOARD_PHOTOS" = "الصور";
 
+/* A button to select a poll from the Attachment Keyboard */
+"ATTACHMENT_KEYBOARD_POLL" = "استطلاع";
+
 /* Accessibility label for attaching photos */
 "ATTACHMENT_LABEL" = "الملف المُرفَق";
 
@@ -478,14 +496,8 @@
 /* Message when trying to show a voice message that has expired and is unavailable for download */
 "AUDIO_UNAVAILABLE_MESSAGE_LABEL" = "الرسالة الصوتية غير مُتوفِّرة";
 
-/* Message for sheet shown when tapping a voice message that has expired and is unavailable for download */
-"AUDIO_UNAVAILABLE_SHEET_MESSAGE" = "هذه الرسالة الصوتية لم يتم تحويلُها من هاتفك عندما كان هذا الجهاز مُرتبِطًا. لا يمكن مُزامنة الملفات والوسائط التي تعود إلى أكثر من 45 يوم منذ الوقت الذي تمَّ فيه ربط الجهاز.";
-
 /* Title for sheet shown when tapping a voice message that has expired and is unavailable for download */
 "AUDIO_UNAVAILABLE_SHEET_TITLE" = "الرسالة الصوتية غير مُتوفِّرة";
-
-/* Username for backup key autofill */
-"AUTOFILL_BACKUP_KEY_USERNAME" = "النسخ الاحتياطية على سيجنال";
 
 /* Text prompting the user to choose a color when editing their avatar */
 "AVATAR_EDIT_VIEW_CHOOSE_A_COLOR" = "اختر لونًا";
@@ -511,7 +523,7 @@
 /* return to the previous screen */
 "BACK_BUTTON" = "الرجوع";
 
-/* Action text for Backup Key reminder megaphone */
+/* Action text for Recovery Key reminder megaphone */
 "BACKUP_ENABLEMENT_REMINDER_MEGAPHONE_ACTION" = "تفعيل";
 
 /* Body for Backup enablement reminder megaphone */
@@ -523,41 +535,53 @@
 /* Snooze text for Backup enablement reminder megaphone */
 "BACKUP_ENABLEMENT_REMINDER_NOT_NOW_ACTION" = "ليس الآن";
 
-/* Text used as placeholder in backup key text view. */
-"BACKUP_KEY_PLACEHOLDER" = "مفتاح النسخة الاحتياطية";
+/* Toast indicating that the user has copied their recovery key. */
+"BACKUP_KEY_COPIED_MESSAGE_TOAST" = "تمَّ نسخ مفتاح الاستعادة";
 
-/* Title of button to tap if you forgot your backup key. */
+/* Text used as placeholder in recovery key text view. */
+"BACKUP_KEY_PLACEHOLDER" = "مفتاح الاستعادة";
+
+/* Title of button to tap if you forgot your recovery key. */
 "BACKUP_KEY_REMINDER_FORGOT_KEY" = "هل نسيت المفتاح؟";
 
-/* Action text for Backup Key reminder megaphone */
+/* Action text for Recovery Key reminder megaphone */
 "BACKUP_KEY_REMINDER_MEGAPHONE_ACTION" = "التحقُّق";
 
-/* Body for Backup Key reminder megaphone */
+/* Body for Recovery Key reminder megaphone */
 "BACKUP_KEY_REMINDER_MEGAPHONE_BODY" = "سَنطلب منك أحيانًا التحقُّق من مفتاحك للتأكُّد من أنك لا زلت تعرفه.";
 
-/* Title for Backup Key reminder megaphone */
-"BACKUP_KEY_REMINDER_MEGAPHONE_TITLE" = "تحقّق من مفتاح النسخ الاحتياطي الخاص بك";
+/* Title for Recovery Key reminder megaphone */
+"BACKUP_KEY_REMINDER_MEGAPHONE_TITLE" = "قُم بتأكيد مفتاح الاستعادة الخاص بك";
 
-/* Snooze text for Backup Key reminder megaphone */
+/* Snooze text for Recovery Key reminder megaphone */
 "BACKUP_KEY_REMINDER_NOT_NOW_ACTION" = "ليس الآن";
 
-/* Toast indicating that the Backup Key was correct. */
-"BACKUP_KEY_REMINDER_SUCCESSFUL_TOAST" = "مفتاح النسخ الاحتياطي صحيح. حافِظ على مفتاحك في مكانٍ آمن.";
+/* Toast indicating that the Recovery Key was correct. */
+"BACKUP_KEY_REMINDER_SUCCESSFUL_TOAST" = "مفتاح الاستعادة صحيح. حافِظ على مفتاحك في مكانٍ آمن.";
 
-/* Body for a sheet warning users to their 'Backup Key' safe. */
+/* Button label for action sheet to cancel backup onboarding */
+"BACKUP_ONBOARDING_CANCEL_SHEET_ACTION" = "مغادرة تثبيت النسخة الاحتياطية";
+
+/* Message for action sheet when attempting to cancel backup onboarding */
+"BACKUP_ONBOARDING_CANCEL_SHEET_MESSAGE" = "لم تُنه إعداد النسخ الاحتياطية، ولم يتم إنشاء أي نسخة احتياطية. يمكنك تفعيل النسخ الاحتياطية في الإعدادات.";
+
+/* Title for action sheet when attempting to cancel backup onboarding */
+"BACKUP_ONBOARDING_CANCEL_SHEET_TITLE" = "هل ترغبُ بمغادرة تثبيت النسخة الاحتياطية؟";
+
+/* Body for a sheet warning users to their 'Recovery Key' safe. */
 "BACKUP_ONBOARDING_CONFIRM_KEY_KEEP_KEY_SAFE_SHEET_BODY" = "لن يتمكّن سيجنال من مُساعدتك على استعادة نسختك الاحتياطية إذا فقدتَ مفتاحك. احتفِظ بمفتاحك في مكانٍ آمن، ولا تُشاركه مع أي أحد.";
 
-/* Title for a sheet warning users to their 'Backup Key' safe. */
+/* Title for a sheet warning users to their 'Recovery Key' safe. */
 "BACKUP_ONBOARDING_CONFIRM_KEY_KEEP_KEY_SAFE_SHEET_TITLE" = "حافظ على مفتاحك في مكانٍ آمن.";
 
-/* Title for a button offering to let users see their 'Backup Key'. */
+/* Title for a button offering to let users see their 'Recovery Key'. */
 "BACKUP_ONBOARDING_CONFIRM_KEY_SEE_KEY_AGAIN_BUTTON_TITLE" = "اطَّلِع على المفتاح مُجدَّدًا";
 
-/* Subtitle for a view asking users to confirm their 'Backup Key'. */
-"BACKUP_ONBOARDING_CONFIRM_KEY_SUBTITLE" = "أدخِل مفتاح النسخة الاحتياطية الذي سجّلته للتو.";
+/* Subtitle for a view asking users to confirm their 'Recovery Key'. */
+"BACKUP_ONBOARDING_CONFIRM_KEY_SUBTITLE" = "أدخِل مفتاح الاستعادة الذي سجّلته للتو";
 
-/* Title for a view asking users to confirm their 'Backup Key'. */
-"BACKUP_ONBOARDING_CONFIRM_KEY_TITLE" = "تأكَّد من مفتاح نسختك الاحتياطية";
+/* Title for a view asking users to confirm their 'Recovery Key'. */
+"BACKUP_ONBOARDING_CONFIRM_KEY_TITLE" = "قُم بتأكيد مفتاح الاستعادة الخاص بك";
 
 /* Bullet point on a view introducing Backups during an onboarding flow. */
 "BACKUP_ONBOARDING_INTRO_BULLET_1" = "مُشفَّرة من طرف لطرف";
@@ -568,62 +592,113 @@
 /* Bullet point on a view introducing Backups during an onboarding flow. */
 "BACKUP_ONBOARDING_INTRO_BULLET_3" = "احذف نسختك الاحتياطية في أي وقت";
 
+/* A toast shown when 'Not Now' is tapped from the Backups onboarding intro. */
+"BACKUP_ONBOARDING_INTRO_NOT_NOW_TOAST" = "يمكنك تفعيل النسخ الاحتياطية في الإعدادات.";
+
 /* Subtitle for a view introducing Backups during an onboarding flow. */
 "BACKUP_ONBOARDING_INTRO_SUBTITLE" = "أنشِئ نسخة احتياطية من رسائلك ووسائطك باستخدام خدمة التخزين الآمنة المُشفَّرة من طرف لطرف من سيجنال. لا تفقد رسالة عندما تستخدم هاتفًا جديدًا أو تعيد تثبيت سيجنال.";
 
 /* Title for a view introducing Backups during an onboarding flow. */
-"BACKUP_ONBOARDING_INTRO_TITLE" = "النسخ الاحتياطية على سيجنال";
+"BACKUP_ONBOARDING_INTRO_TITLE" = "النسخ الاحتياطية الآمنة لسيجنال";
 
-/* Subtitle for a view introducing the 'Backup Key' during an onboarding flow. */
-"BACKUP_ONBOARDING_KEY_INTRO_SUBTITLE" = "مفتاح النسخة الاحتياطية الخاص بك هو كود مُكوَّن من 64 رقمًا يَسمح لك باستعادة نسختك الاحتياطية عندما تُعيد تثبيت سيجنال.\n\nإذا نسيتَ مفتاحك، لن تتمكَّن من استرجاع نسختك الاحتياطية. لا يُمكن لسيجنال مُساعدتك على استرجاع نسختك الاحتياطية.";
+/* Text for a bullet point in a view introducing the 'Recovery Key' during an onboarding flow. */
+"BACKUP_ONBOARDING_KEY_INTRO_BULLET_1" = "مفتاح الاستعادة هو عبارة عن كود مُكوَّن من 64 رمزًا، وتحتاجه لاستعادة نسختك الاحتياطية.";
 
-/* Title for a view introducing the 'Backup Key' during an onboarding flow. */
-"BACKUP_ONBOARDING_KEY_INTRO_TITLE" = "مفتاح النسخة الاحتياطية الخاص بك";
+/* Text for a bullet point in a view introducing the 'Recovery Key' during an onboarding flow. */
+"BACKUP_ONBOARDING_KEY_INTRO_BULLET_2" = "احتفظ بمفتاح الاستعادة الخاص بك في مكان آمن مثل مدير لكلمات المرور، ولا تشاركه مع أي أحد.";
 
-/* Title for a button allowing users to copy their 'Backup Key' to the clipboard. */
+/* Text for a bullet point in a view introducing the 'Recovery Key' during an onboarding flow. */
+"BACKUP_ONBOARDING_KEY_INTRO_BULLET_3" = "إذا فقدته، فلن تتمكّن من استعادة رسائلك.";
+
+/* Title for a continue button for a view introducing the 'Recovery Key' during an onboarding flow. */
+"BACKUP_ONBOARDING_KEY_INTRO_CONTINUE_BUTTON_TITLE" = "عرض مفتاح الاستعادة";
+
+/* Title for a view introducing the 'Recovery Key' during an onboarding flow. */
+"BACKUP_ONBOARDING_KEY_INTRO_TITLE" = "مفتاح الاستعادة";
+
+/* Body for a sheet shown when your Backup plan is downgraded. */
+"BACKUP_PLAN_DOWNGRADED_SHEET_BODY" = "انتهت صلاحية اشتراك النسخ الاحتياطي الخاص بك لأنه تعذَّر تجديده بواسطة طريقة الدفع الخاصة بك.\n\nلمواصلة النسخ الاحتياطي لوسائطك، يمكنك إعادة الاشتراك. سَيظل بإمكانك الوصول إلى خطة النسح الاحتياطي المجانية على سيجنال.";
+
+/* Body for a sheet shown when your Backup plan is downgraded because you stopped using TestFlight. */
+"BACKUP_PLAN_DOWNGRADED_SHEET_BODY_TESTFLIGHT" = "انتهت صلاحية اشتراك النسخ الاحتياطي الخاص بك لأنك لم تعد تستخدم TestFlight.\n\nلمواصلة النسخ الاحتياطي لوسائطك، يمكنك إعادة الاشتراك. سَيظل بإمكانك الوصول إلى خطة النسح الاحتياطي المجانية على سيجنال.";
+
+/* Primary button for a sheet shown when your Backup plan is downgraded. */
+"BACKUP_PLAN_DOWNGRADED_SHEET_PRIMARY_BUTTON" = "إدارة النسخ الاحتياطية";
+
+/* Title for a sheet shown when your Backup plan is downgraded. */
+"BACKUP_PLAN_DOWNGRADED_SHEET_TITLE" = "انتهتَ صلاحية اشتراك النسخ الاحتياطي الخاص بحسابك.";
+
+/* Title for a button allowing users to copy their 'Recovery Key' to the clipboard. */
 "BACKUP_RECORD_KEY_COPY_TO_CLIPBOARD_BUTTON_TITLE" = "نسخ إلى الحافظة";
 
-/* Subtitle for a view allowing users to record their 'Backup Key'. */
+/* Title for a button allowing users to create a new 'Recovery Key'. */
+"BACKUP_RECORD_KEY_CREATE_NEW_KEY_BUTTON_TITLE" = "إنشاء مفتاح جديد";
+
+/* Subtitle for a view allowing users to record their 'Recovery Key'. */
 "BACKUP_RECORD_KEY_SUBTITLE" = "هذا المفتاح مطلوب لاسترجاع بياناتك وحسابك. احتفِظ بهذا المفتاح في مكانٍ آمن. إذا فقدته، لن تتمكّن من استرجاع حسابك.";
 
-/* Title for a view allowing users to record their 'Backup Key'. */
-"BACKUP_RECORD_KEY_TITLE" = "احتفِظ بنسخة عن مفتاح النسخة الاحتياطية الخاص بك.";
+/* Title for a view allowing users to record their 'Recovery Key'. */
+"BACKUP_RECORD_KEY_TITLE" = "قُم بتسجيل مفتاح الاستعادة الخاص بك";
+
+/* Subtitle for a progress spinner on a modal tracking active downloading. Embeds 1:{{ the amount downloaded as a file size, e.g. 100 MB }}; 2:{{ the total amount to download as a file size, e.g. 1 GB }}; 3:{{ the amount downloaded as a percentage, e.g. 10% }}. */
+"BACKUP_RESTORE_MODAL_DOWNLOAD_PROGRESS_SUBTITLE" = "%1$@ من %2$@ (%3$@)";
+
+/* Subtitle for a progress spinner on a modal when waiting for a backup restore to start */
+"BACKUP_RESTORE_MODAL_PREPARING_SUBTITLE" = "جارٍ الاستعداد للاستعادة";
+
+/* Title for a progress spinner on a modal when restoring messages */
+"BACKUP_RESTORE_MODAL_TITLE" = "جارية استعادة الرسائل…";
+
+/* Message describing that the Background App Refresh permission is disabled for Signal. \"Background App Refresh\" should be localized the same way it is in iOS Settings app permissions. */
+"BACKUP_SETTINGS_BACKGROUND_APP_REFRESH_DISABLED_MESSAGE" = "النسخ الاحتياطية التلقائية مُعطَّلة.  فعّل النسخ الاحتياطية التلقائية من خلال تحديث أذونات سيجنال.";
+
+/* Add-on to a message describing that the Background App Refresh permission is disabled for Signal. \"Background App Refresh\" should be localized the same way it is in iOS Settings app permissions. */
+"BACKUP_SETTINGS_BACKGROUND_APP_REFRESH_DISABLED_MESSAGE_UPDATE_NOW" = "حدِّث الآن";
+
+/* Title for a button that takes the users to Signal's iOS Settings page. */
+"BACKUP_SETTINGS_BACKGROUND_APP_REFRESH_DISABLED_SHEET_GO_TO_SETTINGS_BUTTON" = "انتقِل إلى الإعدادات";
+
+/* Message for a sheet warning the user about the Background App Refresh permission. \"Background App Refresh\" should be localized the same way it is in iOS Settings app permissions. */
+"BACKUP_SETTINGS_BACKGROUND_APP_REFRESH_DISABLED_SHEET_MESSAGE" = "للسماح لسيجنال بنسخ رسائلك تلقائيًا، انقر على \"انتقل إلى الإعدادات\" أسفله وفعِّل خاصية \"تحديث التطبيق في الخلفية\"";
+
+/* Title for a sheet warning the user about the Background App Refresh permission. \"Background App Refresh\" should be localized the same way it is in iOS Settings app permissions. */
+"BACKUP_SETTINGS_BACKGROUND_APP_REFRESH_DISABLED_SHEET_TITLE" = "النسخ الاحتياطية التلقائية مُعطَّلة";
 
 /* Message for an action sheet explaining that performing a backup failed with a generic error. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_GENERIC_ERROR" = "Something went wrong creating your backup. Please try again, or contact support.";
+"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_GENERIC_ERROR" = "حدث خطأ ما أثناء إنشاء نسختك الاحتياطية. يُرجى المحاولة مرّة أخرى أو التواصل مع فريق الدعم.";
 
 /* Title for a button in an action sheet allowing users to perform a backup, ignoring that WiFi is required. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NEED_WIFI_ACTION" = "Allow Backups Using Cellular";
+"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NEED_WIFI_ACTION" = "السماح للنسخ الاحتياطية باستخدام البيانات الخلوية";
 
 /* Message for an action sheet explaining that performing a backup failed because WiFi is required. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NEED_WIFI_MESSAGE" = "Backing up using cellular may result in data charges. You can connect to a WiFi network or allow backups using cellular.";
+"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NEED_WIFI_MESSAGE" = "قد يُؤدي النسخ الاحتياطي باستخدام البيانات الخلوية إلى فرض رسوم على البيانات. يمكنك الاتصال بشبكة الواي فاي أو السماح للنسخ الاحتياطية باستخدام البيانات الخلوية.";
 
 /* Title for an action sheet explaining that performing a backup failed because WiFi is required. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NEED_WIFI_TITLE" = "Allow Backups Using Cellular Data?";
+"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NEED_WIFI_TITLE" = "هل ترغبُ بالسماح للنسخ الاحتياطية باستخدام البيانات الخلوية؟";
 
 /* Message for an action sheet explaining that performing a backup failed with a network error. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NETWORK_ERROR" = "Something went wrong creating your backup. Check your internet connection and try again.";
+"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NETWORK_ERROR" = "حدث خطأ ما أثناء إنشاء نسختك الاحتياطية. تحقَّق من اتصالك بالإنترنت وحاوِل مُجدَّدًا.";
 
-/* Description for a progress bar tracking a multi-step backup operation. Embeds {{ the percentage complete of the overall operation, e.g. 20% }}. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION" = "Creating backup: %1$@";
+/* Description for a progress bar tracking the optimizing of Backup media. */
+"BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION_OPTIMIZING_MEDIA" = "جارٍ تحسين الوسائط...";
 
-/* Description for a progress bar tracking a multi-step backup operation, where we are currently creating the backup. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION_CREATING_BACKUP" = "Exporting backup...";
+/* Description for a progress bar tracking the preparation of a Backup. Embeds 1:{{ the percentage completed preformatted as a percent, e.g. 10% }}. */
+"BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION_PREPARING_BACKUP" = "جارٍ تحضير النسخة الاحتياطية (%1$@)";
 
-/* Description for a progress bar tracking a multi-step backup operation, where we are currently uploading the backup. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION_UPLOADING_BACKUP" = "Uploading backup...";
+/* Description for a progress bar tracking the processing of Backup media. */
+"BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION_PROCESSING_MEDIA" = "جارٍ معالجة الوسائط...";
 
-/* Description for a progress bar tracking a multi-step backup operation, where we are currently uploading backup media. */
-"BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION_UPLOADING_MEDIA" = "Uploading backup media...";
+/* Message describing to the user that the last backup failed. */
+"BACKUP_SETTINGS_BACKUP_FAILED_MESSAGE" = "تعذَّر إتمام عملية النسخ الاحتياطي الأخيرة. تأكَّد من أن هاتفك مُتصل بشبكة الواي فاي وانقر على \"إنشاء نسخة احتياطية الآن\" للمحاولة من جديد";
 
 /* Title for a button allowing users to upgrade from a free to paid backup plan. */
 "BACKUP_SETTINGS_BACKUP_PLAN_FREE_ACTION_BUTTON_TITLE" = "ترقية";
 
+/* Text describing the user's free backup plan when they have Backups disabled. */
+"BACKUP_SETTINGS_BACKUP_PLAN_FREE_AND_DISABLED_DESCRIPTION" = "أوقفتَ النسخ الاحتياطية";
+
 /* Text describing the user's free backup plan. */
 "BACKUP_SETTINGS_BACKUP_PLAN_FREE_DESCRIPTION" = "خطة النسخ الاحتياطي الخاصة بك مجانية";
-
-/* Header describing what the free backup plan includes. */
-"BACKUP_SETTINGS_BACKUP_PLAN_FREE_HEADER" = "النسخ الاحتياطي للنص و45 يوم من الوسائط";
 
 /* Message for a view indicating we failed to fetch someone's Backup plan due to an unexpected error. */
 "BACKUP_SETTINGS_BACKUP_PLAN_GENERIC_ERROR_MESSAGE" = "حدث خطأ ما. يُرجى التواصل مع فريق الدعم.";
@@ -652,11 +727,26 @@
 /* Text explaining that a user's paid plan, which has been canceled, expired on a past date. Embeds {{ the formatted expiration date }}. */
 "BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_CANCELED_PAST_EXPIRATION_FORMAT" = "انتهت الصلاحية في %1$@";
 
+/* Title for a button allowing users to manage a paid backup plan that failed to renew. */
+"BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_FAILED_TO_RENEW_ACTION_BUTTON_TITLE" = "إدارة الاشتراك";
+
+/* Text describing that the user's paid backup plan has failed to renew. */
+"BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_FAILED_TO_RENEW_DESCRIPTION_1" = "طريقة الدفع مرفوضة.";
+
+/* Text describing that the user's paid backup plan has failed to renew. */
+"BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_FAILED_TO_RENEW_DESCRIPTION_2" = "تأكَّد من أن طريقة الدفع الخاصة بك مُحدَّثة.";
+
 /* Title for a button allowing users to manage their backup plan as a tester. */
 "BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_FREE_FOR_TESTERS_ACTION_BUTTON_TITLE" = "إدارة الخطة";
 
 /* Text describing that the user's backup plan is paid, but free for them as a tester. */
-"BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_FREE_FOR_TESTERS_DESCRIPTION" = "الخطة مدفوعة ولكن تبقى مجانية طالما أنك تختبر الخطة.";
+"BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_FREE_FOR_TESTERS_DESCRIPTION" = "مدفوع (مجاني بالنسبة لمُستخدِمي TestFlight)";
+
+/* Title for a button allowing users to renew their backup subscription on this device. */
+"BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_IAP_NOT_FOUND_LOCALLY_ACTION_BUTTON_TITLE" = "تجديد";
+
+/* Text describing that the user's paid backup plan did not correspond to a App Store subscription on this device. */
+"BACKUP_SETTINGS_BACKUP_PLAN_PAID_BUT_IAP_NOT_FOUND_LOCALLY_DESCRIPTION" = "تعذَّر العثور على اشتراكك على هذا الجهاز. جدِّد لمتابعة استخدام النسخ الاحتياطية على سيجنال.";
 
 /* Header describing what the paid backup plan includes. */
 "BACKUP_SETTINGS_BACKUP_PLAN_PAID_HEADER" = "النسخ الاحتياطي للنص وكل الوسائط";
@@ -691,6 +781,33 @@
 /* Header for a menu section related to settings for when Backups are enabled. */
 "BACKUP_SETTINGS_BACKUPS_ENABLED_SECTION_HEADER" = "تفاصيل النسخ الاحتياطي";
 
+/* Notice that backups is a beta feature */
+"BACKUP_SETTINGS_BETA_NOTICE_HEADER" = "هذه ميزة تجريبية وسيتمُّ تحسينها مع مرور الوقت.";
+
+/* Message shown in an action sheet when the user tries to create a new Recovery Key, but is not registered. */
+"BACKUP_SETTINGS_CREATE_NEW_KEY_ERROR_NOT_REGISTERED" = "يجب أن تكون مُسجلًا لإنشاء مفتاح استعادة جديد.";
+
+/* Explanation text for a sheet warning users they've reached a rate limit for creating Recovery Key. {{ Embeds 1: the preformatted time they must wait before enabling backups, such as \"1 week\" or \"6 hours\". }} */
+"BACKUP_SETTINGS_CREATE_NEW_KEY_LIMIT_REACHED_WARNING_SHEET_BODY" = "إذا أنشأتَ مفتاح استعادة جديد، فلن تتمكَّن من تفعيل النسخ الاحتياطية لمدة %1$@. عدد المفاتيح التي يمكنك إنشاؤها محدود لمنع سوء الاستخدام.";
+
+/* Action in an action sheet allowing to continue to rotate their key */
+"BACKUP_SETTINGS_CREATE_NEW_KEY_LIMIT_REACHED_WARNING_SHEET_CONTINUE_ACTION" = "إنشاء مفتاح جديد";
+
+/* Title for a sheet warning users they've reached a rate limit for creating Recovery Key. */
+"BACKUP_SETTINGS_CREATE_NEW_KEY_LIMIT_REACHED_WARNING_SHEET_TITLE" = "بلغتَ الحد الأقصى من مفاتيح الاستعادة المسموح بها";
+
+/* Toast shown when a new Recovery Key has been created successfully. */
+"BACKUP_SETTINGS_CREATE_NEW_KEY_SUCCESS_TOAST" = "تمَّ إنشاء مفتاح جديد!";
+
+/* TItle for a sheet warning users that Backups must be disabled to create a new Recovery Key. */
+"BACKUP_SETTINGS_CREATE_NEW_KEY_WARNING_SHEET_BACKUPS_MUST_BE_DISABLED_TITLE" = "تعطيل وإنشاء مفتاح جديد";
+
+/* Body for a sheet warning users about creating a new Recovery Key. */
+"BACKUP_SETTINGS_CREATE_NEW_KEY_WARNING_SHEET_BODY" = "لا يُعتبَر إنشاء مفتاح نسخ احتياطي جديد ضروريًا إلّا إذا كان شخص آخر يعرف مفتاحك. يجب أولًا تعطيل النسخ الاحتياطية لإنشاء مفتاح جديد.\n\nبعد تعطيل النسخ الاحتياطية وإنشاء مفتاح جديد، سَيتعيّن عليك إعادة تفعيل النسخة الاحتياطية وإعادة تحميلها.";
+
+/* Title for a sheet warning users about creating a new Recovery Key. */
+"BACKUP_SETTINGS_CREATE_NEW_KEY_WARNING_SHEET_TITLE" = "إنشاء مفتاح استعادة جديد";
+
 /* Footer for a menu section allowing users to turn off Backups. */
 "BACKUP_SETTINGS_DISABLE_BACKUPS_BUTTON_FOOTER" = "سَيقوم هذا بحذف كل بيانات النسخ الاحتياطي الخاصة بك. لن يتم إنشاء أي نسخ احتياطية جديدة.";
 
@@ -721,6 +838,15 @@
 /* Message shown in an action sheet when the user tries to disable Backups, but is not registered. */
 "BACKUP_SETTINGS_DISABLING_ERROR_NOT_REGISTERED" = "يجب أن تكون مُسجلًا لتمكين النسخ الاحتياطية.";
 
+/* Button for an action sheet shown when the user disables Backups, letting them manage their subscription. */
+"BACKUP_SETTINGS_DISABLING_SUBSCRIPTION_CANCEL_ACTION_SHEET_MANAGE_SUBSCRIPTION_BUTTON" = "إدارة الاشتراك";
+
+/* Message for an action sheet shown when the user disables Backups, but is still subscribed to the paid plan. */
+"BACKUP_SETTINGS_DISABLING_SUBSCRIPTION_CANCEL_ACTION_SHEET_MESSAGE" = "إذا كُنتَ تريد إلغاء اشتراكك، انقر على \"إدارة الاشتراك\" > سيجنال > إلغاء الاشتراك";
+
+/* Title for an action sheet shown when the user disables Backups, but is still subscribed to the paid plan. */
+"BACKUP_SETTINGS_DISABLING_SUBSCRIPTION_CANCEL_ACTION_SHEET_TITLE" = "لا تزال مُشترِكًا في خطة نسخ احتياطي مدفوعة";
+
 /* Title for a button shown in Backup Settings that lets a user cancel an in-progress download. */
 "BACKUP_SETTINGS_DOWNLOAD_PROGRESS_ACTION_BUTTON_CANCEL_DOWNLOAD" = "إلغاء التنزيل";
 
@@ -732,6 +858,9 @@
 
 /* Subtitle for a progress bar tracking downloads that are paused because of low battery. */
 "BACKUP_SETTINGS_DOWNLOAD_PROGRESS_SUBTITLE_PAUSED_LOW_BATTERY" = "تمَّ إيقاف التنزيل مؤقَّتًا: بطارية الجهاز منخفضة.";
+
+/* Subtitle for a progress bar tracking downloads that are paused because of low power mode. */
+"BACKUP_SETTINGS_DOWNLOAD_PROGRESS_SUBTITLE_PAUSED_LOW_POWER_MODE" = "تمَّ إيقاف التنزيل مؤقَّتًا: وضع الطاقة المُنخفضة";
 
 /* Subtitle for a progress bar tracking downloads that are paused because they need more disk space available. Embeds {{ the amount of space needed as a file size, e.g. 100 MB }}. */
 "BACKUP_SETTINGS_DOWNLOAD_PROGRESS_SUBTITLE_PAUSED_NEEDS_DISK_SPACE" = "لا توجد مساحة كافية لتنزيل ملفات الوسائط الخاصة بك. للمواصلة، حرِّر %1$@ من المساحة.";
@@ -769,14 +898,23 @@
 /* Text explaining that the user's last backup was yesterday. Embeds {{ the time of the backup }}. */
 "BACKUP_SETTINGS_ENABLED_LAST_BACKUP_YESTERDAY_FORMAT" = "البارحة عند الساعة %1$@";
 
-/* Label for a menu item offering to show the user their backup key. */
-"BACKUP_SETTINGS_ENABLED_VIEW_BACKUP_KEY_LABEL" = "عرض مفتاح النسخة الاحتياطية";
+/* Label for a menu item offering to show the user their recovery key. */
+"BACKUP_SETTINGS_ENABLED_VIEW_BACKUP_KEY_LABEL" = "عرض مفتاح الاستعادة";
+
+/* Body for a sheet explaining that the user's Backups subscription was not found on this device. */
+"BACKUP_SETTINGS_IAP_NOT_FOUND_LOCALLY_SHEET_BODY" = "تعذَّرت استعادة اشتراكك على هذا الجهاز. يمكن أن يحدث هذا إذا كُنتَ قد سجَّلت الدخول على App Store بحساب Apple مختلف أو قُمتَ بالانتقال من هاتف أندرويد.\n\nإذا كان لديك اشتراك نشِط على هاتفك القديم، فكِّر في إلغائه قبل أن يتم تجديده.";
+
+/* Button for a sheet explaining that the user's Backups subscription was not found on this device. */
+"BACKUP_SETTINGS_IAP_NOT_FOUND_LOCALLY_SHEET_GOT_IT_BUTTON" = "تمَّ";
+
+/* Title for a sheet explaining that the user's Backups subscription was not found on this device. */
+"BACKUP_SETTINGS_IAP_NOT_FOUND_LOCALLY_SHEET_TITLE" = "تعذَّر العثور على اشتراك";
 
 /* Title for a button allowing users to trigger a manual backup. */
 "BACKUP_SETTINGS_MANUAL_BACKUP_BUTTON_TITLE" = "إنشاء نسخة احتياطية الآن";
 
 /* Title for a button shown under a progress bar tracking a manual backup, which lets the user cancel the backup. */
-"BACKUP_SETTINGS_MANUAL_BACKUP_CANCEL_BUTTON" = "Cancel Backup";
+"BACKUP_SETTINGS_MANUAL_BACKUP_CANCEL_BUTTON" = "إلغاء النسخة الاحتياطية";
 
 /* Action in an action sheet allowing users to download their offloaded media later. */
 "BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_DOWNLOAD_SHEET_LATER_ACTION" = "التنزيل لاحقًا";
@@ -791,7 +929,7 @@
 "BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_DOWNLOAD_SHEET_TITLE" = "هل ترغبُ بتنزيل الوسائط المُفرَّغة؟";
 
 /* Message for an action sheet warning users who are testers about the Optimize Local Storage feature. */
-"BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_TESTER_WARNING_SHEET_MESSAGE" = "ستصبح الوسائط المُفرَّغة متوفرة طالما أنك مازلت تختبر الخطة. تأكَّد من تنزيل كل ملفات وسائطك قبل مغادرة برنامج الاختبار.";
+"BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_TESTER_WARNING_SHEET_MESSAGE" = "ستصبح الوسائط المُفرَّغة متوفرة طالما أنك مازلت تختبر TestFlight. تأكَّد من تنزيل كل ملفات وسائطك قبل مغادرة برنامج الاختبار.";
 
 /* Title for an action sheet warning users who are testers about the Optimize Local Storage feature. */
 "BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_TESTER_WARNING_SHEET_TITLE" = "جارٍ اختبار ملفات الوسائط المُفرَّغة";
@@ -800,13 +938,19 @@
 "BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_TOGGLE_FOOTER_AVAILABLE" = "سيتمُّ تفريغ ملفات الوسائط غير المُستخدِمة، لكن يُمكن تنزيلها من النسخة الاحتياطية لديك في أيّ وقت.";
 
 /* Footer for a toggle allowing users to change the Optimize Local Storage setting, if the toggle is available and they are a tester. */
-"BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_TOGGLE_FOOTER_AVAILABLE_FOR_TESTERS" = "سيتمُّ تفريغ ملفات الوسائط غير المُستخدِمة، لكن يُمكن تنزيلها من النسخة الاحتياطية لديك في أيّ وقت طالما أنك تختبر الخطة.";
+"BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_TOGGLE_FOOTER_AVAILABLE_FOR_TESTERS" = "سيتمُّ تفريغ ملفات الوسائط غير المُستخدِمة، لكن يُمكن تنزيلها من النسخة الاحتياطية لديك في أيّ وقت طالما أنك تستخدم TestFlight.";
 
 /* Footer for a toggle allowing users to change the Optimize Local Storage setting, if the toggle is unavailable. */
 "BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_TOGGLE_FOOTER_UNAVAILABLE" = "لا يمكن استخدام ميزة تحسين التخزين إلّا مع المُستوى المدفوع لنسخ سيجنال الاحتياطية. يُرجى ترقية خطة النسخ الاحتياطية لديك لتفعيل هذه الميزة.";
 
 /* Title for a toggle allowing users to change the Optimize Local Storage setting. */
 "BACKUP_SETTINGS_OPTIMIZE_LOCAL_STORAGE_TOGGLE_TITLE" = "تحسين التخزين على الجهاز";
+
+/* Subtitle for a notification telling the user they are out of remote storage space. */
+"BACKUP_SETTINGS_OUT_OF_STORAGE_SPACE_NOTIFICATION_SUBTITLE" = "بلغتَ الحد الأقصى لمساحة تخزين النسخ الاحتياطي الخاص بك. حرِّر مساحة في تطبيق سيجنال لمتابعة نسخ الدردشات والوسائط احتياطيًا.";
+
+/* Title for a notification telling the user they are out of remote storage space. */
+"BACKUP_SETTINGS_OUT_OF_STORAGE_SPACE_NOTIFICATION_TITLE" = "مساحة تخزين النسخ الاحتياطي ممتلئة";
 
 /* Title for a button allowing users to re-enable Backups, after it had been previously disabled. */
 "BACKUP_SETTINGS_REENABLE_BACKUPS_BUTTON_TITLE" = "إعادة تفعيل النسخ الاحتياطية";
@@ -820,29 +964,71 @@
 /* Title for a sheet warning the user about skipping downloads. */
 "BACKUP_SETTINGS_SKIP_DOWNLOADS_WARNING_SHEET_TITLE" = "هل ترغبُ بتخطي التنزيل؟";
 
+/* Title for detail button in notice that the user's Backups subscription couldn't be redeemed. */
+"BACKUP_SETTINGS_SUBSCRIPTION_ALREADY_REDEEMED_NOTICE_DETAIL_BUTTON" = "التفاصيل";
+
+/* Title for notice that the user's Backups subscription couldn't be redeemed. */
+"BACKUP_SETTINGS_SUBSCRIPTION_ALREADY_REDEEMED_NOTICE_TITLE" = "تعذّر استرداد اشتراك النسخ الاحتياطية الخاص بحسابك";
+
+/* Body for a sheet explaining that the user's Backups subscription was already redeemed. */
+"BACKUP_SETTINGS_SUBSCRIPTION_ALREADY_REDEEMED_SHEET_BODY" = "اُستخدِمَت أجهزةٌ عديدة لاسترداد اشتراكك هذا الشهر.\n\nقد تكون أعدت تسجيل حساب سيجنال الخاص بك عدة مرّات، أو لديك عدة أجهزة تستخدم الاشتراك نفسه.";
+
+/* Button for a sheet explaining that the user's Backups subscription was already redeemed. */
+"BACKUP_SETTINGS_SUBSCRIPTION_ALREADY_REDEEMED_SHEET_GOT_IT_BUTTON" = "تمَّ";
+
+/* Title for a sheet explaining that the user's Backups subscription was already redeemed. */
+"BACKUP_SETTINGS_SUBSCRIPTION_ALREADY_REDEEMED_SHEET_TITLE" = "تعذّر استرداد اشتراك النسخ الاحتياطية الخاص بحسابك";
+
 /* Subtitle for a progress bar tracking uploads that are paused because of low battery. */
-"BACKUP_SETTINGS_UPLOAD_PROGRESS_SUBTITLE_PAUSED_LOW_BATTERY" = "التحميل متوقِّف مؤقتًا: بطارية الجهاز منخفضة";
+"BACKUP_SETTINGS_UPLOAD_PROGRESS_SUBTITLE_PAUSED_LOW_BATTERY" = "تمَّ إيقاف تحميل ملفات الوسائط مؤقَّتًا: بطارية الجهاز مُنخفضة";
+
+/* Subtitle for a progress bar tracking uploads that are paused because of low power mode. */
+"BACKUP_SETTINGS_UPLOAD_PROGRESS_SUBTITLE_PAUSED_LOW_POWER_MODE" = "تمَّ إيقاف تحميل ملفات الوسائط مؤقَّتًا: وضع الطاقة المُنخفضة";
+
+/* Subtitle for a progress bar tracking uploads that are paused because they need an internet connection */
+"BACKUP_SETTINGS_UPLOAD_PROGRESS_SUBTITLE_PAUSED_NEEDS_INTERNET" = "تمَّ إيقاف تحميل ملفات الوسائط مؤقَّتًا: لا يُوجد اتصال بالإنترنت…";
 
 /* Subtitle for a progress bar tracking uploads that are paused because they need WiFi. */
-"BACKUP_SETTINGS_UPLOAD_PROGRESS_SUBTITLE_PAUSED_NEEDS_WIFI" = "التحميل متوقِّف مؤقتًا: في انتظار الاتصال بالواي فاي";
+"BACKUP_SETTINGS_UPLOAD_PROGRESS_SUBTITLE_PAUSED_NEEDS_WIFI" = "تمَّ إيقاف تحميل ملفات الوسائط مؤقَّتًا: في انتظار الاتصال بالواي فاي";
 
-/* Subtitle for a progress bar tracking active uploading. Embeds 1:{{ the amount uploaded as a file size, e.g. 100 MB }}; 2:{{ the total amount to upload as a file size, e.g. 1 GB }}; 3:{{ the amount uploaded as a percentage, e.g. 10% }}. */
+/* Subtitle for a progress bar tracking uploads that are paused because the user is out of remote storage space. Embeds 1:{{ total storage space provided, e.g. 100 GB }}; 2:{{ space the user needs to free up by deleting media, e.g. 1 GB }}. */
+"BACKUP_SETTINGS_UPLOAD_PROGRESS_SUBTITLE_PAUSED_OUT_OF_STORAGE_SPACE_FORMAT" = "بلغتَ حد التخزين %1$@ المُضمَّن في خطة النسخ الاحتياطي الخاصة بك. لإنشاء نسخة احتياطية للدردشات والوسائط الجديدة، قُم بتحرير %2$@ في تطبيق سيجنال، ثم انقر على \"إنشاء نسخة احتياطية الآن\".";
+
+/* Subtitle for a progress bar tracking active uploading. Embeds 1:{{ the amount uploaded as a file size, e.g. 100 MB }}; 2:{{ the total amount to upload as a file size, e.g. 1 GB }}; 3:{{ the percentage uploaded as a percent, e.g. 40% }}. */
 "BACKUP_SETTINGS_UPLOAD_PROGRESS_SUBTITLE_RUNNING" = "جارٍ تحميل %1$@ من أصل %2$@ (%3$@)";
 
 /* Message for a sheet shown after the user enables backups. */
-"BACKUP_SETTINGS_WELCOME_TO_BACKUPS_SHEET_MESSAGE" = "قد يستغرق هذا وقتًا طويلًا حسب حجم النسخة الاحتياطية الخاصة بك. يُمكنك استخدام هاتفك بشكل اعتيادي أثناء إجراء عملية النسخ الاحتياطي.";
-
-/* Title for the primary button for a sheet shown after the user enables backups. */
-"BACKUP_SETTINGS_WELCOME_TO_BACKUPS_SHEET_PRIMARY_BUTTON" = "إنشاء نسخة احتياطية الآن";
-
-/* Title for the secondary button for a sheet shown after the user enables backups. */
-"BACKUP_SETTINGS_WELCOME_TO_BACKUPS_SHEET_SECONDARY_BUTTON" = "إجراء النسخ الاحتياطي لاحقًا";
+"BACKUP_SETTINGS_WELCOME_TO_BACKUPS_SHEET_MESSAGE" = "قد يستغرق هذا وقتًا طويلًا حسب حجم النسخة الاحتياطية الخاصة بك. يمكنك استخدام سيجنال بشكل اعتيادي أثناء إجراء عملية النسخ الاحتياطي.";
 
 /* Title for a sheet shown after the user enables backups. */
-"BACKUP_SETTINGS_WELCOME_TO_BACKUPS_SHEET_TITLE" = "مرحبًا بك في النسخ الاحتياطية على سيجنال. ابدأ النسخ الاحتياطي لديك الآن.";
+"BACKUP_SETTINGS_WELCOME_TO_BACKUPS_SHEET_TITLE" = "مرحبًا بك في النسخ الاحتياطية الآمنة لسيجنال. ابدأ النسخ الاحتياطي لديك الآن.";
+
+/* Message for a sheet shown when your Backup subscription fails to renew. */
+"BACKUP_SUBSCRIPTION_FAILED_TO_RENEW_SHEET_MESSAGE" = "تأكَّد من أن طريقة الدفع الخاصة بك مُحدَّثة. انقر على \"إدارة الاشتراك\" > سيجنال > تحديث طريقة الدفع.";
+
+/* Primary button for a sheet shown when your Backup subscription fails to renew. */
+"BACKUP_SUBSCRIPTION_FAILED_TO_RENEW_SHEET_PRIMARY_BUTTON" = "إدارة الاشتراك";
+
+/* Title for a sheet shown when your Backup subscription fails to renew. */
+"BACKUP_SUBSCRIPTION_FAILED_TO_RENEW_SHEET_TITLE" = "تعذَّر تجديد اشتراك النسخ الاحتياطي الخاص بحسابك.";
+
+/* Body for system notification when we detect paid backup media uploads have encountered a problem */
+"BACKUPS_MEDIA_UPLOAD_FAILURE_NOTIFICATION_BODY" = "يُرجى أن تُرسل لنا سجلات التصحيح لنساعدك على حل المشكلة!";
+
+/* Title for system notification when we detect paid backup media uploads have encountered a problem */
+"BACKUPS_MEDIA_UPLOAD_FAILURE_NOTIFICATION_TITLE" = "حدث خطأ أثناء النسخ الاحتياطي لملفات وسائطك";
 
 /* Title for the 'Backup' settings menu. */
-"BACKUPS_SETTINGS_TITLE" = "النسخ الاحتياطية على سيجنال";
+"BACKUPS_SETTINGS_TITLE" = "النسخ الاحتياطية الآمنة";
+
+/* Body for system notification or megaphone when backups is enabled. Embeds {{ time backups was enabled }} */
+"BACKUPS_TURNED_ON_NOTIFICATION_BODY_FORMAT" = "تمّ تفعيل النسخ الاحتياطية على سيجنال لهذا الحساب في %1$@. انقر للمشاهدة.";
+
+/* Title for system notification or megaphone when backups is enabled */
+"BACKUPS_TURNED_ON_TITLE" = "قُمتَ بتفعيل النسخ الاحتياطية";
+
+/* Action text for backups enabled megaphone taking user to backup settings */
+"BACKUPS_VIEW_SETTINGS_BUTTON" = "إظهار الإعدادات";
 
 /* Section header for badge view section in the badge configuration page */
 "BADGE_CONFIGURATION_BADGE_SECTION_TITLE" = "شاراتي";
@@ -919,6 +1105,9 @@
 /* Accessibility label for banner close button */
 "BANNER_CLOSE_ACCESSIBILITY_LABEL" = "إغلاق الشريط";
 
+/* Beta label */
+"BETA_LABEL" = "الإصدار التجريبي";
+
 /* An explanation of the consequences of blocking a group. */
 "BLOCK_GROUP_BEHAVIOR_EXPLANATION" = "لن تصلك الرسائل أو التحديثات من هذه المجموعة بعد الآن.";
 
@@ -987,9 +1176,6 @@
 
 /* An explanation of the consequences of blocking another user. */
 "BLOCK_USER_BEHAVIOR_EXPLANATION" = "لن يتمكن المُستخدِمون المحظورون من مكالمتك أو إرسال الرسائل إليك.";
-
-/* Tooltip highlighting the blur image editing tool. */
-"BLUR_TOOLTIP" = "جديد : قُم بتمويه الوجوه أو ارسم في أي مكان للتمويه.";
 
 /* Default text for the custom amount field of the boost view. */
 "BOOST_VIEW_CUSTOM_AMOUNT_PLACEHOLDER" = "أدخِل مبلغ مُخَصَّص";
@@ -1525,17 +1711,8 @@
 /* Text for a bullet point in a list of Backup features, describing that all text messages are included. */
 "CHOOSE_BACKUP_PLAN_BULLET_FULL_TEXT_BACKUP" = "النسخ الاحتياطي الكامل للرسائل النصية";
 
-/* Text for a bullet point in a list of Backup features, describing that recent media is included. */
-"CHOOSE_BACKUP_PLAN_BULLET_RECENT_MEDIA_BACKUP" = "الأيام 45 الأخيرة من الوسائط";
-
-/* Text for a bullet point in a list of Backup features, describing the amount of included storage. */
-"CHOOSE_BACKUP_PLAN_BULLET_STORAGE_AMOUNT" = "مساحة تخزين 1 تيرابايت (~250 ألف صورة)";
-
-/* Message shown in an action sheet when the user tries to confirm a plan selection, but encountered a generic error. */
-"CHOOSE_BACKUP_PLAN_CONFIRMATION_ERROR_GENERIC_ERROR" = "حدث خطأ ما. يُرجى التواصل مع فريق الدعم.";
-
-/* Message shown in an action sheet when the user tries to confirm a plan selection, but encountered a network error. */
-"CHOOSE_BACKUP_PLAN_CONFIRMATION_ERROR_NETWORK_ERROR" = "حدث خطأ ما. تحقَّق من اتصالك بالشبكة ثم حاوِل مرّة أخرى.";
+/* Text for a bullet point in a list of Backup features, describing the amount of included storage. Embeds {{ the amount of storage preformatted as a localized byte count, e.g. '100 GB' }}. */
+"CHOOSE_BACKUP_PLAN_BULLET_STORAGE_AMOUNT" = "%1$@ من ذاكرة التخزين";
 
 /* Message shown in an action sheet when the user tries to confirm a plan selection, but is not registered. */
 "CHOOSE_BACKUP_PLAN_CONFIRMATION_ERROR_NOT_REGISTERED" = "يجب أن تكون مُسجلًا لتمكين النسخ الاحتياطية.";
@@ -1544,13 +1721,25 @@
 "CHOOSE_BACKUP_PLAN_CONFIRMATION_ERROR_PURCHASE" = "حدث خطأ ما. يُرجى المُحاولة مرّة أخرى.";
 
 /* Message shown in an action sheet when the user tries to confirm selecting the paid plan, but encountered an error while redeeming their completed purchase. */
-"CHOOSE_BACKUP_PLAN_CONFIRMATION_ERROR_PURCHASE_REDEMPTION" = "حدث خطأ ما. يُرجى التواصل مع فريق الدعم.";
+"CHOOSE_BACKUP_PLAN_CONFIRMATION_ERROR_PURCHASE_REDEMPTION" = "حدث خطأ ما أثناء استرداد مشترياتك. يُرجى التواصل مع فريق الدعم.";
+
+/* Message shown in an action sheet when the user tries to confirm a plan selection, but encounters a rate limit. They should wait the requested amount of time and try again. */
+"CHOOSE_BACKUP_PLAN_CONFIRMATION_ERROR_RATE_LIMITED" = "نظرًا لأنك بلغت العدد الأقصى من مفاتيح الاسترداد الجديدة، و لمنع سوء الاستخدام، فإنك لن تتمكن من تفعيل النسخ الاحتياطية لمدة %1$@. انتظر %1$@ وحاوِل مُجدَّدًا.";
+
+/* Message shown in an action sheet when the user tries to confirm a plan selection, but encounters a rate limit. They should wait the requested amount of time and try again. {{ Embeds 1 & 2: the preformatted time they must wait before enabling backups, such as \"1 week\" or \"6 hours\". }} */
+"CHOOSE_BACKUP_PLAN_CONFIRMATION_ERROR_RATE_LIMITED_TITLE" = "تعذَّر تفعيل النسخ الاحتياطية";
 
 /* A label indicating that a given Backup plan option is what the user has already enabled. */
 "CHOOSE_BACKUP_PLAN_CURRENT_PLAN_LABEL" = "الخطة الحالية";
 
-/* Subtitle for the free plan option, when choosing a Backup plan. */
-"CHOOSE_BACKUP_PLAN_FREE_PLAN_SUBTITLE" = "الرسائل النصية + 45 يومًا من الوسائط";
+/* Text for a button that will downgrade the user from the paid Backup plan to the free one. */
+"CHOOSE_BACKUP_PLAN_DOWNGRADE_BUTTON_TEXT" = "تغيير الخطة";
+
+/* Button for an action sheet confirming the user wants to downgrade their Backup plan. */
+"CHOOSE_BACKUP_PLAN_DOWNGRADE_CONFIRMATION_ACTION_SHEET_PROCEED_BUTTON" = "تغيير الخطة";
+
+/* Title for an action sheet confirming the user wants to downgrade their Backup plan. */
+"CHOOSE_BACKUP_PLAN_DOWNGRADE_CONFIRMATION_ACTION_SHEET_TITLE" = "هل تريد الانتقال إلى الخطة المجانية؟";
 
 /* Title for the free plan option, when choosing a Backup plan. */
 "CHOOSE_BACKUP_PLAN_FREE_PLAN_TITLE" = "مجانًا";
@@ -1568,10 +1757,13 @@
 "CHOOSE_BACKUP_PLAN_SUBSCRIBE_PAID_BUTTON_TEXT" = "اشترِك مقابل %1$@/شهريًا";
 
 /* Subtitle for a view allowing users to choose a Backup plan. */
-"CHOOSE_BACKUP_PLAN_SUBTITLE" = "كل النُسخ الاحتياطية مُشفَّرة من طرف لطرف. سيجنال شركة غير ربحية—الدفع مقابل النسخ الاحتياطية يُساعد في دعم مهمتنا.";
+"CHOOSE_BACKUP_PLAN_SUBTITLE" = "النُسخ الاحتياطية مُشفَّرة من طرف لطرف. سيجنال شركة غير ربحية. يُساعد الدفع مقابل النسخ الاحتياطية في دعم مهمتنا.";
+
+/* Title for a label allowing users to view Signal's Terms & Conditions. */
+"CHOOSE_BACKUP_PLAN_TERM_AND_PRIVACY_POLICY_TEXT" = "الشروط وسياسة الخصوصية";
 
 /* Title for a view allowing users to choose a Backup plan. */
-"CHOOSE_BACKUP_PLAN_TITLE" = "اختر خطة النسخ الاحتياطية التي تناسبك";
+"CHOOSE_BACKUP_PLAN_TITLE" = "اختر خطة النسخ الاحتياطية";
 
 /* Title for the color & wallpaper settings view. */
 "COLOR_AND_WALLPAPER_SETTINGS_TITLE" = "الخلفية ولون الدردشة";
@@ -2374,23 +2566,17 @@
 /* Subheader for an action sheet explaining that a Note to Self deleted on this device will be deleted on the user's other devices as well. */
 "DELETE_FOR_ME_NOTE_TO_SELF_LINKED_DEVICES_PRESENT_ACTION_SHEET_SUBHEADER" = "سيتمُّ حذف هذه الرسالة من جميع أجهزتك.";
 
-/* Label for a button in an info sheet confirming that deletes are now synced across devices. */
-"DELETE_FOR_ME_SYNC_MESSAGE_INFO_SHEET_BUTTON" = "تم";
-
-/* Subtitle for an info sheet explaining that deletes are now synced across devices. */
-"DELETE_FOR_ME_SYNC_MESSAGE_INFO_SHEET_SUBTITLE" = "عندما تحذف رسائل أو دردشات، سيتمُّ حذفها من هاتفك وكل أجهزتك المُتصلة.";
-
-/* Title for an info sheet explaining that deletes are now synced across devices. */
-"DELETE_FOR_ME_SYNC_MESSAGE_INFO_SHEET_TITLE" = "عملية الحذف تتمُّ في تزامن عبر جميع أجهزتك الآن";
-
 /* Label indicating a user who deleted their account. */
 "DELETED_USER" = "حساب محذوف";
 
 /* Notification warning the user that they have been de-registered. */
 "DEREGISTRATION_NOTIFICATION" = "تمَّ تسجيل خروجك من تطبيق سيجنال على هذا الجهاز.";
 
-/* Label for button that lets users re-register using the same phone number. */
-"DEREGISTRATION_REREGISTER_WITH_SAME_PHONE_NUMBER" = "أعِد تسجيل رقم الهاتف هذا";
+/* Button that lets users re-register using the same phone number. */
+"DEREGISTRATION_REREGISTER_BUTTON" = "إعادة-التسجيل";
+
+/* Title for prompt that lets users re-register using the same phone number. */
+"DEREGISTRATION_REREGISTER_PROMPT_TITLE" = "هل ترغبُ بإعادة تسجيل رقم الهاتف هذا؟";
 
 /* Label warning the user that they have been de-registered. */
 "DEREGISTRATION_WARNING" = "هذا الجهاز لم يَعُد مُسجلًا. هذا على الأرجح بسبب قيامك بتسجيل رقم هاتفك على سيجنال باستخدام جهازٍ مختلف.";
@@ -2518,6 +2704,42 @@
 /* The title for the action sheet asking the user to scan the QR code to transfer */
 "DEVICE_TRANSFER_SCANNING_TITLE" = "ضع جهازك الجديد أمام الكاميرا";
 
+/* Status message on new device when cancelling transfer. */
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_CANCELLING" = "جارٍ إلغاء الاتصال بجهاز آيفون القديم…";
+
+/* Status message on new device when connecting to old device. */
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_CONNECTING" = "جارٍ الاتصال بجهاز آيفون القديم…";
+
+/* Description message on new device displayed during device transfer. */
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_CONNECTING_MESSAGE" = "ضع جهازك القديم قربك، وتأكَّد من تفعيل الواي فاي والبلوتوث.";
+
+/* Status message on new device when transfer is starting. */
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_STARTING" = "في انتظار الاتصال بجهاز آيفون القديم…";
+
+/* Description in the progress view displayed after failure of device transfer. */
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_TRANSFER_FAILED_BODY" = "فشِلَ النقل إلى الجهاز الجديد. ضع جهازك القديم قربك، وحاوِل من جديد.";
+
+/* Title for a progress view displayed after failure of device transfer. */
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_TRANSFER_FAILED_TITLE" = "فشل النقل";
+
+/* Title for a progress view displayed during device transfer. */
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_TRANSFERRING" = "جارٍ النقل";
+
+/* Description in the progress view displayed during device transfer. */
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_TRANSFERRING_DESCRIPTION" = "أبقِ الجهازين بالقرب من بعضهما البعض. لا تقُم بإيقاف تشغيل أيًا مِنهُما وحافِظ على سيجنال مفتوحًا. عمليات النقل مُشفَّرة من طرف لطرف.";
+
+/* Status message on old device when cancelling transfer. */
+"DEVICE_TRANSFER_STATUS_OLD_DEVICE_CANCELLING" = "جارٍ إلغاء الاتصال بجهاز آيفون الجديد…";
+
+/* Status message on new device when connecting to new device. */
+"DEVICE_TRANSFER_STATUS_OLD_DEVICE_CONNECTING" = "جارٍ الاتصال بجهاز آيفون الجديد…";
+
+/* Description message on old device displayed during device transfer. */
+"DEVICE_TRANSFER_STATUS_OLD_DEVICE_CONNECTING_MESSAGE" = "ضع جهازك الجديد قربك، وتأكَّد من تفعيل الواي فاي والبلوتوث.";
+
+/* Status message on old device when transfer is starting. */
+"DEVICE_TRANSFER_STATUS_OLD_DEVICE_STARTING" = "في انتظار الاتصال بجهاز آيفون الجديد…";
+
 /* The explanation on the action sheet that shows transfer progress */
 "DEVICE_TRANSFER_TRANSFERRING_EXPLANATION" = "أبقي الجهازين بالقرب من بعضهما البعض. لا تقُم بإيقاف تشغيل أيََا مِنهُما وأبقِ على سيجنال مفتوحًا.";
 
@@ -2625,6 +2847,12 @@
 
 /* If a donation badge has been sent, indicates that it's expired and can no longer be redeemed. This is shown in the chat. */
 "DONATE_ON_BEHALF_OF_A_FRIEND_CHAT_EXPIRED" = "منتهية الصلاحية";
+
+/* Message for an action sheet shown when the user tries to cancel their donation subscription, but they have a pending donation. */
+"DONATE_SCREEN_CANCEL_SUBSCRIPTION_PENDING_DONATION_WARNING_MESSAGE" = "لديك تبرُّع مُعلَّق. إذا ألغيتَ اشتراكك، فلن يُجَدَّد تبرعك، لكن تبرُّعك المُعلَّق سيبقى دون إلغاء.";
+
+/* Title for an action sheet shown when the user tries to cancel their donation subscription, but they have a pending donation. */
+"DONATE_SCREEN_CANCEL_SUBSCRIPTION_PENDING_DONATION_WARNING_TITLE" = "التبرُّع مُعلَّق";
 
 /* Message in an alert presented when the user tries to make a donation, but already has an iDEAL donation that is currently awaiting approval. */
 "DONATE_SCREEN_ERROR_MESSAGE_APPROVE_IDEAL_DONATION_BEFORE_MAKING_ANOTHER_DONATION" = "لا يزال تبرُّع iDeal الخاص بك قيد المُعالجة. تفقَّد تطبيق مصرفك للموافقة على عملية الدفع الخاصة بك قبل التبرُّع مرّة أخرى.";
@@ -3061,11 +3289,11 @@
 /* Call setup status label */
 "END_CALL_UNCATEGORIZED_FAILURE" = "فشل الاتصال";
 
-/* Label explaining that an entered 'Backup Key' is incorrect. */
-"ENTER_ACCOUNT_ENTROPY_POOL_VIEW_INCORRECT_AEP_LABEL" = "مفتاح النسخة الاحتياطية غير صحيح.";
+/* Label explaining that an entered 'Recovery Key' is incorrect. */
+"ENTER_ACCOUNT_ENTROPY_POOL_VIEW_INCORRECT_AEP_LABEL" = "مفتاح الاستعادة خاطئ";
 
-/* Label explaining that an entered 'Backup Key' is malformed. */
-"ENTER_ACCOUNT_ENTROPY_POOL_VIEW_MALFORMED_AEP_LABEL" = "مفتاح النسخة الاحتياطية غير صالح.";
+/* Label explaining that an entered 'Recovery Key' is malformed. */
+"ENTER_ACCOUNT_ENTROPY_POOL_VIEW_MALFORMED_AEP_LABEL" = "مفتاح الاستعادة غير صالح";
 
 /* Error indicating that a message could not be forwarded. */
 "ERROR_COULD_NOT_FORWARD_MESSAGES_1" = "تعذَّرت إعادة توجيه الرسالة.";
@@ -3199,9 +3427,6 @@
 /* action sheet header when re-sending message which failed because of an invalid key signature */
 "FAILED_SENDING_BECAUSE_INVALID_KEY_SIGNATURE" = "تعذَّر إرسال الرسالة لأن %1$@ يَحتاج إلى تحديث تطبيق سيجنال وفتحه.";
 
-/* action sheet header when re-sending message which failed because of too many attempts */
-"FAILED_SENDING_BECAUSE_RATE_LIMIT" = "العديد من الأخطاء مع جهة الاتصال هذه. يُرجى إعادة المحاولة لاحقًا.";
-
 /* action sheet header when re-sending message which failed because of untrusted identity keys */
 "FAILED_SENDING_BECAUSE_UNTRUSTED_IDENTITY_KEY" = "تغيَّر رقم الأمان الخاص بك مع %1$@ مؤخَّرًا. قد ترغب بالتحقُّق منه قبل إرسال هذه الرسالة مُجدَّدًا.";
 
@@ -3222,9 +3447,6 @@
 
 /* Footer for message cell for documents/files when they are expired and unavailable for download */
 "FILE_UNAVAILABLE_FOOTER" = "الملف غير مُتوفِّر";
-
-/* Message for sheet shown when tapping a document/file that has expired and is unavailable for download */
-"FILE_UNAVAILABLE_SHEET_MESSAGE" = "لم يتم نقل هذا الملف من هاتفك عندما تمَّ ربط هذا الجهاز. لا يمكن مزامنة الملفات والوسائط التي مضى عليها أكثر من 45 يومًا من الوقت الذي تمَّ فيه ربط الجهاز.";
 
 /* Title for sheet shown when tapping a document/file that has expired and is unavailable for download */
 "FILE_UNAVAILABLE_SHEET_TITLE" = "الملف غير مُتوفِّر";
@@ -3258,12 +3480,6 @@
 
 /* Tooltip notifying users that the flip camera button moved to the picture-in-picture view of themselves in a call */
 "FLIP_CAMERA_BUTTON_MOVED_TO_PIP_TOOLTIP" = "نُقِل زر \"تغيير الكاميرا\" إلى هنا. انقر على الفيديو الخاص بك لتُجرِّبه.";
-
-/* Message for alert with information about forwarding messages. */
-"FORWARD_MESSAGE_FIRST_FORWARD_MESSAGE" = "أُرسِلت اﻵن الرسائل الموجَّهة فورًا.";
-
-/* Title for alert with information about forwarding messages. */
-"FORWARD_MESSAGE_FIRST_FORWARD_TITLE" = "إعادة توجيه أسرع";
 
 /* Indicates that a single message was forwarded. */
 "FORWARD_MESSAGE_MESSAGES_SENT_1" = "أُرسِلت الرسالة";
@@ -3501,9 +3717,6 @@
 
 /* Toast view text informing user about swiping to speaker view */
 "GROUP_CALL_SPEAKER_VIEW_TOAST" = "اسحب للأعلى لتغيير نمط العرض";
-
-/* Tooltip highlighting group calls. */
-"GROUP_CALL_START_TOOLTIP" = "انقر هُنا لبدء مُكالمة جماعية";
 
 /* Text explaining that you started a group call. */
 "GROUP_CALL_STARTED_BY_YOU" = "بدأتَ مُكالمة جماعية";
@@ -4171,6 +4384,18 @@
 /* Title for the conversation list's 'archive' mode. */
 "HOME_VIEW_TITLE_ARCHIVE" = "الأرشيف";
 
+/* Title for the conversation list's backup storage full context menu action. */
+"HOME_VIEW_TITLE_BACKUP_OUT_OF_STORAGE_QUOTA" = "مساحة تخزين النسخ الاحتياطي ممتلئة";
+
+/* Title for the conversation list's failed to redeem backup subscription context menu action. */
+"HOME_VIEW_TITLE_BACKUP_SUBSCRIPTION_FAILED_TO_REDEEM" = "خطأ في اشتراك النسخ الاحتياطي";
+
+/* Title for the conversation list's backup subscription not found locally context menu action. */
+"HOME_VIEW_TITLE_BACKUP_SUBSCRIPTION_NOT_FOUND_LOCALLY" = "تعذَّر العثور على اشتراك النسخ الاحتياطي";
+
+/* Title for the conversation list's failed to backup context menu action. */
+"HOME_VIEW_TITLE_FAILED_TO_BACKUP" = "تعذَّر إتمام عملية النسخة الاحتياطية.";
+
 /* Title for the 'Select Chats' option in the ChatList. */
 "HOME_VIEW_TITLE_SELECT_CHATS" = "تحديد الدردشات";
 
@@ -4238,7 +4463,7 @@
 "INACTIVE_LINKED_DEVICE_REMINDER_MEGAPHONE_TITLE" = "جهاز مُرتبِط غير نشِط";
 
 /* Body for an in-app megaphone about a user's inactive primary device. */
-"INACTIVE_PRIMARY_DEVICE_REMINDER_MEGAPHONE_BODY" = "To keep your account active, open HCP on your primary device.";
+"INACTIVE_PRIMARY_DEVICE_REMINDER_MEGAPHONE_BODY" = "لإبقاء حسابك نشِطًا، افتح سيجنال على جهازك الأساسي.";
 
 /* Title for a button in an in-app megaphone about a user's inactive primary device, temporarily dismissing the megaphone. */
 "INACTIVE_PRIMARY_DEVICE_REMINDER_MEGAPHONE_GOT_IT_BUTTON" = "تم";
@@ -4247,7 +4472,7 @@
 "INACTIVE_PRIMARY_DEVICE_REMINDER_MEGAPHONE_LEARN_MORE_BUTTON" = "اعرف المزيد";
 
 /* Title for an in-app megaphone about a user's inactive primary device. */
-"INACTIVE_PRIMARY_DEVICE_REMINDER_MEGAPHONE_TITLE" = "Open HCP on your phone";
+"INACTIVE_PRIMARY_DEVICE_REMINDER_MEGAPHONE_TITLE" = "افتح تطبيق سيجنال على هاتفك";
 
 /* Label reminding the user that they are in archive mode, and that muted chats remain archived when they receive a new message. */
 "INBOX_VIEW_ARCHIVE_MODE_MUTED_CHATS_REMINDER" = "الدردشات المكتومة المؤرشفة سَتبقى كذلك عند وصول رسالة جديدة.";
@@ -4453,8 +4678,8 @@
 /* confirm the users intent to link a new device */
 "LINK_DEVICE_CONFIRMATION_ALERT_TITLE" = "إنهاء الارتباط";
 
-/* subtitle for choosing to send message history when linking a new device */
-"LINK_DEVICE_CONFIRMATION_ALERT_TRANSFER_SUBTITLE" = "انقل رسائلك النصية وآخر 45 يومًا من الوسائط.";
+/* Subtitle for choosing to send message history when linking a new device, if you have the paid tier enabled. */
+"LINK_DEVICE_CONFIRMATION_ALERT_TRANSFER_PAID_PLAN_SUBTITLE" = "انقل رسائلك النصية وكل ملفات الوسائط الخاصة بك";
 
 /* title for choosing to send message history when linking a new device */
 "LINK_DEVICE_CONFIRMATION_ALERT_TRANSFER_TITLE" = "نقل سجلّ الرسائل";
@@ -4571,7 +4796,7 @@
 "LINKED_DEVICES_EMPTY_STATE" = "لا توجد أجهزة مُرتبِطة";
 
 /* Description for header of the linked devices list */
-"LINKED_DEVICES_HEADER_DESCRIPTION" = "استخدِم سيجنال على الحاسوب المكتبي أو جهاز الآيباد. ستتمُّ مُزامنة رسائلك مع أجهزتك المُرتبِطة.";
+"LINKED_DEVICES_HEADER_DESCRIPTION" = "Use HCP on desktop or iPad.";
 
 /* Footer text below the list of currently-linked devices */
 "LINKED_DEVICES_LIST_FOOTER" = "معلومات الرسائل والدردشات محمية من خلال التشفير من طرف لِطرف على جميع الأجهزة.";
@@ -5422,20 +5647,35 @@
 /* Label for the 'skip and create new pin' button when reglock is disabled during onboarding. */
 "ONBOARDING_2FA_SKIP_AND_CREATE_NEW_PIN" = "تجاهُل وإنشاء رقم تعريف شخصي (PIN) جديد";
 
+/* Label for action to use Recovery Key instead of PIN for registration. */
+"ONBOARDING_2FA_SKIP_AND_USE_RECOVERY_KEY" = "استخدِم مفتاح الاستعادة";
+
 /* Explanation for the skip pin entry action sheet during onboarding. */
 "ONBOARDING_2FA_SKIP_PIN_ENTRY_MESSAGE" = "إذا كُنتَ لا تستطيع تذكُّر رقم التعريف الشخصي (PIN) الخاص بك، يُمكنك إنشاء واحد جديد. يُمكنك التسجيل واستخدام حسابك، لكن سوف تفقد بعض الإعدادات المحفوظة، مثل معلومات حسابك الشخصي.";
 
 /* Title for the skip pin entry action sheet during onboarding. */
 "ONBOARDING_2FA_SKIP_PIN_ENTRY_TITLE" = "هل ترغبُ بتخطّي إدخال رقم التعريف الشخصي (PIN)؟";
 
-/* The body for the device transfer 'choice' view 'transfer' option */
-"ONBOARDING_CHOOSE_RESTORE_METHOD_BACKUPS_BODY" = "استعِد رسائلك النصية والوسائط من خطة النسخ الاحتياطي المدفوعة لسيجنال الخاصة بك";
+/* The body for the device transfer 'choice' view 'restore backup' option */
+"ONBOARDING_CHOOSE_RESTORE_METHOD_BACKUPS_BODY" = "استعِد حسابك ورسائلك من نسخة سيجنال الاحتياطية الخاصة بك.";
 
-/* The title for the device transfer 'choice' view 'transfer' option */
-"ONBOARDING_CHOOSE_RESTORE_METHOD_BACKUPS_TITLE" = "استعادة النسخة الاحتياطية على سيجنال";
+/* The title for the device transfer 'choice' view 'restore backup' option */
+"ONBOARDING_CHOOSE_RESTORE_METHOD_BACKUPS_TITLE" = "استعادة النسخة الاحتياطية الآمنة على سيجنال";
+
+/* Body for a sheet warning users about skipping restore. */
+"ONBOARDING_CHOOSE_RESTORE_METHOD_CONFIRM_SKIP_RESTORE_BODY" = "إذا قُمتَ بتخطي الاستعادة الآن، فلن تتمكَّن من الاستعادة لاحقًا. إذا فعّلتَ النسخ الاحتياطية من جديد في هذا الجهاز، فسيتم استبدال نسختك الاحتياطية الحالية بسِجل الرسائل الخاص بك الجديد.";
+
+/* Title for a sheet warning users about skipping restore. */
+"ONBOARDING_CHOOSE_RESTORE_METHOD_CONFIRM_SKIP_RESTORE_TITLE" = "هل ترغبُ بتخطِّي الاستعادة؟";
 
 /* If a user is installing Signal on a new phone, they may be asked whether they want to restore their device from a backup. This is a description of that question. */
 "ONBOARDING_CHOOSE_RESTORE_METHOD_DESCRIPTION" = "اختر الطريقة التي تودّ أن تستعيد بها سِجل رسائلك وبيانات حسابك.";
+
+/* Message body displayed to a user during registration if there are no restore options available. */
+"ONBOARDING_CHOOSE_RESTORE_METHOD_NONE_AVAILABLE_BODY" = "لأنك تنتقل من أندرويد إلى iOS، فإن الطريقة الوحيدة لنقل رسائلك ووسائطك هي من خلال تفعيل النسخ الاحتياطية على سيجنال على جهازك القديم.";
+
+/* Title displayed to a user during registration if there are no restore options available. */
+"ONBOARDING_CHOOSE_RESTORE_METHOD_NONE_AVAILABLE_TITLE" = "لا تُوجد نسخة احتياطية للاستعادة";
 
 /* The body for the skip restore 'choice' option */
 "ONBOARDING_CHOOSE_RESTORE_METHOD_SKIP_RESTORE_BODY" = "متابعة دون نقل رسائلك والوسائط";
@@ -5474,10 +5714,10 @@
 "ONBOARDING_CONFIRM_BACKUP_RESTORE_DESCRIPTION" = "أُجريتَ آخِر نسخة احتياطية في %1$@ عند الساعة %2$@. حجم نسختك الاحتياطية هو %3$@.";
 
 /* Description for form confirming restore from backup without size detail. */
-"ONBOARDING_CONFIRM_BACKUP_RESTORE_DESCRIPTION_NO_SIZE" = "Your last backup was made on %1$@ at %2$@.";
+"ONBOARDING_CONFIRM_BACKUP_RESTORE_DESCRIPTION_NO_SIZE" = "أُجريَت آخِر نسخة احتياطية في %1$@ عند الساعة %2$@.";
 
 /* Details confirming manual restore from backup. */
-"ONBOARDING_CONFIRM_BACKUP_RESTORE_DESCRIPTION_NO_SIZE_DETAIL" = "If you choose not to restore now, you won’t be able to restore later. Your media will restore in the background.";
+"ONBOARDING_CONFIRM_BACKUP_RESTORE_DESCRIPTION_NO_SIZE_DETAIL" = "إذا اخترت عدم الاستعادة الآن، فلن تتمكّن من الاستعادة لاحقًا. ستتم استعادة ملفات وسائطك في الخلفية.";
 
 /* Text for action button to skip the restore. */
 "ONBOARDING_CONFIRM_BACKUP_RESTORE_SKIP_ACTION" = "تخطِّي الاستعادة";
@@ -5647,11 +5887,29 @@
 /* Label warning the user that they should update Signal to continue using payments. */
 "OUTDATED_PAYMENT_CLIENT_REMINDER_TEXT" = "قُم بتحديث سيجنال للاستمرار في استخدام عمليات الدفع. قد لا يكون رصيدك مُحدَّثًا.";
 
+/* Body of prompt notifying restore was cancelled. */
+"OUTGOING_DEVICE_REGISTRATION_CANCELLED_RESTORE_BODY" = "تمَّ إلغاء الاستعادة. يُرجى المُحاولة مرّة أخرى.";
+
+/* Title of prompt notifying restore was cancelled. */
+"OUTGOING_DEVICE_REGISTRATION_CANCELLED_RESTORE_TITLE" = "تمَّ إلغاء عملية الاستعادة";
+
 /* Body of prompt notifying registration without restore completed on the new device. */
 "OUTGOING_DEVICE_REGISTRATION_COMPLETE_BODY" = "تمَّ تفعيل حسابك على سيجنال على جهازك الآخر. سيجنال غير مُفعَّل الآن على هذا الجهاز.";
 
 /* Title of prompt notifying registration without restore completed on the new device. */
 "OUTGOING_DEVICE_REGISTRATION_COMPLETE_TITLE" = "تمَّ التسجيل بنجاح";
+
+/* Body of prompt notifying restore failed. */
+"OUTGOING_DEVICE_REGISTRATION_FAILED_RESTORE_BODY" = "تحتوي رسالة الاستعادة من الجهاز الآخر على بيانات خاطئة أو منتهية الصلاحية.  يُرجى المُحاولة مرّة أخرى.";
+
+/* Title of prompt notifying restore failed. */
+"OUTGOING_DEVICE_REGISTRATION_FAILED_RESTORE_TITLE" = "فشلت الاستعادة";
+
+/* Body of prompt notifying restore failed for unknown reasons. */
+"OUTGOING_DEVICE_REGISTRATION_UNKNOWN_ERROR_BODY" = "حدث خطأ غير معروف. يُرجى المحاولة من جديد.";
+
+/* Title of prompt notifying restore failed for unknown reasons. */
+"OUTGOING_DEVICE_REGISTRATION_UNKNOWN_ERROR_TITLE" = "خطأ غير معروف";
 
 /* Body of prompt notifying device restore started on the new device. */
 "OUTGOING_DEVICE_RESTORE_COMPLETE_BODY" = "بدأ نقل حساب سيجنال الخاص بك ورسائلك إلى جهازك الآخر. سيجنال غير مُفعَّل الآن على هذا الجهاز.";
@@ -5706,9 +5964,6 @@
 
 /* Footer for message cell for long text when it is expired and unavailable for download */
 "OVERSIZE_TEXT_UNAVAILABLE_FOOTER" = "هذه الرسالة غير مُكتمِلة";
-
-/* Message for sheet shown when tapping oversized text that has expired and is unavailable for download */
-"OVERSIZE_TEXT_UNAVAILABLE_SHEET_MESSAGE" = "لم يتم نقل النص الكامل في هذه الرسالة من هاتفك عند ربط هذا الجهاز. لا يُمكن مزامنة الرسائل النصية الطويلة التي مضى عليها أكثر من 45 يومًا من الوقت الذي تمَّ فيه ربط الجهاز.";
 
 /* Title for sheet shown when tapping oversized text that has expired and is unavailable for download */
 "OVERSIZE_TEXT_UNAVAILABLE_SHEET_TITLE" = "الرسالة الكاملة غير مُتوفِّرة";
@@ -6034,9 +6289,6 @@
 /* Message indicating that a request to join the group was successfully approved. Embeds {{ the name of the approved user }}. */
 "PENDING_GROUP_MEMBERS_REQUEST_APPROVED_FORMAT" = "تمَّت إضافة \"%1$@\".";
 
-/* Label for the 'view requests' button in the pending member requests banner. */
-"PENDING_GROUP_MEMBERS_REQUEST_BANNER_VIEW_REQUESTS" = "عرض الطلبات";
-
 /* Message indicating that a request to join the group was successfully denied. Embeds {{ the name of the denied user }}. */
 "PENDING_GROUP_MEMBERS_REQUEST_DENIED_FORMAT" = "تمَّ رفض \"%1$@\".";
 
@@ -6238,21 +6490,6 @@
 /* The re-creation explanation in the 'pin creation' view. */
 "PIN_CREATION_RECREATION_EXPLANATION" = "يُمكنك تغيير رقم التعريف الشخصي (PIN) الخاص بك طالما أن هذا الجهاز مُسجَّل.";
 
-/* Action of the 'pin disable' reglock action sheet. */
-"PIN_CREATION_REGLOCK_CONFIRMATION_ACTION" = "إيقاف";
-
-/* Message of the 'pin disable' reglock action sheet. */
-"PIN_CREATION_REGLOCK_CONFIRMATION_MESSAGE" = "لإيقاف رقم التعريف الشخصي (PIN) الخاص بك، عليك أولًا إيقاف قفل التسجيل.";
-
-/* Title of the 'pin disable' reglock action sheet. */
-"PIN_CREATION_REGLOCK_CONFIRMATION_TITLE" = "هل تُريد إيقاف قفل التسجيل؟";
-
-/* Error body indicating that the attempt to create a PIN succeeded but enabling reglock failed. */
-"PIN_CREATION_REGLOCK_ERROR_MESSAGE" = "أُنشِئَ رقم التعريف الشخصي (PIN) بنجاح، لكن قفل التسجيل تعذَّر تفعيله. تحقَّق من اتصالك وحاوِل مرّة أخرى.";
-
-/* Error title indicating that the attempt to create a PIN succeeded but enabling reglock failed. */
-"PIN_CREATION_REGLOCK_ERROR_TITLE" = "فشل تفعيل قفل التسجيل";
-
 /* Skip action on the pin creation view */
 "PIN_CREATION_SKIP" = "تعطيل رقم الـ PIN";
 
@@ -6265,14 +6502,11 @@
 /* If your attempted PIN is too weak, you'll see an error message. This is the text on the error dialog. */
 "PIN_CREATION_WEAK_ERROR_MESSAGE" = "يُمكِّنك رقم التعريف الشخصي (PIN) من حفظ معلوماتك بشكلٍ مُشفَّر في سيجنال بحيث يمكنك الوصول إليها وحدك. اختر رقم تعريف شخصي (PIN) أقوى لحماية حسابك.";
 
-/* Error body indicating that the attempt to disable a PIN failed. */
-"PIN_DISABLE_ERROR_MESSAGE" = "لم يكن بالإمكان تعطيل رقم التعريف الشخصي (PIN).";
-
-/* Error title indicating that the attempt to disable a PIN failed. */
-"PIN_DISABLE_ERROR_TITLE" = "فشل تعطيل رقم التعريف الشخصي (PIN)";
-
 /* If the user is re-registering, they need to enter their PIN to restore all their data. In some cases, they can skip this entry and lose some data. This text is shown on a button that lets them begin to do this. */
 "PIN_ENTER_EXISTING_SKIP" = "تَخَطَّ رقم التعريف الشخصي (PIN)";
+
+/* If the user is re-registering, they need to enter their PIN to restore all their data. If they don't remember their PIN, they may remember their Recovery Key which can be used instead of a PIN. */
+"PIN_ENTER_EXISTING_USE_RECOVERY_KEY" = "استخدِم مفتاح الاستعادة";
 
 /* Error title indicating that the attempt to recreate a PIN failed. */
 "PIN_RECREATION_ERROR_TITLE" = "فشل إنشاء رقم التعريف الشخصي (PIN)";
@@ -6348,6 +6582,87 @@
 
 /* Accessibility label for button to start media playback */
 "PLAY_BUTTON_ACCESSABILITY_LABEL" = "تشغيل الوسط";
+
+/* Title for a toggle allowing multiple votes for a poll. */
+"POLL_ALLOW_MULTIPLE_LABEL" = "السماح بالتصويت عدة مرّات";
+
+/* Button to view a poll after its ended */
+"POLL_BUTTON_VIEW_POLL" = "عرض الاستطلاع";
+
+/* Button to view poll results */
+"POLL_BUTTON_VIEW_RESULTS" = "عرض النتائج";
+
+/* Button to view poll votes */
+"POLL_BUTTON_VIEW_VOTES" = "عرض الأصوات";
+
+/* Toast telling user to add a question to poll. */
+"POLL_CREATE_ERROR_TOAST_NO_QUESTION" = "أضِف سؤالًا";
+
+/* Toast telling user to add options and question to poll. */
+"POLL_CREATE_ERROR_TOAST_NO_QUESTION_OR_ENOUGH_OPTIONS" = "أضِف سؤالًا وخيارين على الأقل";
+
+/* Toast telling user to add more options to poll. */
+"POLL_CREATE_ERROR_TOAST_NOT_ENOUGH_OPTIONS" = "أضِف خيارين على الأقل";
+
+/* Title of create poll pane */
+"POLL_CREATE_TITLE" = "استطلاع جديد";
+
+/* Label for button to end a poll */
+"POLL_DETAILS_END_POLL" = "إنهاء الاستطلاع";
+
+/* Title of poll details pane */
+"POLL_DETAILS_TITLE" = "تفاصيل الاستطلاع";
+
+/* Title for an action sheet confirming the user wants end a poll. */
+"POLL_END_CONFIRMATION" = "هل ترغبُ بإنهاء الاستطلاع؟";
+
+/* Message for an action sheet confirming the user wants to end a poll. */
+"POLL_END_CONFIRMATION_MESSAGE" = "لن يستطيع أعضاء المجموعة التصويت في هذا الاستطلاع بعد الآن.";
+
+/* Shown when another user ends a poll. Embeds {{ another user }} and {{ poll question }}. */
+"POLL_ENDED_BY_OTHER_CHAT_LIST_UPDATE" = "%1$@ أنهى الاستطلاع: \"%2$@\"";
+
+/* Shown when the local user ends a poll. Embeds {{ poll question }}. */
+"POLL_ENDED_BY_YOU_CHAT_LIST_UPDATE" = "أنهيتَ الاستطلاع: %1$@";
+
+/* Notification that {{contact}} ended a poll with question {{poll question}} */
+"POLL_ENDED_NOTIFICATION" = "%1$@ أنهى الاستطلاع \"%2$@\"";
+
+/* Label specifying the poll is finished and these are the final results */
+"POLL_FINAL_RESULTS_LABEL" = "النتائج النهائية";
+
+/* Label specifying the message type as a poll */
+"POLL_LABEL" = "استطلاع";
+
+/* String to display when a poll has no votes */
+"POLL_NO_VOTES" = "لا أصوات";
+
+/* Placeholder text for an option row when creating a poll. This will have a number appended to it (Option 1, Option 2) */
+"POLL_OPTION_PLACEHOLDER_PREFIX" = "Option";
+
+/* Header for the poll options text boxes when making a new poll */
+"POLL_OPTIONS_LABEL" = "الخيارات";
+
+/* Prefix for a poll preview */
+"POLL_PREFIX" = "استطلاع:";
+
+/* Header for the poll question text box when making a new poll */
+"POLL_QUESTION_LABEL" = "سؤال";
+
+/* Placeholder text for poll question */
+"POLL_QUESTION_PLACEHOLDER_TEXT" = "اطرَح سؤالًا";
+
+/* Title of poll details pane when poll is ended */
+"POLL_RESULTS_TITLE" = "نتائج الاستطلاع";
+
+/* Label specifying the user can select more than one option */
+"POLL_SELECT_LABEL_MULTIPLE" = "حدِّد خيارًا واحدًا أو أكثر";
+
+/* Label specifying the user can select one option */
+"POLL_SELECT_LABEL_SINGULAR" = "حدِّد خيارًا واحدًا";
+
+/* Notification that {{contact}} voted in a poll with question {{poll question}} */
+"POLL_VOTED_NOTIFICATION" = "%1$@ صوّت في استطلاع \"%2$@\"";
 
 /* Badge indicating that the user is verified. */
 "PRIVACY_IDENTITY_IS_VERIFIED_BADGE" = "مُتحقَّق منه";
@@ -6668,13 +6983,13 @@
 "REGISTER_2FA_FORGOT_PIN_ALERT_TITLE" = "هل تحتاج لمُساعدة؟";
 
 /* Alert body for a forgotten SVR (V2) PIN */
-"REGISTER_2FA_FORGOT_SVR_PIN_ALERT_MESSAGE" = "رقم التعريف الشخصي (PIN) الخاص بك عبارة عن كود من أربع خانات أو أكثر والتي يُمكن أن تكون إما أرقام أو حُروف. إذا لم تستطع تَذكُّر رقم التعريف الشخصي (PIN) الخاص بك، يجبُ عليك الانتظار لمدة سبعة أيام لكي تُعيد تسجيل الحساب الخاص بك.";
+"REGISTER_2FA_FORGOT_SVR_PIN_ALERT_MESSAGE" = "رقم التعريف الشخصي (PIN) الخاص بك عِبارة عن كود مُكوَّن من 4 أرقام أو أكثر ويُمكن أن يكون رقميًا أو أبجديًا ورقميًا. إذا لم تستطع تَذكُّر رقم التعريف الشخصي (PIN) الخاص بك، يجبُ عليك الانتظار لمدة سبعة أيام لكي تُعيد تسجيل الحساب الخاص بك. إذا فعَّلتَ النسخ الاحتياطي الآمن لتطبيق سيجنال، فيمكنك المتابعة بمفتاح الاستعادة الخاص بك.";
 
 /* Alert body for a forgotten SVR (V2) PIN when the user doesn't have reglock and they cannot necessarily create a new PIN */
-"REGISTER_2FA_FORGOT_SVR_PIN_WITHOUT_REGLOCK_ALERT_MESSAGE" = "رقم التعريف الشخصي (PIN) الخاص بك عِبارة عن كود أنشأته مُكوَّن من أربع خانات أو أكثر والتي يُمكن أن تكون إما أرقامًا أو حُروفًا. إذا لم تستطع تَذكُّر رقم التعريف الشخصي (PIN) الخاص بك، تستطيع إنشاء واحِد جديد. يُمكنك التسجيل واستخدام الحساب الخاص بك لكِنَك ستفقِد بعض الإعدادات المحفوظة، مِثل معلومات حسابك الشخصي.";
+"REGISTER_2FA_FORGOT_SVR_PIN_WITHOUT_REGLOCK_ALERT_MESSAGE" = "رقم التعريف الشخصي (PIN) الخاص بك عِبارة عن كود مُكوَّن من 4 أرقام أو أكثر ويُمكن أن يكون رقميًا أو أبجديًا ورقميًا. إذا لم تستطع تَذكُّر رقم التعريف الشخصي (PIN) الخاص بك، تستطيع إنشاء واحِد جديد. يُمكنك التسجيل واستخدام الحساب الخاص بك، لكِنَك ستفقِد بعض الإعدادات المحفوظة، مِثل معلومات حسابك الشخصي. إذا فعَّلتَ النسخ الاحتياطي الآمن لتطبيق سيجنال، فيمكنك المتابعة بمفتاح الاستعادة الخاص بك.";
 
 /* Alert body for a forgotten SVR (V2) PIN when the user doesn't have reglock and they can create a new PIN */
-"REGISTER_2FA_FORGOT_SVR_PIN_WITHOUT_REGLOCK_AND_CAN_CREATE_NEW_PIN_ALERT_MESSAGE" = "رقم التعريف الشخصي (PIN) الخاص بك عِبارة عَن كود أنشأته مُكوَّن من أربع خانات أو أكثر والذي يُمكن أن يكون إما أرقامًا أو حُروفًا. إذا لم تستطع تَذكُّر رقم التعريفي الشخصي (PIN) الخاص بك، تستطيع إنشاء واحِد جديد. يُمكنك التسجيل واستخدام الحساب الخاص بك لكنك ستفقِد بعض الإعدادات المحفوظة، مِثل معلومات حسابك الشخصي.";
+"REGISTER_2FA_FORGOT_SVR_PIN_WITHOUT_REGLOCK_AND_CAN_CREATE_NEW_PIN_ALERT_MESSAGE" = "رقم التعريف الشخصي (PIN) الخاص بك عِبارة عن كود مُكوَّن من 4 أرقام أو أكثر ويُمكن أن يكون رقميًا أو أبجديًا ورقميًا. إذا لم تستطع تَذكُّر رقم التعريف الشخصي (PIN) الخاص بك، يمكنك إنشاء رقم جديد. يُمكنك التسجيل واستخدام الحساب الخاص بك، لكِنَك ستفقِد بعض الإعدادات المحفوظة مِثل معلومات حسابك الشخصي. إذا فعَّلتَ النسخ الاحتياطي الآمن لتطبيق سيجنال، فيمكنك المتابعة بمفتاح الاستعادة الخاص بك.";
 
 /* Alert title explaining what happens if you forget your 'two-factor auth pin'. */
 "REGISTER_2FA_INVALID_PIN_ALERT_TITLE" = "رقم التعريف الشخصي (PIN) غير صحيح";
@@ -6686,13 +7001,10 @@
 "REGISTER_RATE_LIMITING_ALERT" = "حاولتَ كثيرًا. يُرجى الانتِظار بضع دقائق قبل المُحاولة مرّة أُخرى.";
 
 /* No comment provided by engineer. */
-"REGISTER_RATE_LIMITING_BODY" = "حاولتَ كثيرًا. يُرجى الانتظار لدقيقة واحدة قبل إعادة المحاولة.";
-
-/* No comment provided by engineer. */
 "REGISTER_RATE_LIMITING_ERROR" = "حاولتَ كثيرًا. يُرجى الانتظار لمُدة دقيقة واحدة قبل إعادة المحاولة.";
 
 /* Body for a sheet warning users about a missing backup. */
-"REGISTRATION_BACKUP_RESTORE_ERROR_BACKUP_NOT_FOUND_BODY" = "مفتاح النسخة الاحتياطية الذي أدخلته صحيح، لكن لا توجد أي نسخة احتياطية مرتبطة به. إذا كُنتَ لا تزال تحتفظ بهاتفك القديم، تأكَّد من أن النسخة الاحتياطية مُفعَّلة وأن عملية النسخ الاحتياطي قد اكتملت بالفعل، وحاوِل مرّة أخرى.";
+"REGISTRATION_BACKUP_RESTORE_ERROR_BACKUP_NOT_FOUND_BODY" = "لا توجد نسخة احتياطية مرتبطة لمفتاح الاستعادة هذا. يُرجى التأكُّد من أن المفتاح صحيح وحاوِل من جديد.";
 
 /* Title for a sheet warning users about a missing backup. */
 "REGISTRATION_BACKUP_RESTORE_ERROR_BACKUP_NOT_FOUND_TITLE" = "لا توجد نسخة احتياطية";
@@ -6724,11 +7036,14 @@
 /* Title for a sheet warning users about a generic backup manual restore failure. */
 "REGISTRATION_BACKUP_RESTORE_ERROR_GENERIC_TITLE" = "تعذَّر إنهاء عملية النقل";
 
-/* Body for a sheet warning users about an incorrect backup key. */
-"REGISTRATION_BACKUP_RESTORE_ERROR_INCORRECT_KEY_BODY" = "Make sure you’ve entered the same 64-digit backup key you saved when enabling Signal backups. Backups can not be recovered without this key.";
+/* Body for a sheet warning users about an incorrect recovery key. */
+"REGISTRATION_BACKUP_RESTORE_ERROR_INCORRECT_KEY_BODY" = "قد تكون أدخلتَ مفتاح الاستعادة الخاص بك بشكل خاطئ، أو لم تكمل نسخة احتياطية واحدة على الأقل على جهازك القديم. \n\nتأكَّد من تسجيل الدخول باستخدام رقم الهاتف ومفتاح الاستعادة نفسيهما اللذين حفظتهما عند تفعيل النسخ الاحتياطية الآمنة في سيجنال، وتحقَّق من أن جهازك القديم قد أكملَ النسخ الاحتياطي.";
 
-/* Title for a sheet warning users about an incorrect backup key. */
-"REGISTRATION_BACKUP_RESTORE_ERROR_INCORRECT_KEY_TITLE" = "مفتاح النسخة الاحتياطية غير صحيح.";
+/* Body for a sheet warning users about an incorrect recovery key and having hit a rate limit on retries. */
+"REGISTRATION_BACKUP_RESTORE_ERROR_INCORRECT_KEY_RATE_LIMIT_BODY" = "نفدَت محاولات إدخال مفتاح الاستعادة. من أجل أمانك، عدد المحاولات المسموح بها محدود. انتظر ساعة ثم حاوِل مجددًا.";
+
+/* Title for a sheet warning users about an incorrect recovery key. */
+"REGISTRATION_BACKUP_RESTORE_ERROR_INCORRECT_KEY_TITLE" = "تعذَّر العثور على نسخة احتياطية.";
 
 /* Body for a sheet warning users about a network error during backup restore. */
 "REGISTRATION_BACKUP_RESTORE_ERROR_NETWORK_BODY" = "لا يُمكن استعادة نسختك الاحتياطية الآن. تحقَّق من اتصالك بالإنترنت وحاوِل مُجدَّدًا.";
@@ -6736,11 +7051,23 @@
 /* Title for a sheet warning users about a network error during backup restore. */
 "REGISTRATION_BACKUP_RESTORE_ERROR_NETWORK_TITLE" = "تعذَّرت استعادة النسخة الاحتياطية";
 
+/* Body for a sheet telling users to try restoring a backup again after a server error. */
+"REGISTRATION_BACKUP_RESTORE_ERROR_RETRYABLE_SERVER_ERROR_BODY" = "لا يُمكن استعادة نسختك الاحتياطية الآن. تحقَّق من اتصالك بالإنترنت وحاوِل مُجدَّدًا.";
+
+/* Title for a sheet telling users to try restoring a backup again after a server error. */
+"REGISTRATION_BACKUP_RESTORE_ERROR_RETRYABLE_SERVER_ERROR_TITLE" = "تعذَّرت استعادة النسخة الاحتياطية.";
+
 /* Skip restore action label for backup restore error recovery. */
 "REGISTRATION_BACKUP_RESTORE_ERROR_SKIP_RESTORE_ACTION" = "تخطِّي الاستعادة";
 
 /* Try again action label for backup restore error recovery. */
 "REGISTRATION_BACKUP_RESTORE_ERROR_TRY_AGAIN_ACTION" = "حاوِل مُجدَّدًا";
+
+/* Body for a sheet telling users restoring a backup unrecoverably failed. */
+"REGISTRATION_BACKUP_RESTORE_ERROR_UNRETRYABLE_SERVER_ERROR_BODY" = "حدث خطأ أثناء استعادة نسختك الاحتياطية. نسختك الاحتياطية غير قابلة للاستعادة. يُرجى التواصل مع الدعم للحصول على المساعدة.";
+
+/* Title for a sheet telling users restoring a backup unrecoverably failed. */
+"REGISTRATION_BACKUP_RESTORE_ERROR_UNRETRYABLE_SERVER_ERROR_TITLE" = "تعذَّرت استعادة النسخة الاحتياطية.";
 
 /* Body for a sheet warning users about an incompatible backup version. */
 "REGISTRATION_BACKUP_RESTORE_ERROR_UNSUPPORTED_BACKUP_VERSION_BODY" = "لاسترداد النسخة الاحتياطية الخاصة بك، تأكَّد من أنك تستخدم لآخر إصدار من سيجنال ثم حاوِل مُجدَّدًا. إذا استمرت المشكلة، تواصَل بقسم الدعم.";
@@ -6772,11 +7099,11 @@
 /* If a user is installing Signal on a new phone, they may be asked whether they want to transfer their account from their old device. This is the title on the screen that asks them this question. */
 "REGISTRATION_DEVICE_TRANSFER_CHOICE_TITLE" = "نَقل الحساب والرسائل";
 
-/* Description for the screen that allows users to enter their backup key. */
-"REGISTRATION_ENTER_BACKUP_KEY_DESCRIPTION" = "مفتاح النسخة الاحتياطية الخاص بك هو كود مُكوَّن من 64 رقمًا، وهو مطلوب لاستعادة حسابك وبياناتك.";
+/* Description for the screen that allows users to enter their recovery key. */
+"REGISTRATION_ENTER_BACKUP_KEY_DESCRIPTION" = "مفتاح الاستعادة الخاص بك هو كود مُكوَّن من 64 رمزًا، وهو مطلوب لاستعادة حسابك وبياناتك.";
 
-/* Title for the screen that allows users to enter their backup key. */
-"REGISTRATION_ENTER_BACKUP_KEY_TITLE" = "أدخِل مفتاح النسخة الاحتياطية الخاص بك";
+/* Title for the screen that allows users to enter their recovery key. */
+"REGISTRATION_ENTER_BACKUP_KEY_TITLE" = "أدخِل مفتاح الاستعادة الخاص بك.";
 
 /* Placeholder text for the phone number textfield */
 "REGISTRATION_ENTERNUMBER_DEFAULT_TEXT" = "أدخِل الرقم";
@@ -6799,20 +7126,23 @@
 /* A network error occurred during registration, and an error is shown to the user. This is the title on that error sheet. */
 "REGISTRATION_NETWORK_ERROR_TITLE" = "تحقَّق من الاتصال";
 
-/* Title of button to tap if you do not have a backup key during registration. */
-"REGISTRATION_NO_BACKUP_KEY_BUTTON_TITLE" = "ليس بمتناولك مفتاح النسخة الاحتياطية؟";
+/* Title of button to tap if you do not have a recovery key during registration. */
+"REGISTRATION_NO_BACKUP_KEY_BUTTON_TITLE" = "لا حاجة لمفتاح استعادة جديد؟";
 
-/* Body text on a sheet with info for what to do if you don't have a backup key */
-"REGISTRATION_NO_BACKUP_KEY_SHEET_BODY" = "لا يُمكن استرجاع النسخ الاحتياطية دون كود الاستعادة المُكوَّن من 64 رقمًا. إذا فقدت مفتاح النسخة الاحتياطية الخاص بك، فلا يُمكن لسيجنال مُساعدتك في استعادة نسختك الاحتياطية.\n\nإذا كُنتَ تستعمل جهازك القديم، يُمكنك عرض مفتاح النسخة الاحتياطية الخاص بك في \"الإعدادات\" > \"الدردشات\" > \"النسخ الاحتياطية على سيجنال\". ثم انقر على \"عرض مفتاح النسخة الاحتياطية\".";
+/* Body text on a sheet with info for what to do if you don't have a recovery key */
+"REGISTRATION_NO_BACKUP_KEY_SHEET_BODY" = "لا يُمكن استعادة النُسخ الاحتياطية دون كود الاستعادة المُكوَّن من 64 رمزًا. إذا فقدتَ مفتاح الاستعادة الخاص بك، فلا يُمكن لسيجنال مُساعدتك في استعادة نسختك الاحتياطية.\n\nإذا كُنتَ تستعمل جهازك القديم، يُمكنك عرض مفتاح الاستعادة الخاص بك في \"الإعدادات\" > \"الدردشات\" > \"النسخ الاحتياطية\". ثم انقر على عرض مفتاح الاستعادة.";
 
-/* Title for sheet with info for what to do if you don't have a backup key */
-"REGISTRATION_NO_BACKUP_KEY_SHEET_TITLE" = "ليس بمتناولك مفتاح النسخة الاحتياطية؟";
+/* Title for sheet with info for what to do if you don't have a recovery key */
+"REGISTRATION_NO_BACKUP_KEY_SHEET_TITLE" = "لا حاجة لمفتاح استعادة جديد؟";
 
-/* Title for button on sheet for when you don't have a backup key */
+/* Title for button on sheet for when you don't have a recovery key */
 "REGISTRATION_NO_BACKUP_KEY_SKIP_RESTORE_BUTTON_TITLE" = "تخطّي دون الاستعادة";
 
 /* During registration, users are asked to enter their phone number. This is the subtitle on that screen, which gives users some instructions. */
 "REGISTRATION_PHONE_NUMBER_SUBTITLE" = "أدخِل رقم هاتفك للبدء.";
+
+/* During re-registration, users are asked to confirm their phone number. This is the subtitle on that screen, which gives users some instructions. */
+"REGISTRATION_PHONE_NUMBER_SUBTITLE_2" = "سيُرسَل كود التحقُّق إلى هذا الرقم:";
 
 /* During registration, users are asked to enter their phone number. This is the title on that screen. */
 "REGISTRATION_PHONE_NUMBER_TITLE" = "رقم هاتفك";
@@ -6868,8 +7198,23 @@
 /* Error shown if an SMS/call service provider is temporarily unable to send a verification code to the provided number. */
 "REGISTRATION_PROVIDER_FAILURE_MESSAGE_TRANSIENT" = "تعذَّر على سيجنال إرسال كود عبر رسالة نصية قصيرة نظرًا لمشاكل في مُزوِّد الرسائل القصيرة. حاوِل مرّة أخرى في بضع ساعات.";
 
+/* Third step in directions for how to make a backup */
+"REGISTRATION_RESTORE_METHOD_MAKE_BACKUP_TUTORIAL_ENABLE_BACKUPS" = "فعِّل النسخ الاحتياطية وانتظر حتى تكتمل عملية النسخ الاحتياطي";
+
+/* First step in directions for how to make a backup */
+"REGISTRATION_RESTORE_METHOD_MAKE_BACKUP_TUTORIAL_OPEN_SIGNAL" = "افتح تطبيق سيجنال على جهازك القديم";
+
+/* Second step in directions for how to make a backup */
+"REGISTRATION_RESTORE_METHOD_MAKE_BACKUP_TUTORIAL_TAP_SETTINGS" = "انقر على \"الإعدادات\" > \" النسخ الاحتياطية\"";
+
 /* No comment provided by engineer. */
 "REGISTRATION_RESTRICTED_MESSAGE" = "يجب عليك التسجيل قبل أن تتمكن من إرسال رسالة.";
+
+/* Body of error notifying restore failed. */
+"REGISTRATION_SCAN_QR_CODE_FAILED_BODY" = "Failed to restore from old device. Try again.";
+
+/* Title of error notifying restore failed. */
+"REGISTRATION_SCAN_QR_CODE_FAILED_TITLE" = "فشلت الاستعادة";
 
 /* Title for screen containing QR code that users scan with their old phone when they want to transfer/restore their message history to a new device. */
 "REGISTRATION_SCAN_QR_CODE_TITLE" = "امسح هذا الكود ضوئيًا باستخدام جهازك القديم";
@@ -6952,6 +7297,30 @@
 /* Configure reactions reset button text */
 "RESET" = "إعادة التعيين";
 
+/* Body for a sheet allowing users to cancel an in-progress media restore. */
+"RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_1_BODY" = "لم تكتمل استعادة ملفات الوسائط الخاصة بك. إذا اخترت الإلغاء الآن، يمكنك الاستعادة مُجدَّدًا من خلال إعادة ربط هذا الجهاز.";
+
+/* Button for a sheet allowing users to cancel an in-progress media restore. */
+"RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_1_PRIMARY_BUTTON" = "مواصلة الاستعادة";
+
+/* Button for a sheet allowing users to cancel an in-progress media restore. */
+"RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_1_SECONDARY_BUTTON" = "إلغاء الاستعادة";
+
+/* Title for a sheet allowing users to cancel an in-progress media restore. */
+"RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_1_TITLE" = "ملفات الوسائط الخاصة بك في طور الاستعادة";
+
+/* Message for a sheet allowing users to cancel an in-progress media restore. */
+"RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_2_MESSAGE" = "لم تكتمل استعادة ملفات الوسائط الخاصة بك. إذا اخترت الإلغاء الآن، يمكنك الاستعادة مُجدَّدًا من خلال إعادة ربط هذا الجهاز.";
+
+/* Button for a sheet allowing users to cancel an in-progress media restore. */
+"RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_2_PRIMARY_BUTTON" = "مواصلة الاستعادة";
+
+/* Button for a sheet allowing users to cancel an in-progress media restore. */
+"RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_2_SECONDARY_BUTTON" = "إلغاء الاستعادة";
+
+/* Title for a sheet allowing users to cancel an in-progress media restore. */
+"RESTORING_MEDIA_BANNER_CANCEL_RESTORE_SHEET_2_TITLE" = "هل ترغبُ بإلغاء استعادة ملفات الوسائط؟";
+
 /* Button title shown on chat list banner for restoring media from a backup when paused because the device has insufficient disk space, to see a bottom sheet with more details about next steps. */
 "RESTORING_MEDIA_BANNER_DISK_SPACE_BUTTON" = "التفاصيل";
 
@@ -6963,6 +7332,9 @@
 
 /* Subtitle shown on chat list banner for restoring media from a backup when paused because the device has low battery */
 "RESTORING_MEDIA_BANNER_PAUSED_BATTERY_SUBTITLE" = "بطارية الجهاز منخفضة";
+
+/* Subtitle shown on chat list banner for restoring media from a backup when paused because the device is in low power mode */
+"RESTORING_MEDIA_BANNER_PAUSED_LOW_POWER_MODE_SUBTITLE" = "وضع الطاقة المنخفضة";
 
 /* Subtitle shown on chat list banner for restoring media from a backup when paused because the device has no internet connection */
 "RESTORING_MEDIA_BANNER_PAUSED_NOT_REACHABLE_SUBTITLE" = "لا يوجد اتصال بالإنترنت…";
@@ -7180,7 +7552,7 @@
 /* Message for action sheet when secondary device fails to sync messages due to an unspecified error. */
 "SECONDARY_LINKING_SYNCING_OTHER_ERROR_MESSAGE" = "تعذَّر نقل رسائلك بسبب حدوث خطأ. حاوِل مرّة أخرى من خلال إعادة ربط هذا الجهاز.";
 
-/* Button on an action sheet to open HCP on the App Store. */
+/* Button on an action sheet to open Signal on the App Store. */
 "SECONDARY_LINKING_SYNCING_UPDATE_REQUIRED_CHECK_FOR_UPDATE_BUTTON" = "تحقّق من وجود تحديثات";
 
 /* Message for action sheet when the secondary device fails to sync messages due to an app update being required. */
@@ -7363,6 +7735,12 @@
 /* No comment provided by engineer. */
 "SETTINGS_ADVANCED_PINS_DISABLE_PIN_ACTION" = "تعطيل رقم الـ PIN";
 
+/* Message shown in an action sheet when attempting to disable PIN, but Backups is enabled. */
+"SETTINGS_ADVANCED_PINS_DISABLE_PIN_ACTION_BACKUPS_DISABLE_REQUIRED" = "عليك أن تُعطِّل النسخ الاحتياطية قبل تعطيل رقم تعريفك الشخصي (PIN).";
+
+/* Message shown in an action sheet when attempting to disable PIN, but registration lock is enabled. */
+"SETTINGS_ADVANCED_PINS_DISABLE_PIN_ACTION_REGLOCK_DISABLE_REQUIRED" = "عليك أن تُعطِّل قفل التسجيل قبل تعطيل رقم تعريفك الشخصي.";
+
 /* No comment provided by engineer. */
 "SETTINGS_ADVANCED_PINS_ENABLE_PIN_ACTION" = "تفعيل رقم PIN";
 
@@ -7520,10 +7898,16 @@
 "SETTINGS_DELETE_DATA_BUTTON" = "حذف جميع البيانات";
 
 /* Alert message before user confirms clearing history */
-"SETTINGS_DELETE_HISTORYLOG_CONFIRMATION" = "هل أنت متأكِّد من أنك تريد حذف كل السجلات (الرسائل والملفات المُرفقة والمكالمات، إلخ.)؟ لا يمكن التراجع عن هذا الإجراء.";
+"SETTINGS_DELETE_HISTORYLOG_CONFIRMATION" = "هل أنت متأكِّد من أنك تريد حذف كل سِجلات الدردشات (الرسائل والوسائط والمكالمات، إلخ.) من جميع أجهزتك؟ لا يُمكن التراجع عن هذا الإجراء.";
 
 /* Confirmation text for button which deletes all message, calling, attachments, etc. */
 "SETTINGS_DELETE_HISTORYLOG_CONFIRMATION_BUTTON" = "حذف كل شيء";
+
+/* Secondary alert message before user confirms clearing history */
+"SETTINGS_DELETE_HISTORYLOG_CONFIRMATION_SECONDARY_MESSAGE" = "ستُحذَف كل سِجلات الدردشات نهائيًا. لا يُمكن التراجُع عن هذا الإجراء.";
+
+/* Secondary alert title before user confirms clearing history */
+"SETTINGS_DELETE_HISTORYLOG_CONFIRMATION_SECONDARY_TITLE" = "هل أنت متأكِّد من أنك تريد حذف كل سِجلات الدردشات؟";
 
 /* Label for the 'disappearing messages' privacy settings. */
 "SETTINGS_DISAPPEARING_MESSAGES" = "ميزة اختفاء الرسائل";
@@ -8161,11 +8545,26 @@
 /* Action to turn off registration lock */
 "SETTINGS_REGISTRATION_LOCK_TURN_OFF" = "تعطيل";
 
+/* Message shown in an action sheet when attempting to enable registration lock, but encountering a generic error. */
+"SETTINGS_REGISTRATION_LOCK_TURN_OFF_ERROR_GENERIC" = "تعذَّر تعطيل قفل التسجيل. يُرجى التواصل مع فريق الدعم.";
+
+/* Message shown in an action sheet when attempting to enable registration lock, but encountering a network error. */
+"SETTINGS_REGISTRATION_LOCK_TURN_OFF_ERROR_NETWORK" = "تعذَّر تعطيل قفل التسجيل. تحقَّق من اتصالك بالإنترنت وحاوِل مُجدَّدًا.";
+
 /* Title for the alert confirming that the user wants to turn off registration lock. */
 "SETTINGS_REGISTRATION_LOCK_TURN_OFF_TITLE" = "هل تُريد تعطيل قفل التسجيل؟";
 
 /* Action to turn on registration lock */
 "SETTINGS_REGISTRATION_LOCK_TURN_ON" = "تفعيل";
+
+/* Message shown in an action sheet when attempting to enable registration lock, but encountering a generic error. */
+"SETTINGS_REGISTRATION_LOCK_TURN_ON_ERROR_GENERIC" = "تعذَّر تفعيل قفل التسجيل. يُرجى التواصل مع فريق الدعم.";
+
+/* Message shown in an action sheet when attempting to enable registration lock, but encountering a network error. */
+"SETTINGS_REGISTRATION_LOCK_TURN_ON_ERROR_NETWORK" = "تعذَّر تفعيل قفل التسجيل. تحقَّق من اتصالك بالإنترنت وحاوِل مُجدَّدًا.";
+
+/* Message shown in an action sheet when attempting to enable registration lock, but the user does not have a PIN. */
+"SETTINGS_REGISTRATION_LOCK_TURN_ON_ERROR_PIN_REQUIRED" = "عليك أن تُنشِئ رقم تعريف شخصي (PIN) لاستخدام قفل التسجيل.";
 
 /* Body for the alert confirming that the user wants to turn on registration lock. */
 "SETTINGS_REGISTRATION_LOCK_TURN_ON_MESSAGE" = "إذا نسيتَ رقم التعريف الشخصي (PIN) الخاص بسيجنال خلال التسجيل مرّة أُخرى في سيجنال، سوف يُقفَل حسابك لمدة سبعة أيام.";
@@ -8346,9 +8745,6 @@
 
 /* Message when trying to show a sticker that has expired and is unavailable for download */
 "STICKER_UNAVAILABLE_MESSAGE_LABEL" = "المُلصَق غير مُتوفِّر";
-
-/* Message for sheet shown when tapping a sticker that has expired and is unavailable for download */
-"STICKER_UNAVAILABLE_SHEET_MESSAGE" = "هذا المُلصَق لم يتم تحويله من هاتفك عندما كان هذا الجهاز مُرتبِطًا. لا يمكن مُزامنة الملفات والوسائط التي تعود إلى أكثر من 45 يوم منذ الوقت الذي تمَّ فيه ربط الجهاز.";
 
 /* Title for sheet shown when tapping a sticker that has expired and is unavailable for download */
 "STICKER_UNAVAILABLE_SHEET_TITLE" = "المُلصَق غير مُتوفِّر";
@@ -9258,9 +9654,6 @@
 
 /* Indicates how to cancel a voice message. */
 "VOICE_MESSAGE_CANCEL_INSTRUCTIONS" = "اسحب للإلغاء";
-
-/* Filename for voice messages. */
-"VOICE_MESSAGE_FILE_NAME" = "signal";
 
 /* Message for the tooltip indicating the 'voice message' needs to be held to be held down to record. */
 "VOICE_MESSAGE_TOO_SHORT_TOOLTIP" = "اضغط مُطوَّلًا للتسجيل";

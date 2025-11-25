@@ -26,14 +26,9 @@ class NewCallViewController: RecipientPickerContainerViewController {
         recipientPicker.shouldShowInvites = true
         recipientPicker.delegate = self
 
-        addChild(recipientPicker)
-        view.addSubview(recipientPicker.view)
-        recipientPicker.view.autoPin(toTopLayoutGuideOf: self, withInset: 0)
-        recipientPicker.view.autoPinEdge(toSuperviewEdge: .leading)
-        recipientPicker.view.autoPinEdge(toSuperviewEdge: .trailing)
-        recipientPicker.view.autoPinEdge(toSuperviewEdge: .bottom)
+        addRecipientPicker()
 
-        navigationItem.leftBarButtonItem = .cancelButton(dismissingFrom: self)
+        navigationItem.rightBarButtonItem = .cancelButton(dismissingFrom: self)
     }
 
     private var callStarterContext: CallStarter.Context {

@@ -123,7 +123,7 @@ public class BlockingManager {
     }
 
     public func addBlockedAci(_ aci: Aci, blockMode: BlockMode, tx: DBWriteTransaction) {
-        self.addBlockedAddress(SignalServiceAddress(aci), blockMode: blockMode, transaction: SDSDB.shimOnlyBridge(tx))
+        self.addBlockedAddress(SignalServiceAddress(aci), blockMode: blockMode, transaction: tx)
     }
 
     public func addBlockedAddress(
@@ -147,12 +147,12 @@ public class BlockingManager {
             return
         }
 
-        let isBlocked = failIfThrows { try blockedRecipientStore.isBlocked(recipientId: recipient.id!, tx: tx) }
+        let isBlocked = failIfThrows { try blockedRecipientStore.isBlocked(recipientId: recipient.id, tx: tx) }
         guard !isBlocked else {
             return
         }
         failIfThrows {
-            try blockedRecipientStore.setBlocked(true, recipientId: recipient.id!, tx: tx)
+            try blockedRecipientStore.setBlocked(true, recipientId: recipient.id, tx: tx)
         }
 
         Logger.info("Added blocked address: \(address)")
@@ -168,7 +168,7 @@ public class BlockingManager {
         }
         let storyRecipientManager = DependenciesBridge.shared.storyRecipientManager
         storyRecipientManager.removeRecipientIdFromAllPrivateStoryThreads(
-            recipient.id!,
+            recipient.id,
             shouldUpdateStorageService: true,
             tx: tx
         )
@@ -209,12 +209,12 @@ public class BlockingManager {
             return
         }
 
-        let isBlocked = failIfThrows { try blockedRecipientStore.isBlocked(recipientId: recipient.id!, tx: tx) }
+        let isBlocked = failIfThrows { try blockedRecipientStore.isBlocked(recipientId: recipient.id, tx: tx) }
         guard isBlocked else {
             return
         }
         failIfThrows {
-            try blockedRecipientStore.setBlocked(false, recipientId: recipient.id!, tx: tx)
+            try blockedRecipientStore.setBlocked(false, recipientId: recipient.id, tx: tx)
         }
 
         Logger.info("Removed blocked address: \(address)")
@@ -263,8 +263,7 @@ public class BlockingManager {
             // Quit the group if we're a member.
             if
                 blockMode == .localShouldLeaveGroups,
-                groupThread.groupModel.groupMembership.isLocalUserMemberOfAnyKind,
-                groupThread.isLocalUserMemberOfAnyKind
+                groupThread.groupModel.groupMembership.isLocalUserMemberOfAnyKind
             {
                 GroupManager.leaveGroupOrDeclineInviteAsyncWithoutUI(
                     groupThread: groupThread,
@@ -399,10 +398,10 @@ public class BlockingManager {
         var blockedRecipientIds = Set<SignalRecipient.RowId>()
         let recipientFetcher = DependenciesBridge.shared.recipientFetcher
         for blockedAci in blockedAcis {
-            blockedRecipientIds.insert(recipientFetcher.fetchOrCreate(serviceId: blockedAci, tx: transaction).id!)
+            blockedRecipientIds.insert(recipientFetcher.fetchOrCreate(serviceId: blockedAci, tx: transaction).id)
         }
         for blockedPhoneNumber in blockedPhoneNumbers.compactMap(E164.init) {
-            blockedRecipientIds.insert(recipientFetcher.fetchOrCreate(phoneNumber: blockedPhoneNumber, tx: transaction).id!)
+            blockedRecipientIds.insert(recipientFetcher.fetchOrCreate(phoneNumber: blockedPhoneNumber, tx: transaction).id)
         }
 
         failIfThrows {

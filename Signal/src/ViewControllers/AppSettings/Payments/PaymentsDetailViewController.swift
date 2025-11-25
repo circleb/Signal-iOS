@@ -316,11 +316,11 @@ class PaymentsDetailViewController: OWSTableViewController2 {
         let footerLabel = PaymentsViewUtils.buildTextWithLearnMoreLinkTextView(
             text: footerText,
             font: .dynamicTypeCaption1Clamped,
-            learnMoreUrl: "https://support.signal.org/hc/articles/360057625692#payments_details")
+            learnMoreUrl: URL.Support.Payments.details)
         let footerStack = UIStackView(arrangedSubviews: [footerLabel])
         footerStack.axis = .vertical
         footerStack.alignment = .fill
-        footerStack.layoutMargins = cellOuterInsetsWithMargin(hMargin: Self.cellHInnerMargin, vMargin: 12)
+        footerStack.layoutMargins = .init(hMargin: Self.cellHInnerMargin, vMargin: 12)
         footerStack.isLayoutMarginsRelativeArrangement = true
         section.customFooterView = footerStack
 

@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import LibSignalClient
 import SignalServiceKit
 
 public class QuickRestoreManager {
@@ -18,6 +19,7 @@ public class QuickRestoreManager {
     }
 
     private let accountKeyStore: AccountKeyStore
+    private let backupNonceStore: BackupNonceMetadataStore
     private let backupSettingsStore: BackupSettingsStore
     private let db: any DB
     private let deviceProvisioningService: DeviceProvisioningService
@@ -27,6 +29,7 @@ public class QuickRestoreManager {
 
     init(
         accountKeyStore: AccountKeyStore,
+        backupNonceStore: BackupNonceMetadataStore,
         backupSettingsStore: BackupSettingsStore,
         db: any DB,
         deviceProvisioningService: DeviceProvisioningService,
@@ -35,6 +38,7 @@ public class QuickRestoreManager {
         tsAccountManager: TSAccountManager
     ) {
         self.accountKeyStore = accountKeyStore
+        self.backupNonceStore = backupNonceStore
         self.backupSettingsStore = backupSettingsStore
         self.db = db
         self.deviceProvisioningService = deviceProvisioningService
@@ -52,7 +56,9 @@ public class QuickRestoreManager {
             pinCode,
             backupTier,
             lastBackupDate,
-            lastBackupSizeBytes
+            lastBackupSizeBytes,
+            lastBackupForwardSecrecyToken,
+            nextBackupSecretData,
         ) = try db.read { tx in
             guard let localIdentifiers = tsAccountManager.localIdentifiers(tx: tx) else {
                 owsFailDebug("Can't quick restore without local identifiers")
@@ -80,8 +86,29 @@ public class QuickRestoreManager {
             case .disabled, .disabling: nil
             }
 
-            let lastBackupTime = backupSettingsStore.lastBackupDate(tx: tx)?.ows_millisecondsSince1970
-            let lastBackupSizeBytes = backupSettingsStore.lastBackupSizeBytes(tx: tx)
+            let lastBackupTime: UInt64?
+            let lastBackupSizeBytes: UInt64?
+            if backupTier != nil {
+                let lastBackupDetails = backupSettingsStore.lastBackupDetails(tx: tx)
+                lastBackupTime = lastBackupDetails?.date.ows_millisecondsSince1970
+                lastBackupSizeBytes = lastBackupDetails?.backupTotalSizeBytes
+            } else {
+                lastBackupTime = nil
+                lastBackupSizeBytes = nil
+            }
+
+            let backupKey = try MessageRootBackupKey(
+                accountEntropyPool: accountEntropyPool,
+                aci: localIdentifiers.aci
+            )
+            let lastBackupForwardSecrecyToken = try backupNonceStore.getLastForwardSecrecyToken(
+                for: backupKey,
+                tx: tx
+            )
+            let nextBackupSecretData = backupNonceStore.getNextSecretMetadata(
+                for: backupKey,
+                tx: tx
+            )
 
             return (
                 localIdentifiers,
@@ -91,7 +118,9 @@ public class QuickRestoreManager {
                 pinCode,
                 backupTier,
                 lastBackupTime,
-                lastBackupSizeBytes
+                lastBackupSizeBytes,
+                lastBackupForwardSecrecyToken,
+                nextBackupSecretData,
             )
         }
 
@@ -114,7 +143,9 @@ public class QuickRestoreManager {
             backupVersion: BackupArchiveManagerImpl.Constants.supportedBackupVersion,
             backupTimestamp: lastBackupDate,
             backupSizeBytes: lastBackupSizeBytes,
-            restoreMethodToken: restoreMethodToken
+            restoreMethodToken: restoreMethodToken,
+            lastBackupForwardSecrecyToken: lastBackupForwardSecrecyToken,
+            nextBackupSecretData: nextBackupSecretData,
         )
 
         let theirPublicKey = deviceProvisioningUrl.publicKey
@@ -152,7 +183,6 @@ public class QuickRestoreManager {
                     token: restoreMethodToken,
                     method: method
                 ),
-                canUseWebSocket: false
             )
             switch response.responseStatusCode {
             case 200, 204:
@@ -172,11 +202,8 @@ public class QuickRestoreManager {
     public func waitForRestoreMethodChoice(restoreMethodToken: RestoreMethodToken) async throws -> RestoreMethodType {
         whileLoop: while true {
             do {
-                // TODO: this cannot use websocket until the websocket implementation
-                // supports cooperative cancellation; we need this to be cancellable.
                 let response = try await networkManager.asyncRequest(
                     Requests.WaitForRestoreMethodChoice.buildRequest(token: restoreMethodToken),
-                    canUseWebSocket: false
                 )
                 switch response.responseStatusCode {
                 case 200:
@@ -249,7 +276,7 @@ public class QuickRestoreManager {
                 )
 
                 request.auth = .anonymous
-                request.applyRedactionStrategy(.redactURLForSuccessResponses())
+                request.applyRedactionStrategy(.redactURL())
                 // The timeout is server side; apply wiggle room for our local clock.
                 request.timeoutInterval = 10 + TimeInterval(Constants.longPollRequestTimeoutSeconds)
                 return request
@@ -286,7 +313,7 @@ public class QuickRestoreManager {
                 )
 
                 request.auth = .anonymous
-                request.applyRedactionStrategy(.redactURLForSuccessResponses())
+                request.applyRedactionStrategy(.redactURL())
                 return request
             }
         }

@@ -11,14 +11,11 @@ class MainAppContext: NSObject, AppContext {
 
     let appLaunchTime: Date
 
-    private(set) var appForegroundTime: Date
-
     override init() {
         _reportedApplicationState = AtomicValue(.inactive, lock: .init())
 
         let launchDate = Date()
         appLaunchTime = launchDate
-        appForegroundTime = launchDate
         _mainApplicationStateOnLaunch = UIApplication.shared.applicationState
 
         super.init()
@@ -68,7 +65,6 @@ class MainAppContext: NSObject, AppContext {
         AssertIsOnMainThread()
 
         self.reportedApplicationState = .inactive
-        self.appForegroundTime = Date()
 
         BenchManager.bench(title: "Slow WillEnterForeground", logIfLongerThan: 0.2, logInProduction: true) {
             NotificationCenter.default.post(name: .OWSApplicationWillEnterForeground, object: nil)
@@ -185,9 +181,4 @@ class MainAppContext: NSObject, AppContext {
     let hasUI: Bool = true
 
     var debugLogsDirPath: String { DebugLogger.mainAppDebugLogsDirPath }
-
-    @MainActor
-    func resetAppDataAndExit() -> Never {
-        SignalApp.resetAppDataAndExit(keyFetcher: SSKEnvironment.shared.databaseStorageRef.keyFetcher)
-    }
 }

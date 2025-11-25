@@ -128,7 +128,7 @@ public extension HydratedMessageBody.DisplayConfiguration {
 
     static func conversationListSearchResultSnippet() -> Self {
         return .init(
-            baseFont: .dynamicTypeBody2,
+            baseFont: .dynamicTypeSubheadline,
             baseTextColor: .secondaryTextAndIcon,
             spoilerAnimationColorOverride: ConversationStyle.bubbleTextColorIncomingThemed
         )
@@ -185,7 +185,7 @@ extension ThemedColor {
 }
 
 extension UIFont {
-    fileprivate static let defaultBaseFont = UIFont.dynamicTypeBody
+    fileprivate static var defaultBaseFont: UIFont { UIFont.dynamicTypeBody }
 }
 
 extension HydratedMessageBody.DisplayConfiguration {

@@ -16,7 +16,7 @@ public class SentMessageTranscriptReceiverImpl: SentMessageTranscriptReceiver {
     private let interactionDeleteManager: InteractionDeleteManager
     private let interactionStore: InteractionStore
     private let messageStickerManager: MessageStickerManager
-    private let paymentsHelper: Shims.PaymentsHelper
+    private let paymentsHelper: PaymentsHelper
     private let signalProtocolStoreManager: SignalProtocolStoreManager
     private let tsAccountManager: TSAccountManager
     private let viewOnceMessages: Shims.ViewOnceMessages
@@ -30,7 +30,7 @@ public class SentMessageTranscriptReceiverImpl: SentMessageTranscriptReceiver {
         interactionDeleteManager: InteractionDeleteManager,
         interactionStore: InteractionStore,
         messageStickerManager: MessageStickerManager,
-        paymentsHelper: Shims.PaymentsHelper,
+        paymentsHelper: PaymentsHelper,
         signalProtocolStoreManager: SignalProtocolStoreManager,
         tsAccountManager: TSAccountManager,
         viewOnceMessages: Shims.ViewOnceMessages
@@ -94,7 +94,7 @@ public class SentMessageTranscriptReceiverImpl: SentMessageTranscriptReceiver {
             // Don't continue processing lest we print a bubble for the session reset.
             return .success(nil)
         case .paymentNotification(let paymentNotification):
-            Logger.info("Recording payment notification from sync transcript in thread: \(paymentNotification.target.threadUniqueId) timestamp: \(transcript.timestamp)")
+            Logger.info("Recording payment notification from sync transcript in thread: \(paymentNotification.target.thread.logString) timestamp: \(transcript.timestamp)")
             guard validateTimestampValue() else {
                 return .failure(OWSAssertionError("Timestamp validation failed"))
             }
@@ -109,7 +109,7 @@ public class SentMessageTranscriptReceiverImpl: SentMessageTranscriptReceiver {
                 thread: paymentNotification.target.thread,
                 paymentNotification: paymentNotification.notification,
                 messageTimestamp: messageTimestamp,
-                tx: tx
+                transaction: tx
             )
             return .success(nil)
 
@@ -144,7 +144,7 @@ public class SentMessageTranscriptReceiverImpl: SentMessageTranscriptReceiver {
 
             return .success(message)
         case .expirationTimerUpdate(let target):
-            Logger.info("Recording expiration timer update transcript in thread: \(target.threadUniqueId) timestamp: \(transcript.timestamp)")
+            Logger.info("Recording expiration timer update transcript in thread: \(target.thread.logString) timestamp: \(transcript.timestamp)")
             guard validateTimestampValue() else {
                 return .failure(OWSAssertionError("Timestamp validation failed"))
             }
@@ -156,7 +156,7 @@ public class SentMessageTranscriptReceiverImpl: SentMessageTranscriptReceiver {
             return .success(nil)
 
         case .message(let messageParams):
-            Logger.info("Recording transcript in thread: \(messageParams.target.threadUniqueId) timestamp: \(transcript.timestamp)")
+            Logger.info("Recording transcript in thread: \(messageParams.target.thread.logString) timestamp: \(transcript.timestamp)")
             guard validateTimestampValue() else {
                 return .failure(OWSAssertionError("Timestamp validation failed"))
             }
@@ -199,7 +199,6 @@ public class SentMessageTranscriptReceiverImpl: SentMessageTranscriptReceiver {
             timestamp: transcript.timestamp,
             receivedAtTimestamp: nil,
             messageBody: messageParams.body,
-            bodyRanges: messageParams.bodyRanges,
             editState: .none, // Sent transcripts with edit state are handled by a different codepath
             expiresInSeconds: messageParams.expirationDurationSeconds,
             expireTimerVersion: messageParams.expireTimerVersion,
@@ -219,7 +218,8 @@ public class SentMessageTranscriptReceiverImpl: SentMessageTranscriptReceiver {
             contactShare: contactBuilder?.info,
             linkPreview: linkPreviewBuilder?.info,
             messageSticker: messageStickerBuilder?.info,
-            giftBadge: messageParams.giftBadge
+            giftBadge: messageParams.giftBadge,
+            isPoll: messageParams.makePollCreateBuilder != nil
         )
         var outgoingMessage = interactionStore.buildOutgoingMessage(builder: outgoingMessageBuilder, tx: tx)
 
@@ -230,7 +230,8 @@ public class SentMessageTranscriptReceiverImpl: SentMessageTranscriptReceiver {
             hasContactShare: contactBuilder != nil,
             hasSticker: messageStickerBuilder != nil,
             // Payment notifications go through a different path.
-            hasPayment: false
+            hasPayment: false,
+            hasPoll: messageParams.makePollCreateBuilder != nil
         )
         if !hasRenderableContent && !outgoingMessage.isViewOnceMessage {
             switch messageParams.target {
@@ -268,6 +269,18 @@ public class SentMessageTranscriptReceiverImpl: SentMessageTranscriptReceiver {
             // Check for any placeholders inserted because of a previously undecryptable message
             // The sender may have resent the message. If so, we should swap it in place of the placeholder
             interactionStore.insertOrReplacePlaceholder(for: outgoingMessage, from: localIdentifiers.aciAddress, tx: tx)
+
+            // Polls can only be inserted after the outgoing message, since they have
+            // a reference to the grdb id of the TSInteraction.
+            if let pollCreateBuilder = messageParams.makePollCreateBuilder, let interactionId = outgoingMessage.grdbId?.int64Value {
+                do {
+                    try pollCreateBuilder(interactionId, tx)
+                } catch {
+                    Logger.error("Failed to insert poll \(error)")
+                    // Roll back the message
+                    interactionDeleteManager.delete(outgoingMessage, sideEffects: .default(), tx: tx)
+                }
+            }
 
             do {
                 try attachmentManager.createAttachmentPointers(

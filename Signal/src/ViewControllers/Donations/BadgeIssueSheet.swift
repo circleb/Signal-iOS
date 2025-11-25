@@ -118,7 +118,7 @@ public class BadgeIssueSheetState {
 
             return Body(
                 String(format: formatText, chargeFailureString),
-                learnMoreLink: SupportConstants.badgeExpirationLearnMoreURL
+                learnMoreLink: URL.Support.Donations.badgeExpiration
             )
         case let .boostExpired(hasCurrentSubscription):
             let bodyText: String
@@ -166,7 +166,7 @@ public class BadgeIssueSheetState {
 
             return Body(
                 String(format: bodyFormat, badge.localizedName),
-                learnMoreLink: SupportConstants.donationPendingLearnMoreURL
+                learnMoreLink: URL.Support.Donations.donationPending
             )
         case .subscriptionBankPaymentProcessing:
             let bodyFormat = OWSLocalizedString(
@@ -176,7 +176,7 @@ public class BadgeIssueSheetState {
 
             return Body(
                 String(format: bodyFormat, badge.localizedName),
-                learnMoreLink: SupportConstants.donationPendingLearnMoreURL
+                learnMoreLink: URL.Support.Donations.donationPending
             )
         }
     }()
@@ -274,7 +274,7 @@ class BadgeIssueSheet: OWSTableSheetViewController {
             badge: badge,
             mode: mode,
             canDonate: DonationUtilities.canDonateInAnyWay(
-                localNumber: DependenciesBridge.shared.tsAccountManager.localIdentifiersWithMaybeSneakyTransaction?.phoneNumber
+                tsAccountManager: DependenciesBridge.shared.tsAccountManager,
             )
         )
         owsAssertDebug(state.badge.assets != nil)
@@ -284,9 +284,8 @@ class BadgeIssueSheet: OWSTableSheetViewController {
         updateTableContents()
     }
 
-    public override func updateTableContents(shouldReload: Bool = true) {
+    public override func tableContents() -> OWSTableContents {
         let contents = OWSTableContents()
-        defer { tableViewController.setContents(contents, shouldReload: shouldReload) }
 
         let headerSection = OWSTableSection()
         headerSection.hasBackground = false
@@ -326,12 +325,7 @@ class BadgeIssueSheet: OWSTableSheetViewController {
                 alertImageView.autoPinEdge(.top, to: .top, of: badgeImageView)
             }
 
-            let titleLabel = UILabel()
-            titleLabel.font = .dynamicTypeTitle2.semibold()
-            titleLabel.textColor = Theme.primaryTextColor
-            titleLabel.textAlignment = .center
-            titleLabel.numberOfLines = 0
-            titleLabel.text = self.state.titleText
+            let titleLabel = UILabel.title2Label(text: self.state.titleText)
             stackView.addArrangedSubview(titleLabel)
             stackView.setCustomSpacing(12, after: titleLabel)
 
@@ -342,18 +336,14 @@ class BadgeIssueSheet: OWSTableSheetViewController {
                     comment: "Text for the 'learn more' link in a sheet explaining there's been an issue with your badge."
                 ).styled(with: .link(learnMoreLink))
                 let label = LinkingTextView()
-                label.attributedText = .composed(of: [self.state.body.text, " ", learnMore]).styled(with: .color(Theme.secondaryTextAndIconColor), .font(.dynamicTypeSubheadlineClamped))
+                label.attributedText = .composed(of: [self.state.body.text, " ", learnMore])
+                    .styled(with: .color(.Signal.secondaryLabel), .font(.dynamicTypeSubheadlineClamped))
                 label.textAlignment = .center
-                label.linkTextAttributes = [
-                    .foregroundColor: Theme.accentBlueColor,
-                    .underlineColor: UIColor.clear,
-                    .underlineStyle: NSUnderlineStyle.single.rawValue
-                ]
                 bodyLabel = label
             } else {
                 let label = UILabel()
                 label.font = .dynamicTypeSubheadlineClamped
-                label.textColor = Theme.secondaryTextAndIconColor
+                label.textColor = .Signal.secondaryLabel
                 label.numberOfLines = 0
                 label.text = self.state.body.text
                 label.textAlignment = .center
@@ -373,38 +363,34 @@ class BadgeIssueSheet: OWSTableSheetViewController {
             cell.selectionStyle = .none
             guard let self = self else { return cell }
 
-            let stackView = UIStackView()
-            stackView.axis = .vertical
-            stackView.alignment = .center
-            stackView.layoutMargins = UIEdgeInsets(top: 12, left: 24, bottom: 12, right: 24)
-            stackView.spacing = 16
-            stackView.isLayoutMarginsRelativeArrangement = true
+            let actionButton = UIButton(
+                configuration: .largePrimary(title: self.state.actionButton.text),
+                primaryAction: UIAction { _ in
+                    self.didTapAction()
+                }
+            )
+
+            var buttons = [actionButton]
+
+            if self.state.actionButton.hasNotNow {
+                let notNowButton = UIButton(
+                    configuration: .largeSecondary(title: CommonStrings.notNowButton),
+                    primaryAction: UIAction { _ in
+                        self.didDismiss()
+                    }
+                )
+                buttons.append(notNowButton)
+            }
+
+            let stackView = UIStackView.verticalButtonStack(buttons: buttons, isFullWidthButtons: true)
+            stackView.directionalLayoutMargins.bottom = 0
             cell.contentView.addSubview(stackView)
             stackView.autoPinEdgesToSuperviewEdges()
 
-            let actionButton = OWSFlatButton.button(title: self.state.actionButton.text,
-                                                    font: UIFont.dynamicTypeBody.semibold(),
-                                                    titleColor: .white,
-                                                    backgroundColor: .ows_accentBlue,
-                                                    target: self,
-                                                    selector: #selector(self.didTapAction))
-            actionButton.autoSetHeightUsingFont()
-            actionButton.cornerRadius = 8
-            stackView.addArrangedSubview(actionButton)
-            actionButton.autoPinWidthToSuperviewMargins()
-
-            if self.state.actionButton.hasNotNow {
-                let notNowButton = OWSButton(title: CommonStrings.notNowButton) { [weak self] in
-                    guard let self = self else { return }
-                    self.didDismiss()
-                }
-                notNowButton.setTitleColor(Theme.accentBlueColor, for: .normal)
-                notNowButton.dimsWhenHighlighted = true
-                stackView.addArrangedSubview(notNowButton)
-            }
-
             return cell
         }, actionBlock: nil))
+
+        return contents
     }
 
     public override func willDismissInteractively() {

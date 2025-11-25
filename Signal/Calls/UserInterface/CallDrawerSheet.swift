@@ -121,7 +121,7 @@ class CallDrawerSheet: InteractiveSheetViewController {
             delegate: callControlsDelegate
         )
 
-        super.init(blurEffect: nil)
+        super.init()
 
         self.animationsShouldBeInterruptible = true
         self.sheetPanDelegate = sheetPanDelegate
@@ -737,8 +737,8 @@ extension CallDrawerSheet: GroupCallMemberCellDelegate {
                 ),
                 name
             ),
-            theme: .translucentDark
         )
+        actionSheet.overrideUserInterfaceStyle = .dark
         actionSheet.addAction(.init(
             title: OWSLocalizedString(
                 "GROUP_CALL_REMOVE_MEMBER_CONFIRMATION_ACTION_SHEET_REMOVE_ACTION",
@@ -1190,8 +1190,8 @@ private class UnknownMembersCell: UITableViewCell, ReusableTableViewCell {
                     "GROUP_CALL_MEMBER_LIST_UNKNOWN_MEMBERS_INFO_SHEET",
                     comment: "Message on an action sheet when tapping an info button next to unknown members in the group call member list."
                 ),
-                theme: .translucentDark
             )
+            actionSheet.overrideUserInterfaceStyle = .dark
             actionSheet.addAction(.acknowledge)
             self?.parentViewController?.presentActionSheet(actionSheet)
         }
@@ -1209,8 +1209,8 @@ private class UnknownMembersCell: UITableViewCell, ReusableTableViewCell {
                 comment: "Label for an unknown member in the group call member list when they are the only member of the call."
             )
         } else {
-            bodyLabel.text = String(
-                format: OWSLocalizedString(
+            bodyLabel.text = String.localizedStringWithFormat(
+                OWSLocalizedString(
                     "GROUP_CALL_MEMBER_LIST_UNKNOWN_MEMBERS_ROW_%ld",
                     tableName: "PluralAware",
                     comment: "Label for one or more unknown members in the group call member list when there is at least one known member in the call. Embeds {{ count }}"

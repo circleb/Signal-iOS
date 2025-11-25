@@ -49,11 +49,6 @@ public class BackupArchivePostFrameRestoreActionManager {
         bencher: BackupArchive.RestoreBencher,
         chatItemContext: BackupArchive.ChatItemRestoringContext
     ) throws {
-        // Proactively mark the group call tooltip shown; we don't know
-        // definitively if it was shown prior to restore, but it's a good
-        // guess that it was and its annoying to see again.
-        preferences.setWasGroupCallTooltipShown(tx: chatItemContext.tx)
-
         for (recipientId, actions) in recipientActions {
             if actions.insertContactHiddenInfoMessage {
                 try bencher.benchPostFrameRestoreAction(.InsertContactHiddenInfoMessage) {
@@ -187,7 +182,6 @@ public class BackupArchivePostFrameRestoreActionManager {
             /// without a chat existing. However, who's to say what we'll import
             /// and it's not illegal to create a Backup with a `Contact` frame
             /// that doesn't have a corresponding `Chat` frame.
-            Logger.warn("Skipping insert of contact-hidden info message: missing contact thread for recipient!")
             return
         }
 
@@ -196,8 +190,6 @@ public class BackupArchivePostFrameRestoreActionManager {
             infoMessage,
             in: chatThread,
             chatId: chatId,
-            // This info message is directionless
-            directionalDetails: .directionless(BackupProto_ChatItem.DirectionlessMessageDetails()),
             context: chatItemContext
         )
     }
@@ -208,7 +200,6 @@ public class BackupArchivePostFrameRestoreActionManager {
             case .contact(let contactAddress) = address,
             let phoneNumber = contactAddress.e164
         else {
-            Logger.warn("Skipping insert of phone number missing ACI because there's no phone number!")
             return
         }
         AuthorMergeHelper().foundMissingAci(for: phoneNumber.stringValue, tx: chatItemContext.tx)

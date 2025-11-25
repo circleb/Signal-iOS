@@ -10,10 +10,13 @@ extension BackupArchive {
         let chatContext: ChatRestoringContext
         let recipientContext: RecipientRestoringContext
 
+        public var uploadEra: String? { chatContext.customChatColorContext.accountDataContext.uploadEra }
+
         init(
             chatContext: ChatRestoringContext,
             recipientContext: RecipientRestoringContext,
             startTimestampMs: UInt64,
+            attachmentByteCounter: BackupArchiveAttachmentByteCounter,
             isPrimaryDevice: Bool,
             tx: DBWriteTransaction
         ) {
@@ -21,6 +24,7 @@ extension BackupArchive {
             self.chatContext = chatContext
             super.init(
                 startTimestampMs: startTimestampMs,
+                attachmentByteCounter: attachmentByteCounter,
                 isPrimaryDevice: isPrimaryDevice,
                 tx: tx
             )

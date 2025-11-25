@@ -70,10 +70,9 @@ class DonationPaymentDetailsViewController: OWSTableViewController2 {
     // MARK: - View callbacks
 
     public override func viewDidLoad() {
-        shouldAvoidKeyboard = true
-
         super.viewDidLoad()
 
+        shouldAvoidKeyboard = true
         render()
 
         let sections = [donationAmountSection] + formSections()
@@ -91,12 +90,6 @@ class DonationPaymentDetailsViewController: OWSTableViewController2 {
         case .ideal:
             break
         }
-    }
-
-    public override func themeDidChange() {
-        super.themeDidChange()
-
-        render()
     }
 
     // MARK: - Events
@@ -153,7 +146,7 @@ class DonationPaymentDetailsViewController: OWSTableViewController2 {
         // We'd like a link that doesn't go anywhere, because we'd like to
         // handle the tapping ourselves. We use a "fake" URL because BonMot
         // needs one.
-        let linkPart = StringStyle.Part.link(SupportConstants.subscriptionFAQURL)
+        let linkPart = StringStyle.Part.link(URL.Support.Donations.subscriptionFAQ)
 
         let subheaderText: String
         switch self.paymentMethod {
@@ -176,12 +169,8 @@ class DonationPaymentDetailsViewController: OWSTableViewController2 {
                 "CARD_DONATION_SUBHEADER_LEARN_MORE",
                 comment: "On the credit/debit card donation screen, a small amount of information text is shown. Users can click this link to learn more information."
             ).styled(with: linkPart)
-        ]).styled(with: .color(Theme.secondaryTextAndIconColor), .font(.dynamicTypeFootnoteClamped))
-        subheaderTextView.linkTextAttributes = [
-            .foregroundColor: Theme.primaryTextColor,
-            .underlineColor: UIColor.clear,
-            .underlineStyle: NSUnderlineStyle.single.rawValue
-        ]
+        ]).styled(with: .color(.Signal.secondaryLabel), .font(.dynamicTypeFootnoteClamped))
+        subheaderTextView.linkTextAttributes = [ .foregroundColor: UIColor.Signal.label ]
 
         // Only change the placeholder when enough digits are entered.
         // Helps avoid a jittery UI as you type/delete.
@@ -237,8 +226,6 @@ class DonationPaymentDetailsViewController: OWSTableViewController2 {
         // Currently, name and email can only be valid or potentially
         // valid. There is no invalid state for either.
         tableView.endUpdates()
-
-        bottomFooterStackView.layer.backgroundColor = self.tableBackgroundColor.cgColor
     }
 
     private func ibanErrorMessage(invalidFields: Set<InvalidFormField>) -> String? {
@@ -566,23 +553,19 @@ class DonationPaymentDetailsViewController: OWSTableViewController2 {
             Self.cell(for: self.emailView),
         ])
 
-        let label = LinkingTextView()
-        let linkPart = StringStyle.Part.link(SupportConstants.subscriptionFAQURL)
-        label.attributedText = OWSLocalizedString(
-            "BANK_DONATION_FOOTER_FIND_ACCOUNT_INFO",
-            comment: "On the bank donation screen, show a link below the input form to show help about finding account info."
+        let findAccountInfoButton = UIButton(
+            configuration: .mediumBorderless(title: OWSLocalizedString(
+                "BANK_DONATION_FOOTER_FIND_ACCOUNT_INFO",
+                comment: "On the bank donation screen, show a link below the input form to show help about finding account info."
+            )),
+            primaryAction: UIAction { [weak self] _ in
+                self?.present(DonationPaymentDetailsFindAccountInfoSheetViewController(), animated: true)
+            }
         )
-        .styled(with: linkPart)
-        .styled(with: .color(Theme.primaryTextColor), .font(.dynamicTypeBody))
-        label.linkTextAttributes = [
-            .foregroundColor: Theme.accentBlueColor,
-            .underlineColor: UIColor.clear,
-            .underlineStyle: NSUnderlineStyle.single.rawValue
-        ]
-        label.textAlignment = .center
-        label.delegate = self
-        label.textContainerInset = .init(margin: 20)
-        section.customFooterView = label
+        let stackView = UIStackView.verticalButtonStack(buttons: [findAccountInfoButton])
+        stackView.directionalLayoutMargins.top = 16
+
+        section.customFooterView = stackView
 
         return section
     }()
@@ -659,7 +642,7 @@ class DonationPaymentDetailsViewController: OWSTableViewController2 {
 
     // MARK: - Submit button, footer
 
-    private lazy var submitButton: OWSButton = {
+    private lazy var submitButton: UIButton = {
         let amountString = CurrencyFormatter.format(money: self.donationAmount)
         let title = {
             let format: String
@@ -678,74 +661,72 @@ class DonationPaymentDetailsViewController: OWSTableViewController2 {
             return String(format: format, amountString)
         }()
 
-        let result = OWSButton(title: title) { [weak self] in
-            guard let self else { return }
-            let submitAction = {
-                self.didSubmit()
-            }
-            switch self.paymentMethod {
-            case .card, .sepa:
-                submitAction()
-            case .ideal:
-                switch self.donationMode {
-                case .oneTime, .gift:
+        return UIButton(
+            configuration: .largePrimary(title: title),
+            primaryAction: UIAction { [weak self] _ in
+                guard let self else { return }
+                let submitAction = {
+                    self.didSubmit()
+                }
+                switch self.paymentMethod {
+                case .card, .sepa:
                     submitAction()
-                case .monthly:
-                    let title = OWSLocalizedString(
-                        "IDEAL_DONATION_CONFIRM_DONATION_TITLE",
-                        comment: "Fallback title confirming recurring donation with bank."
-                    )
+                case .ideal:
+                    switch self.donationMode {
+                    case .oneTime, .gift:
+                        submitAction()
+                    case .monthly:
+                        let title = OWSLocalizedString(
+                            "IDEAL_DONATION_CONFIRM_DONATION_TITLE",
+                            comment: "Fallback title confirming recurring donation with bank."
+                        )
 
-                    let messageFormat = OWSLocalizedString(
-                        "IDEAL_DONATION_CONFIRM_DONATION_WITH_BANK_MESSAGE",
-                        comment: "Message confirming recurring donation with bank. This message confirms with the user that they will see a small confirmation charge with their bank before the donation. Embeds 1:{{ 0.01 euro, as a localized string }}, 2:{{ the amount of their donation, as a localized string }}."
-                    )
-                    let oneEuroCentString = CurrencyFormatter.format(
-                        money: FiatMoney(currencyCode: "EUR", value: 0.01)
-                    )
-                    let message = String(format: messageFormat, oneEuroCentString, amountString)
+                        let messageFormat = OWSLocalizedString(
+                            "IDEAL_DONATION_CONFIRM_DONATION_WITH_BANK_MESSAGE",
+                            comment: "Message confirming recurring donation with bank. This message confirms with the user that they will see a small confirmation charge with their bank before the donation. Embeds 1:{{ 0.01 euro, as a localized string }}, 2:{{ the amount of their donation, as a localized string }}."
+                        )
+                        let oneEuroCentString = CurrencyFormatter.format(
+                            money: FiatMoney(currencyCode: "EUR", value: 0.01)
+                        )
+                        let message = String(format: messageFormat, oneEuroCentString, amountString)
 
-                    let actionSheet = ActionSheetController(title: title, message: message)
-                    actionSheet.addAction(.init(
-                        title: CommonStrings.continueButton,
-                        style: .default,
-                        handler: { _ in
-                            submitAction()
-                        }
-                    ))
-                    actionSheet.addAction(.init(
-                        title: CommonStrings.cancelButton,
-                        style: .cancel,
-                        handler: nil
-                    ))
-                    self.presentActionSheet(actionSheet)
+                        let actionSheet = ActionSheetController(title: title, message: message)
+                        actionSheet.addAction(.init(
+                            title: CommonStrings.continueButton,
+                            style: .default,
+                            handler: { _ in
+                                submitAction()
+                            }
+                        ))
+                        actionSheet.addAction(.init(
+                            title: CommonStrings.cancelButton,
+                            style: .cancel,
+                            handler: nil
+                        ))
+                        self.presentActionSheet(actionSheet)
+                    }
                 }
             }
-        }
-        result.dimsWhenHighlighted = true
-        result.dimsWhenDisabled = true
-        result.layer.cornerRadius = 8
-        result.backgroundColor = .ows_accentBlue
-        result.titleLabel?.font = .dynamicTypeBody.semibold()
-        result.autoSetDimension(.height, toSize: 48, relation: .greaterThanOrEqual)
-        return result
+        )
     }()
 
-    private lazy var bottomFooterStackView: UIStackView = {
-        let result = UIStackView(arrangedSubviews: [submitButton])
-
-        result.axis = .vertical
-        result.alignment = .fill
-        result.spacing = 16
-        result.isLayoutMarginsRelativeArrangement = true
-        result.preservesSuperviewLayoutMargins = true
-        result.layoutMargins = .init(hMargin: 16, vMargin: 10)
-
-        return result
+    private lazy var bottomFooterContainer: UIView = {
+        let stackView = UIStackView.verticalButtonStack(buttons: [submitButton])
+        let view = UIView()
+        view.preservesSuperviewLayoutMargins = true
+        view.addSubview(stackView)
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            stackView.topAnchor.constraint(equalTo: view.topAnchor),
+            stackView.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
+            stackView.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
+            stackView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
+        return view
     }()
 
     open override var bottomFooter: UIView? {
-        get { bottomFooterStackView }
+        get { bottomFooterContainer }
         set {}
     }
 }
@@ -759,11 +740,7 @@ extension DonationPaymentDetailsViewController: UITextViewDelegate {
         in characterRange: NSRange,
         interaction: UITextItemInteraction
     ) -> Bool {
-        if textView == subheaderTextView {
-            present(DonationPaymentDetailsReadMoreSheetViewController(), animated: true)
-        } else {
-            present(DonationPaymentDetailsFindAccountInfoSheetViewController(), animated: true)
-        }
+        present(DonationPaymentDetailsReadMoreSheetViewController(), animated: true)
         return false
     }
 }
@@ -779,3 +756,17 @@ extension DonationPaymentDetailsViewController: CreditOrDebitCardDonationFormVie
 fileprivate extension UInt8 {
     var isValidAsMonth: Bool { self >= 1 && self <= 12 }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+@available(iOS 17, *)
+#Preview {
+    DonationPaymentDetailsViewController(
+        donationAmount: .init(currencyCode: "USD", value: 10),
+        donationMode: .oneTime,
+        paymentMethod: .card,
+        onFinished: { _ in }
+    )
+}
+#endif

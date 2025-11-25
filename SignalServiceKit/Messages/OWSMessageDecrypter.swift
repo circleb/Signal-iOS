@@ -36,7 +36,7 @@ public class OWSMessageDecrypter {
     func messageProcessorDidDrainQueue() {
         Task {
             // We don't want to send additional resets until we have received the
-            // "empty" response from the WebSocket or finished at least one REST fetch.
+            // "empty" response from the WebSocket.
             guard await SSKEnvironment.shared.messageFetcherJobRef.hasCompletedInitialFetch else { return }
 
             // We clear all recently reset sender ids any time the decryption queue has
@@ -396,7 +396,9 @@ public class OWSMessageDecrypter {
 
             let identityManager = DependenciesBridge.shared.identityManager
             let protocolAddress = ProtocolAddress(sourceAci, deviceId: sourceDeviceId)
-            let signalProtocolStore = DependenciesBridge.shared.signalProtocolStoreManager.signalProtocolStore(for: validatedEnvelope.localIdentity)
+            let signalProtocolStoreManager = DependenciesBridge.shared.signalProtocolStoreManager
+            let signalProtocolStore = signalProtocolStoreManager.signalProtocolStore(for: validatedEnvelope.localIdentity)
+            let preKeyStore = signalProtocolStoreManager.preKeyStore.forIdentity(validatedEnvelope.localIdentity)
 
             let plaintext: Data
             switch cipherType {
@@ -420,11 +422,10 @@ public class OWSMessageDecrypter {
                     from: protocolAddress,
                     sessionStore: signalProtocolStore.sessionStore,
                     identityStore: identityManager.libSignalStore(for: localIdentity, tx: transaction),
-                    preKeyStore: signalProtocolStore.preKeyStore,
-                    signedPreKeyStore: signalProtocolStore.signedPreKeyStore,
-                    kyberPreKeyStore: signalProtocolStore.kyberPreKeyStore,
+                    preKeyStore: preKeyStore,
+                    signedPreKeyStore: preKeyStore,
+                    kyberPreKeyStore: preKeyStore,
                     context: transaction,
-                    usePqRatchet: RemoteConfig.current.usePqRatchet
                 )
             case .senderKey:
                 plaintext = try groupDecrypt(
@@ -521,7 +522,7 @@ public class OWSMessageDecrypter {
                         transaction: transaction
                     ) { thread, stop in
                         guard thread.isGroupV2Thread else { return }
-                        guard thread.isLocalUserFullMember else { return }
+                        guard thread.groupModel.groupMembership.isLocalUserFullMember else { return }
                         stop.pointee = true
                         needsReactiveProfileKeyMessage = true
                     }
@@ -548,13 +549,15 @@ public class OWSMessageDecrypter {
             throw OWSAssertionError("UD Envelope is missing content.")
         }
         let identityManager = DependenciesBridge.shared.identityManager
-        let signalProtocolStore = DependenciesBridge.shared.signalProtocolStoreManager.signalProtocolStore(for: localIdentity)
+        let signalProtocolStoreManager = DependenciesBridge.shared.signalProtocolStoreManager
+        let signalProtocolStore = signalProtocolStoreManager.signalProtocolStore(for: localIdentity)
+        let preKeyStore = signalProtocolStoreManager.preKeyStore.forIdentity(localIdentity)
 
         let cipher = try SMKSecretSessionCipher(
             sessionStore: signalProtocolStore.sessionStore,
-            preKeyStore: signalProtocolStore.preKeyStore,
-            signedPreKeyStore: signalProtocolStore.signedPreKeyStore,
-            kyberPreKeyStore: signalProtocolStore.kyberPreKeyStore,
+            preKeyStore: preKeyStore,
+            signedPreKeyStore: preKeyStore,
+            kyberPreKeyStore: preKeyStore,
             identityStore: identityManager.libSignalStore(for: localIdentity, tx: transaction),
             senderKeyStore: SSKEnvironment.shared.senderKeyStoreRef
         )
@@ -562,7 +565,7 @@ public class OWSMessageDecrypter {
         let decryptResult: SMKDecryptResult
         do {
             decryptResult = try cipher.decryptMessage(
-                trustRoot: SSKEnvironment.shared.udManagerRef.trustRoot,
+                trustRoots: SSKEnvironment.shared.udManagerRef.trustRoots,
                 cipherTextData: encryptedData,
                 timestamp: validatedEnvelope.serverTimestamp,
                 localIdentifiers: localIdentifiers,
@@ -600,7 +603,7 @@ public class OWSMessageDecrypter {
         }
 
         let envelopeBuilder = validatedEnvelope.envelope.asBuilder()
-        envelopeBuilder.setSourceServiceID(decryptResult.senderAci.serviceIdString)
+        envelopeBuilder.setSourceServiceIDBinary(decryptResult.senderAci.serviceIdBinary)
         envelopeBuilder.setSourceDevice(decryptResult.senderDeviceId.uint32Value)
 
         let decryptedEnvelope = try DecryptedIncomingEnvelope(
@@ -608,7 +611,7 @@ public class OWSMessageDecrypter {
             updatedEnvelope: try envelopeBuilder.build(),
             sourceAci: decryptResult.senderAci,
             sourceDeviceId: decryptResult.senderDeviceId,
-            wasReceivedByUD: validatedEnvelope.envelope.sourceServiceID == nil,
+            wasReceivedByUD: !(validatedEnvelope.envelope.hasSourceServiceID || validatedEnvelope.envelope.hasSourceServiceIDBinary),
             plaintextData: decryptResult.paddedPayload.withoutPadding(),
             isPlaintextCipher: decryptResult.messageType == .plaintext
         )
@@ -640,10 +643,7 @@ public class OWSMessageDecrypter {
         case SMKSecretSessionCipherError.selfSentMessage:
             // Self-sent messages can be safely discarded. Return as-is.
             return error
-        case is SignalError,
-            PreKeyStoreImpl.Error.noPreKeyWithId(_),
-            SignedPreKeyStoreImpl.Error.noPreKeyWithId(_),
-            KyberPreKeyStoreImpl.Error.noKyberPreKeyWithId(_):
+        case is SignalError, PreKeyStore.Error.noPreKeyWithId(_):
             return processError(
                 error,
                 validatedEnvelope: validatedEnvelope,
@@ -667,8 +667,9 @@ public class OWSMessageDecrypter {
         handlePniSignatureIfNeeded(in: decryptedEnvelope, localIdentifiers: localIdentifiers, tx: tx)
 
         let recipientManager = DependenciesBridge.shared.recipientManager
+        var mergedRecipient = mergeRecipient(tx)
         recipientManager.markAsRegisteredAndSave(
-            mergeRecipient(tx),
+            &mergedRecipient,
             deviceId: decryptedEnvelope.sourceDeviceId,
             shouldUpdateStorageService: true,
             tx: tx
@@ -798,6 +799,7 @@ public class OWSMessageDecrypter {
     }
 
     static func description(for envelope: SSKProtoEnvelope) -> String {
-        return "<Envelope type: \(descriptionForEnvelopeType(envelope)), source: \(envelope.formattedAddress), timestamp: \(envelope.timestamp), serverTimestamp: \(envelope.serverTimestamp), serverGuid: \(envelope.serverGuid ?? "(null)"), content.length: \(envelope.content?.count ?? 0) />"
+        let serverGuid = ValidatedIncomingEnvelope.parseServerGuid(fromEnvelope: envelope)
+        return "<Envelope type: \(descriptionForEnvelopeType(envelope)), source: \(envelope.formattedAddress), timestamp: \(envelope.timestamp), serverTimestamp: \(envelope.serverTimestamp), serverGuid: \(serverGuid?.uuidString.lowercased() ?? "(null)"), content.length: \(envelope.content?.count ?? 0) />"
     }
 }

@@ -135,6 +135,8 @@ class ImageEditorCropViewController: OWSViewController {
     // MARK: - UIViewController
 
     override func viewDidLoad() {
+        super.viewDidLoad()
+
         view.backgroundColor = .black
 
         // MARK: - Clip view & content.
@@ -993,7 +995,8 @@ extension ImageEditorCropViewController {
 
     @objc
     private func didTapChooseAspectRatio() {
-        let actionSheet = ActionSheetController(theme: .translucentDark)
+        let actionSheet = ActionSheetController()
+        actionSheet.overrideUserInterfaceStyle = .dark
         for aspectRatio in AspectRatio.allCases {
             guard isCurrentImageCompatibleWith(aspectRatio: aspectRatio) else { continue }
             actionSheet.addAction(

@@ -13,23 +13,46 @@ extension HomeTabViewController {
         return splitViewController as? ConversationSplitViewController
     }
 
+    /// - Parameter badgeColor
+    /// Color for a badge added to the bar button item, if any.
+    /// - Parameter onDidDismissContextMenu
+    /// Block called when the context menu presented by tapping the bar button
+    /// item is dismissed.
     func createSettingsBarButtonItem(
         databaseStorage: SDSDatabaseStorage,
-        shouldShowUnreadPaymentBadge: Bool = false,
-        buildActions: (_ settingsAction: UIAction) -> [UIAction],
+        badgeColor: UIColor? = nil,
+        onDidDismissContextMenu: @escaping () -> Void = {},
+        buildActions: (_ settingsAction: UIMenuElement) -> [UIMenuElement],
         showAppSettings: @escaping () -> Void
     ) -> UIBarButtonItem {
+        let isInFloatingSidebar = if #available(iOS 26, *) {
+            splitViewController?.isCollapsed == false
+        } else {
+            // Floating sidebar only exists on iOS 26+
+            false
+        }
+
         let settingsAction = UIAction(
             title: CommonStrings.openAppSettingsButton,
             image: Theme.iconImage(.contextMenuSettings),
             handler: { _ in showAppSettings() }
         )
 
-        let contextButton = ContextMenuButton(actions: buildActions(settingsAction))
+        let contextButton = ContextMenuButton(
+            actions: buildActions(settingsAction),
+            onDidDismissContextMenu: onDidDismissContextMenu,
+        )
         contextButton.accessibilityLabel = CommonStrings.openAppSettingsButton
 
+        let sizeClass: ConversationAvatarView.Configuration.SizeClass
+        if #available(iOS 26, *), BuildFlags.iOS26SDKIsAvailable {
+            sizeClass = isInFloatingSidebar ? .thirtyTwo : .forty
+        } else {
+            sizeClass = .twentyEight
+        }
+
         let avatarView = ConversationAvatarView(
-            sizeClass: .twentyEight,
+            sizeClass: sizeClass,
             localUserDisplayMode: .asUser
         )
         databaseStorage.read { transaction in
@@ -40,15 +63,21 @@ extension HomeTabViewController {
             }
         }
         contextButton.addSubview(avatarView)
-        avatarView.autoPinEdgesToSuperviewEdges()
+
+        avatarView.autoPinEdgesToSuperviewEdges(with: .init(
+            top: 0,
+            leading: isInFloatingSidebar ? 2 : 0,
+            bottom: 0,
+            trailing: 0
+        ))
 
         let barButtonView: UIView
 
-        if shouldShowUnreadPaymentBadge {
+        if let badgeColor {
             let wrapper = UIView.container()
             wrapper.addSubview(contextButton)
             contextButton.autoPinEdgesToSuperviewEdges()
-            PaymentsViewUtils.addUnreadBadge(toView: wrapper)
+            wrapper.addCircleBadge(color: badgeColor)
             barButtonView = wrapper
         } else {
             barButtonView = contextButton
@@ -56,6 +85,11 @@ extension HomeTabViewController {
 
         let barButtonItem = UIBarButtonItem(customView: barButtonView)
         barButtonItem.accessibilityLabel = CommonStrings.openAppSettingsButton
+#if compiler(>=6.2)
+        if #available(iOS 26.0, *) {
+            barButtonItem.hidesSharedBackground = true
+        }
+#endif
         return barButtonItem
     }
 }

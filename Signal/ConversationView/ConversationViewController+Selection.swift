@@ -50,7 +50,8 @@ public struct CVSelectionItem {
         if let message = interaction as? TSMessage {
             self.isForwardable = (hasRenderableContent &&
                                     !message.isViewOnceMessage &&
-                                    !message.wasRemotelyDeleted)
+                                    !message.wasRemotelyDeleted &&
+                                    !message.isPoll)
         } else {
             self.isForwardable = false
         }
@@ -296,26 +297,14 @@ extension ConversationViewController {
     }
 
     func didTapDeleteSelectedItems() {
+        let db = DependenciesBridge.shared.db
+
         let selectionItems = self.selectionState.selectionItems
         guard !selectionItems.isEmpty else {
             owsFailDebug("Invalid selection.")
             return
         }
 
-        DeleteForMeInfoSheetCoordinator.fromGlobals().coordinateDelete(
-            fromViewController: self
-        ) { interactionDeleteManager, _ in
-            self.presentDeleteSelectedMessagesActionSheet(
-                selectionItems: selectionItems,
-                interactionDeleteManager: interactionDeleteManager
-            )
-        }
-    }
-
-    private func presentDeleteSelectedMessagesActionSheet(
-        selectionItems: [CVSelectionItem],
-        interactionDeleteManager: InteractionDeleteManager
-    ) {
         let alert = ActionSheetController(
             title: nil,
             message: String.localizedStringWithFormat(
@@ -341,22 +330,22 @@ extension ConversationViewController {
             ) { [weak self] modalActivityIndicator in
                 guard let self = self else { return }
 
-                DispatchQueue.main.async {
-                    Self.deleteSelectedItems(
+                await db.awaitableWrite { tx in
+                    self.deleteSelectedItemsForMe(
                         selectionItems: selectionItems,
                         thread: self.thread,
-                        interactionDeleteManager: interactionDeleteManager
+                        tx: tx,
                     )
+                }
 
-                    modalActivityIndicator.dismiss {
-                        self.uiMode = .normal
-                    }
+                modalActivityIndicator.dismiss {
+                    self.uiMode = .normal
                 }
             }
         }
         alert.addAction(deleteForMeAction)
 
-        let canDeleteForEveryone: Bool = SSKEnvironment.shared.databaseStorageRef.read { tx in
+        let canDeleteForEveryone: Bool = db.read { tx in
             selectionItems.allSatisfy { selectionItem in
                 TSOutgoingMessage.anyFetchOutgoingMessage(
                     uniqueId: selectionItem.interactionId,
@@ -377,11 +366,10 @@ extension ConversationViewController {
                         canCancel: false
                     ) { @MainActor [weak self] modalActivityIndicator in
                         guard let self else { return }
-                        let thread = self.thread
-                        await SSKEnvironment.shared.databaseStorageRef.awaitableWrite { tx in
-                            Self.deleteSelectedItemsForEveryone(
+                        await db.awaitableWrite { tx in
+                            self.deleteSelectedItemsForEveryone(
                                 selectionItems: selectionItems,
-                                thread: thread,
+                                thread: self.thread,
                                 tx: tx
                             )
                         }
@@ -398,30 +386,30 @@ extension ConversationViewController {
         present(alert, animated: true)
     }
 
-    private static func deleteSelectedItems(
+    private func deleteSelectedItemsForMe(
         selectionItems: [CVSelectionItem],
         thread: TSThread,
-        interactionDeleteManager: InteractionDeleteManager
+        tx: DBWriteTransaction,
     ) {
-        SSKEnvironment.shared.databaseStorageRef.write { tx in
-            let interactionsToDelete = selectionItems.compactMap { item in
-                TSInteraction.anyFetch(
-                    uniqueId: item.interactionId,
-                    transaction: tx
-                )
-            }
+        let interactionDeleteManager = DependenciesBridge.shared.interactionDeleteManager
 
-            interactionDeleteManager.delete(
-                interactions: interactionsToDelete,
-                sideEffects: .custom(
-                    deleteForMeSyncMessage: .sendSyncMessage(interactionsThread: thread)
-                ),
-                tx: tx
+        let interactionsToDelete = selectionItems.compactMap { item in
+            TSInteraction.anyFetch(
+                uniqueId: item.interactionId,
+                transaction: tx
             )
         }
+
+        interactionDeleteManager.delete(
+            interactions: interactionsToDelete,
+            sideEffects: .custom(
+                deleteForMeSyncMessage: .sendSyncMessage(interactionsThread: thread)
+            ),
+            tx: tx
+        )
     }
 
-    private static func deleteSelectedItemsForEveryone(
+    private func deleteSelectedItemsForEveryone(
         selectionItems: [CVSelectionItem],
         thread: TSThread,
         tx: DBWriteTransaction
@@ -531,20 +519,9 @@ extension ConversationViewController {
     }
 
     func didTapDeleteAll() {
-        DeleteForMeInfoSheetCoordinator.fromGlobals().coordinateDelete(
-            fromViewController: self
-        ) { [weak self] _, threadSoftDeleteManager in
-            guard let self else { return }
+        let db = DependenciesBridge.shared.db
+        let threadSoftDeleteManager = DependenciesBridge.shared.threadSoftDeleteManager
 
-            self.presentDeleteAllConfirmationSheet(
-                threadSoftDeleteManager: threadSoftDeleteManager
-            )
-        }
-    }
-
-    private func presentDeleteAllConfirmationSheet(
-        threadSoftDeleteManager: any ThreadSoftDeleteManager
-    ) {
         let thread = self.thread
         let alert = ActionSheetController(title: nil, message: OWSLocalizedString("DELETE_ALL_MESSAGES_IN_CONVERSATION_ALERT_BODY", comment: "action sheet body"))
         alert.addAction(OWSActionSheets.cancelAction)
@@ -553,7 +530,7 @@ extension ConversationViewController {
             guard let self = self else { return }
             ModalActivityIndicatorViewController.present(fromViewController: self, canCancel: false) { [weak self] modalActivityIndicator in
                 guard let self = self else { return }
-                SSKEnvironment.shared.databaseStorageRef.write {
+                db.write {
                     threadSoftDeleteManager.removeAllInteractions(
                         thread: thread,
                         sendDeleteForMeSyncMessage: true,

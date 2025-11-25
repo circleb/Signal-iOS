@@ -8,10 +8,6 @@ import SignalUI
 import SignalServiceKit
 
 class RequestAccountDataReportViewController: OWSTableViewController2 {
-    private var learnMoreUrl: URL {
-        URL(string: "https://support.signal.org/hc/articles/5538911756954")!
-    }
-
     private enum FileType {
         case json
         case text
@@ -36,26 +32,17 @@ class RequestAccountDataReportViewController: OWSTableViewController2 {
         updateTableContents()
     }
 
-    public override func themeDidChange() {
-        super.themeDidChange()
-        updateTableContents()
-    }
-
     // MARK: - Rendering
 
-    private lazy var exportButton: UIView = {
-        let title = OWSLocalizedString(
+    private lazy var exportButton = UIButton(
+        configuration: .largePrimary(title: OWSLocalizedString(
             "ACCOUNT_DATA_REPORT_EXPORT_REPORT_BUTTON",
             comment: "Users can request a report of their account data. Users tap this button to export their data."
-        )
-        let result = OWSButton(title: title) { [weak self] in self?.didTapExport() }
-        result.dimsWhenHighlighted = true
-        result.layer.cornerRadius = 8
-        result.backgroundColor = .ows_accentBlue
-        result.titleLabel?.font = UIFont.dynamicTypeBody.semibold()
-        result.autoSetDimension(.height, toSize: 48)
-        return result
-    }()
+        )),
+        primaryAction: UIAction { [weak self] _ in
+            self?.didTapExport()
+        }
+    )
 
     private func updateTableContents() {
         self.contents = OWSTableContents(sections: [
@@ -67,24 +54,19 @@ class RequestAccountDataReportViewController: OWSTableViewController2 {
 
     private func headerSection() -> OWSTableSection {
         let result = OWSTableSection(items: [
-            .init(customCellBlock: { [weak self] in
+            .init(customCellBlock: {
                 let cell = UITableViewCell()
-                guard let self else { return cell }
-                cell.layoutMargins = OWSTableViewController2.cellOuterInsets(in: self.view)
-                cell.contentView.layoutMargins = .zero
 
                 let iconView = UIImageView(image: .init(named: "account_data_report"))
-                iconView.autoSetDimensions(to: .square(88))
-
-                let titleLabel = UILabel()
-                titleLabel.textAlignment = .center
-                titleLabel.font = UIFont.dynamicTypeTitle2.semibold()
-                titleLabel.text = OWSLocalizedString(
-                    "ACCOUNT_DATA_REPORT_TITLE",
-                    comment: "Users can request a report of their account data. This is the title on the screen where they do this."
-                )
-                titleLabel.numberOfLines = 0
-                titleLabel.lineBreakMode = .byWordWrapping
+                iconView.translatesAutoresizingMaskIntoConstraints = false
+                let iconViewContainer = UIView.container()
+                iconViewContainer.addSubview(iconView)
+                iconViewContainer.addConstraints([
+                    iconView.topAnchor.constraint(equalTo: iconViewContainer.topAnchor),
+                    iconView.leadingAnchor.constraint(greaterThanOrEqualTo: iconViewContainer.leadingAnchor),
+                    iconView.centerXAnchor.constraint(equalTo: iconViewContainer.centerXAnchor),
+                    iconView.bottomAnchor.constraint(equalTo: iconViewContainer.bottomAnchor, constant: -12),
+                ])
 
                 let descriptionTextView = LinkingTextView()
                 descriptionTextView.attributedText = .composed(
@@ -93,30 +75,19 @@ class RequestAccountDataReportViewController: OWSTableViewController2 {
                             "ACCOUNT_DATA_REPORT_SUBTITLE",
                             comment: "Users can request a report of their account data. This is the subtitle on the screen where they do this, giving them more information."
                         ),
-                        CommonStrings.learnMore.styled(with: .link(self.learnMoreUrl))
+                        CommonStrings.learnMore.styled(with: .link(URL.Support.requestingAccountData))
                     ],
-                    baseStyle: .init(.color(Theme.primaryTextColor), .font(.dynamicTypeBody)),
+                    baseStyle: .init(.color(.Signal.secondaryLabel), .font(.dynamicTypeSubheadline)),
                     separator: " "
                 )
-                descriptionTextView.linkTextAttributes = [
-                    .foregroundColor: Theme.accentBlueColor,
-                    .underlineColor: UIColor.clear,
-                    .underlineStyle: NSUnderlineStyle.single.rawValue
-                ]
                 descriptionTextView.textAlignment = .center
 
                 let stackView = UIStackView(arrangedSubviews: [
-                    iconView,
-                    titleLabel,
+                    iconViewContainer,
                     descriptionTextView
                 ])
                 stackView.axis = .vertical
-                stackView.alignment = .center
                 stackView.spacing = 12
-                stackView.setCustomSpacing(24, after: iconView)
-
-                cell.contentView.backgroundColor = .cyan
-
                 cell.contentView.addSubview(stackView)
                 stackView.autoPinEdgesToSuperviewMargins()
 
@@ -175,7 +146,8 @@ class RequestAccountDataReportViewController: OWSTableViewController2 {
             guard let self else { return cell }
 
             cell.contentView.addSubview(self.exportButton)
-            self.exportButton.autoPinEdgesToSuperviewMargins()
+            self.exportButton.autoPinHeightToSuperviewMargins()
+            self.exportButton.autoPinWidthToSuperview(withMargin: 12)
 
             return cell
         })])
@@ -197,7 +169,7 @@ class RequestAccountDataReportViewController: OWSTableViewController2 {
             canCancel: true,
             asyncBlock: { modal in
                 do {
-                    let response = try await SSKEnvironment.shared.signalServiceRef.urlSessionForMainSignalService().performRequest(request)
+                    let response = try await SSKEnvironment.shared.networkManagerRef.asyncRequest(request)
                     let status = response.responseStatusCode
                     guard status == 200 else {
                         throw OWSGenericError("Received a \(status) status code. The request failed")

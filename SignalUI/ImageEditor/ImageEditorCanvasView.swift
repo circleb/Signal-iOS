@@ -1220,20 +1220,23 @@ class ImageEditorCanvasView: UIView {
             return owsFailDebug("Could not load src image.")
         }
 
-        // we use a very strong blur radius to ensure adequate coverage of large and small faces
-        srcImage.cgImageWithGaussianBlurPromise(
-            radius: 25,
-            resizeToMaxPixelDimension: 300
-        ).done(on: DispatchQueue.main) { [weak self] blurredImage in
-            guard let self = self else { return }
-            self.model.blurredSourceImage = blurredImage
+        Task { @MainActor [weak self] in
+            do {
+                // we use a very strong blur radius to ensure adequate coverage of large and small faces
+                let blurredImage = try await srcImage.cgImageWithGaussianBlurAsync(
+                    radius: 25,
+                    resizeToMaxPixelDimension: 300,
+                )
+                guard let self = self else { return }
+                self.model.blurredSourceImage = blurredImage
 
-            // Once the blur is ready, update any content in case the user already blurred
-            if self.window != nil {
-                self.updateAllContent()
+                // Once the blur is ready, update any content in case the user already blurred
+                if self.window != nil {
+                    self.updateAllContent()
+                }
+            } catch {
+                owsFailDebug("Failed to blur src image")
             }
-        }.catch { _ in
-            owsFailDebug("Failed to blur src image")
         }
     }
 
@@ -1280,8 +1283,6 @@ class ImageEditorCanvasView: UIView {
         let dstSizePixels = transform.outputSizePixels
         let dstScale: CGFloat = 1.0 // The size is specified in pixels, not in points.
         let viewSize = dstSizePixels
-
-        let hasAlpha = Data.hasAlpha(forValidImageFilePath: model.srcImagePath)
 
         // We use an UIImageView + UIView.renderAsImage() instead of a CGGraphicsContext
         // Because CALayer.renderInContext() doesn't honor CALayer properties like frame,
@@ -1340,7 +1341,7 @@ class ImageEditorCanvasView: UIView {
 
         CATransaction.commit()
 
-        let image = view.renderAsImage(opaque: !hasAlpha, scale: dstScale)
+        let image = view.renderAsImage(opaque: !model.srcImageMetadata.hasAlpha, scale: dstScale)
         return image
     }
 

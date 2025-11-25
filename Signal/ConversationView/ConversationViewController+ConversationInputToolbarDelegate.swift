@@ -4,6 +4,7 @@
 //
 
 import CoreServices
+import LibSignalClient
 public import Photos
 public import SignalServiceKit
 public import SignalUI
@@ -18,6 +19,12 @@ extension ConversationViewController: ConversationInputToolbarDelegate {
     public func isGroup() -> Bool {
         isGroupConversation
     }
+
+    public func viewForKeyboardLayoutGuide() -> UIView {
+        return view
+    }
+
+    public func viewForSuggestedStickersPanel() -> UIView { view }
 
     public func sendButtonPressed() {
         AssertIsOnMainThread()
@@ -204,9 +211,6 @@ extension ConversationViewController: ConversationInputToolbarDelegate {
             owsFailDebug("Missing inputToolbar.")
             return
         }
-
-        updateInputAccessoryPlaceholderHeight()
-        updateBottomBarPosition()
         updateContentInsets()
     }
 
@@ -381,7 +385,6 @@ extension ConversationViewController: ConversationInputToolbarDelegate {
         case inputToolbarMissing
         case conversationBlocked
         case untrustedContacts
-        case invalidAttachment(SignalAttachment)
     }
 
     @MainActor
@@ -416,10 +419,6 @@ extension ConversationViewController: ConversationInputToolbarDelegate {
 
         guard identityIsConfirmed else {
             throw .untrustedContacts
-        }
-
-        if let attachment = attachments.first(where: \.hasError) {
-            throw .invalidAttachment(attachment)
         }
 
         let didAddToProfileWhitelist = ThreadUtil.addThreadToProfileWhitelistIfEmptyOrPendingRequestAndSetDefaultTimerWithSneakyTransaction(self.thread)
@@ -521,6 +520,16 @@ extension ConversationViewController: ConversationInputToolbarDelegate {
         )
     }
 
+    public func pollButtonPressed() {
+        AssertIsOnMainThread()
+
+        dismissKeyBoard()
+
+        let newPollViewController = NewPollViewController()
+        newPollViewController.sendDelegate = self
+        present(OWSNavigationController(rootViewController: newPollViewController), animated: true)
+    }
+
     public func didSelectRecentPhoto(asset: PHAsset, attachment: SignalAttachment) {
         AssertIsOnMainThread()
 
@@ -542,21 +551,19 @@ extension ConversationViewController: ConversationInputToolbarDelegate {
 
 public extension ConversationViewController {
 
-    func showErrorAlert(forAttachment attachment: SignalAttachment?) {
+    func showErrorAlert(attachmentError: SignalAttachmentError?) {
         AssertIsOnMainThread()
-        owsAssertDebug(attachment == nil || attachment?.hasError == true)
 
-        let errorMessage = (attachment?.localizedErrorDescription
-                                ?? SignalAttachment.missingDataErrorMessage)
+        Logger.warn("\(attachmentError as Optional)")
+        let errorMessage = (attachmentError ?? .missingData).localizedDescription
 
-        Logger.error("\(errorMessage)")
-
-        OWSActionSheets.showActionSheet(title: OWSLocalizedString("ATTACHMENT_ERROR_ALERT_TITLE",
-                                                                 comment: "The title of the 'attachment error' alert."),
-                                        message: errorMessage)
+        OWSActionSheets.showActionSheet(
+            title: OWSLocalizedString("ATTACHMENT_ERROR_ALERT_TITLE", comment: "The title of the 'attachment error' alert."),
+            message: errorMessage,
+        )
     }
 
-    func showApprovalDialog(forAttachment attachment: SignalAttachment) {
+    func showApprovalDialog(forAttachments attachments: [SignalAttachment]) {
         AssertIsOnMainThread()
 
         guard hasViewWillAppearEverBegun else {
@@ -569,7 +576,7 @@ public extension ConversationViewController {
         }
 
         let modal = AttachmentApprovalViewController.wrappedInNavController(
-            attachments: [attachment],
+            attachments: attachments,
             initialMessageBody: inputToolbar.messageBodyForSending,
             hasQuotedReplyDraft: inputToolbar.quotedReplyDraft != nil,
             approvalDelegate: self,
@@ -752,45 +759,26 @@ extension ConversationViewController: UIDocumentPickerDelegate {
     }
 
     public func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentAt url: URL) {
-        Logger.debug("Picked document at url: \(url)")
+        let resourceValues: URLResourceValues?
+        do {
+            resourceValues = try url.resourceValues(forKeys: [.contentTypeKey, .isDirectoryKey])
+        } catch {
+            owsFailDebug("couldn't get resourceValues: \(error)")
+            resourceValues = nil
+        }
 
-        let contentType: UTType = {
-            do {
-                let resourceValues = try url.resourceValues(forKeys: [.contentTypeKey])
-                guard let contentType = resourceValues.contentType else {
-                    owsFailDebug("Missing contentType.")
-                    return .data
-                }
-                return contentType
-            } catch {
-                owsFailDebug("Error: \(error)")
-                return .data
-            }
-        }()
-        let isDirectory: Bool = {
-            do {
-                let resourceValues = try url.resourceValues(forKeys: Set([
-                    .isDirectoryKey
-                ]))
-                guard let isDirectory = resourceValues.isDirectory else {
-                    owsFailDebug("Missing isDirectory.")
-                    return false
-                }
-                return isDirectory
-            } catch {
-                owsFailDebug("Error: \(error)")
-                return false
-            }
-        }()
-
-        if isDirectory {
-            Logger.info("User picked directory.")
-
+        if resourceValues?.isDirectory == true {
             DispatchQueue.main.async {
-                OWSActionSheets.showActionSheet(title: OWSLocalizedString("ATTACHMENT_PICKER_DOCUMENTS_PICKED_DIRECTORY_FAILED_ALERT_TITLE",
-                                                                         comment: "Alert title when picking a document fails because user picked a directory/bundle"),
-                                                message: OWSLocalizedString("ATTACHMENT_PICKER_DOCUMENTS_PICKED_DIRECTORY_FAILED_ALERT_BODY",
-                                                                           comment: "Alert body when picking a document fails because user picked a directory/bundle"))
+                OWSActionSheets.showActionSheet(
+                    title: OWSLocalizedString(
+                        "ATTACHMENT_PICKER_DOCUMENTS_PICKED_DIRECTORY_FAILED_ALERT_TITLE",
+                        comment: "Alert title when picking a document fails because user picked a directory/bundle"
+                    ),
+                    message: OWSLocalizedString(
+                        "ATTACHMENT_PICKER_DOCUMENTS_PICKED_DIRECTORY_FAILED_ALERT_BODY",
+                        comment: "Alert body when picking a document fails because user picked a directory/bundle",
+                    ),
+                )
             }
             return
         }
@@ -800,82 +788,69 @@ extension ConversationViewController: UIDocumentPickerDelegate {
                 return filename
             }
             owsFailDebug("Unable to determine filename")
-            return OWSLocalizedString("ATTACHMENT_DEFAULT_FILENAME",
-                                     comment: "Generic filename for an attachment with no known name")
+            return OWSLocalizedString("ATTACHMENT_DEFAULT_FILENAME", comment: "Generic filename for an attachment with no known name")
         }()
 
-        func buildDataSource() -> DataSource? {
-            do {
-                return try DataSourcePath(fileUrl: url, shouldDeleteOnDeallocation: false)
-            } catch {
-                owsFailDebug("Error: \(error).")
-                return nil
-            }
-        }
-        guard let dataSource = buildDataSource() else {
+        let dataSource: DataSourcePath
+        do {
+            dataSource = try DataSourcePath(fileUrl: url, shouldDeleteOnDeallocation: false)
+        } catch {
+            owsFailDebug("couldn't build data source: \(error)")
             DispatchQueue.main.async {
-                OWSActionSheets.showActionSheet(title: OWSLocalizedString("ATTACHMENT_PICKER_DOCUMENTS_FAILED_ALERT_TITLE",
-                                                                         comment: "Alert title when picking a document fails for an unknown reason"))
+                OWSActionSheets.showActionSheet(
+                    title: OWSLocalizedString(
+                        "ATTACHMENT_PICKER_DOCUMENTS_FAILED_ALERT_TITLE",
+                        comment: "Alert title when picking a document fails for an unknown reason",
+                    ),
+                )
             }
             return
         }
         dataSource.sourceFilename = filename
 
-        // Although we want to be able to send higher quality attachments through the document picker
-        // it's more important that we ensure the sent format is one all clients can accept (e.g. *not* quicktime .mov)
-        if SignalAttachment.isVideoThatNeedsCompression(dataSource: dataSource,
-                                                        dataUTI: contentType.identifier) {
-            self.showApprovalDialogAfterProcessingVideoURL(url, filename: filename)
+        let contentTypeIdentifier = (resourceValues?.contentType ?? .data).identifier
+
+        // Although we want to be able to send higher quality attachments through
+        // the document picker, it's more important that we ensure the sent format
+        // is one all clients can accept (e.g., *not* QuickTime .mov).
+        if SignalAttachment.videoUTISet.contains(contentTypeIdentifier) {
+            self.showApprovalDialogAfterProcessingVideo(dataSource: dataSource)
             return
         }
 
-        let attachment = SignalAttachment.attachment(dataSource: dataSource, dataUTI: contentType.identifier)
-        showApprovalDialog(forAttachment: attachment)
+        let attachment: SignalAttachment
+        do throws(SignalAttachmentError) {
+            attachment = try SignalAttachment.attachment(dataSource: dataSource, dataUTI: contentTypeIdentifier)
+        } catch {
+            DispatchQueue.main.async {
+                self.showErrorAlert(attachmentError: error)
+            }
+            return
+        }
+
+        showApprovalDialog(forAttachments: [attachment])
     }
 
-    private func showApprovalDialogAfterProcessingVideoURL(_ movieURL: URL, filename: String?) {
+    private func showApprovalDialogAfterProcessingVideo(dataSource: DataSourcePath) {
         AssertIsOnMainThread()
 
-        ModalActivityIndicatorViewController.present(fromViewController: self,
-                                                     canCancel: true) { modalActivityIndicator in
-            let dataSource: DataSource
-            do {
-                dataSource = try DataSourcePath(fileUrl: movieURL, shouldDeleteOnDeallocation: false)
-            } catch {
-                owsFailDebug("Error: \(error).")
-
-                DispatchQueue.main.async {
-                    self.showErrorAlert(forAttachment: nil)
+        ModalActivityIndicatorViewController.present(
+            fromViewController: self,
+            canCancel: true,
+            asyncBlock: { modalActivityIndicator in
+                do {
+                    let attachment = try await SignalAttachment.compressVideoAsMp4(dataSource: dataSource)
+                    modalActivityIndicator.dismissIfNotCanceled(completionIfNotCanceled: {
+                        self.showApprovalDialog(forAttachments: [attachment])
+                    })
+                } catch {
+                    owsFailDebug("Error: \(error).")
+                    modalActivityIndicator.dismissIfNotCanceled(completionIfNotCanceled: {
+                        self.showErrorAlert(attachmentError: error as? SignalAttachmentError)
+                    })
                 }
-                return
-            }
-
-            dataSource.sourceFilename = filename
-            let promise = Promise.wrapAsync({
-                return try await SignalAttachment.compressVideoAsMp4(dataSource: dataSource,
-                                                                     dataUTI: UTType.mpeg4Movie.identifier)
-            })
-            promise.done(on: DispatchQueue.main) { (attachment: SignalAttachment) in
-                if modalActivityIndicator.wasCancelled {
-                    return
-                }
-                modalActivityIndicator.dismiss {
-                    if attachment.hasError {
-                        owsFailDebug("Invalid attachment: \(attachment.errorName ?? "Unknown error").")
-                        self.showErrorAlert(forAttachment: attachment)
-                    } else {
-                        self.showApprovalDialog(forAttachment: attachment)
-                    }
-                }
-            }.catch(on: DispatchQueue.main) { error in
-                owsFailDebug("Error: \(error).")
-
-                modalActivityIndicator.dismiss {
-                    owsFailDebug("Invalid attachment.")
-                    self.showErrorAlert(forAttachment: nil)
-                }
-            }
-        }
+            },
+        )
     }
 }
 
@@ -914,7 +889,13 @@ extension ConversationViewController: SendMediaNavDelegate {
                 from: viewController,
                 messageBody: messageBody
             )
-            inputToolbar?.clearTextMessage(animated: false)
+
+            if attachments.count == 1, let attachment = attachments.first, attachment.isBorderless {
+                // This looks like a sticker, we shouldn't clear the input toolbar.
+            } else {
+                inputToolbar?.clearTextMessage(animated: false)
+            }
+
             // we want to already be at the bottom when the user returns, rather than have to watch
             // the new message scroll into view.
             scrollToBottomOfConversation(animated: true)
@@ -928,9 +909,6 @@ extension ConversationViewController: SendMediaNavDelegate {
             case .conversationBlocked, .untrustedContacts:
                 // User was prompted but chose not to make changes. Stop here.
                 break
-            case .invalidAttachment(let attachment):
-                Logger.warn("Invalid attachment: \(attachment.errorName ?? "Missing data").")
-                self.showErrorAlert(forAttachment: attachment)
             }
         }
     }
@@ -974,8 +952,8 @@ extension ConversationViewController: SendMediaNavDataSource {
         return [displayName]
     }
 
-    func sendMediaNavMentionableAddresses(tx: DBReadTransaction) -> [SignalServiceAddress] {
-        supportsMentions ? thread.recipientAddresses(with: SDSDB.shimOnlyBridge(tx)) : []
+    func sendMediaNavMentionableAcis(tx: DBReadTransaction) -> [Aci] {
+        supportsMentions ? thread.recipientAddresses(with: tx).compactMap(\.aci) : []
     }
 
     func sendMediaNavMentionCacheInvalidationKey() -> String {
@@ -990,5 +968,21 @@ extension ConversationViewController: StickerPickerSheetDelegate {
         let manageStickersView = ManageStickersViewController()
         let navigationController = OWSNavigationController(rootViewController: manageStickersView)
         return navigationController
+    }
+}
+
+// MARK: - PollSendDelegate
+
+extension ConversationViewController: PollSendDelegate {
+    public func sendPoll(question: String, options: [String], allowMultipleVotes: Bool) {
+        ThreadUtil.enqueueMessage(
+            withPoll:
+                CreatePollMessage(
+                    question: question,
+                    options: options,
+                    allowMultiple: allowMultipleVotes
+                ),
+            thread: self.thread
+        )
     }
 }

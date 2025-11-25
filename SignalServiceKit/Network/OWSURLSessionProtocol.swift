@@ -112,11 +112,13 @@ public protocol OWSURLSessionProtocol: AnyObject {
 
     // MARK: Initializer
 
+    /// - parameter onFailureCallback: called for any failure on any request made using this session.
     init(
         endpoint: OWSURLSessionEndpoint,
         configuration: URLSessionConfiguration,
         maxResponseSize: Int?,
-        canUseSignalProxy: Bool
+        canUseSignalProxy: Bool,
+        onFailureCallback: ((any Error) -> Void)?
     )
 
     // MARK: Tasks
@@ -170,13 +172,14 @@ extension OWSURLSessionProtocol {
         endpoint: OWSURLSessionEndpoint,
         configuration: URLSessionConfiguration,
         maxResponseSize: Int? = nil,
-        canUseSignalProxy: Bool = false
+        canUseSignalProxy: Bool = false,
     ) {
         self.init(
             endpoint: endpoint,
             configuration: configuration,
             maxResponseSize: maxResponseSize,
-            canUseSignalProxy: canUseSignalProxy
+            canUseSignalProxy: canUseSignalProxy,
+            onFailureCallback: nil,
         )
     }
 }
@@ -192,7 +195,7 @@ public extension OWSURLSessionProtocol {
         headers: HttpHeaders = HttpHeaders(),
         requestData: Data,
         progress: OWSProgressSource? = nil
-    ) async throws -> any HTTPResponse {
+    ) async throws -> HTTPResponse {
         let request = try self.endpoint.buildRequest(urlString, method: method, headers: headers, body: requestData)
         return try await self.performUpload(request: request, requestData: requestData, progress: progress)
     }
@@ -203,7 +206,7 @@ public extension OWSURLSessionProtocol {
         headers: HttpHeaders = HttpHeaders(),
         fileUrl: URL,
         progress: OWSProgressSource? = nil
-    ) async throws -> any HTTPResponse {
+    ) async throws -> HTTPResponse {
         let request = try self.endpoint.buildRequest(urlString, method: method, headers: headers)
         return try await self.performUpload(
             request: request,
@@ -221,7 +224,7 @@ public extension OWSURLSessionProtocol {
         headers: HttpHeaders = HttpHeaders(),
         body: Data? = nil,
         ignoreAppExpiry: Bool = false
-    ) async throws -> any HTTPResponse {
+    ) async throws -> HTTPResponse {
         let request = try self.endpoint.buildRequest(urlString, method: method, headers: headers, body: body)
         return try await self.performRequest(request: request, ignoreAppExpiry: ignoreAppExpiry)
     }
@@ -253,7 +256,7 @@ extension OWSURLSessionProtocol {
         textParts textPartsDictionary: OrderedDictionary<String, String>,
         ignoreAppExpiry: Bool = false,
         progress: OWSProgressSource? = nil
-    ) async throws -> any HTTPResponse {
+    ) async throws -> HTTPResponse {
         let multipartBodyFileURL = OWSFileSystem.temporaryFileUrl(isAvailableWhileDeviceLocked: true)
         defer {
             do {
@@ -276,16 +279,14 @@ extension OWSURLSessionProtocol {
             boundary: boundary,
             textParts: textParts
         )
-        guard let bodyFileSize = OWSFileSystem.fileSize(of: multipartBodyFileURL) else {
-            throw OWSAssertionError("Missing bodyFileSize.")
-        }
+        let bodyFileSize: UInt64 = try OWSFileSystem.fileSize(of: multipartBodyFileURL)
 
         var request = request
         request.httpMethod = HTTPMethod.post.methodName
         request.setValue(Self.userAgentHeaderValueSignalIos, forHTTPHeaderField: Self.userAgentHeaderKey)
         request.setValue(Self.acceptLanguageHeaderValue, forHTTPHeaderField: Self.acceptLanguageHeaderKey)
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-        request.setValue(String(format: "%llu", bodyFileSize.uint64Value), forHTTPHeaderField: "Content-Length")
+        request.setValue(String(format: "%llu", bodyFileSize), forHTTPHeaderField: "Content-Length")
 
         return try await performUpload(
             request: request,

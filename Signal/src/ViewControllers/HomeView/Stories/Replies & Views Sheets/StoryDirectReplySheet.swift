@@ -17,17 +17,15 @@ public class StoryDirectReplySheet: OWSViewController, StoryReplySheet {
         }
         let toolbar = StoryReplyInputToolbar(isGroupStory: false, quotedReplyModel: quotedReplyModel, spoilerState: spoilerState)
         toolbar.delegate = self
+        toolbar.translatesAutoresizingMaskIntoConstraints = false
         return toolbar
     }()
     let storyMessage: StoryMessage
     lazy var thread: TSThread? = SSKEnvironment.shared.databaseStorageRef.read { storyMessage.context.thread(transaction: $0) }
 
-    var reactionPickerBackdrop: UIView?
-    var reactionPicker: MessageReactionPicker?
-
-    let backdropView: UIView? = UIView()
-
     let spoilerState: SpoilerRenderState
+
+    private var inputToolbarBottomConstraint: NSLayoutConstraint?
 
     init(storyMessage: StoryMessage, spoilerState: SpoilerRenderState) {
         self.storyMessage = storyMessage
@@ -52,10 +50,15 @@ public class StoryDirectReplySheet: OWSViewController, StoryReplySheet {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
         view.addGestureRecognizer(tapGesture)
 
+        let inputToolbarBottomConstraint = inputToolbar.topAnchor.constraint(greaterThanOrEqualTo: view.safeAreaLayoutGuide.topAnchor)
         view.addSubview(inputToolbar)
-        inputToolbar.autoPinWidthToSuperview()
-        inputToolbar.autoPin(toTopLayoutGuideOf: self, withInset: 0, relation: .greaterThanOrEqual)
-        inputToolbar.autoPinEdge(.bottom, to: .bottom, of: keyboardLayoutGuideViewSafeArea)
+        NSLayoutConstraint.activate([
+            inputToolbar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            inputToolbar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            inputToolbarBottomConstraint,
+            inputToolbar.bottomAnchor.constraint(equalTo: keyboardLayoutGuide.topAnchor),
+        ])
+        self.inputToolbarBottomConstraint = inputToolbarBottomConstraint
     }
 
     @objc
@@ -65,6 +68,19 @@ public class StoryDirectReplySheet: OWSViewController, StoryReplySheet {
     }
 
     public override func dismiss(animated flag: Bool, completion: (() -> Void)? = nil) {
+        // We don't want `inputToolbar` to stay attached to the keyboard's layout guide during dismiss animation
+        // as this creates unpleasant animations where the bar flies across the screen.
+        // To workaround that we freeze vertical position of the `inputToolbar`
+        // just before the animation stars to that the bar is animated with the whole view.
+        if let inputToolbarBottomConstraint {
+            let fixedPositionConstraint = inputToolbar.topAnchor.constraint(
+                equalTo: view.topAnchor, constant: inputToolbar.frame.y)
+
+            NSLayoutConstraint.deactivate([inputToolbarBottomConstraint])
+            NSLayoutConstraint.activate([fixedPositionConstraint])
+
+            self.inputToolbarBottomConstraint = nil
+        }
         super.dismiss(animated: flag) { [dismissHandler] in
             completion?()
             dismissHandler?()

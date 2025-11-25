@@ -97,7 +97,7 @@ public class FingerprintViewController: OWSViewController, OWSNavigationChildCon
         super.init()
 
         title = NSLocalizedString("PRIVACY_VERIFICATION_TITLE", comment: "Navbar title")
-        navigationItem.leftBarButtonItem = .doneButton(dismissingFrom: self)
+        navigationItem.rightBarButtonItem = .doneButton(dismissingFrom: self)
 
         identityStateChangeObserver = NotificationCenter.default.addObserver(
             forName: .identityStateDidChange,
@@ -160,11 +160,7 @@ public class FingerprintViewController: OWSViewController, OWSNavigationChildCon
             .color(Theme.secondaryTextAndIconColor),
             .alignment(.center)
         )
-        instructionsTextView.linkTextAttributes = [
-            .foregroundColor: Theme.primaryTextColor,
-            .underlineColor: UIColor.clear,
-            .underlineStyle: NSUnderlineStyle.single.rawValue
-        ]
+        instructionsTextView.linkTextAttributes = [ .foregroundColor: Theme.primaryTextColor ]
     }
 
     private lazy var verifyUnverifyButtonLabel = UILabel()
@@ -384,8 +380,7 @@ public class FingerprintViewController: OWSViewController, OWSNavigationChildCon
     }
 
     fileprivate static func showLearnMoreUrl(from viewController: UIViewController) {
-        let learnMoreUrl = URL(string: "https://support.signal.org/hc/articles/360007060632")!
-        let safariVC = SFSafariViewController(url: learnMoreUrl)
+        let safariVC = SFSafariViewController(url: URL.Support.safetyNumbers)
         viewController.present(safariVC, animated: true)
     }
 

@@ -151,6 +151,10 @@ public enum CommonStrings {
         OWSLocalizedString("LEARN_MORE", comment: "Label for the 'learn more' button.")
     }
 
+    static public var copiedToClipboardToast: String {
+        OWSLocalizedString("COPIED_TO_CLIPBOARD", comment: "Indicator that a value has been copied to the clipboard.")
+    }
+
     static public var unarchiveAction: String {
         OWSLocalizedString("UNARCHIVE_ACTION",
                           comment: "Label for the unarchive button for conversations list view")
@@ -274,6 +278,10 @@ public enum CommonStrings {
             "SCAN_QR_CODE_VIEW_TITLE",
             comment: "Title for the 'scan QR code' view."
         )
+    }
+
+    static public var betaLabel: String {
+        OWSLocalizedString("BETA_LABEL", comment: "Beta label")
     }
 }
 

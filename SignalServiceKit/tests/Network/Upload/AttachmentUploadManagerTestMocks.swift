@@ -16,7 +16,6 @@ extension AttachmentUploadManagerImpl {
         typealias AttachmentEncrypter = _Upload_AttachmentEncrypterMock
         typealias FileSystem = _Upload_FileSystemMock
 
-        typealias BackupKeyMaterial = _AttachmentUploadManager_BackupKeyMaterialMock
         typealias BackupRequestManager = _AttachmentUploadManager_BackupRequestManagerMock
 
         typealias SleepTimer = _Upload_SleepTimerMock
@@ -41,10 +40,16 @@ class _Upload_FileSystemMock: Upload.Shims.FileSystem {
 
     func temporaryFileUrl() -> URL { return URL(string: "file://")! }
 
+    func fileOrFolderExists(url: URL) -> Bool {
+        true
+    }
+
     func deleteFile(url: URL) throws { }
 
-    func createTempFileSlice(url: URL, start: Int) throws -> (URL, Int) {
-        return (url, size - start)
+    public func maxFileChunkSizeBytes() -> Int { 32 }
+
+    func readMemoryMappedFileData(url: URL) throws -> Data {
+        return Data(repeating: 0, count: size)
     }
 }
 
@@ -57,69 +62,44 @@ class _Upload_SleepTimerMock: Upload.Shims.SleepTimer {
 
 class _AttachmentUploadManager_NetworkManagerMock: NetworkManager {
 
-    var performRequestBlock: ((TSRequest, Bool) -> Promise<HTTPResponse>)?
+    var performRequestBlock: ((TSRequest) -> Promise<HTTPResponse>)?
 
-    override func asyncRequest(_ request: TSRequest, canUseWebSocket: Bool = true, retryPolicy: RetryPolicy = .dont) async throws -> any HTTPResponse {
-        return try await performRequestBlock!(request, canUseWebSocket).awaitable()
-    }
-
-    override func makePromise(request: TSRequest, canUseWebSocket: Bool = true) -> Promise<HTTPResponse> {
-        return performRequestBlock!(request, canUseWebSocket)
+    override func asyncRequestImpl(_ request: TSRequest, retryPolicy: RetryPolicy) async throws -> HTTPResponse {
+        return try await performRequestBlock!(request).awaitable()
     }
 }
 
 public class _AttachmentUploadManager_OWSURLSessionMock: BaseOWSURLSessionMock {
 
-    public var performUploadDataBlock: ((URLRequest, Data, OWSProgressSource?) async throws -> any HTTPResponse)?
-    public override func performUpload(request: URLRequest, requestData: Data, progress: OWSProgressSource?) async throws -> any HTTPResponse {
+    public var performUploadDataBlock: ((URLRequest, Data, OWSProgressSource?) async throws -> HTTPResponse)?
+    public override func performUpload(request: URLRequest, requestData: Data, progress: OWSProgressSource?) async throws -> HTTPResponse {
         return try await performUploadDataBlock!(request, requestData, progress)
     }
 
-    public var performUploadFileBlock: ((URLRequest, URL, Bool, OWSProgressSource?) async throws -> any HTTPResponse)?
-    public override func performUpload(request: URLRequest, fileUrl: URL, ignoreAppExpiry: Bool, progress: OWSProgressSource?) async throws -> any HTTPResponse {
+    public var performUploadFileBlock: ((URLRequest, URL, Bool, OWSProgressSource?) async throws -> HTTPResponse)?
+    public override func performUpload(request: URLRequest, fileUrl: URL, ignoreAppExpiry: Bool, progress: OWSProgressSource?) async throws -> HTTPResponse {
         return try await performUploadFileBlock!(request, fileUrl, ignoreAppExpiry, progress)
     }
 
-    public var performRequestBlock: ((URLRequest) async throws -> any HTTPResponse)?
-    public override func performRequest(request: URLRequest, ignoreAppExpiry: Bool) async throws -> any HTTPResponse {
+    public var performRequestBlock: ((URLRequest) async throws -> HTTPResponse)?
+    public override func performRequest(request: URLRequest, ignoreAppExpiry: Bool) async throws -> HTTPResponse {
         return try await performRequestBlock!(request)
     }
 }
 
-class _AttachmentUploadManager_ChatConnectionManagerMock: ChatConnectionManager {
-    func updateCanOpenWebSocket() {}
-    var hasEmptiedInitialQueue: Bool { true }
-    var identifiedConnectionState: OWSChatConnectionState { .open }
-    func waitForIdentifiedConnectionToOpen() async throws { }
-    func waitUntilIdentifiedConnectionShouldBeClosed() async throws(CancellationError) { fatalError() }
-    func shouldWaitForSocketToMakeRequest(connectionType: OWSChatConnectionType) -> Bool { true }
-    func shouldSocketBeOpen_restOnly(connectionType: OWSChatConnectionType) -> Bool { fatalError() }
-    func requestIdentifiedConnection(shouldReconnectIfConnectedElsewhere: Bool) -> OWSChatConnection.ConnectionToken { fatalError() }
-    func requestUnidentifiedConnection(shouldReconnectIfConnectedElsewhere: Bool) -> OWSChatConnection.ConnectionToken { fatalError() }
-    func makeRequest(_ request: TSRequest) async throws -> HTTPResponse { fatalError() }
-    func waitForDisconnectIfClosed() async {}
-}
+class _AttachmentUploadManager_ChatConnectionManagerMock: ChatConnectionManagerMock {}
 
-class _AttachmentUploadManager_BackupKeyMaterialMock: BackupKeyMaterial {
-    func backupKey(
-        type: BackupAuthCredentialType,
-        tx: DBReadTransaction
-    ) throws(BackupKeyMaterialError) -> BackupKey {
+class _AttachmentUploadManager_BackupRequestManagerMock: BackupRequestManager {
+    func fetchBackupServiceAuthForRegistration(
+        key: BackupKeyMaterial,
+        localAci: Aci,
+        chatServiceAuth: ChatServiceAuth
+    ) async throws -> BackupServiceAuth {
         fatalError("Unimplemented for tests")
     }
 
-    func mediaEncryptionMetadata(
-        mediaName: String,
-        type: MediaTierEncryptionType,
-        tx: DBReadTransaction
-    ) throws(BackupKeyMaterialError) -> MediaTierEncryptionMetadata {
-        return .init(type: type, mediaId: Data(), hmacKey: Data(), aesKey: Data())
-    }
-}
-
-class _AttachmentUploadManager_BackupRequestManagerMock: BackupRequestManager {
     func fetchBackupServiceAuth(
-        for type: BackupAuthCredentialType,
+        for key: BackupKeyMaterial,
         localAci: Aci,
         auth: ChatServiceAuth,
         forceRefreshUnlessCachedPaidCredential: Bool
@@ -129,8 +109,6 @@ class _AttachmentUploadManager_BackupRequestManagerMock: BackupRequestManager {
 
     func reserveBackupId(localAci: Aci, auth: ChatServiceAuth) async throws { }
 
-    func registerBackupKeys(localAci: Aci, auth: ChatServiceAuth) async throws {}
-
     func fetchBackupUploadForm(
         backupByteLength: UInt32,
         auth: BackupServiceAuth
@@ -138,7 +116,7 @@ class _AttachmentUploadManager_BackupRequestManagerMock: BackupRequestManager {
         fatalError("Unimplemented for tests")
     }
 
-    func fetchBackupMediaAttachmentUploadForm(auth: BackupServiceAuth) async throws -> Upload.Form {
+    func fetchBackupMediaAttachmentUploadForm(auth: BackupServiceAuth, logger: PrefixedLogger? = nil) async throws -> Upload.Form {
         fatalError("Unimplemented for tests")
     }
 
@@ -152,7 +130,8 @@ class _AttachmentUploadManager_BackupRequestManagerMock: BackupRequestManager {
 
     func copyToMediaTier(
         item: BackupArchive.Request.MediaItem,
-        auth: BackupServiceAuth
+        auth: BackupServiceAuth,
+        logger: PrefixedLogger? = nil
     ) async throws -> UInt32 {
         return 3
     }
@@ -179,6 +158,14 @@ class _AttachmentUploadManager_BackupRequestManagerMock: BackupRequestManager {
     }
 
     func redeemReceipt(receiptCredentialPresentation: Data) async throws {
+    }
+
+    func fetchSvr🐝AuthCredential(
+        key: SignalServiceKit.MessageRootBackupKey,
+        chatServiceAuth auth: SignalServiceKit.ChatServiceAuth,
+        forceRefresh: Bool
+    ) async throws -> LibSignalClient.Auth {
+        return LibSignalClient.Auth(username: "", password: "")
     }
 }
 

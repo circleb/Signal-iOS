@@ -119,20 +119,22 @@ public class HTTPUtils {
         responseHeaders: HttpHeaders,
         responseData: Data?
     ) async -> OWSHTTPError {
-        let httpError = HTTPUtils.buildServiceError(
-            requestUrl: requestUrl,
-            responseStatus: responseStatus,
-            responseHeaders: responseHeaders,
-            responseData: responseData
-        )
+        let httpError: OWSHTTPError
+        if responseStatus == 0 {
+            httpError = .networkFailure(.invalidResponseStatus)
+        } else {
+            httpError = .serviceResponse(.init(
+                requestUrl: requestUrl,
+                responseStatus: responseStatus,
+                responseHeaders: responseHeaders,
+                responseData: responseData
+            ))
+        }
 
         await applyHTTPError(httpError)
-
         return httpError
     }
 
-    // This DRYs up handling of main service errors so that
-    // REST and websocket errors are handled in the same way.
     public static func applyHTTPError(_ httpError: OWSHTTPError) async {
         if httpError.isNetworkFailureImpl || httpError.isTimeoutImpl {
             OutageDetection.shared.reportConnectionFailure()
@@ -155,46 +157,7 @@ public class HTTPUtils {
         } else {
             retryAfter = defaultRetryTime
         }
-        return UInt64(retryAfter * 1000) * NSEC_PER_MSEC
-    }
-
-    private static func buildServiceError(
-        requestUrl: URL,
-        responseStatus: Int,
-        responseHeaders: HttpHeaders,
-        responseData: Data?
-    ) -> OWSHTTPError {
-
-        let retryAfterDate: Date? = responseHeaders.retryAfterDate
-        func buildServiceResponseError(
-            localizedDescription: String? = nil,
-            localizedRecoverySuggestion: String? = nil
-        ) -> OWSHTTPError {
-            .forServiceResponse(
-                requestUrl: requestUrl,
-                responseStatus: responseStatus,
-                responseHeaders: responseHeaders,
-                responseError: nil,
-                responseData: responseData,
-                customRetryAfterDate: retryAfterDate,
-                customLocalizedDescription: localizedDescription,
-                customLocalizedRecoverySuggestion: localizedRecoverySuggestion
-            )
-        }
-
-        switch responseStatus {
-        case 0:
-            return .networkFailure(.invalidResponseStatus)
-        case 429:
-            let description = OWSLocalizedString("REGISTER_RATE_LIMITING_ERROR", comment: "")
-            let recoverySuggestion = OWSLocalizedString("REGISTER_RATE_LIMITING_BODY", comment: "")
-            return buildServiceResponseError(
-                localizedDescription: description,
-                localizedRecoverySuggestion: recoverySuggestion
-            )
-        default:
-            return buildServiceResponseError()
-        }
+        return retryAfter.clampedNanoseconds
     }
 }
 
@@ -202,15 +165,30 @@ public class HTTPUtils {
 
 public extension Error {
     var httpRetryAfterDate: Date? {
-        HTTPUtils.httpRetryAfterDate(forError: self)
+        guard let httpError = self as? OWSHTTPError else {
+            return nil
+        }
+
+        return httpError.responseHeaders?.retryAfterDate
     }
 
     var httpResponseData: Data? {
-        HTTPUtils.httpResponseData(forError: self)
+        guard let httpError = self as? OWSHTTPError else {
+            return nil
+        }
+
+        return httpError.responseBodyData
     }
 
     var httpStatusCode: Int? {
-        HTTPUtils.httpStatusCode(forError: self)
+        guard
+            let httpError = self as? OWSHTTPError,
+            httpError.responseStatusCode > 0
+        else {
+            return nil
+        }
+
+        return httpError.responseStatusCode
     }
 
     var httpResponseHeaders: HttpHeaders? {
@@ -220,107 +198,11 @@ public extension Error {
         return error.responseHeaders
     }
 
-    var httpResponseJson: Any? {
-        guard let data = httpResponseData else {
-            return nil
-        }
-        do {
-            let json = try JSONSerialization.jsonObject(with: data, options: [])
-            return json
-        } catch {
-            owsFailDebug("Could not parse JSON: \(error).")
-            return nil
-        }
-    }
-
     /// Does this error represent a transient networking issue?
     ///
     /// a.k.a. "the internet gave up" (see also `isTimeout`)
     var isNetworkFailure: Bool {
-        return HTTPUtils.isNetworkFailureError(self)
-    }
-
-    /// Does this error represent a self-induced timeout?
-    ///
-    /// a.k.a. "we gave up" (see also `isNetworkFailure`)
-    var isTimeout: Bool {
-        return HTTPUtils.isTimeoutError(self)
-    }
-
-    var isNetworkFailureOrTimeout: Bool {
-        return isNetworkFailure || isTimeout
-    }
-
-    var is5xxServiceResponse: Bool {
-        switch self as? OWSHTTPError {
-        case .serviceResponse(let serviceResponse):
-            return serviceResponse.is5xx
-        case nil, .invalidAppState, .invalidRequest, .wrappedFailure, .networkFailure:
-            return false
-        }
-    }
-
-    func hasFatalHttpStatusCode() -> Bool {
-        guard let statusCode = self.httpStatusCode else {
-            return false
-        }
-        if statusCode == 429 {
-            // "Too Many Requests", retry with backoff.
-            return false
-        }
-        return 400 <= statusCode && statusCode <= 499
-    }
-}
-
-// MARK: -
-
-// This extension contains the canonical implementations for
-// extracting various HTTP metadata from errors.  They should
-// only be called from the convenience accessors on Error and
-// NSError above.
-fileprivate extension HTTPUtils {
-    static func httpRetryAfterDate(forError error: Error) -> Date? {
-        guard let httpError = error as? OWSHTTPError else {
-            return nil
-        }
-        if let retryAfterDate = httpError.customRetryAfterDate {
-            return retryAfterDate
-        }
-        if let retryAfterDate = httpError.responseHeaders?.retryAfterDate {
-            return retryAfterDate
-        }
-        if let responseError = httpError.responseError {
-            return httpRetryAfterDate(forError: responseError)
-        }
-        return nil
-    }
-
-    static func httpResponseData(forError error: Error) -> Data? {
-        guard let httpError = error as? OWSHTTPError else {
-            return nil
-        }
-        if let responseData = httpError.responseBodyData {
-            return responseData
-        }
-        if let responseError = httpError.responseError {
-            return httpResponseData(forError: responseError)
-        }
-        return nil
-    }
-
-    static func httpStatusCode(forError error: Error) -> Int? {
-        guard let httpError = error as? OWSHTTPError else {
-            return nil
-        }
-        let statusCode = httpError.responseStatusCode
-        guard statusCode > 0 else {
-            return nil
-        }
-        return statusCode
-    }
-
-    static func isNetworkFailureError(_ error: Error) -> Bool {
-        switch error {
+        switch (self as any Error) {
         case URLError.cannotConnectToHost: return true
         case URLError.networkConnectionLost: return true
         case URLError.dnsLookupFailed: return true
@@ -338,8 +220,11 @@ fileprivate extension HTTPUtils {
         }
     }
 
-    static func isTimeoutError(_ error: Error) -> Bool {
-        switch error {
+    /// Does this error represent a self-induced timeout?
+    ///
+    /// a.k.a. "we gave up" (see also `isNetworkFailure`)
+    var isTimeout: Bool {
+        switch (self as any Error) {
         case URLError.timedOut: return true
         case let httpError as OWSHTTPError: return httpError.isTimeoutImpl
         case GroupsV2Error.timeout: return true
@@ -347,6 +232,19 @@ fileprivate extension HTTPUtils {
         case SignalError.connectionTimeoutError: return true
         case Upload.Error.networkTimeout: return true
         default: return false
+        }
+    }
+
+    var isNetworkFailureOrTimeout: Bool {
+        return isNetworkFailure || isTimeout
+    }
+
+    var is5xxServiceResponse: Bool {
+        switch self as? OWSHTTPError {
+        case .serviceResponse(let serviceResponse):
+            return serviceResponse.is5xx
+        case nil, .invalidRequest, .wrappedFailure, .networkFailure:
+            return false
         }
     }
 }
@@ -385,47 +283,44 @@ public func owsFailBetaUnlessNetworkFailure(
 
 extension HttpHeaders {
 
-    // fallback retry-after delay if we fail to parse a non-empty retry-after string
-    private static var kOWSFallbackRetryAfter: TimeInterval { 60 }
-    private static var kOWSRetryAfterHeaderKey: String { "Retry-After" }
-
-    public var retryAfterDate: Date? {
-        if let retryAfterValue = value(forHeader: Self.kOWSRetryAfterHeaderKey) {
-            return Self.parseRetryAfterHeaderValue(retryAfterValue)
-        } else {
+    public var retryAfterTimeInterval: TimeInterval? {
+        guard let retryAfterStringValue else {
             return nil
         }
+
+        let timeInterval = TimeInterval(retryAfterStringValue)
+
+        guard let timeInterval, timeInterval > 0 else {
+            return nil
+        }
+
+        return timeInterval
     }
 
-    static func parseRetryAfterHeaderValue(_ rawValue: String?) -> Date? {
-        guard let value = rawValue?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty else {
+    public var retryAfterDate: Date? {
+        guard let retryAfterStringValue else {
             return nil
         }
-        if let result = Date.ows_parseFromHTTPDateString(value) {
-            return result
+
+        if let date = Date.ows_parseFromHTTPDateString(retryAfterStringValue) {
+            return date
+        } else if let date = Date.ows_parseFromISO8601String(retryAfterStringValue) {
+            return date
+        } else if let retryAfterTimeInterval {
+            return Date().addingTimeInterval(retryAfterTimeInterval)
         }
-        if let result = Date.ows_parseFromISO8601String(value) {
-            return result
-        }
-        func parseWithScanner() -> Date? {
-            // We need to use NSScanner instead of -[NSNumber doubleValue] so we can differentiate
-            // because the NSNumber method returns 0.0 on a parse failure. NSScanner lets us detect
-            // a parse failure.
-            let scanner = Scanner(string: value)
-            guard let delay = scanner.scanDouble(),
-                  scanner.isAtEnd else {
-                      // Only return the delay if we've made it to the end.
-                      // Helps to prevent things like: 8/11/1994 being interpreted as delay: 8.
-                      return nil
-                  }
-            return Date(timeIntervalSinceNow: max(0, delay))
-        }
-        if let result = parseWithScanner() {
-            return result
-        }
+
         if !CurrentAppContext().isRunningTests {
-            owsFailDebug("Failed to parse retry-after string: \(String(describing: rawValue))")
+            owsFailDebug("Failed to parse retry-after string: \(String(describing: retryAfterStringValue))")
         }
-        return Date(timeIntervalSinceNow: Self.kOWSFallbackRetryAfter)
+
+        // Historically, if we failed to parse here we returned a +60s date.
+        return Date().addingTimeInterval(.minute)
+    }
+
+    private var retryAfterStringValue: String? {
+        return value(forHeader: "Retry-After")?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .nilIfEmpty
     }
 }

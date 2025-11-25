@@ -9,14 +9,14 @@ use_frameworks!
 source 'https://cdn.cocoapods.org/'
 
 pod 'blurhash', podspec: './ThirdParty/blurhash.podspec'
-pod 'SwiftProtobuf', "1.30.0"
+pod 'SwiftProtobuf', "1.31.1"
 
-ENV['LIBSIGNAL_FFI_PREBUILD_CHECKSUM'] = 'ebaf33d71937087c5a5d6eb3ce52d67152fb25eb677b5bb6d29897a040f270f7'
-pod 'LibSignalClient', git: 'https://github.com/signalapp/libsignal.git', tag: 'v0.76.7', testspecs: ["Tests"]
+ENV['LIBSIGNAL_FFI_PREBUILD_CHECKSUM'] = 'ab550c7240e1f830e0dc7e52787dc0bc6b0f1287da066f6980fe4cba7163b265'
+pod 'LibSignalClient', git: 'https://github.com/signalapp/libsignal.git', tag: 'v0.86.0', testspecs: ["Tests"]
 # pod 'LibSignalClient', path: '../libsignal', testspecs: ["Tests"]
 
-ENV['RINGRTC_PREBUILD_CHECKSUM'] = 'a0682f74dfaaac1d5399bc122733b5ca7dad2a672c71408f8bf319410ac54454'
-pod 'SignalRingRTC', git: 'https://github.com/signalapp/ringrtc', tag: 'v2.56.0', inhibit_warnings: true
+ENV['RINGRTC_PREBUILD_CHECKSUM'] = 'b4a56a4d548cf2ea0215664f5a64c127c725ccf2ec360cbebe790da689286837'
+pod 'SignalRingRTC', git: 'https://github.com/signalapp/ringrtc', tag: 'v2.59.3', inhibit_warnings: true
 # pod 'SignalRingRTC', path: '../ringrtc', testspecs: ["Tests"]
 
 pod 'GRDB.swift/SQLCipher'
@@ -37,11 +37,9 @@ pod 'Mantle', git: 'https://github.com/signalapp/Mantle', branch: 'signal-master
 pod 'libPhoneNumber-iOS', git: 'https://github.com/signalapp/libPhoneNumber-iOS', branch: 'signal-master'
 # pod 'libPhoneNumber-iOS', path: '../libPhoneNumber-iOS'
 
-pod 'YYImage', git: 'https://github.com/signalapp/YYImage', :inhibit_warnings => true
-pod 'YYImage/libwebp', git: 'https://github.com/signalapp/YYImage', :inhibit_warnings => true
-pod 'libwebp', podspec: './ThirdParty/libwebp.podspec.json'
-# pod 'YYImage', path: '../YYImage'
-# pod 'YYImage/libwebp', path:'../YYImage'
+pod 'SDWebImage'
+pod 'SDWebImageWebPCoder'
+pod 'libwebp' 
 
 ###
 # third party pods

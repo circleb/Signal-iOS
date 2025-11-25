@@ -19,6 +19,12 @@ enum CVCBottomViewType: Equatable {
     case announcementOnlyGroup
 }
 
+protocol ConversationBottomBar: UIView {
+    /// Return `true` to have view controller put this bar above keyboard (using `keyboardLayoutGuide`).
+    /// Return `false` to have view controller constrain bottom edge of the bar to the bottom edge of the screen.
+    var shouldAttachToKeyboardLayoutGuide: Bool { get }
+}
+
 // MARK: -
 
 public extension ConversationViewController {
@@ -116,6 +122,7 @@ public extension ConversationViewController {
         case .selection:
             bottomView = selectionToolbar
         case .inputToolbar:
+            loadInputToolbarIfNeeded()
             bottomView = inputToolbar
         case .blockingLegacyGroup:
             let legacyGroupView = BlockingLegacyGroupView(fromViewController: self)
@@ -128,73 +135,69 @@ public extension ConversationViewController {
             bottomView = announcementOnlyView
         }
 
-        bottomBar.removeAllSubviews()
+        bottomBarContainer.removeAllSubviews()
 
         if let bottomView {
-            bottomBar.addSubview(bottomView)
-            bottomView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .bottom)
-            if bottomView is UIToolbar {
-                // UIToolbar will extend its background to cover bottom safe area. 
-                bottomView.autoPinEdge(toSuperviewSafeArea: .bottom)
+            bottomView.translatesAutoresizingMaskIntoConstraints = false
+            bottomBarContainer.addSubview(bottomView)
+            NSLayoutConstraint.activate([
+                bottomView.topAnchor.constraint(equalTo: bottomBarContainer.topAnchor),
+                bottomView.leadingAnchor.constraint(equalTo: bottomBarContainer.leadingAnchor),
+                bottomView.trailingAnchor.constraint(equalTo: bottomBarContainer.trailingAnchor),
+            ])
+
+            if let conversationBottomBar = bottomView as? ConversationBottomBar,
+               conversationBottomBar.shouldAttachToKeyboardLayoutGuide
+            {
+                NSLayoutConstraint.activate([
+                    bottomView.bottomAnchor.constraint(equalTo: keyboardLayoutGuide.topAnchor),
+                ])
             } else {
-                bottomView.autoPinEdge(toSuperviewEdge: .bottom)
+                NSLayoutConstraint.activate([
+                    bottomView.bottomAnchor.constraint(equalTo: bottomBarContainer.bottomAnchor),
+                ])
             }
         }
 
-        updateInputAccessoryPlaceholderHeight()
-        updateBottomBarPosition()
         updateContentInsets()
     }
 
-    // This is expensive. We only need to do it if conversationStyle has changed.
-    //
-    // TODO: Once conversationStyle is immutable, compare the old and new
-    //       conversationStyle values and exit early if it hasn't changed.
-    func updateInputToolbar() {
+    func loadInputToolbarIfNeeded() {
         AssertIsOnMainThread()
 
-        guard hasViewWillAppearEverBegun else {
-            return
-        }
+        guard hasViewWillAppearEverBegun else { return }
+
+        guard inputToolbar == nil else { return }
 
         var messageDraft: MessageBody?
         var replyDraft: ThreadReplyInfo?
         var voiceMemoDraft: VoiceMessageInterruptedDraft?
         var editTarget: TSOutgoingMessage?
-        if let oldInputToolbar = self.inputToolbar {
-            // Maintain draft continuity.
-            messageDraft = oldInputToolbar.messageBodyForSending
-            replyDraft = oldInputToolbar.draftReply
-            editTarget = oldInputToolbar.editTarget
-            voiceMemoDraft = oldInputToolbar.voiceMemoDraft
-        } else {
-            SSKEnvironment.shared.databaseStorageRef.read { transaction in
-                messageDraft = self.thread.currentDraft(transaction: transaction)
-                voiceMemoDraft = VoiceMessageInterruptedDraft.currentDraft(for: self.thread, transaction: transaction)
-                if messageDraft != nil || voiceMemoDraft != nil {
-                    replyDraft = DependenciesBridge.shared.threadReplyInfoStore.fetch(for: self.thread.uniqueId, tx: transaction)
-                }
-                editTarget = self.thread.editTarget(transaction: transaction)
+        SSKEnvironment.shared.databaseStorageRef.read { transaction in
+            messageDraft = thread.currentDraft(transaction: transaction)
+            voiceMemoDraft = VoiceMessageInterruptedDraft.currentDraft(for: thread, transaction: transaction)
+            if messageDraft != nil || voiceMemoDraft != nil {
+                replyDraft = DependenciesBridge.shared.threadReplyInfoStore.fetch(for: thread.uniqueId, tx: transaction)
             }
+            editTarget = thread.editTarget(transaction: transaction)
         }
 
-        let newInputToolbar = buildInputToolbar(
-            conversationStyle: conversationStyle,
+        let inputToolbar = buildInputToolbar(
             messageDraft: messageDraft,
             draftReply: replyDraft,
             voiceMemoDraft: voiceMemoDraft,
             editTarget: editTarget
         )
 
-        let hadFocus = self.inputToolbar?.isInputViewFirstResponder ?? false
-        self.inputToolbar = newInputToolbar
-
-        if hadFocus {
-            self.inputToolbar?.beginEditingMessage()
+        // Obscures content underneath bottom bar to improve legibility.
+        if #available(iOS 26, *) {
+            let interaction = UIScrollEdgeElementContainerInteraction()
+            interaction.scrollView = collectionView
+            interaction.edge = .bottom
+            inputToolbar.setScrollEdgeElementContainerInteraction(interaction)
         }
-        newInputToolbar.updateFontSizes()
 
-        updateBottomBar()
+        self.inputToolbar = inputToolbar
     }
 
     func reloadDraft() {
@@ -212,59 +215,6 @@ public extension ConversationViewController {
         inputToolbar.setMessageBody(messageDraft, animated: false)
     }
 
-    func updateBottomBarPosition() {
-        AssertIsOnMainThread()
-
-        guard hasViewWillAppearEverBegun else {
-            return
-        }
-
-        guard !isSwitchingKeyboard else { return }
-
-        if let interactivePopGestureRecognizer = navigationController?.interactivePopGestureRecognizer {
-            // Don't update the bottom bar position if an interactive pop is in progress
-            switch interactivePopGestureRecognizer.state {
-            case .possible, .failed:
-                break
-            default:
-                return
-            }
-        }
-
-        guard let bottomBarBottomConstraint = bottomBarBottomConstraint,
-              let bottomBarSuperview = bottomBar.superview else {
-            return
-        }
-        let bottomBarPosition = -inputAccessoryPlaceholder.keyboardOverlap
-        let didChange = bottomBarBottomConstraint.constant != bottomBarPosition
-        guard didChange else {
-            return
-        }
-        bottomBarBottomConstraint.constant = bottomBarPosition
-
-        // We always want to apply the new bottom bar position immediately,
-        // as this only happens during animations (interactive or otherwise)
-        bottomBarSuperview.layoutIfNeeded()
-    }
-
-    func updateInputAccessoryPlaceholderHeight() {
-        AssertIsOnMainThread()
-
-        // If we're currently dismissing interactively, skip updating the
-        // input accessory height. Changing it while dismissing can lead to
-        // an infinite loop of keyboard frame changes as the listeners in
-        // InputAcessoryViewPlaceholder will end up calling back here if
-        // a dismissal is in progress.
-        if isDismissingInteractively {
-            return
-        }
-
-        // Apply any pending layout changes to ensure we're measuring the up-to-date height.
-        bottomBar.superview?.layoutIfNeeded()
-
-        inputAccessoryPlaceholder.desiredHeight = bottomBar.height
-    }
-
     // MARK: - Message Request
 
     func showMessageRequestDialogIfRequiredAsync() {
@@ -279,30 +229,6 @@ public extension ConversationViewController {
         AssertIsOnMainThread()
 
         ensureBottomViewType()
-    }
-
-    func updateInputToolbarLayout(initialLayout: Bool = false) {
-        AssertIsOnMainThread()
-
-        guard hasViewWillAppearEverBegun else {
-            return
-        }
-        guard let inputToolbar = inputToolbar else {
-            owsFailDebug("Missing inputToolbar.")
-            return
-        }
-
-        if inputToolbar.updateLayout(withSafeAreaInsets: view.safeAreaInsets) {
-            // Ensure that if the toolbar has its insets changed, we trigger a re-layout.
-            // Without this, UIKit does a bad job of picking up the final safe area for
-            // constraints on the toolbar on its own.
-            self.view.setNeedsLayout()
-            self.updateContentInsets()
-        }
-
-        if initialLayout {
-            inputToolbar.scrollToBottom()
-        }
     }
 
     func popKeyBoard() {
@@ -372,14 +298,14 @@ public extension ConversationViewController {
         guard let groupThread = thread as? TSGroupThread else {
             return false
         }
-        return groupThread.isLocalUserRequestingMember
+        return groupThread.groupModel.groupMembership.isLocalUserRequestingMember
     }
 
     var userLeftGroup: Bool {
         guard let groupThread = thread as? TSGroupThread else {
             return false
         }
-        return !groupThread.isLocalUserFullMember
+        return !groupThread.groupModel.groupMembership.isLocalUserFullMember
     }
 
     private var hasBlockingLegacyGroup: Bool {

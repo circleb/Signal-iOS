@@ -117,6 +117,26 @@
 			<string>הוסף חברי קבוצה חדשים</string>
 		</dict>
 	</dict>
+	<key>BACKUP_SETTINGS_BACKUP_PLAN_FREE_HEADER_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>גיבוי טקסט + יום %1$d של מדיה</string>
+			<key>two</key>
+			<string>גיבוי טקסט + יומיים של מדיה</string>
+			<key>many</key>
+			<string>גיבוי טקסט + %1$d ימים של מדיה</string>
+			<key>other</key>
+			<string>גיבוי טקסט + %1$d ימים של מדיה</string>
+		</dict>
+	</dict>
 	<key>CALLS_TAB_DELETE_MULTIPLE_TITLE</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -377,6 +397,66 @@
 			<string>צבע זה נמצא בשימוש ב–%1$d צ׳אטים. לשמור את השינויים עבור כל הצ׳אטים?</string>
 		</dict>
 	</dict>
+	<key>CHOOSE_BACKUP_PLAN_BULLET_RECENT_MEDIA_BACKUP_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>יום אחרון %1$d של מדיה</string>
+			<key>two</key>
+			<string>יומיים אחרונים של מדיה</string>
+			<key>many</key>
+			<string>%1$d ימים אחרונים של מדיה</string>
+			<key>other</key>
+			<string>%1$d ימים אחרונים של מדיה</string>
+		</dict>
+	</dict>
+	<key>CHOOSE_BACKUP_PLAN_DOWNGRADE_CONFIRMATION_ACTION_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>כל הודעות הטקסט שלך והמדיה מהיום האחרון ייכללו בגיבוי שלך בעת החלפת התכנית.</string>
+			<key>two</key>
+			<string>כל הודעות הטקסט שלך והמדיה מהיומיים האחרון ייכללו בגיבוי שלך בעת החלפת התכנית.</string>
+			<key>many</key>
+			<string>כל הודעות הטקסט שלך והמדיה מ–%1$d הימים האחרונים ייכללו בגיבוי שלך בעת החלפת התכנית.</string>
+			<key>other</key>
+			<string>כל הודעות הטקסט שלך והמדיה מ–%1$d הימים האחרונים ייכללו בגיבוי שלך בעת החלפת התכנית.</string>
+		</dict>
+	</dict>
+	<key>CHOOSE_BACKUP_PLAN_FREE_PLAN_SUBTITLE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>טקסט + יום %1$d של מדיה</string>
+			<key>two</key>
+			<string>טקסט + יומיים של מדיה</string>
+			<key>many</key>
+			<string>טקסט + %1$d ימים של מדיה</string>
+			<key>other</key>
+			<string>טקסט + %1$d ימים של מדיה</string>
+		</dict>
+	</dict>
 	<key>CONVERSATION_DELETE_CONFIRMATIONS_ALERT_TITLE_%d</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -610,26 +690,6 @@
 			<string>אפשר לבצע רק %1$d עריכות בהודעה זו.</string>
 			<key>other</key>
 			<string>אפשר לבצע רק %1$d עריכות בהודעה זו.</string>
-		</dict>
-	</dict>
-	<key>FORWARD_MESSAGE_FIRST_FORWARD_PROCEED_%d</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@text@</string>
-		<key>text</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
-			<key>one</key>
-			<string>שליחת הודעה</string>
-			<key>two</key>
-			<string>שליחת%1$d הודעות</string>
-			<key>many</key>
-			<string>שליחת%1$d הודעות</string>
-			<key>other</key>
-			<string>שליחת%1$d הודעות</string>
 		</dict>
 	</dict>
 	<key>GROUPS_TOO_MANY_MEMBERS_ALERT_MESSAGE_%d</key>
@@ -1212,6 +1272,26 @@
 			<string>כדי להשאיר את ״%2$@״ מחובר, צריך לפתוח את Signal במכשיר הזה תוך %1$d ימים.</string>
 		</dict>
 	</dict>
+	<key>LINK_DEVICE_CONFIRMATION_ALERT_TRANSFER_SUBTITLE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>העברת כל הודעות הטקסט שלך, והעברת המדיה מהיום האחרון</string>
+			<key>two</key>
+			<string>העברת כל הודעות הטקסט שלך, והעברת המדיה מהיומיים האחרונים</string>
+			<key>many</key>
+			<string>העברת כל הודעות הטקסט שלך, והעברת המדיה מ–%1$d הימים האחרונים</string>
+			<key>other</key>
+			<string>העברת כל הודעות הטקסט שלך, והעברת המדיה מ–%1$d הימים האחרונים</string>
+		</dict>
+	</dict>
 	<key>MANY_GROUPS_IN_COMMON_%d</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -1330,26 +1410,6 @@
 			<string>העברת %1$d</string>
 			<key>other</key>
 			<string>העברת %1$d</string>
-		</dict>
-	</dict>
-	<key>MESSAGES_VIEW_GROUP_N_MEMBERS_BLOCKED_%d</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@caption@</string>
-		<key>caption</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
-			<key>one</key>
-			<string>חסמת חבר/ה %1$d של קבוצה זו</string>
-			<key>two</key>
-			<string>חסמת %1$d חברים של קבוצה זו</string>
-			<key>many</key>
-			<string>חסמת %1$d חברים של קבוצה זו</string>
-			<key>other</key>
-			<string>חסמת %1$d חברים של קבוצה זו</string>
 		</dict>
 	</dict>
 	<key>MESSAGE_ACTIONS_TOOLBAR_CAPTION_%d</key>
@@ -1672,6 +1732,26 @@
 			<string>לבטל %1$d הזמנות שנשלחו על ידי ”%2$@“?</string>
 		</dict>
 	</dict>
+	<key>POLL_VOTE_COUNT</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>הצבעה %1$d</string>
+			<key>two</key>
+			<string>%1$d הצבעות</string>
+			<key>many</key>
+			<string>%1$d הצבעות</string>
+			<key>other</key>
+			<string>%1$d הצבעות</string>
+		</dict>
+	</dict>
 	<key>PRIVATE_STORY_VIEWERS_%d</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -1910,6 +1990,86 @@
 			<string>%1$ld אחרים</string>
 			<key>other</key>
 			<string>%1$ld אחרים</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_AUDIO_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>ההודעה הקולית הזו הזה לא הועברה מהטלפון שלך כשהמכשיר הזה קושר. לא ניתן לסנכרן קבצים ומדיה שהם בני יותר מיום %1$d בזמן קישור המכשיר.</string>
+			<key>two</key>
+			<string>ההודעה הקולית הזו לא הועברה מהטלפון שלך כשהמכשיר הזה קושר. לא ניתן לסנכרן קבצים ומדיה שהם בני יותר מיומיים בזמן קישור המכשיר.</string>
+			<key>many</key>
+			<string>ההודעה הקולית הזו לא הועברה מהטלפון שלך כשהמכשיר הזה קושר. לא ניתן לסנכרן קבצים ומדיה שהם בני יותר מ–%1$d יום בזמן קישור המכשיר.</string>
+			<key>other</key>
+			<string>ההודעה הקולית הזו לא הועברה מהטלפון שלך כשהמכשיר הזה קושר. לא ניתן לסנכרן קבצים ומדיה שהם בני יותר מ–%1$d יום בזמן קישור המכשיר.</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_FILE_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>הקובץ הזה לא הועבר מהטלפון שלך כשהמכשיר הזה קושר. לא ניתן לסנכרן קבצים ומדיה שהם בני יותר מיום %1$d בזמן קישור המכשיר.</string>
+			<key>two</key>
+			<string>הקובץ הזה לא הועבר מהטלפון שלך כשהמכשיר הזה קושר. לא ניתן לסנכרן קבצים ומדיה שהם בני יותר מיומיים בזמן קישור המכשיר.</string>
+			<key>many</key>
+			<string>הקובץ הזה לא הועבר מהטלפון שלך כשהמכשיר הזה קושר. לא ניתן לסנכרן קבצים ומדיה שהם בני יותר מ–%1$d יום בזמן קישור המכשיר.</string>
+			<key>other</key>
+			<string>הקובץ הזה לא הועבר מהטלפון שלך כשהמכשיר הזה קושר. לא ניתן לסנכרן קבצים ומדיה שהם בני יותר מ–%1$d יום בזמן קישור המכשיר.</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_OVERSIZE_TEXT_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>הטקסט השלם בהודעה הזו הזה לא הועבר מהטלפון שלך כשהמכשיר הזה קושר. לא ניתן לסנכרן קבצים ומדיה שהם בני יותר מיום %1$d בזמן קישור המכשיר.</string>
+			<key>two</key>
+			<string>הטקסט השלם בהודעה הזו הזה לא הועבר מהטלפון שלך כשהמכשיר הזה קושר. לא ניתן לסנכרן קבצים ומדיה שהם בני יותר מיומיים בזמן קישור המכשיר.</string>
+			<key>many</key>
+			<string>הטקסט השלם בהודעה הזו הזה לא הועבר מהטלפון שלך כשהמכשיר הזה קושר. לא ניתן לסנכרן קבצים ומדיה שהם בני יותר מ–%1$d יום בזמן קישור המכשיר.</string>
+			<key>other</key>
+			<string>הטקסט השלם בהודעה הזו הזה לא הועבר מהטלפון שלך כשהמכשיר הזה קושר. לא ניתן לסנכרן קבצים ומדיה שהם בני יותר מ–%1$d יום בזמן קישור המכשיר.</string>
+		</dict>
+	</dict>
+	<key>UNAVAILABLE_ATTACHMENT_STICKER_SHEET_MESSAGE_%d</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@text@</string>
+		<key>text</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>הסטיקר הזה לא הועבר מהטלפון שלך כשהמכשיר הזה קושר. לא ניתן לסנכרן קבצים ומדיה שהם בני יותר מיום %1$d בזמן קישור המכשיר.</string>
+			<key>two</key>
+			<string>הסטיקר הזה לא הועבר מהטלפון שלך כשהמכשיר הזה קושר. לא ניתן לסנכרן קבצים ומדיה שהם בני יותר מיומיים בזמן קישור המכשיר.</string>
+			<key>many</key>
+			<string>הסטיקר הזה לא הועבר מהטלפון שלך כשהמכשיר הזה קושר. לא ניתן לסנכרן קבצים ומדיה שהם בני יותר מ–%1$d יום בזמן קישור המכשיר.</string>
+			<key>other</key>
+			<string>הסטיקר הזה לא הועבר מהטלפון שלך כשהמכשיר הזה קושר. לא ניתן לסנכרן קבצים ומדיה שהם בני יותר מ–%1$d יום בזמן קישור המכשיר.</string>
 		</dict>
 	</dict>
 	<key>USERNAME_SELECTION_TOO_SHORT_ERROR_MESSAGE_%d</key>

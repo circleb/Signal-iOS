@@ -6,7 +6,6 @@
 import Foundation
 
 public enum ImageFormat: CustomStringConvertible {
-    case unknown
     case png
     case gif
     case tiff
@@ -18,8 +17,6 @@ public enum ImageFormat: CustomStringConvertible {
 
     public var description: String {
         switch self {
-        case .unknown:
-            "ImageFormat_Unknown"
         case .png:
             "ImageFormat_Png"
         case .gif:
@@ -39,109 +36,58 @@ public enum ImageFormat: CustomStringConvertible {
         }
     }
 
-    internal var mimeType: MimeType? {
+    public var mimeType: MimeType {
+        return self.mimeTypes.preferredMimeType
+    }
+
+    private var mimeTypes: (preferredMimeType: MimeType, alternativeMimeTypes: [MimeType]) {
         switch self {
-        case .png:
-            return MimeType.imagePng
-        case .gif:
-            return MimeType.imageGif
-        case .tiff:
-            return MimeType.imageTiff
-        case .jpeg:
-            return MimeType.imageJpeg
-        case .bmp:
-            return MimeType.imageBmp
-        case .webp:
-            return MimeType.imageWebp
-        case .heic:
-            return MimeType.imageHeic
-        case .heif:
-            return MimeType.imageHeif
-        case .unknown:
-            return nil
+        case .png: (.imagePng, [.imageApng, .imageVndMozillaApng])
+        case .gif: (.imageGif, [])
+        case .tiff: (.imageTiff, [.imageXTiff])
+        case .jpeg: (.imageJpeg, [])
+        case .bmp: (.imageBmp, [.imageXWindowsBmp])
+        case .webp: (.imageWebp, [])
+        case .heic: (.imageHeic, [])
+        case .heif: (.imageHeif, [])
         }
     }
 
-    internal func isValid(source: OWSImageSource) -> Bool {
-        switch self {
-        case .unknown:
-            return false
-        case .png, .tiff, .jpeg, .bmp, .webp, .heic, .heif:
-            return true
-        case .gif:
-            return source.ows_hasValidGifSize
-        }
+    public var fileExtension: String {
+        // All known ImageFormats must have a corresponding extension.
+        return MimeTypeUtil.fileExtensionForMimeType(mimeType.rawValue)!
     }
 
-    internal func isValid(mimeType: String?) -> Bool {
-        owsAssertDebug(!(mimeType?.isEmpty ?? true))
-
-        switch self {
-        case .unknown:
-            return false
-        case .png:
-            guard let mimeType else { return true }
-            return (mimeType.caseInsensitiveCompare(MimeType.imagePng.rawValue) == .orderedSame ||
-                    mimeType.caseInsensitiveCompare(MimeType.imageApng.rawValue) == .orderedSame ||
-                    mimeType.caseInsensitiveCompare(MimeType.imageVndMozillaApng.rawValue) == .orderedSame)
-        case .gif:
-            guard let mimeType else { return true }
-            return mimeType.caseInsensitiveCompare(MimeType.imageGif.rawValue) == .orderedSame
-        case .tiff:
-            guard let mimeType else { return true }
-            return (mimeType.caseInsensitiveCompare(MimeType.imageTiff.rawValue) == .orderedSame ||
-                    mimeType.caseInsensitiveCompare(MimeType.imageXTiff.rawValue) == .orderedSame)
-        case .jpeg:
-            guard let mimeType else { return true }
-            return mimeType.caseInsensitiveCompare(MimeType.imageJpeg.rawValue) == .orderedSame
-        case .bmp:
-            guard let mimeType else { return true }
-            return (mimeType.caseInsensitiveCompare(MimeType.imageBmp.rawValue) == .orderedSame ||
-                    mimeType.caseInsensitiveCompare(MimeType.imageXWindowsBmp.rawValue) == .orderedSame)
-        case .webp:
-            guard let mimeType else { return true }
-            return mimeType.caseInsensitiveCompare(MimeType.imageWebp.rawValue) == .orderedSame
-        case .heic:
-            guard let mimeType else { return true }
-            return mimeType.caseInsensitiveCompare(MimeType.imageHeic.rawValue) == .orderedSame
-        case .heif:
-            guard let mimeType else { return true }
-            return mimeType.caseInsensitiveCompare(MimeType.imageHeif.rawValue) == .orderedSame
-        }
+    internal func isValid(mimeType: String) -> Bool {
+        owsAssertDebug(!mimeType.isEmpty)
+        let mimeTypes = self.mimeTypes
+        return ([mimeTypes.preferredMimeType] + mimeTypes.alternativeMimeTypes).contains(where: {
+            return mimeType.caseInsensitiveCompare($0.rawValue) == .orderedSame
+        })
     }
 }
 
-// TODO: Convert to struct once all users of this type are swift.
-@objc
-public class ImageMetadata: NSObject {
-    @objc
-    public let isValid: Bool
+public struct ImageMetadata {
     public let imageFormat: ImageFormat
-    @objc
     public let pixelSize: CGSize
     public let hasAlpha: Bool
     let isAnimated: Bool
 
-    internal init(isValid: Bool, imageFormat: ImageFormat, pixelSize: CGSize, hasAlpha: Bool, isAnimated: Bool) {
-        self.isValid = isValid
+    internal init(imageFormat: ImageFormat, pixelSize: CGSize, hasAlpha: Bool, isAnimated: Bool) {
         self.imageFormat = imageFormat
         self.pixelSize = pixelSize
         self.hasAlpha = hasAlpha
         self.isAnimated = isAnimated
     }
 
-    internal static func invalid() -> ImageMetadata {
-        .init(isValid: false, imageFormat: .unknown, pixelSize: .zero, hasAlpha: false, isAnimated: false)
-    }
-
-    public var mimeType: String? {
-        imageFormat.mimeType?.rawValue
-    }
-    public var fileExtension: String? {
-        guard let mimeType else {
-            return nil
-        }
-        return MimeTypeUtil.fileExtensionForMimeType(mimeType)
+    var hasStickerLikeProperties: Bool {
+        let maxStickerHeight = CGFloat(512)
+        return (
+            pixelSize.width <= maxStickerHeight
+            && pixelSize.height <= maxStickerHeight
+            && pixelSize != CGSize(width: 1, height: 1)
+            && hasAlpha
+        )
     }
 }
 
@@ -164,12 +110,4 @@ public enum ImageMetadataResult {
     case invalid
 
     case valid(ImageMetadata)
-
-    /// A mime type was provided, and it did not match the contents.
-    /// Metadata is still valid and the error can be safely ignored.
-    case mimeTypeMismatch(ImageMetadata)
-
-    /// A file extension was provided, and it did not match the contents.
-    /// Metadata is still valid and the error can be safely ignored.
-    case fileExtensionMismatch(ImageMetadata)
 }

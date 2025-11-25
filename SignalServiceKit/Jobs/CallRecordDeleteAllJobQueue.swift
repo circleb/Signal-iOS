@@ -149,20 +149,18 @@ private class CallRecordDeleteAllJobRunner: JobRunner {
 
     func runJobAttempt(
         _ jobRecord: CallRecordDeleteAllJobRecord
-    ) async -> JobAttemptResult {
+    ) async -> JobAttemptResult<Void> {
         return await JobAttemptResult.executeBlockWithDefaultErrorHandler(
             jobRecord: jobRecord,
             retryLimit: Constants.maxRetries,
             db: db,
-            block: {
-                try await _runJobAttempt(jobRecord)
-            }
+            block: { try await _runJobAttempt(jobRecord) },
         )
     }
 
     func didFinishJob(
         _ jobRecordId: JobRecord.RowId,
-        result: JobResult
+        result: JobResult<Void>
     ) async {
         switch result.ranSuccessfullyOrError {
         case .success:
@@ -223,8 +221,6 @@ private class CallRecordDeleteAllJobRunner: JobRunner {
         logger.info("Deleted \(deletedCount) calls.")
 
         await db.awaitableWrite { tx in
-            let sdsTx: DBWriteTransaction = SDSDB.shimOnlyBridge(tx)
-
             if jobRecord.sendDeleteAllSyncMessage {
                 self.logger.info("Sending delete-all-calls sync message.")
 
@@ -232,11 +228,11 @@ private class CallRecordDeleteAllJobRunner: JobRunner {
                     callId: jobRecord.deleteAllBeforeCallId,
                     conversationId: jobRecord.deleteAllBeforeConversationId,
                     beforeTimestamp: deleteBeforeTimestamp,
-                    tx: sdsTx
+                    tx: tx
                 )
             }
 
-            jobRecord.anyRemove(transaction: sdsTx)
+            jobRecord.anyRemove(transaction: tx)
         }
     }
 

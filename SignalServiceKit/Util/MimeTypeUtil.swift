@@ -27,8 +27,6 @@ public enum MimeType: String {
     case imageXWindowsBmp = "image/x-windows-bmp"
     /// oversized text message
     case textXSignalPlain = "text/x-signal-plain"
-    /// unknown for tests
-    case unknownMimetype = "unknown/mimetype"
 }
 
 public enum MimeTypeUtil {
@@ -36,7 +34,6 @@ public enum MimeTypeUtil {
     // MARK: - Constants
     public static let oversizeTextAttachmentUti = "org.whispersystems.oversize-text-attachment"
     public static let oversizeTextAttachmentFileExtension = "txt"
-    public static let unknownTestAttachmentUti = "org.whispersystems.unknown"
     public static let syncMessageFileExtension = "bin"
 
     // MARK: - Supported Mime Types
@@ -62,11 +59,6 @@ public enum MimeTypeUtil {
         isSupportedImageMimeType(contentType)
         || isSupportedVideoMimeType(contentType)
         || isSupportedMaybeAnimatedMimeType(contentType)
-    }
-
-    // MARK: - Supported File Extensions
-    public static func isSupportedVideoFile(_ filePath: String) -> Bool {
-        supportedVideoFileExtensions.contains((filePath as NSString).pathExtension.lowercased())
     }
 
     // MARK: - Supported Uti Types
@@ -1135,7 +1127,7 @@ public enum MimeTypeUtil {
         "text/pascal": "pas",
         "text/plain": "txt",
         "text/plain-bas": "par",
-        "text/prs.lines.logTag": "dsc",
+        "text/prs.lines.log": "dsc",
         "text/richtext": "rtf",
         "text/scriplet": "wsc",
         "text/scriptlet": "sct",
@@ -1273,18 +1265,6 @@ public enum MimeTypeUtil {
     ]
 
     // MARK: - Extension to Mime Type Dictionaries
-    public static let supportedVideoFileExtensions: Set<String> = [
-        "3gp",
-        "3gpp",
-        "3gp2",
-        "3gpp2",
-        "mp4",
-        "mov",
-        "mqv",
-        "m4v",
-        "mpg",
-        "mpeg",
-    ]
     public static let genericExtensionTypesToMimeTypes: [String: String] = [
         // Common MIME types.
         "123": "application/vnd.lotus-1-2-3",
@@ -1466,7 +1446,7 @@ public enum MimeTypeUtil {
         "dp": "application/vnd.osgi.dp",
         "dpg": "application/vnd.dpgraph",
         "dra": "audio/vnd.dra",
-        "dsc": "text/prs.lines.logTag",
+        "dsc": "text/prs.lines.log",
         "dssc": "application/dssc+der",
         "dtb": "application/x-dtbook+xml",
         "dtd": "application/xml-dtd",

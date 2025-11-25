@@ -335,6 +335,12 @@ public class CVComponentState: Equatable {
     }
     let giftBadge: GiftBadge?
 
+    struct Poll: Equatable {
+        let state: CVPollView.State
+        let prevPollState: CVPollView.State?
+    }
+    let poll: Poll?
+
     struct SystemMessage: Equatable {
         typealias ReferencedUser = CVTextLabel.ReferencedUserItem
 
@@ -342,6 +348,12 @@ public class CVComponentState: Equatable {
         let titleColor: UIColor
         let titleSelectionBackgroundColor: UIColor
         let action: CVMessageAction?
+
+        struct Expiration: Equatable {
+            let expirationTimestamp: UInt64
+            let expiresInSeconds: UInt32
+        }
+        let expiration: Expiration?
 
         /// Represents users whose names appear in the title. Only applies to
         /// system messages in group threads.
@@ -351,7 +363,8 @@ public class CVComponentState: Equatable {
             title: NSAttributedString,
             titleColor: UIColor,
             titleSelectionBackgroundColor: UIColor,
-            action: CVMessageAction?
+            action: CVMessageAction?,
+            expiration: Expiration?
         ) {
             let mutableTitle = NSMutableAttributedString(attributedString: title)
             mutableTitle.removeAttribute(
@@ -363,6 +376,7 @@ public class CVComponentState: Equatable {
             self.titleColor = titleColor
             self.titleSelectionBackgroundColor = titleSelectionBackgroundColor
             self.action = action
+            self.expiration = expiration
 
             self.namesInTitle = {
                 // Extract the addresses for names in the string. These are only
@@ -441,6 +455,8 @@ public class CVComponentState: Equatable {
     }
     let bottomButtons: BottomButtons?
 
+    let bottomLabel: String?
+
     struct FailedOrPendingDownloads: Equatable {
         let attachmentPointers: [AttachmentPointer]
 
@@ -483,12 +499,13 @@ public class CVComponentState: Equatable {
         unknownThreadWarning: UnknownThreadWarning?,
         defaultDisappearingMessageTimer: DefaultDisappearingMessageTimer?,
         bottomButtons: BottomButtons?,
+        bottomLabel: String?,
         failedOrPendingDownloads: FailedOrPendingDownloads?,
         sendFailureBadge: SendFailureBadge?,
         messageHasBodyAttachments: Bool,
-        hasRenderableContent: Bool
+        hasRenderableContent: Bool,
+        poll: Poll?
     ) {
-
         self.messageCellType = messageCellType
         self.senderName = senderName
         self.senderAvatar = senderAvatar
@@ -514,10 +531,12 @@ public class CVComponentState: Equatable {
         self.unknownThreadWarning = unknownThreadWarning
         self.defaultDisappearingMessageTimer = defaultDisappearingMessageTimer
         self.bottomButtons = bottomButtons
+        self.bottomLabel = bottomLabel
         self.failedOrPendingDownloads = failedOrPendingDownloads
         self.sendFailureBadge = sendFailureBadge
         self.messageHasBodyAttachments = messageHasBodyAttachments
         self.hasRenderableContent = hasRenderableContent
+        self.poll = poll
     }
 
     // MARK: - Equatable
@@ -548,8 +567,10 @@ public class CVComponentState: Equatable {
                     lhs.unknownThreadWarning == rhs.unknownThreadWarning &&
                     lhs.defaultDisappearingMessageTimer == rhs.defaultDisappearingMessageTimer &&
                     lhs.bottomButtons == rhs.bottomButtons &&
+                    lhs.bottomLabel == rhs.bottomLabel &&
                     lhs.failedOrPendingDownloads == rhs.failedOrPendingDownloads &&
-                    lhs.sendFailureBadge == rhs.sendFailureBadge)
+                    lhs.sendFailureBadge == rhs.sendFailureBadge &&
+                    lhs.poll == rhs.poll)
     }
 
     // MARK: - Building
@@ -580,6 +601,7 @@ public class CVComponentState: Equatable {
         typealias FailedOrPendingDownloads = CVComponentState.FailedOrPendingDownloads
         typealias BottomButtons = CVComponentState.BottomButtons
         typealias SendFailureBadge = CVComponentState.SendFailureBadge
+        typealias Poll = CVComponentState.Poll
 
         let interaction: TSInteraction
         let itemBuildingContext: CVItemBuildingContext
@@ -615,8 +637,10 @@ public class CVComponentState: Equatable {
         var sendFailureBadge: SendFailureBadge?
         var messageHasBodyAttachments: Bool
         var hasRenderableContent: Bool
+        var poll: Poll?
 
         var bottomButtonsActions = [CVMessageAction]()
+        var bottomLabel: String?
 
         init(interaction: TSInteraction, itemBuildingContext: CVItemBuildingContext) {
             self.interaction = interaction
@@ -657,10 +681,12 @@ public class CVComponentState: Equatable {
                 unknownThreadWarning: unknownThreadWarning,
                 defaultDisappearingMessageTimer: defaultDisappearingMessageTimer,
                 bottomButtons: bottomButtons,
+                bottomLabel: bottomLabel,
                 failedOrPendingDownloads: failedOrPendingDownloads,
                 sendFailureBadge: sendFailureBadge,
                 messageHasBodyAttachments: messageHasBodyAttachments,
-                hasRenderableContent: hasRenderableContent
+                hasRenderableContent: hasRenderableContent,
+                poll: poll
             )
         }
 
@@ -731,6 +757,9 @@ public class CVComponentState: Equatable {
             }
             if quotedReply != nil {
                 return .quoteOnlyMessage
+            }
+            if poll != nil {
+                return .poll
             }
 
             owsFailDebug("Unknown state.")
@@ -817,11 +846,17 @@ public class CVComponentState: Equatable {
         if bottomButtons != nil {
             result.insert(.bottomButtons)
         }
+        if bottomLabel != nil {
+            result.insert(.bottomLabel)
+        }
         if failedOrPendingDownloads != nil {
             result.insert(.failedOrPendingDownloads)
         }
         if sendFailureBadge != nil {
             result.insert(.sendFailureBadge)
+        }
+        if poll != nil {
+            result.insert(.poll)
         }
         return result
     }()
@@ -1084,6 +1119,10 @@ fileprivate extension CVComponentState.Builder {
 
         if let giftBadge = message.giftBadge {
             return try buildGiftBadge(messageUniqueId: message.uniqueId, giftBadge: giftBadge)
+        }
+
+        if message.isPoll {
+            return try buildPoll(message: message, transaction: transaction)
         }
 
         do {
@@ -1386,6 +1425,9 @@ fileprivate extension CVComponentState.Builder {
     }
 
     mutating func buildBodyText(message: TSMessage) throws {
+        if message.isPoll {
+            return
+        }
         bodyText = try CVComponentBodyText.buildComponentState(
             message: message,
             viewStateSnapshot: viewStateSnapshot,
@@ -1720,6 +1762,60 @@ fileprivate extension CVComponentState.Builder {
         )
         return build()
     }
+
+    mutating func buildPoll(message: TSMessage, transaction: DBReadTransaction) throws -> CVComponentState {
+        guard let poll = try DependenciesBridge.shared.pollMessageManager.buildPoll(message: message, transaction: transaction) else {
+            Logger.error("Failed to build poll")
+            return build()
+        }
+
+        let state = CVPollView.buildState(
+            poll: poll,
+            isIncoming: isIncoming,
+            conversationStyle: conversationStyle,
+            localAci: self.localAci
+        )
+
+        let prevPollState: CVComponentState.Poll?
+        if let prevRenderState = itemBuildingContext.prevRenderState,
+           let prevPollInteraction = prevRenderState.items.first(
+            where: {
+                $0.interactionUniqueId == message.uniqueId
+            }),
+           let _prevPollState = prevPollInteraction.componentState.poll
+        {
+            prevPollState = _prevPollState
+        } else {
+            prevPollState = nil
+        }
+
+        // Pass the previously rendered poll so we can animate.
+        self.poll = Poll(state: state, prevPollState: prevPollState?.state)
+
+        if poll.totalVoters() > 0 {
+            let title = poll.isEnded ? OWSLocalizedString(
+                "POLL_BUTTON_VIEW_RESULTS",
+                comment: "Button to view poll results"
+            ) : OWSLocalizedString(
+                "POLL_BUTTON_VIEW_VOTES",
+                comment: "Button to view poll votes"
+            )
+            let viewVotesAction = CVMessageAction(
+                title: title,
+                accessibilityIdentifier: "view_votes",
+                action: .didTapViewVotes(poll: poll)
+            )
+
+            bottomButtonsActions.append(viewVotesAction)
+        } else {
+            bottomLabel = OWSLocalizedString(
+                "POLL_NO_VOTES",
+                comment: "String to display when a poll has no votes"
+            )
+        }
+
+        return build()
+    }
 }
 
 // MARK: - DisplayableText
@@ -1800,7 +1896,7 @@ public extension CVComponentState {
                 break
             case .bodyMedia, .sticker, .audioAttachment, .genericAttachment, .contactShare:
                 hasPrimaryContent = true
-            case .senderName, .senderAvatar, .footer, .reactions, .bottomButtons, .sendFailureBadge, .dateHeader, .unreadIndicator, .typingIndicator, .threadDetails, .failedOrPendingDownloads, .unknownThreadWarning, .defaultDisappearingMessageTimer, .messageRoot:
+            case .senderName, .senderAvatar, .footer, .reactions, .bottomButtons, .bottomLabel, .sendFailureBadge, .dateHeader, .unreadIndicator, .typingIndicator, .threadDetails, .failedOrPendingDownloads, .unknownThreadWarning, .defaultDisappearingMessageTimer, .messageRoot:
                 // "Primary" content is not just metadata / UI.
                 break
             case .giftBadge:
@@ -1817,6 +1913,8 @@ public extension CVComponentState {
                 break
             case .paymentAttachment, .archivedPaymentAttachment:
                 // Payments can't be forwarded.
+                break
+            case .poll:
                 break
             case .undownloadableAttachment:
                 break

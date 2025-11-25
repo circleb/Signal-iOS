@@ -187,7 +187,7 @@ extension DonationSettingsViewController {
                             /// for them so it's expected we won't have a
                             /// corresponding error.
                             break
-                        case .active, .canceled, .incomplete, .unpaid, .unknown:
+                        case .active, .canceled, .unrecognized:
                             logger.warn("Subscription is processing, but we don't have a receipt credential request error about it!")
                         }
                     }
@@ -225,10 +225,7 @@ extension DonationSettingsViewController {
                         }
 
                         return nil
-                    case
-                            .incomplete,
-                            .unpaid,
-                            .unknown:
+                    case .unrecognized:
                         // Not sure what's going on here, but we don't want to show a
                         // subscription with an unexpected status.
                         logger.error("Unexpected subscription status: \(subscription.status)")
@@ -272,9 +269,7 @@ extension DonationSettingsViewController {
 
                 let dateFormatter = DateFormatter()
                 dateFormatter.dateStyle = .medium
-                let dateArg = dateFormatter.string(from: Date(
-                    timeIntervalSince1970: subscription.endOfCurrentPeriod
-                ))
+                let dateArg = dateFormatter.string(from: subscription.endOfCurrentPeriod)
 
                 return String(format: renewalFormat, dateArg)
             case .pendingAuthorization:
@@ -350,11 +345,7 @@ extension DonationSettingsViewController {
         // We don't show anything for one-time boosts unless there's an
         // error.
         if let receiptCredentialRequestError {
-            guard let receiptAmount = receiptCredentialRequestError.amount else {
-                owsFailBeta("We never persisted these without an amount for one-time boosts. How did we get here?")
-                return nil
-            }
-            amount = receiptAmount
+            amount = receiptCredentialRequestError.amount
 
             logger.info("Showing boost error. \(receiptCredentialRequestError)")
 
@@ -445,7 +436,7 @@ extension DonationSettingsViewController {
                     guard let self else { return }
 
                     self.present(
-                        SFSafariViewController(url: SupportConstants.donationPendingLearnMoreURL),
+                        SFSafariViewController(url: URL.Support.Donations.donationPending),
                         animated: true
                     )
                 }

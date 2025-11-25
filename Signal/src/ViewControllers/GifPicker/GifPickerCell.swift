@@ -5,11 +5,11 @@
 
 import SignalServiceKit
 import SignalUI
-import YYImage
+import SDWebImage
 
 class GifPickerCell: UICollectionViewCell {
 
-    private let imageView = YYAnimatedImageView()
+    private let imageView = SDAnimatedImageView()
     private let mp4View = LoopingVideoView()
     private let activityIndicator: UIActivityIndicatorView = {
         let view = UIActivityIndicatorView(style: .medium)
@@ -193,16 +193,13 @@ class GifPickerCell: UICollectionViewCell {
             activityIndicator.stopAnimating()
         }
 
-        if asset.assetDescription.fileExtension == "mp4",
-           let video = LoopingVideo(decryptedLocalFileUrl: URL(fileURLWithPath: asset.filePath)) {
+        if asset.assetDescription.fileExtension == "mp4", let video = LoopingVideo(decryptedLocalFileUrl: URL(fileURLWithPath: asset.filePath)) {
             mp4View.video = video
             mp4View.isHidden = false
-        } else if Data.ows_isValidImage(atPath: asset.filePath, mimeType: MimeType.imageGif.rawValue),
-                  let image = YYImage(contentsOfFile: asset.filePath) {
+        } else if (try? DataImageSource.forPath(asset.filePath))?.ows_isValidImage ?? false, let image = SDAnimatedImage(contentsOfFile: asset.filePath) {
             imageView.image = image
             imageView.isHidden = false
-        } else if Data.ows_isValidImage(atPath: asset.filePath, mimeType: MimeType.imageJpeg.rawValue),
-                  let image = UIImage(contentsOfFile: asset.filePath) {
+        } else if (try? DataImageSource.forPath(asset.filePath))?.ows_isValidImage ?? false, let image = UIImage(contentsOfFile: asset.filePath) {
             imageView.image = image
             imageView.isHidden = false
         } else {

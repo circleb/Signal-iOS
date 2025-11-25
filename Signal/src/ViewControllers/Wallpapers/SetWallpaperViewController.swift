@@ -9,7 +9,7 @@ import SignalUI
 import UniformTypeIdentifiers
 
 class SetWallpaperViewController: OWSTableViewController2 {
-    lazy var collectionView = WallpaperCollectionView(container: self, shouldDimInDarkMode: shouldDimInDarkMode) { [weak self] wallpaper in
+    private lazy var collectionView = WallpaperCollectionView(container: self, shouldDimInDarkMode: shouldDimInDarkMode) { [weak self] wallpaper in
         guard let self = self else { return }
         let vc = PreviewWallpaperViewController(
             mode: .preset(selectedWallpaper: wallpaper),
@@ -22,7 +22,7 @@ class SetWallpaperViewController: OWSTableViewController2 {
     static func load(thread: TSThread?, tx: DBReadTransaction) -> SetWallpaperViewController {
         return SetWallpaperViewController(
             thread: thread,
-            shouldDimInDarkMode: DependenciesBridge.shared.wallpaperStore.fetchDimInDarkMode(
+            shouldDimInDarkMode: DependenciesBridge.shared.wallpaperStore.fetchDimInDarkModeForRendering(
                 for: thread?.uniqueId,
                 tx: tx
             )
@@ -50,7 +50,7 @@ class SetWallpaperViewController: OWSTableViewController2 {
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
 
-        let referenceSize = view.bounds.size
+        let referenceSize = view.bounds.size - CGSize(width: view.safeAreaInsets.totalWidth, height: 0)
         guard referenceSize != previousReferenceSize else { return }
         previousReferenceSize = referenceSize
         updateCollectionViewSize(reference: referenceSize)
@@ -60,7 +60,7 @@ class SetWallpaperViewController: OWSTableViewController2 {
         super.viewWillTransition(to: size, with: coordinator)
 
         coordinator.animate { _ in
-            self.updateCollectionViewSize(reference: size)
+            self.updateCollectionViewSize(reference: size - CGSize(width: self.view.safeAreaInsets.totalWidth, height: 0))
         } completion: { _ in
 
         }
@@ -151,7 +151,7 @@ extension SetWallpaperViewController: PreviewWallpaperDelegate {
     }
 }
 
-class WallpaperCollectionView: UICollectionView {
+private class WallpaperCollectionView: UICollectionView {
     private let shouldDimInDarkMode: Bool
     private let flowLayout = UICollectionViewFlowLayout()
     private let selectionHandler: (Wallpaper) -> Void
@@ -239,7 +239,7 @@ extension WallpaperCollectionView: UICollectionViewDataSource, UICollectionViewD
     }
 }
 
-class WallpaperCell: UICollectionViewCell {
+private class WallpaperCell: UICollectionViewCell {
     static let reuseIdentifier = "WallpaperCell"
 
     var wallpaperView: UIView?

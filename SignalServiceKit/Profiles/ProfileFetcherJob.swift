@@ -21,16 +21,13 @@ public class ProfileFetcherJob {
     private let mustFetchNewCredential: Bool
     private let authedAccount: AuthedAccount
 
+    private let accountChecker: AccountChecker
     private let db: any DB
     private let disappearingMessagesConfigurationStore: any DisappearingMessagesConfigurationStore
     private let identityManager: any OWSIdentityManager
     private let paymentsHelper: any PaymentsHelper
     private let profileManager: any ProfileManager
     private let recipientDatabaseTable: RecipientDatabaseTable
-    private let recipientManager: any SignalRecipientManager
-    private let recipientMerger: any RecipientMerger
-    private let storageServiceRecordIkmCapabilityStore: any StorageServiceRecordIkmCapabilityStore
-    private let storageServiceRecordIkmMigrator: any StorageServiceRecordIkmMigrator
     private let syncManager: any SyncManagerProtocol
     private let tsAccountManager: any TSAccountManager
     private let udManager: any OWSUDManager
@@ -41,16 +38,13 @@ public class ProfileFetcherJob {
         groupIdContext: GroupIdentifier?,
         mustFetchNewCredential: Bool,
         authedAccount: AuthedAccount,
+        accountChecker: AccountChecker,
         db: any DB,
         disappearingMessagesConfigurationStore: any DisappearingMessagesConfigurationStore,
         identityManager: any OWSIdentityManager,
         paymentsHelper: any PaymentsHelper,
         profileManager: any ProfileManager,
         recipientDatabaseTable: RecipientDatabaseTable,
-        recipientManager: any SignalRecipientManager,
-        recipientMerger: any RecipientMerger,
-        storageServiceRecordIkmCapabilityStore: any StorageServiceRecordIkmCapabilityStore,
-        storageServiceRecordIkmMigrator: any StorageServiceRecordIkmMigrator,
         syncManager: any SyncManagerProtocol,
         tsAccountManager: any TSAccountManager,
         udManager: any OWSUDManager,
@@ -60,16 +54,13 @@ public class ProfileFetcherJob {
         self.groupIdContext = groupIdContext
         self.mustFetchNewCredential = mustFetchNewCredential
         self.authedAccount = authedAccount
+        self.accountChecker = accountChecker
         self.db = db
         self.disappearingMessagesConfigurationStore = disappearingMessagesConfigurationStore
         self.identityManager = identityManager
         self.paymentsHelper = paymentsHelper
         self.profileManager = profileManager
         self.recipientDatabaseTable = recipientDatabaseTable
-        self.recipientManager = recipientManager
-        self.recipientMerger = recipientMerger
-        self.storageServiceRecordIkmCapabilityStore = storageServiceRecordIkmCapabilityStore
-        self.storageServiceRecordIkmMigrator = storageServiceRecordIkmMigrator
         self.syncManager = syncManager
         self.tsAccountManager = tsAccountManager
         self.udManager = udManager
@@ -90,22 +81,11 @@ public class ProfileFetcherJob {
             try await updateProfile(fetchedProfile: fetchedProfile, localIdentifiers: localIdentifiers)
             return fetchedProfile
         } catch ProfileRequestError.notFound {
-            await db.awaitableWrite { [serviceId] tx in
-                let recipient = self.recipientDatabaseTable.fetchRecipient(serviceId: serviceId, transaction: tx)
-                guard let recipient else {
-                    return
-                }
-                self.recipientManager.markAsUnregisteredAndSave(
-                    recipient,
-                    unregisteredAt: .now,
-                    shouldUpdateStorageService: true,
-                    tx: tx
-                )
-                self.recipientMerger.splitUnregisteredRecipientIfNeeded(
-                    localIdentifiers: localIdentifiers,
-                    unregisteredRecipient: recipient,
-                    tx: tx
-                )
+            let isRegistered = db.read { tx in
+                return recipientDatabaseTable.fetchRecipient(serviceId: serviceId, transaction: tx)?.isRegistered == true
+            }
+            if isRegistered {
+                try? await accountChecker.checkIfAccountExists(serviceId: serviceId)
             }
             throw ProfileRequestError.notFound
         }
@@ -142,9 +122,12 @@ public class ProfileFetcherJob {
             )
             do {
                 let response = try await makeRequest(versionedProfileRequest.request)
+                guard let params = response.responseBodyParamParser else {
+                    throw OWSAssertionError("Missing or invalid JSON!")
+                }
                 let profile = try SignalServiceProfile.fromResponse(
                     serviceId: serviceId,
-                    responseObject: response.responseBodyJson
+                    params: params,
                 )
 
                 await versionedProfiles.didFetchProfile(profile: profile, profileRequest: versionedProfileRequest)
@@ -191,9 +174,12 @@ public class ProfileFetcherJob {
             )
         }
 
+        guard let params = result.response.responseBodyParamParser else {
+            throw OWSAssertionError("Missing or invalid JSON!")
+        }
         let profile = try SignalServiceProfile.fromResponse(
             serviceId: serviceId,
-            responseObject: result.responseJson
+            params: params,
         )
 
         return FetchedProfile(profile: profile, profileKey: nil)
@@ -292,6 +278,9 @@ public class ProfileFetcherJob {
     }
 
     private func readGroupSendEndorsement(groupId: GroupIdentifier, tx: DBReadTransaction) throws -> GroupSendFullTokenBuilder? {
+        guard let aci = serviceId as? Aci else {
+            return nil
+        }
         let threadStore = DependenciesBridge.shared.threadStore
         guard let groupThread = threadStore.fetchGroupThread(groupId: groupId, tx: tx) else {
             throw OWSAssertionError("Can't find group that should exist.")
@@ -306,10 +295,10 @@ public class ProfileFetcherJob {
             return nil
         }
         guard
-            let recipient = recipientDatabaseTable.fetchRecipient(serviceId: serviceId, transaction: tx),
+            let recipient = recipientDatabaseTable.fetchRecipient(serviceId: aci, transaction: tx),
             let individualEndorsement = try endorsementStore.fetchIndividualEndorsement(
                 groupThreadId: groupThread.sqliteRowId!,
-                recipientId: recipient.id!,
+                recipientId: recipient.id,
                 tx: tx
             )
         else {
@@ -322,18 +311,9 @@ public class ProfileFetcherJob {
         )
     }
 
-    private func makeRequest(_ request: TSRequest) async throws -> any HTTPResponse {
-        // TODO: WebSockets: Inline this method once it doesn't need to branch.
-        let connectionType = try request.auth.connectionType
-        let shouldUseWebSocket: Bool = (
-            OWSChatConnection.canAppUseSocketsToMakeRequests
-            && DependenciesBridge.shared.chatConnectionManager.shouldWaitForSocketToMakeRequest(connectionType: connectionType)
-        )
-        if shouldUseWebSocket {
-            return try await DependenciesBridge.shared.chatConnectionManager.makeRequest(request)
-        } else {
-            return try await SSKEnvironment.shared.networkManagerRef.asyncRequest(request, canUseWebSocket: false)
-        }
+    private func makeRequest(_ request: TSRequest) async throws -> HTTPResponse {
+        let networkManager = SSKEnvironment.shared.networkManagerRef
+        return try await networkManager.asyncRequest(request)
     }
 
     private func updateProfile(
@@ -375,7 +355,7 @@ public class ProfileFetcherJob {
         }
         let profileAddress = SignalServiceAddress(fetchedProfile.profile.serviceId)
         let didAlreadyDownloadAvatar = db.read { tx -> Bool in
-            let userProfile = profileManager.userProfile(for: profileAddress, tx: SDSDB.shimOnlyBridge(tx))
+            let userProfile = profileManager.userProfile(for: profileAddress, tx: tx)
             guard let userProfile else {
                 return false
             }
@@ -431,18 +411,20 @@ public class ProfileFetcherJob {
         let serviceId = profile.serviceId
 
         await db.awaitableWrite { transaction in
-            self.updateUnidentifiedAccess(
-                serviceId: serviceId,
-                verifier: profile.unidentifiedAccessVerifier,
-                hasUnrestrictedAccess: profile.hasUnrestrictedUnidentifiedAccess,
-                tx: transaction
-            )
+            if let aci = serviceId as? Aci {
+                self.updateUnidentifiedAccess(
+                    aci: aci,
+                    verifier: profile.unidentifiedAccessVerifier,
+                    hasUnrestrictedAccess: profile.hasUnrestrictedUnidentifiedAccess,
+                    tx: transaction
+                )
+            }
 
             // First, we add ensure we have a copy of any new badge in our badge store
             let badgeModels = fetchedProfile.profile.badges.map { $0.1 }
             let persistedBadgeIds: [String] = badgeModels.compactMap {
                 do {
-                    try self.profileManager.badgeStore.createOrUpdateBadge($0, transaction: SDSDB.shimOnlyBridge(transaction))
+                    try self.profileManager.badgeStore.createOrUpdateBadge($0, transaction: transaction)
                     return $0.id
                 } catch {
                     owsFailDebug("Failed to save badgeId: \($0.id). \(error)")
@@ -460,23 +442,25 @@ public class ProfileFetcherJob {
             do {
                 avatarFilename = try OWSUserProfile.consumeTemporaryAvatarFileUrl(
                     avatarDownloadResult.localFileUrl,
-                    tx: SDSDB.shimOnlyBridge(transaction)
+                    tx: transaction
                 )
             } catch {
                 Logger.warn("Couldn't move downloaded avatar: \(error)")
                 avatarFilename = .noChange
             }
 
-            self.profileManager.updateProfile(
-                address: OWSUserProfile.insertableAddress(serviceId: serviceId, localIdentifiers: localIdentifiers),
-                decryptedProfile: fetchedProfile.decryptedProfile,
-                avatarUrlPath: avatarDownloadResult.remoteRelativePath,
-                avatarFileName: avatarFilename,
-                profileBadges: profileBadgeMetadata,
-                lastFetchDate: Date(),
-                userProfileWriter: .profileFetch,
-                tx: SDSDB.shimOnlyBridge(transaction)
-            )
+            if !localIdentifiers.contains(serviceId: serviceId) || localIdentifiers.aci == serviceId {
+                self.profileManager.updateProfile(
+                    address: OWSUserProfile.insertableAddress(serviceId: serviceId, localIdentifiers: localIdentifiers),
+                    decryptedProfile: fetchedProfile.decryptedProfile,
+                    avatarUrlPath: avatarDownloadResult.remoteRelativePath,
+                    avatarFileName: avatarFilename,
+                    profileBadges: profileBadgeMetadata,
+                    lastFetchDate: Date(),
+                    userProfileWriter: .profileFetch,
+                    tx: transaction
+                )
+            }
 
             self.updateCapabilitiesIfNeeded(
                 serviceId: serviceId,
@@ -485,7 +469,7 @@ public class ProfileFetcherJob {
                 tx: transaction
             )
 
-            if localIdentifiers.contains(serviceId: serviceId) {
+            if localIdentifiers.aci == serviceId {
                 self.reconcileLocalProfileIfNeeded(fetchedProfile: fetchedProfile)
             }
 
@@ -496,13 +480,13 @@ public class ProfileFetcherJob {
             self.paymentsHelper.setArePaymentsEnabled(
                 for: serviceId,
                 hasPaymentsEnabled: paymentAddress != nil,
-                transaction: SDSDB.shimOnlyBridge(transaction)
+                transaction: transaction
             )
         }
     }
 
     private func updateUnidentifiedAccess(
-        serviceId: ServiceId,
+        aci: Aci,
         verifier: Data?,
         hasUnrestrictedAccess: Bool,
         tx: DBWriteTransaction
@@ -518,7 +502,7 @@ public class ProfileFetcherJob {
                 return .unrestricted
             }
 
-            guard let udAccessKey = udManager.udAccessKey(for: serviceId, tx: SDSDB.shimOnlyBridge(tx)) else {
+            guard let udAccessKey = udManager.udAccessKey(for: aci, tx: tx) else {
                 return .disabled
             }
 
@@ -530,7 +514,7 @@ public class ProfileFetcherJob {
 
             return .enabled
         }()
-        udManager.setUnidentifiedAccessMode(unidentifiedAccessMode, for: serviceId, tx: SDSDB.shimOnlyBridge(tx))
+        udManager.setUnidentifiedAccessMode(unidentifiedAccessMode, for: aci, tx: tx)
     }
 
     private func updateCapabilitiesIfNeeded(
@@ -544,27 +528,15 @@ public class ProfileFetcherJob {
         var shouldSendProfileSync = false
 
         if
-            localIdentifiers.contains(serviceId: serviceId),
-            fetchedCapabilities.storageServiceRecordIkm
+            localIdentifiers.aci == serviceId,
+            fetchedCapabilities.dummyCapability
         {
-            if !storageServiceRecordIkmCapabilityStore.isRecordIkmCapable(tx: tx) {
-                storageServiceRecordIkmCapabilityStore.setIsRecordIkmCapable(tx: tx)
-
-                shouldSendProfileSync = true
-            }
-
-            if registrationState.isRegisteredPrimaryDevice {
-                /// Only primary devices should perform the `recordIkm`
-                /// migration, since only primaries can create a Storage Service
-                /// manifest.
-                ///
-                /// We want to do this in a transaction completion block, since
-                /// it'll read from the database and we want to ensure this
-                /// write has completed.
-                tx.addSyncCompletion { [storageServiceRecordIkmMigrator] in
-                    storageServiceRecordIkmMigrator.migrateToManifestRecordIkmIfNecessary()
-                }
-            }
+            // Space to detect changes to our own capabilities, and run code
+            // such as migrations in response.
+            //
+            // See comment on `dummyCapability`: it's always false, but lets us
+            // keep this code around without the compiler complaining.
+            shouldSendProfileSync = true
         }
 
         if
@@ -574,7 +546,7 @@ public class ProfileFetcherJob {
             /// If some capability is newly enabled, we want all devices to be aware.
             /// This would happen automatically the next time those devices
             /// fetch the local profile, but we'd prefer it happen ASAP!
-            syncManager.sendFetchLatestProfileSyncMessage(tx: SDSDB.shimOnlyBridge(tx))
+            syncManager.sendFetchLatestProfileSyncMessage(tx: tx)
         }
     }
 

@@ -47,13 +47,15 @@ public class OWSIncomingSentMessageTranscript: SentMessageTranscript {
 
             groupId = contextInfo.groupId
             recipientAddress = nil
-        } else if
-            sentProto.destinationServiceID != nil
-            || sentProto.destinationE164 != nil
-        {
-            let destinationAddress = SignalServiceAddress.legacyAddress(
+        } else if sentProto.hasDestinationServiceID || sentProto.hasDestinationServiceIDBinary || sentProto.destinationE164 != nil {
+            let serviceId = ServiceId.parseFrom(
+                serviceIdBinary: sentProto.destinationServiceIDBinary,
                 serviceIdString: sentProto.destinationServiceID,
-                phoneNumber: sentProto.destinationE164?.nilIfEmpty
+            )
+            let destinationAddress = SignalServiceAddress(
+                serviceId: serviceId,
+                legacyPhoneNumber: sentProto.destinationE164?.nilIfEmpty,
+                cache: SSKEnvironment.shared.signalServiceAddressCacheRef,
             )
             guard destinationAddress.isValid else {
                 owsFailDebug("Invalid destinationAddress.")
@@ -151,8 +153,10 @@ public class OWSIncomingSentMessageTranscript: SentMessageTranscript {
         var recipientStates = [SignalServiceAddress: TSOutgoingMessageRecipientState]()
         for statusProto in sentProto.unidentifiedStatus {
             guard
-                let serviceIdString = statusProto.destinationServiceID,
-                let serviceId = try? ServiceId.parseFrom(serviceIdString: serviceIdString),
+                let serviceId = ServiceId.parseFrom(
+                    serviceIdBinary: statusProto.destinationServiceIDBinary,
+                    serviceIdString: statusProto.destinationServiceID,
+                ),
                 statusProto.hasUnidentified
             else {
                 owsFailDebug("Delivery status proto is missing value.")
@@ -209,13 +213,12 @@ public class OWSIncomingSentMessageTranscript: SentMessageTranscript {
     ) throws -> SentMessageTranscriptType.Message? {
         let isViewOnceMessage = dataMessage.hasIsViewOnce && dataMessage.isViewOnce
 
-        let body = dataMessage.body
-
-        let bodyRanges: MessageBodyRanges?
-        if dataMessage.bodyRanges.isEmpty.negated {
-            bodyRanges = MessageBodyRanges(protos: dataMessage.bodyRanges)
-        } else {
-            bodyRanges = nil
+        let bodyRanges = dataMessage.bodyRanges.isEmpty ? MessageBodyRanges.empty : MessageBodyRanges(protos: dataMessage.bodyRanges)
+        var body = dataMessage.body.map {
+            DependenciesBridge.shared.attachmentContentValidator.truncatedMessageBodyForInlining(
+                MessageBody(text: $0, ranges: bodyRanges),
+                tx: tx
+            )
         }
 
         let makeContactBuilder = { [dataMessage] tx in
@@ -284,15 +287,33 @@ public class OWSIncomingSentMessageTranscript: SentMessageTranscript {
             )
         }
 
+        var makePollCreateBuilder: ((Int64, DBWriteTransaction) throws -> Void)?
+        if let pollCreateMessage = dataMessage.pollCreate, let question = pollCreateMessage.question {
+            makePollCreateBuilder = { [pollCreateMessage] (interactionId: Int64, tx: DBWriteTransaction) in
+                try DependenciesBridge.shared.pollMessageManager.processIncomingPollCreate(
+                    interactionId: interactionId,
+                    pollCreateProto: pollCreateMessage,
+                    transaction: tx
+                )
+            }
+            body = DependenciesBridge.shared.attachmentContentValidator.truncatedMessageBodyForInlining(
+                MessageBody(text: question, ranges: .empty),
+                tx: tx
+            )
+        }
+
         let storyTimestamp: UInt64?
         let storyAuthorAci: Aci?
         if
             let storyContext = dataMessage.storyContext,
             storyContext.hasSentTimestamp,
-            let authorAci = storyContext.authorAci
+            storyContext.hasAuthorAci || storyContext.hasAuthorAciBinary
         {
             storyTimestamp = storyContext.sentTimestamp
-            storyAuthorAci = try Aci.parseFrom(serviceIdString: authorAci)
+            storyAuthorAci = Aci.parseFrom(serviceIdBinary: storyContext.authorAciBinary, serviceIdString: storyContext.authorAci)
+            guard storyAuthorAci != nil else {
+                throw OWSAssertionError("Couldn't parse story author")
+            }
         } else {
             storyTimestamp = nil
             storyAuthorAci = nil
@@ -301,7 +322,6 @@ public class OWSIncomingSentMessageTranscript: SentMessageTranscript {
         return .init(
             target: target,
             body: body,
-            bodyRanges: bodyRanges,
             attachmentPointerProtos: dataMessage.attachments,
             makeQuotedMessageBuilder: makeQuotedMessageBuilder,
             makeContactBuilder: makeContactBuilder,
@@ -313,7 +333,8 @@ public class OWSIncomingSentMessageTranscript: SentMessageTranscript {
             expirationDurationSeconds: dataMessage.expireTimer,
             expireTimerVersion: dataMessage.expireTimerVersion,
             storyTimestamp: storyTimestamp,
-            storyAuthorAci: storyAuthorAci
+            storyAuthorAci: storyAuthorAci,
+            makePollCreateBuilder: makePollCreateBuilder
         )
     }
 
@@ -354,7 +375,7 @@ public class OWSIncomingSentMessageTranscript: SentMessageTranscript {
         } else if let recipientAddress {
             let thread = TSContactThread.getOrCreateThread(
                 withContactAddress: recipientAddress,
-                transaction: SDSDB.shimOnlyBridge(tx)
+                transaction: tx
             )
             return .contact(
                 thread,

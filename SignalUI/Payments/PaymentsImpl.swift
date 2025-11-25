@@ -786,39 +786,23 @@ public extension PaymentsImpl {
         guard let mcTransactionData = paymentModel.mcTransactionData,
               !mcTransactionData.isEmpty,
               let mcTransaction = MobileCoin.Transaction(serializedData: mcTransactionData) else {
-            if DebugFlags.paymentsIgnoreBadData.get() {
-                Logger.warn("Missing or invalid mcTransactionData.")
-            } else {
-                owsFailDebug("Missing or invalid mcTransactionData.")
-            }
+            owsFailDebug("Missing or invalid mcTransactionData.")
             return
         }
         guard let mcReceiptData = paymentModel.mcReceiptData,
               !mcReceiptData.isEmpty,
               nil != MobileCoin.Receipt(serializedData: mcReceiptData) else {
-            if DebugFlags.paymentsIgnoreBadData.get() {
-                Logger.warn("Missing or invalid mcReceiptData.")
-            } else {
-                owsFailDebug("Missing or invalid mcReceiptData.")
-            }
+            owsFailDebug("Missing or invalid mcReceiptData.")
             return
         }
         let mcSpentKeyImages = Array(mcTransaction.inputKeyImages)
         guard !mcSpentKeyImages.isEmpty else {
-            if DebugFlags.paymentsIgnoreBadData.get() {
-                Logger.warn("Missing or invalid mcSpentKeyImages.")
-            } else {
-                owsFailDebug("Missing or invalid mcSpentKeyImages.")
-            }
+            owsFailDebug("Missing or invalid mcSpentKeyImages.")
             return
         }
         let mcOutputPublicKeys = Array(mcTransaction.outputPublicKeys)
         guard !mcOutputPublicKeys.isEmpty else {
-            if DebugFlags.paymentsIgnoreBadData.get() {
-                Logger.warn("Missing or invalid mcOutputPublicKeys.")
-            } else {
-                owsFailDebug("Missing or invalid mcOutputPublicKeys.")
-            }
+            owsFailDebug("Missing or invalid mcOutputPublicKeys.")
             return
         }
 
@@ -836,14 +820,16 @@ public extension PaymentsImpl {
                                            transaction: transaction)
     }
 
-    class func sendPaymentNotificationMessage(paymentModel: TSPaymentModel,
-                                              transaction: DBWriteTransaction) throws -> OWSOutgoingPaymentMessage {
+    class func sendPaymentNotificationMessage(
+        paymentModel: TSPaymentModel,
+        messageBody: ValidatedMessageBody?,
+        transaction: DBWriteTransaction
+    ) throws -> OWSOutgoingPaymentMessage {
         guard paymentModel.paymentType == .outgoingPayment else {
             owsFailDebug("Invalid paymentType.")
             throw PaymentsError.invalidModel
         }
-        guard paymentModel.paymentState == .outgoingVerified ||
-                DebugFlags.paymentsDoubleNotify.get() else {
+        guard paymentModel.paymentState == .outgoingVerified else {
             owsFailDebug("Invalid paymentState: \(paymentModel.paymentState.formatted).")
             throw PaymentsError.invalidModel
         }
@@ -870,18 +856,14 @@ public extension PaymentsImpl {
         }
         guard let mcReceiptData = paymentModel.mcReceiptData,
               mcReceiptData.count > 0 else {
-            if DebugFlags.paymentsIgnoreBadData.get() {
-                Logger.warn("Missing mcReceiptData.")
-            } else {
-                owsFailDebug("Missing mcReceiptData.")
-            }
+            owsFailDebug("Missing mcReceiptData.")
             throw PaymentsError.invalidModel
         }
 
         let message = self.sendPaymentNotificationMessage(
             paymentModel: paymentModel,
             recipientAci: recipientAci,
-            memoMessage: paymentModel.memoMessage,
+            messageBody: messageBody,
             mcReceiptData: mcReceiptData,
             transaction: transaction
         )
@@ -918,39 +900,23 @@ public extension PaymentsImpl {
         guard let mcReceiptData = paymentModel.mcReceiptData,
               !mcReceiptData.isEmpty,
               nil != MobileCoin.Receipt(serializedData: mcReceiptData) else {
-            if DebugFlags.paymentsIgnoreBadData.get() {
-                Logger.warn("Missing mcReceiptData.")
-            } else {
-                owsFailDebug("Missing mcReceiptData.")
-            }
+            owsFailDebug("Missing mcReceiptData.")
             return
         }
         guard let mcTransactionData = paymentModel.mcTransactionData,
               !mcTransactionData.isEmpty,
               let mcTransaction = MobileCoin.Transaction(serializedData: mcTransactionData) else {
-            if DebugFlags.paymentsIgnoreBadData.get() {
-                Logger.warn("Missing or invalid mcTransactionData.")
-            } else {
-                owsFailDebug("Missing or invalid mcTransactionData.")
-            }
+            owsFailDebug("Missing or invalid mcTransactionData.")
             return
         }
         let mcSpentKeyImages = Array(mcTransaction.inputKeyImages)
         guard !mcSpentKeyImages.isEmpty else {
-            if DebugFlags.paymentsIgnoreBadData.get() {
-                Logger.warn("Missing or invalid mcSpentKeyImages.")
-            } else {
-                owsFailDebug("Missing or invalid mcSpentKeyImages.")
-            }
+            owsFailDebug("Missing or invalid mcSpentKeyImages.")
             return
         }
         let mcOutputPublicKeys = Array(mcTransaction.outputPublicKeys)
         guard !mcOutputPublicKeys.isEmpty else {
-            if DebugFlags.paymentsIgnoreBadData.get() {
-                Logger.warn("Missing or invalid mcOutputPublicKeys.")
-            } else {
-                owsFailDebug("Missing or invalid mcOutputPublicKeys.")
-            }
+            owsFailDebug("Missing or invalid mcOutputPublicKeys.")
             return
         }
         _ = sendOutgoingPaymentSyncMessage(recipientAci: recipientAci.wrappedAciValue,
@@ -975,7 +941,7 @@ public extension PaymentsImpl {
     private class func sendPaymentNotificationMessage(
         paymentModel: TSPaymentModel,
         recipientAci: Aci,
-        memoMessage: String?,
+        messageBody: ValidatedMessageBody?,
         mcReceiptData: Data,
         transaction: DBWriteTransaction
     ) -> OWSOutgoingPaymentMessage {
@@ -1000,36 +966,27 @@ public extension PaymentsImpl {
             transaction: transaction
         )
         let paymentNotification = TSPaymentNotification(
-            memoMessage: memoMessage,
+            memoMessage: paymentModel.memoMessage,
             mcReceiptData: mcReceiptData
         )
         let dmConfigurationStore = DependenciesBridge.shared.disappearingMessagesConfigurationStore
         let dmConfig = dmConfigurationStore.fetchOrBuildDefault(for: .thread(thread), tx: transaction)
-
-        let messageBody: String? = {
-            guard let picoMob = paymentModel.paymentAmount?.picoMob else {
-                return nil
-            }
-            // Reverse type direction, so it reads correctly incoming to the recipient.
-            return PaymentsFormat.paymentPreviewText(
-                amount: picoMob,
-                transaction: transaction,
-                type: .incomingMessage
-            )
-        }()
 
         let message = OWSOutgoingPaymentMessage(
             thread: thread,
             messageBody: messageBody,
             paymentNotification: paymentNotification,
             expiresInSeconds: dmConfig.durationSeconds,
-            expireTimerVersion: NSNumber(value: dmConfig.timerVersion),
-            transaction: transaction
+            expireTimerVersion: dmConfig.timerVersion,
+            tx: transaction
         )
 
         paymentModel.update(withInteractionUniqueId: message.uniqueId, transaction: transaction)
         // No attachments to add.
-        let unpreparedMessage = UnpreparedOutgoingMessage.forMessage(message)
+        let unpreparedMessage = UnpreparedOutgoingMessage.forMessage(
+            message,
+            body: messageBody,
+        )
 
         ThreadUtil.enqueueMessage(
             unpreparedMessage,

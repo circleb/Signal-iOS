@@ -29,13 +29,9 @@ public protocol DataSource: AnyObject {
     var isValidImage: Bool { get }
     var isValidVideo: Bool { get }
     var hasStickerLikeProperties: Bool { get }
-    var imageMetadata: ImageMetadata { get }
+    var imageMetadata: ImageMetadata? { get }
 
     func writeTo(_ dstUrl: URL) throws
-
-    /// Faster than `writeTo(_:)`, but a DataSource can only be moved once,
-    /// and cannot be used after it's been moved.
-    func moveToUrlAndConsume(_ dstUrl: URL) throws
 
     func consumeAndDelete() throws
 }
@@ -74,11 +70,6 @@ public class DataSourceValue: DataSource {
         self.init(data, fileExtension: MimeTypeUtil.oversizeTextAttachmentFileExtension)
     }
 
-    /// Initializes a new empty `DataSourceValue`.
-    public convenience init() {
-        self.init(Data(), fileExtension: "bin")
-    }
-
     deinit {
         if let _dataUrl {
             try? OWSFileSystem.deleteFileIfExists(url: _dataUrl)
@@ -107,15 +98,14 @@ public class DataSourceValue: DataSource {
 
     /// This property is lazily-populated.
     /// Should only be accessed while holding `lock`.
-    private var _imageMetadata: ImageMetadata?
-    public var imageMetadata: ImageMetadata {
-        return lock.withLock {
+    private var _imageMetadata: ImageMetadata??
+    public var imageMetadata: ImageMetadata? {
+        return lock.withLock { () -> ImageMetadata? in
             owsAssertDebug(!_isConsumed)
             if let _imageMetadata {
                 return _imageMetadata
             }
-            let mimeType = MimeTypeUtil.mimeTypeForFileExtension(fileExtension)
-            let cachedImageMetadata = data.imageMetadata(withPath: nil, mimeType: mimeType, ignoreFileSize: true)
+            let cachedImageMetadata = DataImageSource(data).imageMetadata(ignorePerTypeFileSizeLimits: true)
             _imageMetadata = cachedImageMetadata
             return cachedImageMetadata
         }
@@ -167,29 +157,6 @@ public class DataSourceValue: DataSource {
         }
     }
 
-    public func moveToUrlAndConsume(_ dstUrl: URL) throws {
-        try lock.withLock {
-            owsAssertDebug(!_isConsumed)
-            owsAssertDebug(!Thread.isMainThread)
-            // This method is meant to be fast. If _dataUrl is nil,
-            // we'll still lazily generate it and this method will work,
-            // but it will be slower than expected.
-            owsAssertDebug(_dataUrl != nil)
-
-            guard let dataUrl else {
-                throw OWSAssertionError("Missing data URL.")
-            }
-            _dataUrl = nil
-            _isConsumed = true
-            do {
-                try OWSFileSystem.moveFile(from: dataUrl, to: dstUrl)
-            } catch {
-                owsFailDebug("Could not write data with error: \(error)")
-                throw error
-            }
-        }
-    }
-
     public func consumeAndDelete() throws {
         try lock.withLock {
             owsAssertDebug(!_isConsumed)
@@ -201,7 +168,7 @@ public class DataSourceValue: DataSource {
 
     public var isValidImage: Bool {
         owsAssertDebug(!isConsumed)
-        return data.ows_isValidImage
+        return DataImageSource(data).ows_isValidImage
     }
 
     public var isValidVideo: Bool {
@@ -209,16 +176,20 @@ public class DataSourceValue: DataSource {
         guard let path = dataUrl?.path else {
             return false
         }
-        guard MimeTypeUtil.isSupportedVideoFile(path) else {
+        owsFailDebug("Are we calling this anywhere? It seems quite inefficient.")
+        do {
+            try OWSMediaUtils.validateVideoExtension(ofPath: path)
+            try OWSMediaUtils.validateVideoSize(atPath: path)
+            try OWSMediaUtils.validateVideoAsset(atPath: path)
+            return true
+        } catch {
             return false
         }
-        owsFailDebug("Are we calling this anywhere? It seems quite inefficient.")
-        return OWSMediaUtils.isValidVideo(path: path)
     }
 
     public var hasStickerLikeProperties: Bool {
         owsAssertDebug(!isConsumed)
-        return Data.ows_hasStickerLikeProperties(withImageMetadata: imageMetadata)
+        return imageMetadata?.hasStickerLikeProperties ?? false
     }
 }
 
@@ -261,7 +232,7 @@ public class DataSourcePath: DataSource {
         }
     }
 
-    private var fileUrl: URL
+    public let fileUrl: URL
     private let shouldDeleteOnDeallocation: Bool
     private let lock = NSRecursiveLock()
 
@@ -323,31 +294,34 @@ public class DataSourcePath: DataSource {
 
     public var isValidImage: Bool {
         owsAssertDebug(!isConsumed)
-        return Data.ows_isValidImage(at: fileUrl, mimeType: mimeType)
+        return (try? DataImageSource.forPath(fileUrl.path))?.ows_isValidImage ?? false
     }
 
     public var isValidVideo: Bool {
         owsAssertDebug(!isConsumed)
-        if let mimeType {
-            return MimeTypeUtil.isSupportedVideoMimeType(mimeType) && OWSMediaUtils.isValidVideo(path: fileUrl.path)
-        } else {
-            return MimeTypeUtil.isSupportedVideoFile(fileUrl.path) && OWSMediaUtils.isValidVideo(path: fileUrl.path)
+        do {
+            try OWSMediaUtils.validateVideoExtension(ofPath: fileUrl.path)
+            try OWSMediaUtils.validateVideoSize(atPath: fileUrl.path)
+            try OWSMediaUtils.validateVideoAsset(atPath: fileUrl.path)
+            return true
+        } catch {
+            return false
         }
     }
 
     public var hasStickerLikeProperties: Bool {
         owsAssertDebug(!isConsumed)
-        return Data.ows_hasStickerLikeProperties(withImageMetadata: imageMetadata)
+        return imageMetadata?.hasStickerLikeProperties ?? false
     }
 
-    private var _imageMetadata: ImageMetadata?
-    public var imageMetadata: ImageMetadata {
-        lock.withLock {
+    private var _imageMetadata: ImageMetadata??
+    public var imageMetadata: ImageMetadata? {
+        lock.withLock { () -> ImageMetadata? in
             owsAssertDebug(!_isConsumed)
             if let _imageMetadata {
                 return _imageMetadata
             }
-            let imageMetadata = Data.imageMetadata(withPath: fileUrl.path, mimeType: mimeType, ignoreFileSize: true)
+            let imageMetadata = (try? DataImageSource.forPath(fileUrl.path))?.imageMetadata(ignorePerTypeFileSizeLimits: true)
             _imageMetadata = imageMetadata
             return imageMetadata
         }
@@ -362,25 +336,6 @@ public class DataSourcePath: DataSource {
         }
     }
 
-    public func moveToUrlAndConsume(_ dstUrl: URL) throws {
-        try lock.withLock {
-            owsAssertDebug(!_isConsumed)
-            _isConsumed = true
-
-            do {
-                try OWSFileSystem.moveFile(from: fileUrl, to: dstUrl)
-            } catch {
-                Logger.error("File could not be moved. Copying instead. \(error)")
-                do {
-                    try FileManager.default.copyItem(at: fileUrl, to: dstUrl)
-                } catch {
-                    owsFailDebug("Could not write data with error: \(error)")
-                    throw error
-                }
-            }
-        }
-    }
-
     public func consumeAndDelete() throws {
         try lock.withLock {
             owsAssertDebug(!_isConsumed)
@@ -388,10 +343,5 @@ public class DataSourcePath: DataSource {
 
             try OWSFileSystem.deleteFileIfExists(url: fileUrl)
         }
-    }
-
-    private var mimeType: String? {
-        owsAssertDebug(!isConsumed)
-        return MimeTypeUtil.mimeTypeForFileExtension(fileUrl.pathExtension)
     }
 }

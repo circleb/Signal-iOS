@@ -11,8 +11,10 @@ import XCTest
 @testable import SignalServiceKit
 
 class BackupEnablementReminderMegaphoneTests: XCTestCase {
-    private let db = InMemoryDB()
-    private let backupSettingsStore = BackupSettingsStore()
+    private let db: DB = InMemoryDB()
+    private let backupSettingsStore: BackupSettingsStore = BackupSettingsStore()
+    private let tsAccountManager: TSAccountManager = MockTSAccountManager()
+
     private var contactThread: TSContactThread!
     private var experienceUpgrade: ExperienceUpgrade!
 
@@ -20,6 +22,7 @@ class BackupEnablementReminderMegaphoneTests: XCTestCase {
         super.setUp()
         let testPhone = E164("+16505550101")!
         let testPNI = Pni.constantForTesting("PNI:00000000-0000-4000-8000-0000000000b1")
+
         contactThread = TSContactThread(contactAddress: SignalServiceAddress(
             serviceId: testPNI,
             phoneNumber: testPhone.stringValue,
@@ -34,17 +37,14 @@ class BackupEnablementReminderMegaphoneTests: XCTestCase {
     }
 
     private func checkPreconditions(tx: DBReadTransaction) -> Bool {
-        let remoteConfig = RemoteConfig(clockSkew: 0, valueFlags: [
-            "ios.allowBackups": "true"
-        ])
-
         return ExperienceUpgradeManifest.checkPreconditionsForBackupEnablementReminder(
-            remoteConfig: remoteConfig,
+            backupSettingsStore: backupSettingsStore,
+            tsAccountManager: tsAccountManager,
             transaction: tx
         )
     }
 
-    func testPreconditionsForBackupKeyMegaphone_backupsEnabled() throws {
+    func testPreconditionsForRecoveryKeyMegaphone_backupsEnabled() throws {
         db.write { tx in
             backupSettingsStore.setBackupPlan(.free, tx: tx)
         }
@@ -55,7 +55,7 @@ class BackupEnablementReminderMegaphoneTests: XCTestCase {
         }
     }
 
-    func testPreconditionsForBackupKeyMegaphone_lessThanRequiredMessages() throws {
+    func testPreconditionsForRecoveryKeyMegaphone_lessThanRequiredMessages() throws {
         db.write { tx in
             backupSettingsStore.setBackupPlan(.disabled, tx: tx)
         }
@@ -65,7 +65,7 @@ class BackupEnablementReminderMegaphoneTests: XCTestCase {
         }
     }
 
-    func testPreconditionsForBackupKeyMegaphone_hasRequiredMessages() throws {
+    func testPreconditionsForRecoveryKeyMegaphone_hasRequiredMessages() throws {
         db.write { tx in
             let db = tx.database
             try! contactThread!.asRecord().insert(db)
@@ -85,7 +85,7 @@ class BackupEnablementReminderMegaphoneTests: XCTestCase {
         }
     }
 
-    func testPreconditionsForBackupKeyMegaphone_backupsHasPreviouslyBeenEnabled() throws {
+    func testPreconditionsForRecoveryKeyMegaphone_backupsHasPreviouslyBeenEnabled() throws {
 
         // Enable then disable backups
         db.write { tx in backupSettingsStore.setBackupPlan(.free, tx: tx) }
@@ -110,7 +110,7 @@ class BackupEnablementReminderMegaphoneTests: XCTestCase {
         }
     }
 
-    func testPreconditionsForBackupKeyMegaphone_snoozed() throws {
+    func testPreconditionsForRecoveryKeyMegaphone_snoozed() throws {
         experienceUpgrade.snoozeCount = 1
 
         experienceUpgrade.lastSnoozedTimestamp = Date().addingTimeInterval(-25 * TimeInterval.day).timeIntervalSince1970
@@ -132,7 +132,10 @@ class BackupEnablementReminderMegaphoneTests: XCTestCase {
 
 private extension TSOutgoingMessage {
     convenience init(in thread: TSThread, messageBody: String) {
-        let builder: TSOutgoingMessageBuilder = .withDefaultValues(thread: thread, messageBody: messageBody)
+        let builder: TSOutgoingMessageBuilder = .withDefaultValues(
+            thread: thread,
+            messageBody: AttachmentContentValidatorMock.mockValidatedBody(messageBody)
+        )
         self.init(outgoingMessageWith: builder, recipientAddressStates: [:])
     }
 }

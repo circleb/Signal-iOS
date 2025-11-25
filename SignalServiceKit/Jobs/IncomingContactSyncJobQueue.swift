@@ -80,7 +80,7 @@ private class IncomingContactSyncJobRunner: JobRunner {
         self.appReadiness = appReadiness
     }
 
-    func runJobAttempt(_ jobRecord: IncomingContactSyncJobRecord) async -> JobAttemptResult {
+    func runJobAttempt(_ jobRecord: IncomingContactSyncJobRecord) async -> JobAttemptResult<Void> {
         return await JobAttemptResult.executeBlockWithDefaultErrorHandler(
             jobRecord: jobRecord,
             retryLimit: Constants.maxRetries,
@@ -89,7 +89,7 @@ private class IncomingContactSyncJobRunner: JobRunner {
         )
     }
 
-    func didFinishJob(_ jobRecordId: JobRecord.RowId, result: JobResult) async {}
+    func didFinishJob(_ jobRecordId: JobRecord.RowId, result: JobResult<Void>) async {}
 
     private func _runJob(_ jobRecord: IncomingContactSyncJobRecord) async throws {
         let fileUrl: URL
@@ -203,7 +203,7 @@ private class IncomingContactSyncJobRunner: JobRunner {
         let recipientManager = DependenciesBridge.shared.recipientManager
         let recipientMerger = DependenciesBridge.shared.recipientMerger
 
-        let recipient: SignalRecipient
+        var recipient: SignalRecipient
         if let aci = contactDetails.aci {
             recipient = recipientMerger.applyMergeFromContactSync(
                 localIdentifiers: localIdentifiers,
@@ -213,7 +213,7 @@ private class IncomingContactSyncJobRunner: JobRunner {
             )
             // Mark as registered only if we have a UUID (we always do in this branch).
             // If we don't have a UUID, contacts can't be registered.
-            recipientManager.markAsRegisteredAndSave(recipient, shouldUpdateStorageService: false, tx: tx)
+            recipientManager.markAsRegisteredAndSave(&recipient, shouldUpdateStorageService: false, tx: tx)
         } else if let phoneNumber = contactDetails.phoneNumber {
             recipient = recipientFetcher.fetchOrCreate(phoneNumber: phoneNumber, tx: tx)
         } else {

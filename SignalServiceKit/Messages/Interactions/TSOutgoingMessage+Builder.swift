@@ -17,8 +17,7 @@ public class TSOutgoingMessageBuilder: TSMessageBuilder {
         thread: TSThread,
         timestamp: UInt64?,
         receivedAtTimestamp: UInt64?,
-        messageBody: String?,
-        bodyRanges: MessageBodyRanges?,
+        messageBody: ValidatedInlineMessageBody?,
         editState: TSEditState,
         expiresInSeconds: UInt32?,
         expireTimerVersion: UInt32?,
@@ -38,7 +37,8 @@ public class TSOutgoingMessageBuilder: TSMessageBuilder {
         contactShare: OWSContact?,
         linkPreview: OWSLinkPreview?,
         messageSticker: MessageSticker?,
-        giftBadge: OWSGiftBadge?
+        giftBadge: OWSGiftBadge?,
+        isPoll: Bool
     ) {
         self.isVoiceMessage = isVoiceMessage
         self.groupMetaMessage = groupMetaMessage
@@ -50,7 +50,6 @@ public class TSOutgoingMessageBuilder: TSMessageBuilder {
             timestamp: timestamp,
             receivedAtTimestamp: receivedAtTimestamp,
             messageBody: messageBody,
-            bodyRanges: bodyRanges,
             editState: editState,
             expiresInSeconds: expiresInSeconds,
             expireTimerVersion: expireTimerVersion,
@@ -66,7 +65,8 @@ public class TSOutgoingMessageBuilder: TSMessageBuilder {
             contactShare: contactShare,
             linkPreview: linkPreview,
             messageSticker: messageSticker,
-            giftBadge: giftBadge
+            giftBadge: giftBadge,
+            isPoll: isPoll
         )
     }
 
@@ -75,8 +75,7 @@ public class TSOutgoingMessageBuilder: TSMessageBuilder {
         thread: TSThread,
         timestamp: UInt64? = nil,
         receivedAtTimestamp: UInt64? = nil,
-        messageBody: String? = nil,
-        bodyRanges: MessageBodyRanges? = nil,
+        messageBody: ValidatedInlineMessageBody? = nil,
         editState: TSEditState = .none,
         expiresInSeconds: UInt32? = nil,
         expireTimerVersion: UInt32? = nil,
@@ -96,14 +95,14 @@ public class TSOutgoingMessageBuilder: TSMessageBuilder {
         contactShare: OWSContact? = nil,
         linkPreview: OWSLinkPreview? = nil,
         messageSticker: MessageSticker? = nil,
-        giftBadge: OWSGiftBadge? = nil
+        giftBadge: OWSGiftBadge? = nil,
+        isPoll: Bool = false
     ) -> TSOutgoingMessageBuilder {
         return TSOutgoingMessageBuilder(
             thread: thread,
             timestamp: timestamp,
             receivedAtTimestamp: receivedAtTimestamp,
             messageBody: messageBody,
-            bodyRanges: bodyRanges,
             editState: editState,
             expiresInSeconds: expiresInSeconds,
             expireTimerVersion: expireTimerVersion,
@@ -123,7 +122,8 @@ public class TSOutgoingMessageBuilder: TSMessageBuilder {
             contactShare: contactShare,
             linkPreview: linkPreview,
             messageSticker: messageSticker,
-            giftBadge: giftBadge
+            giftBadge: giftBadge,
+            isPoll: isPoll
         )
     }
 
@@ -137,7 +137,7 @@ public class TSOutgoingMessageBuilder: TSMessageBuilder {
 
     public static func outgoingMessageBuilder(
         thread: TSThread,
-        messageBody: String?
+        messageBody: ValidatedInlineMessageBody?
     ) -> TSOutgoingMessageBuilder {
         return .withDefaultValues(thread: thread, messageBody: messageBody)
     }

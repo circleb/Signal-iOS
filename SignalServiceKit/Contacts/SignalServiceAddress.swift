@@ -493,8 +493,6 @@ public class SignalServiceAddressCache: NSObject {
     }
 
     func prepareCache() {
-        owsAssertDebug(GRDBSchemaMigrator.areMigrationsComplete)
-
         SSKEnvironment.shared.databaseStorageRef.read { tx in
             let bulkFetcher: BulkPhoneNumberVisibilityFetcher?
             do {
@@ -531,13 +529,13 @@ public class SignalServiceAddressCache: NSObject {
     internal func updateRecipient(_ signalRecipient: SignalRecipient, isPhoneNumberVisible: Bool) {
         updateRecipient(
             aci: signalRecipient.aci,
-            pni: signalRecipient.pni,
             phoneNumber: signalRecipient.phoneNumber?.stringValue,
+            pni: signalRecipient.pni,
             isPhoneNumberVisible: isPhoneNumberVisible
         )
     }
 
-    private func updateRecipient(aci: Aci?, pni: Pni?, phoneNumber: String?, isPhoneNumberVisible: Bool) {
+    internal func updateRecipient(aci: Aci?, phoneNumber: String?, pni: Pni?, isPhoneNumberVisible: Bool) {
         state.update { cacheState in
             // This cache associates phone numbers to the other identifiers. If we
             // don't have a phone number, there's nothing to associate.

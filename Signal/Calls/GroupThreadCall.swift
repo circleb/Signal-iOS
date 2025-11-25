@@ -134,7 +134,7 @@ final class GroupThreadCall: HCP.GroupCall {
         case shouldRing
         case ringing
         case ringingEnded
-        case incomingRing(caller: SignalServiceAddress, ringId: Int64)
+        case incomingRing(caller: Aci, ringId: Int64)
         case incomingRingCancelled
 
         var isIncomingRing: Bool {

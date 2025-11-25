@@ -38,11 +38,12 @@ protocol ImageEditorModelObserver: AnyObject {
 
 // MARK: -
 
+// Should be @MainActor.
 class ImageEditorModel: NSObject {
 
     let srcImagePath: String
-
     let srcImageSizePixels: CGSize
+    let srcImageMetadata: ImageMetadata
 
     private var contents: ImageEditorContents
 
@@ -77,7 +78,14 @@ class ImageEditorModel: NSObject {
             throw ImageEditorError.invalidInput
         }
 
-        let srcImageSizePixels = Data.imageSize(forFilePath: srcImagePath, mimeType: mimeType)
+        let srcImageMetadata = try? DataImageSource.forPath(srcImagePath).imageMetadata()
+        guard let srcImageMetadata else {
+            Logger.error("Invalid image")
+            throw ImageEditorError.invalidInput
+        }
+        self.srcImageMetadata = srcImageMetadata
+
+        let srcImageSizePixels = srcImageMetadata.pixelSize
         guard srcImageSizePixels.width > 0, srcImageSizePixels.height > 0 else {
             Logger.error("Couldn't determine image size.")
             throw ImageEditorError.invalidInput
@@ -90,6 +98,7 @@ class ImageEditorModel: NSObject {
         super.init()
     }
 
+    @MainActor
     func renderOutput() -> UIImage? {
         return ImageEditorCanvasView.renderForOutput(model: self, transform: currentTransform())
     }
@@ -285,61 +294,5 @@ class ImageEditorModel: NSObject {
             fireModelDidChange(before: oldContents,
                                after: self.contents)
         }
-    }
-
-    // MARK: - Utilities
-
-    // Returns nil on error.
-    private class func crop(imagePath: String,
-                            unitCropRect: CGRect) -> UIImage? {
-        // TODO: Do we want to render off the main thread?
-        AssertIsOnMainThread()
-
-        guard let srcImage = UIImage(contentsOfFile: imagePath) else {
-            owsFailDebug("Could not load image")
-            return nil
-        }
-        let srcImageSize = srcImage.size
-        // Convert from unit coordinates to src image coordinates.
-        let cropRect = CGRect(x: round(unitCropRect.origin.x * srcImageSize.width),
-                              y: round(unitCropRect.origin.y * srcImageSize.height),
-                              width: round(unitCropRect.size.width * srcImageSize.width),
-                              height: round(unitCropRect.size.height * srcImageSize.height))
-
-        guard cropRect.origin.x >= 0,
-              cropRect.origin.y >= 0,
-              cropRect.origin.x + cropRect.size.width <= srcImageSize.width,
-              cropRect.origin.y + cropRect.size.height <= srcImageSize.height else {
-            owsFailDebug("Invalid crop rectangle.")
-            return nil
-        }
-        guard cropRect.size.width > 0,
-              cropRect.size.height > 0 else {
-            // Not an error; indicates that the user tapped rather
-            // than dragged.
-            Logger.warn("Empty crop rectangle.")
-            return nil
-        }
-
-        let hasAlpha = Data.hasAlpha(forValidImageFilePath: imagePath)
-
-        UIGraphicsBeginImageContextWithOptions(cropRect.size, !hasAlpha, srcImage.scale)
-        defer { UIGraphicsEndImageContext() }
-
-        guard let context = UIGraphicsGetCurrentContext() else {
-            owsFailDebug("context was unexpectedly nil")
-            return nil
-        }
-        context.interpolationQuality = .high
-
-        // Draw source image.
-        let dstFrame = CGRect(origin: CGPoint.invert(cropRect.origin), size: srcImageSize)
-        srcImage.draw(in: dstFrame)
-
-        let dstImage = UIGraphicsGetImageFromCurrentImageContext()
-        if dstImage == nil {
-            owsFailDebug("could not generate dst image.")
-        }
-        return dstImage
     }
 }

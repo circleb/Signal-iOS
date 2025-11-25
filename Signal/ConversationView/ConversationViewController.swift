@@ -99,7 +99,6 @@ public final class ConversationViewController: OWSViewController {
             for: thread, chatColor: chatColor, wallpaperViewBuilder: wallpaperViewBuilder
         )
         let conversationViewModel = ConversationViewModel.load(for: thread, tx: tx)
-        let didAlreadyShowGroupCallTooltipEnoughTimes = SSKEnvironment.shared.preferencesRef.wasGroupCallTooltipShown(withTransaction: tx)
 
         let cvc = ConversationViewController(
             appReadiness: appReadiness,
@@ -107,7 +106,6 @@ public final class ConversationViewController: OWSViewController {
             conversationViewModel: conversationViewModel,
             action: action,
             conversationStyle: conversationStyle,
-            didAlreadyShowGroupCallTooltipEnoughTimes: didAlreadyShowGroupCallTooltipEnoughTimes,
             loadAroundMessageId: loadAroundMessageId,
             scrollToMessageId: scrollToMessageId,
             oldestUnreadMessage: oldestUnreadMessage,
@@ -135,7 +133,6 @@ public final class ConversationViewController: OWSViewController {
         conversationViewModel: ConversationViewModel,
         action: ConversationViewAction,
         conversationStyle: ConversationStyle,
-        didAlreadyShowGroupCallTooltipEnoughTimes: Bool,
         loadAroundMessageId: String?,
         scrollToMessageId: String?,
         oldestUnreadMessage: TSInteraction?,
@@ -150,7 +147,6 @@ public final class ConversationViewController: OWSViewController {
         self.viewState = CVViewState(
             threadUniqueId: threadViewModel.threadRecord.uniqueId,
             conversationStyle: conversationStyle,
-            didAlreadyShowGroupCallTooltipEnoughTimes: didAlreadyShowGroupCallTooltipEnoughTimes,
             chatColor: chatColor,
             wallpaperViewBuilder: wallpaperViewBuilder
         )
@@ -170,8 +166,6 @@ public final class ConversationViewController: OWSViewController {
         self.viewState.selectionState.delegate = self
         self.hidesBottomBarWhenPushed = true
 
-        self.inputAccessoryPlaceholder.delegate = self
-
         SUIEnvironment.shared.contactsViewHelperRef.addObserver(self)
 
         self.actionOnOpen = action
@@ -185,10 +179,6 @@ public final class ConversationViewController: OWSViewController {
         )
 
         searchController.delegate = self
-
-        // because the search bar view is hosted in the navigation bar, it's not in the CVC's responder
-        // chain, and thus won't inherit our inputAccessoryView, so we manually set it here.
-        searchController.uiSearchController.searchBar.inputAccessoryView = self.inputAccessoryPlaceholder
 
         self.otherUsersProfileDidChangeEvent = DebouncedEvents.build(
             mode: .firstLast,
@@ -268,11 +258,24 @@ public final class ConversationViewController: OWSViewController {
         backgroundContainer.autoPinEdgesToSuperviewEdges()
         setUpWallpaper()
 
-        self.view.addSubview(bottomBar)
-        self.bottomBarBottomConstraint = bottomBar.autoPinEdge(toSuperviewEdge: .bottom)
-        bottomBar.autoPinWidthToSuperview()
+        self.view.addSubview(bottomBarContainer)
+        bottomBarContainer.autoPinWidthToSuperview()
+        bottomBarContainer.autoPinEdge(toSuperviewEdge: .bottom)
 
-        self.selectionToolbar = self.buildSelectionToolbar()
+        selectionToolbar = self.buildSelectionToolbar()
+
+#if compiler(>=6.2)
+        // Obscures content underneath bottom bar to improve legibility.
+        if #available(iOS 26, *) {
+            let scrollInteraction = UIScrollEdgeElementContainerInteraction()
+            scrollInteraction.scrollView = collectionView
+            scrollInteraction.edge = .bottom
+            if let selectionToolbar {
+                selectionToolbar.addInteraction(scrollInteraction)
+            }
+            searchController.resultsBar.addInteraction(scrollInteraction)
+        }
+#endif
 
         // This should kick off the first load.
         owsAssertDebug(!self.hasRenderState)
@@ -311,10 +314,6 @@ public final class ConversationViewController: OWSViewController {
         return result
     }
 
-    public override var inputAccessoryView: UIView? {
-        inputAccessoryPlaceholder
-    }
-
     public override var textInputContextIdentifier: String? {
         thread.uniqueId
     }
@@ -335,17 +334,9 @@ public final class ConversationViewController: OWSViewController {
 
         super.viewWillAppear(animated)
 
-        if self.inputToolbar == nil {
-            // This will create the input toolbar for the first time.
-            // It's important that we do this at the "last moment" to
-            // avoid expensive work that delays CVC presentation.
-            self.applyTheme()
-            owsAssertDebug(self.inputToolbar != nil)
+        configureGestureRecognizersIfNeeded()
 
-            self.createGestureRecognizers()
-        } else {
-            self.ensureBannerState()
-        }
+        ensureBannerState()
 
         self.isViewVisible = true
         self.viewWillAppearForLoad()
@@ -358,7 +349,8 @@ public final class ConversationViewController: OWSViewController {
         self.updateNavigationTitle()
 
         self.ensureBottomViewType()
-        self.updateInputToolbarLayout(initialLayout: true)
+        inputToolbar?.scrollToBottom()
+
         self.refreshCallState()
 
         self.showMessageRequestDialogIfRequired()
@@ -444,7 +436,6 @@ public final class ConversationViewController: OWSViewController {
         // Clear the "on open" state after the view has been presented.
         self.actionOnOpen = .none
 
-        self.updateInputToolbarLayout()
         self.configureScrollDownButtons()
         inputToolbar?.viewDidAppear()
 
@@ -503,7 +494,7 @@ public final class ConversationViewController: OWSViewController {
         guard hasViewWillAppearEverBegun else {
             return
         }
-        guard nil != inputToolbar else {
+        guard let inputToolbar else {
             owsFailDebug("Missing inputToolbar.")
             return
         }
@@ -513,9 +504,9 @@ public final class ConversationViewController: OWSViewController {
         // in the view hierarchy. Since it's not in the view hierarchy, it hasn't been laid out and has no width,
         // which is used to determine height.
         // So here we unsure the proper height once we know everything's been laid out.
-        self.inputToolbar?.ensureTextViewHeight()
+        inputToolbar.ensureTextViewHeight()
 
-        self.positionGroupCallTooltip()
+        updateContentInsets()
     }
 
     public override var shouldAutorotate: Bool {
@@ -533,16 +524,6 @@ public final class ConversationViewController: OWSViewController {
         Logger.info("didChangePreferredContentSize")
 
         resetForSizeOrOrientationChange()
-
-        guard hasViewWillAppearEverBegun else {
-            return
-        }
-        guard let inputToolbar = inputToolbar else {
-            owsFailDebug("Missing inputToolbar.")
-            return
-        }
-
-        inputToolbar.updateFontSizes()
     }
 
     public override func themeDidChange() {
@@ -579,8 +560,6 @@ public final class ConversationViewController: OWSViewController {
         self.updateNavigationTitle()
         self.updateNavigationBarSubtitleLabel()
 
-        self.updateInputToolbar()
-        self.updateInputToolbarLayout()
         self.updateBarButtonItems()
         self.ensureBannerState()
 
@@ -666,10 +645,25 @@ public final class ConversationViewController: OWSViewController {
 
         super.viewSafeAreaInsetsDidChange()
 
+        // Workaround for iOS 26 animating bottom bar getting in its final position
+        // during view presentation animation.
+        if #available(iOS 26, *) {
+            UIView.performWithoutAnimation {
+                bottomBarContainer.setNeedsLayout()
+                bottomBarContainer.layoutIfNeeded()
+                bottomBarContainer.frame = CGRect(
+                    origin: CGPoint(
+                        x: 0,
+                        y: view.bounds.maxY - bottomBarContainer.frame.height
+                    ),
+                    size: bottomBarContainer.bounds.size
+                )
+            }
+        }
+
         updateContentInsetsDebounced()
-        self.updateInputToolbarLayout()
-        self.viewSafeAreaInsetsDidChangeForLoad()
-        self.updateConversationStyle()
+        viewSafeAreaInsetsDidChangeForLoad()
+        updateConversationStyle()
     }
 }
 

@@ -17,7 +17,6 @@ public protocol ConversationInputTextViewDelegate: AnyObject {
 protocol ConversationTextViewToolbarDelegate: AnyObject {
     func textViewDidChange(_ textView: UITextView)
     func textViewDidChangeSelection(_ textView: UITextView)
-    func textViewDidBecomeFirstResponder(_ textView: UITextView)
 }
 
 // MARK: -
@@ -33,6 +32,10 @@ class ConversationInputTextView: BodyRangesTextView {
     var trimmedText: String { textStorage.string.ows_stripped() }
     var untrimmedText: String { textStorage.string }
     private var textIsChanging = false
+
+    var inFieldButtonsAreaWidth: CGFloat = 0 {
+        didSet { ensurePlaceholderConstraints() }
+    }
 
     override init() {
         super.init()
@@ -79,6 +82,11 @@ class ConversationInputTextView: BodyRangesTextView {
 
     // MARK: -
 
+    public var placeholderTextColor: UIColor? {
+        get { placeholderView.textColor }
+        set { placeholderView.textColor = newValue }
+    }
+
     override var defaultTextContainerInset: UIEdgeInsets {
         var textContainerInset = super.defaultTextContainerInset
         textContainerInset.left = 12
@@ -87,12 +95,7 @@ class ConversationInputTextView: BodyRangesTextView {
         // If the placeholder view is visible, we need to offset
         // the input container to accommodate for the sticker button.
         if !placeholderView.isHidden {
-            let stickerButtonOffset: CGFloat = 30
-            if CurrentAppContext().isRTL {
-                textContainerInset.left += stickerButtonOffset
-            } else {
-                textContainerInset.right += stickerButtonOffset
-            }
+            textContainerInset.right += inFieldButtonsAreaWidth
         }
 
         return textContainerInset
@@ -103,7 +106,7 @@ class ConversationInputTextView: BodyRangesTextView {
         // because placeholderView wasn't added yet.
         guard placeholderView.superview != nil else { return }
 
-        if let placeholderConstraints = placeholderConstraints {
+        if let placeholderConstraints {
             NSLayoutConstraint.deactivate(placeholderConstraints)
         }
 
@@ -140,25 +143,54 @@ class ConversationInputTextView: BodyRangesTextView {
         updateTextContainerInset()
     }
 
-    override func becomeFirstResponder() -> Bool {
-        let result = super.becomeFirstResponder()
-        if result { textViewToolbarDelegate?.textViewDidBecomeFirstResponder(self) }
-        return result
-    }
-
     var pasteboardHasPossibleAttachment: Bool {
         // We don't want to load/convert images more than once so we
         // only do a cursory validation pass at this time.
         SignalAttachment.pasteboardHasPossibleAttachment() && !SignalAttachment.pasteboardHasText()
     }
 
+    override var inputView: UIView? {
+        didSet {
+            reloadCaret()
+        }
+    }
+
+    // Force UITextView to redraw to make sure the caret is shown/hidden as necessary.
+    private func reloadCaret() {
+        let fullRange = NSRange(location: 0, length: textStorage.length)
+        layoutManager.invalidateLayout(forCharacterRange: fullRange, actualCharacterRange: nil)
+        layoutManager.invalidateDisplay(forCharacterRange: fullRange)
+        layoutManager.ensureLayout(for: textContainer)
+    }
+
+    private var isTextInputMode: Bool {
+        return inputView == nil
+    }
+
     override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
+        guard isTextInputMode else {
+            return false
+        }
         if action == #selector(paste(_:)) {
             if pasteboardHasPossibleAttachment && !super.disallowsAnyPasteAction() {
                 return true
             }
         }
         return super.canPerformAction(action, withSender: sender)
+    }
+
+    override func caretRect(for position: UITextPosition) -> CGRect {
+        guard isTextInputMode else {
+            return .zero
+        }
+        return super.caretRect(for: position)
+    }
+
+    override func selectionRects(for range: UITextRange) -> [UITextSelectionRect] {
+        guard isTextInputMode else {
+            return []
+        }
+        return super.selectionRects(for: range)
     }
 
     override func paste(_ sender: Any?) {

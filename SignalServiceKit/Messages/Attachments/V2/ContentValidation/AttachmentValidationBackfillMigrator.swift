@@ -164,7 +164,7 @@ public class AttachmentValidationBackfillMigratorImpl: AttachmentValidationBackf
             do {
                 let revalidationResult = try await self.reValidateContents(
                     ofEncryptedFileAt: fileUrl,
-                    encryptionKey: attachment.encryptionKey,
+                    attachmentKey: AttachmentKey(combinedKey: attachment.encryptionKey),
                     plaintextLength: plaintextLength,
                     mimeType: attachment.mimeType
                 )
@@ -201,28 +201,16 @@ public class AttachmentValidationBackfillMigratorImpl: AttachmentValidationBackf
 
     private func reValidateContents(
         ofEncryptedFileAt fileUrl: URL,
-        encryptionKey: Data,
+        attachmentKey: AttachmentKey,
         plaintextLength: UInt32,
         mimeType: String
     ) async throws -> RevalidatedAttachment {
-        // AttachmentValidator runs synchronously _and_ opens write transactions internally.
-        // We can't block on the write lock in async funcs (they use a cooperative thread pool),
-        // so bridge out of structured concurrency to run the validation.
-        return try await withCheckedThrowingContinuation { continuation in
-            DispatchQueue.global().async {
-                do {
-                    let result = try self.validator.reValidateContents(
-                        ofEncryptedFileAt: fileUrl,
-                        encryptionKey: encryptionKey,
-                        plaintextLength: plaintextLength,
-                        mimeType: mimeType
-                    )
-                    continuation.resume(with: .success(result))
-                } catch let error {
-                    continuation.resume(throwing: error)
-                }
-            }
-        }
+        try await self.validator.reValidateContents(
+            ofEncryptedFileAt: fileUrl,
+            attachmentKey: attachmentKey,
+            plaintextLength: plaintextLength,
+            mimeType: mimeType
+        )
     }
 
     private func updateRevalidatedAttachment(

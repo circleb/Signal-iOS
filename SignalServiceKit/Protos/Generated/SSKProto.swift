@@ -184,6 +184,54 @@ public class SSKProtoEnvelope: NSObject, Codable, NSSecureCoding {
         return proto.hasSpamReportingToken
     }
 
+    @objc
+    public var sourceServiceIDBinary: Data? {
+        guard hasSourceServiceIDBinary else {
+            return nil
+        }
+        return proto.sourceServiceIDBinary
+    }
+    @objc
+    public var hasSourceServiceIDBinary: Bool {
+        return proto.hasSourceServiceIDBinary
+    }
+
+    @objc
+    public var destinationServiceIDBinary: Data? {
+        guard hasDestinationServiceIDBinary else {
+            return nil
+        }
+        return proto.destinationServiceIDBinary
+    }
+    @objc
+    public var hasDestinationServiceIDBinary: Bool {
+        return proto.hasDestinationServiceIDBinary
+    }
+
+    @objc
+    public var serverGuidBinary: Data? {
+        guard hasServerGuidBinary else {
+            return nil
+        }
+        return proto.serverGuidBinary
+    }
+    @objc
+    public var hasServerGuidBinary: Bool {
+        return proto.hasServerGuidBinary
+    }
+
+    @objc
+    public var updatedPniBinary: Data? {
+        guard hasUpdatedPniBinary else {
+            return nil
+        }
+        return proto.updatedPniBinary
+    }
+    @objc
+    public var hasUpdatedPniBinary: Bool {
+        return proto.hasUpdatedPniBinary
+    }
+
     public var hasUnknownFields: Bool {
         return !proto.unknownFields.data.isEmpty
     }
@@ -297,6 +345,18 @@ extension SSKProtoEnvelope {
         }
         if let _value = spamReportingToken {
             builder.setSpamReportingToken(_value)
+        }
+        if let _value = sourceServiceIDBinary {
+            builder.setSourceServiceIDBinary(_value)
+        }
+        if let _value = destinationServiceIDBinary {
+            builder.setDestinationServiceIDBinary(_value)
+        }
+        if let _value = serverGuidBinary {
+            builder.setServerGuidBinary(_value)
+        }
+        if let _value = updatedPniBinary {
+            builder.setUpdatedPniBinary(_value)
         }
         if let _value = unknownFields {
             builder.setUnknownFields(_value)
@@ -414,6 +474,50 @@ public class SSKProtoEnvelopeBuilder: NSObject {
 
     public func setSpamReportingToken(_ valueParam: Data) {
         proto.spamReportingToken = valueParam
+    }
+
+    @objc
+    @available(swift, obsoleted: 1.0)
+    public func setSourceServiceIDBinary(_ valueParam: Data?) {
+        guard let valueParam = valueParam else { return }
+        proto.sourceServiceIDBinary = valueParam
+    }
+
+    public func setSourceServiceIDBinary(_ valueParam: Data) {
+        proto.sourceServiceIDBinary = valueParam
+    }
+
+    @objc
+    @available(swift, obsoleted: 1.0)
+    public func setDestinationServiceIDBinary(_ valueParam: Data?) {
+        guard let valueParam = valueParam else { return }
+        proto.destinationServiceIDBinary = valueParam
+    }
+
+    public func setDestinationServiceIDBinary(_ valueParam: Data) {
+        proto.destinationServiceIDBinary = valueParam
+    }
+
+    @objc
+    @available(swift, obsoleted: 1.0)
+    public func setServerGuidBinary(_ valueParam: Data?) {
+        guard let valueParam = valueParam else { return }
+        proto.serverGuidBinary = valueParam
+    }
+
+    public func setServerGuidBinary(_ valueParam: Data) {
+        proto.serverGuidBinary = valueParam
+    }
+
+    @objc
+    @available(swift, obsoleted: 1.0)
+    public func setUpdatedPniBinary(_ valueParam: Data?) {
+        guard let valueParam = valueParam else { return }
+        proto.updatedPniBinary = valueParam
+    }
+
+    public func setUpdatedPniBinary(_ valueParam: Data) {
+        proto.updatedPniBinary = valueParam
     }
 
     public func setUnknownFields(_ unknownFields: SwiftProtobuf.UnknownStorage) {
@@ -3892,6 +3996,18 @@ public class SSKProtoDataMessageQuote: NSObject, Codable, NSSecureCoding {
         return proto.hasType
     }
 
+    @objc
+    public var authorAciBinary: Data? {
+        guard hasAuthorAciBinary else {
+            return nil
+        }
+        return proto.authorAciBinary
+    }
+    @objc
+    public var hasAuthorAciBinary: Bool {
+        return proto.hasAuthorAciBinary
+    }
+
     public var hasUnknownFields: Bool {
         return !proto.unknownFields.data.isEmpty
     }
@@ -3996,6 +4112,9 @@ extension SSKProtoDataMessageQuote {
         if let _value = type {
             builder.setType(_value)
         }
+        if let _value = authorAciBinary {
+            builder.setAuthorAciBinary(_value)
+        }
         if let _value = unknownFields {
             builder.setUnknownFields(_value)
         }
@@ -4068,6 +4187,17 @@ public class SSKProtoDataMessageQuoteBuilder: NSObject {
     @objc
     public func setType(_ valueParam: SSKProtoDataMessageQuoteType) {
         proto.type = SSKProtoDataMessageQuoteTypeUnwrap(valueParam)
+    }
+
+    @objc
+    @available(swift, obsoleted: 1.0)
+    public func setAuthorAciBinary(_ valueParam: Data?) {
+        guard let valueParam = valueParam else { return }
+        proto.authorAciBinary = valueParam
+    }
+
+    public func setAuthorAciBinary(_ valueParam: Data) {
+        proto.authorAciBinary = valueParam
     }
 
     public func setUnknownFields(_ unknownFields: SwiftProtobuf.UnknownStorage) {
@@ -5936,6 +6066,18 @@ public class SSKProtoDataMessageReaction: NSObject, Codable, NSSecureCoding {
         return proto.hasTargetAuthorAci
     }
 
+    @objc
+    public var targetAuthorAciBinary: Data? {
+        guard hasTargetAuthorAciBinary else {
+            return nil
+        }
+        return proto.targetAuthorAciBinary
+    }
+    @objc
+    public var hasTargetAuthorAciBinary: Bool {
+        return proto.hasTargetAuthorAciBinary
+    }
+
     public var hasUnknownFields: Bool {
         return !proto.unknownFields.data.isEmpty
     }
@@ -6031,6 +6173,9 @@ extension SSKProtoDataMessageReaction {
         if let _value = targetAuthorAci {
             builder.setTargetAuthorAci(_value)
         }
+        if let _value = targetAuthorAciBinary {
+            builder.setTargetAuthorAciBinary(_value)
+        }
         if let _value = unknownFields {
             builder.setUnknownFields(_value)
         }
@@ -6084,6 +6229,17 @@ public class SSKProtoDataMessageReactionBuilder: NSObject {
     @objc
     public func setTimestamp(_ valueParam: UInt64) {
         proto.timestamp = valueParam
+    }
+
+    @objc
+    @available(swift, obsoleted: 1.0)
+    public func setTargetAuthorAciBinary(_ valueParam: Data?) {
+        guard let valueParam = valueParam else { return }
+        proto.targetAuthorAciBinary = valueParam
+    }
+
+    public func setTargetAuthorAciBinary(_ valueParam: Data) {
+        proto.targetAuthorAciBinary = valueParam
     }
 
     public func setUnknownFields(_ unknownFields: SwiftProtobuf.UnknownStorage) {
@@ -7448,6 +7604,18 @@ public class SSKProtoDataMessageStoryContext: NSObject, Codable, NSSecureCoding 
         return proto.hasSentTimestamp
     }
 
+    @objc
+    public var authorAciBinary: Data? {
+        guard hasAuthorAciBinary else {
+            return nil
+        }
+        return proto.authorAciBinary
+    }
+    @objc
+    public var hasAuthorAciBinary: Bool {
+        return proto.hasAuthorAciBinary
+    }
+
     public var hasUnknownFields: Bool {
         return !proto.unknownFields.data.isEmpty
     }
@@ -7527,6 +7695,9 @@ extension SSKProtoDataMessageStoryContext {
         if hasSentTimestamp {
             builder.setSentTimestamp(sentTimestamp)
         }
+        if let _value = authorAciBinary {
+            builder.setAuthorAciBinary(_value)
+        }
         if let _value = unknownFields {
             builder.setUnknownFields(_value)
         }
@@ -7556,6 +7727,17 @@ public class SSKProtoDataMessageStoryContextBuilder: NSObject {
     @objc
     public func setSentTimestamp(_ valueParam: UInt64) {
         proto.sentTimestamp = valueParam
+    }
+
+    @objc
+    @available(swift, obsoleted: 1.0)
+    public func setAuthorAciBinary(_ valueParam: Data?) {
+        guard let valueParam = valueParam else { return }
+        proto.authorAciBinary = valueParam
+    }
+
+    public func setAuthorAciBinary(_ valueParam: Data) {
+        proto.authorAciBinary = valueParam
     }
 
     public func setUnknownFields(_ unknownFields: SwiftProtobuf.UnknownStorage) {
@@ -7745,6 +7927,542 @@ extension SSKProtoDataMessageGiftBadgeBuilder {
 
 #endif
 
+// MARK: - SSKProtoDataMessagePollCreate
+
+@objc
+public class SSKProtoDataMessagePollCreate: NSObject, Codable, NSSecureCoding {
+
+    fileprivate let proto: SignalServiceProtos_DataMessage.PollCreate
+
+    @objc
+    public var question: String? {
+        guard hasQuestion else {
+            return nil
+        }
+        return proto.question
+    }
+    @objc
+    public var hasQuestion: Bool {
+        return proto.hasQuestion
+    }
+
+    @objc
+    public var allowMultiple: Bool {
+        return proto.allowMultiple
+    }
+    @objc
+    public var hasAllowMultiple: Bool {
+        return proto.hasAllowMultiple
+    }
+
+    @objc
+    public var options: [String] {
+        return proto.options
+    }
+
+    public var hasUnknownFields: Bool {
+        return !proto.unknownFields.data.isEmpty
+    }
+    public var unknownFields: SwiftProtobuf.UnknownStorage? {
+        guard hasUnknownFields else { return nil }
+        return proto.unknownFields
+    }
+
+    private init(proto: SignalServiceProtos_DataMessage.PollCreate) {
+        self.proto = proto
+    }
+
+    @objc
+    public func serializedData() throws -> Data {
+        return try self.proto.serializedData()
+    }
+
+    @objc
+    public required convenience init(serializedData: Data) throws {
+        let proto = try SignalServiceProtos_DataMessage.PollCreate(serializedBytes: serializedData)
+        self.init(proto)
+    }
+
+    fileprivate convenience init(_ proto: SignalServiceProtos_DataMessage.PollCreate) {
+        self.init(proto: proto)
+    }
+
+    public required convenience init(from decoder: Swift.Decoder) throws {
+        let singleValueContainer = try decoder.singleValueContainer()
+        let serializedData = try singleValueContainer.decode(Data.self)
+        try self.init(serializedData: serializedData)
+    }
+    public func encode(to encoder: Swift.Encoder) throws {
+        var singleValueContainer = encoder.singleValueContainer()
+        try singleValueContainer.encode(try serializedData())
+    }
+
+    public static var supportsSecureCoding: Bool { true }
+
+    public required convenience init?(coder: NSCoder) {
+        guard let serializedData = coder.decodeData() else { return nil }
+        do {
+            try self.init(serializedData: serializedData)
+        } catch {
+            owsFailDebug("Failed to decode serialized data \(error)")
+            return nil
+        }
+    }
+
+    public func encode(with coder: NSCoder) {
+        do {
+            coder.encode(try serializedData())
+        } catch {
+            owsFailDebug("Failed to encode serialized data \(error)")
+        }
+    }
+
+    @objc
+    public override var debugDescription: String {
+        return "\(proto)"
+    }
+}
+
+extension SSKProtoDataMessagePollCreate {
+    @objc
+    public static func builder() -> SSKProtoDataMessagePollCreateBuilder {
+        return SSKProtoDataMessagePollCreateBuilder()
+    }
+
+    // asBuilder() constructs a builder that reflects the proto's contents.
+    @objc
+    public func asBuilder() -> SSKProtoDataMessagePollCreateBuilder {
+        let builder = SSKProtoDataMessagePollCreateBuilder()
+        if let _value = question {
+            builder.setQuestion(_value)
+        }
+        if hasAllowMultiple {
+            builder.setAllowMultiple(allowMultiple)
+        }
+        builder.setOptions(options)
+        if let _value = unknownFields {
+            builder.setUnknownFields(_value)
+        }
+        return builder
+    }
+}
+
+@objc
+public class SSKProtoDataMessagePollCreateBuilder: NSObject {
+
+    private var proto = SignalServiceProtos_DataMessage.PollCreate()
+
+    @objc
+    fileprivate override init() {}
+
+    @objc
+    @available(swift, obsoleted: 1.0)
+    public func setQuestion(_ valueParam: String?) {
+        guard let valueParam = valueParam else { return }
+        proto.question = valueParam
+    }
+
+    public func setQuestion(_ valueParam: String) {
+        proto.question = valueParam
+    }
+
+    @objc
+    public func setAllowMultiple(_ valueParam: Bool) {
+        proto.allowMultiple = valueParam
+    }
+
+    @objc
+    public func addOptions(_ valueParam: String) {
+        proto.options.append(valueParam)
+    }
+
+    @objc
+    public func setOptions(_ wrappedItems: [String]) {
+        proto.options = wrappedItems
+    }
+
+    public func setUnknownFields(_ unknownFields: SwiftProtobuf.UnknownStorage) {
+        proto.unknownFields = unknownFields
+    }
+
+    @objc
+    public func buildInfallibly() -> SSKProtoDataMessagePollCreate {
+        return SSKProtoDataMessagePollCreate(proto)
+    }
+
+    @objc
+    public func buildSerializedData() throws -> Data {
+        return try SSKProtoDataMessagePollCreate(proto).serializedData()
+    }
+}
+
+#if TESTABLE_BUILD
+
+extension SSKProtoDataMessagePollCreate {
+    @objc
+    public func serializedDataIgnoringErrors() -> Data? {
+        return try! self.serializedData()
+    }
+}
+
+extension SSKProtoDataMessagePollCreateBuilder {
+    @objc
+    public func buildIgnoringErrors() -> SSKProtoDataMessagePollCreate? {
+        return self.buildInfallibly()
+    }
+}
+
+#endif
+
+// MARK: - SSKProtoDataMessagePollTerminate
+
+@objc
+public class SSKProtoDataMessagePollTerminate: NSObject, Codable, NSSecureCoding {
+
+    fileprivate let proto: SignalServiceProtos_DataMessage.PollTerminate
+
+    @objc
+    public var targetSentTimestamp: UInt64 {
+        return proto.targetSentTimestamp
+    }
+    @objc
+    public var hasTargetSentTimestamp: Bool {
+        return proto.hasTargetSentTimestamp
+    }
+
+    public var hasUnknownFields: Bool {
+        return !proto.unknownFields.data.isEmpty
+    }
+    public var unknownFields: SwiftProtobuf.UnknownStorage? {
+        guard hasUnknownFields else { return nil }
+        return proto.unknownFields
+    }
+
+    private init(proto: SignalServiceProtos_DataMessage.PollTerminate) {
+        self.proto = proto
+    }
+
+    @objc
+    public func serializedData() throws -> Data {
+        return try self.proto.serializedData()
+    }
+
+    @objc
+    public required convenience init(serializedData: Data) throws {
+        let proto = try SignalServiceProtos_DataMessage.PollTerminate(serializedBytes: serializedData)
+        self.init(proto)
+    }
+
+    fileprivate convenience init(_ proto: SignalServiceProtos_DataMessage.PollTerminate) {
+        self.init(proto: proto)
+    }
+
+    public required convenience init(from decoder: Swift.Decoder) throws {
+        let singleValueContainer = try decoder.singleValueContainer()
+        let serializedData = try singleValueContainer.decode(Data.self)
+        try self.init(serializedData: serializedData)
+    }
+    public func encode(to encoder: Swift.Encoder) throws {
+        var singleValueContainer = encoder.singleValueContainer()
+        try singleValueContainer.encode(try serializedData())
+    }
+
+    public static var supportsSecureCoding: Bool { true }
+
+    public required convenience init?(coder: NSCoder) {
+        guard let serializedData = coder.decodeData() else { return nil }
+        do {
+            try self.init(serializedData: serializedData)
+        } catch {
+            owsFailDebug("Failed to decode serialized data \(error)")
+            return nil
+        }
+    }
+
+    public func encode(with coder: NSCoder) {
+        do {
+            coder.encode(try serializedData())
+        } catch {
+            owsFailDebug("Failed to encode serialized data \(error)")
+        }
+    }
+
+    @objc
+    public override var debugDescription: String {
+        return "\(proto)"
+    }
+}
+
+extension SSKProtoDataMessagePollTerminate {
+    @objc
+    public static func builder() -> SSKProtoDataMessagePollTerminateBuilder {
+        return SSKProtoDataMessagePollTerminateBuilder()
+    }
+
+    // asBuilder() constructs a builder that reflects the proto's contents.
+    @objc
+    public func asBuilder() -> SSKProtoDataMessagePollTerminateBuilder {
+        let builder = SSKProtoDataMessagePollTerminateBuilder()
+        if hasTargetSentTimestamp {
+            builder.setTargetSentTimestamp(targetSentTimestamp)
+        }
+        if let _value = unknownFields {
+            builder.setUnknownFields(_value)
+        }
+        return builder
+    }
+}
+
+@objc
+public class SSKProtoDataMessagePollTerminateBuilder: NSObject {
+
+    private var proto = SignalServiceProtos_DataMessage.PollTerminate()
+
+    @objc
+    fileprivate override init() {}
+
+    @objc
+    public func setTargetSentTimestamp(_ valueParam: UInt64) {
+        proto.targetSentTimestamp = valueParam
+    }
+
+    public func setUnknownFields(_ unknownFields: SwiftProtobuf.UnknownStorage) {
+        proto.unknownFields = unknownFields
+    }
+
+    @objc
+    public func buildInfallibly() -> SSKProtoDataMessagePollTerminate {
+        return SSKProtoDataMessagePollTerminate(proto)
+    }
+
+    @objc
+    public func buildSerializedData() throws -> Data {
+        return try SSKProtoDataMessagePollTerminate(proto).serializedData()
+    }
+}
+
+#if TESTABLE_BUILD
+
+extension SSKProtoDataMessagePollTerminate {
+    @objc
+    public func serializedDataIgnoringErrors() -> Data? {
+        return try! self.serializedData()
+    }
+}
+
+extension SSKProtoDataMessagePollTerminateBuilder {
+    @objc
+    public func buildIgnoringErrors() -> SSKProtoDataMessagePollTerminate? {
+        return self.buildInfallibly()
+    }
+}
+
+#endif
+
+// MARK: - SSKProtoDataMessagePollVote
+
+@objc
+public class SSKProtoDataMessagePollVote: NSObject, Codable, NSSecureCoding {
+
+    fileprivate let proto: SignalServiceProtos_DataMessage.PollVote
+
+    @objc
+    public var targetAuthorAciBinary: Data? {
+        guard hasTargetAuthorAciBinary else {
+            return nil
+        }
+        return proto.targetAuthorAciBinary
+    }
+    @objc
+    public var hasTargetAuthorAciBinary: Bool {
+        return proto.hasTargetAuthorAciBinary
+    }
+
+    @objc
+    public var targetSentTimestamp: UInt64 {
+        return proto.targetSentTimestamp
+    }
+    @objc
+    public var hasTargetSentTimestamp: Bool {
+        return proto.hasTargetSentTimestamp
+    }
+
+    @objc
+    public var optionIndexes: [UInt32] {
+        return proto.optionIndexes
+    }
+
+    @objc
+    public var voteCount: UInt32 {
+        return proto.voteCount
+    }
+    @objc
+    public var hasVoteCount: Bool {
+        return proto.hasVoteCount
+    }
+
+    public var hasUnknownFields: Bool {
+        return !proto.unknownFields.data.isEmpty
+    }
+    public var unknownFields: SwiftProtobuf.UnknownStorage? {
+        guard hasUnknownFields else { return nil }
+        return proto.unknownFields
+    }
+
+    private init(proto: SignalServiceProtos_DataMessage.PollVote) {
+        self.proto = proto
+    }
+
+    @objc
+    public func serializedData() throws -> Data {
+        return try self.proto.serializedData()
+    }
+
+    @objc
+    public required convenience init(serializedData: Data) throws {
+        let proto = try SignalServiceProtos_DataMessage.PollVote(serializedBytes: serializedData)
+        self.init(proto)
+    }
+
+    fileprivate convenience init(_ proto: SignalServiceProtos_DataMessage.PollVote) {
+        self.init(proto: proto)
+    }
+
+    public required convenience init(from decoder: Swift.Decoder) throws {
+        let singleValueContainer = try decoder.singleValueContainer()
+        let serializedData = try singleValueContainer.decode(Data.self)
+        try self.init(serializedData: serializedData)
+    }
+    public func encode(to encoder: Swift.Encoder) throws {
+        var singleValueContainer = encoder.singleValueContainer()
+        try singleValueContainer.encode(try serializedData())
+    }
+
+    public static var supportsSecureCoding: Bool { true }
+
+    public required convenience init?(coder: NSCoder) {
+        guard let serializedData = coder.decodeData() else { return nil }
+        do {
+            try self.init(serializedData: serializedData)
+        } catch {
+            owsFailDebug("Failed to decode serialized data \(error)")
+            return nil
+        }
+    }
+
+    public func encode(with coder: NSCoder) {
+        do {
+            coder.encode(try serializedData())
+        } catch {
+            owsFailDebug("Failed to encode serialized data \(error)")
+        }
+    }
+
+    @objc
+    public override var debugDescription: String {
+        return "\(proto)"
+    }
+}
+
+extension SSKProtoDataMessagePollVote {
+    @objc
+    public static func builder() -> SSKProtoDataMessagePollVoteBuilder {
+        return SSKProtoDataMessagePollVoteBuilder()
+    }
+
+    // asBuilder() constructs a builder that reflects the proto's contents.
+    @objc
+    public func asBuilder() -> SSKProtoDataMessagePollVoteBuilder {
+        let builder = SSKProtoDataMessagePollVoteBuilder()
+        if let _value = targetAuthorAciBinary {
+            builder.setTargetAuthorAciBinary(_value)
+        }
+        if hasTargetSentTimestamp {
+            builder.setTargetSentTimestamp(targetSentTimestamp)
+        }
+        builder.setOptionIndexes(optionIndexes)
+        if hasVoteCount {
+            builder.setVoteCount(voteCount)
+        }
+        if let _value = unknownFields {
+            builder.setUnknownFields(_value)
+        }
+        return builder
+    }
+}
+
+@objc
+public class SSKProtoDataMessagePollVoteBuilder: NSObject {
+
+    private var proto = SignalServiceProtos_DataMessage.PollVote()
+
+    @objc
+    fileprivate override init() {}
+
+    @objc
+    @available(swift, obsoleted: 1.0)
+    public func setTargetAuthorAciBinary(_ valueParam: Data?) {
+        guard let valueParam = valueParam else { return }
+        proto.targetAuthorAciBinary = valueParam
+    }
+
+    public func setTargetAuthorAciBinary(_ valueParam: Data) {
+        proto.targetAuthorAciBinary = valueParam
+    }
+
+    @objc
+    public func setTargetSentTimestamp(_ valueParam: UInt64) {
+        proto.targetSentTimestamp = valueParam
+    }
+
+    @objc
+    public func addOptionIndexes(_ valueParam: UInt32) {
+        proto.optionIndexes.append(valueParam)
+    }
+
+    @objc
+    public func setOptionIndexes(_ wrappedItems: [UInt32]) {
+        proto.optionIndexes = wrappedItems
+    }
+
+    @objc
+    public func setVoteCount(_ valueParam: UInt32) {
+        proto.voteCount = valueParam
+    }
+
+    public func setUnknownFields(_ unknownFields: SwiftProtobuf.UnknownStorage) {
+        proto.unknownFields = unknownFields
+    }
+
+    @objc
+    public func buildInfallibly() -> SSKProtoDataMessagePollVote {
+        return SSKProtoDataMessagePollVote(proto)
+    }
+
+    @objc
+    public func buildSerializedData() throws -> Data {
+        return try SSKProtoDataMessagePollVote(proto).serializedData()
+    }
+}
+
+#if TESTABLE_BUILD
+
+extension SSKProtoDataMessagePollVote {
+    @objc
+    public func serializedDataIgnoringErrors() -> Data? {
+        return try! self.serializedData()
+    }
+}
+
+extension SSKProtoDataMessagePollVoteBuilder {
+    @objc
+    public func buildIgnoringErrors() -> SSKProtoDataMessagePollVote? {
+        return self.buildInfallibly()
+    }
+}
+
+#endif
+
 // MARK: - SSKProtoDataMessageFlags
 
 @objc
@@ -7782,6 +8500,7 @@ public enum SSKProtoDataMessageProtocolVersion: Int32 {
     case cdnSelectorAttachments = 5
     case mentions = 6
     case payments = 7
+    case polls = 8
 }
 
 private func SSKProtoDataMessageProtocolVersionWrap(_ value: SignalServiceProtos_DataMessage.ProtocolVersion) -> SSKProtoDataMessageProtocolVersion {
@@ -7794,6 +8513,7 @@ private func SSKProtoDataMessageProtocolVersionWrap(_ value: SignalServiceProtos
     case .cdnSelectorAttachments: return .cdnSelectorAttachments
     case .mentions: return .mentions
     case .payments: return .payments
+    case .polls: return .polls
     }
 }
 
@@ -7807,6 +8527,7 @@ private func SSKProtoDataMessageProtocolVersionUnwrap(_ value: SSKProtoDataMessa
     case .cdnSelectorAttachments: return .cdnSelectorAttachments
     case .mentions: return .mentions
     case .payments: return .payments
+    case .polls: return .polls
     }
 }
 
@@ -7855,6 +8576,15 @@ public class SSKProtoDataMessage: NSObject, Codable, NSSecureCoding {
 
     @objc
     public let giftBadge: SSKProtoDataMessageGiftBadge?
+
+    @objc
+    public let pollCreate: SSKProtoDataMessagePollCreate?
+
+    @objc
+    public let pollTerminate: SSKProtoDataMessagePollTerminate?
+
+    @objc
+    public let pollVote: SSKProtoDataMessagePollVote?
 
     @objc
     public var body: String? {
@@ -7955,7 +8685,10 @@ public class SSKProtoDataMessage: NSObject, Codable, NSSecureCoding {
                  groupCallUpdate: SSKProtoDataMessageGroupCallUpdate?,
                  payment: SSKProtoDataMessagePayment?,
                  storyContext: SSKProtoDataMessageStoryContext?,
-                 giftBadge: SSKProtoDataMessageGiftBadge?) {
+                 giftBadge: SSKProtoDataMessageGiftBadge?,
+                 pollCreate: SSKProtoDataMessagePollCreate?,
+                 pollTerminate: SSKProtoDataMessagePollTerminate?,
+                 pollVote: SSKProtoDataMessagePollVote?) {
         self.proto = proto
         self.attachments = attachments
         self.groupV2 = groupV2
@@ -7970,6 +8703,9 @@ public class SSKProtoDataMessage: NSObject, Codable, NSSecureCoding {
         self.payment = payment
         self.storyContext = storyContext
         self.giftBadge = giftBadge
+        self.pollCreate = pollCreate
+        self.pollTerminate = pollTerminate
+        self.pollVote = pollVote
     }
 
     @objc
@@ -8041,6 +8777,21 @@ public class SSKProtoDataMessage: NSObject, Codable, NSSecureCoding {
             giftBadge = SSKProtoDataMessageGiftBadge(proto.giftBadge)
         }
 
+        var pollCreate: SSKProtoDataMessagePollCreate?
+        if proto.hasPollCreate {
+            pollCreate = SSKProtoDataMessagePollCreate(proto.pollCreate)
+        }
+
+        var pollTerminate: SSKProtoDataMessagePollTerminate?
+        if proto.hasPollTerminate {
+            pollTerminate = SSKProtoDataMessagePollTerminate(proto.pollTerminate)
+        }
+
+        var pollVote: SSKProtoDataMessagePollVote?
+        if proto.hasPollVote {
+            pollVote = SSKProtoDataMessagePollVote(proto.pollVote)
+        }
+
         self.init(proto: proto,
                   attachments: attachments,
                   groupV2: groupV2,
@@ -8054,7 +8805,10 @@ public class SSKProtoDataMessage: NSObject, Codable, NSSecureCoding {
                   groupCallUpdate: groupCallUpdate,
                   payment: payment,
                   storyContext: storyContext,
-                  giftBadge: giftBadge)
+                  giftBadge: giftBadge,
+                  pollCreate: pollCreate,
+                  pollTerminate: pollTerminate,
+                  pollVote: pollVote)
     }
 
     public required convenience init(from decoder: Swift.Decoder) throws {
@@ -8157,6 +8911,15 @@ extension SSKProtoDataMessage {
         }
         if let _value = giftBadge {
             builder.setGiftBadge(_value)
+        }
+        if let _value = pollCreate {
+            builder.setPollCreate(_value)
+        }
+        if let _value = pollTerminate {
+            builder.setPollTerminate(_value)
+        }
+        if let _value = pollVote {
+            builder.setPollVote(_value)
         }
         if let _value = unknownFields {
             builder.setUnknownFields(_value)
@@ -8362,6 +9125,39 @@ public class SSKProtoDataMessageBuilder: NSObject {
 
     public func setGiftBadge(_ valueParam: SSKProtoDataMessageGiftBadge) {
         proto.giftBadge = valueParam.proto
+    }
+
+    @objc
+    @available(swift, obsoleted: 1.0)
+    public func setPollCreate(_ valueParam: SSKProtoDataMessagePollCreate?) {
+        guard let valueParam = valueParam else { return }
+        proto.pollCreate = valueParam.proto
+    }
+
+    public func setPollCreate(_ valueParam: SSKProtoDataMessagePollCreate) {
+        proto.pollCreate = valueParam.proto
+    }
+
+    @objc
+    @available(swift, obsoleted: 1.0)
+    public func setPollTerminate(_ valueParam: SSKProtoDataMessagePollTerminate?) {
+        guard let valueParam = valueParam else { return }
+        proto.pollTerminate = valueParam.proto
+    }
+
+    public func setPollTerminate(_ valueParam: SSKProtoDataMessagePollTerminate) {
+        proto.pollTerminate = valueParam.proto
+    }
+
+    @objc
+    @available(swift, obsoleted: 1.0)
+    public func setPollVote(_ valueParam: SSKProtoDataMessagePollVote?) {
+        guard let valueParam = valueParam else { return }
+        proto.pollVote = valueParam.proto
+    }
+
+    public func setPollVote(_ valueParam: SSKProtoDataMessagePollVote) {
+        proto.pollVote = valueParam.proto
     }
 
     public func setUnknownFields(_ unknownFields: SwiftProtobuf.UnknownStorage) {
@@ -8836,6 +9632,18 @@ public class SSKProtoVerified: NSObject, Codable, NSSecureCoding {
         return proto.hasNullMessage
     }
 
+    @objc
+    public var destinationAciBinary: Data? {
+        guard hasDestinationAciBinary else {
+            return nil
+        }
+        return proto.destinationAciBinary
+    }
+    @objc
+    public var hasDestinationAciBinary: Bool {
+        return proto.hasDestinationAciBinary
+    }
+
     public var hasUnknownFields: Bool {
         return !proto.unknownFields.data.isEmpty
     }
@@ -8921,6 +9729,9 @@ extension SSKProtoVerified {
         if let _value = nullMessage {
             builder.setNullMessage(_value)
         }
+        if let _value = destinationAciBinary {
+            builder.setDestinationAciBinary(_value)
+        }
         if let _value = unknownFields {
             builder.setUnknownFields(_value)
         }
@@ -8972,6 +9783,17 @@ public class SSKProtoVerifiedBuilder: NSObject {
 
     public func setNullMessage(_ valueParam: Data) {
         proto.nullMessage = valueParam
+    }
+
+    @objc
+    @available(swift, obsoleted: 1.0)
+    public func setDestinationAciBinary(_ valueParam: Data?) {
+        guard let valueParam = valueParam else { return }
+        proto.destinationAciBinary = valueParam
+    }
+
+    public func setDestinationAciBinary(_ valueParam: Data) {
+        proto.destinationAciBinary = valueParam
     }
 
     public func setUnknownFields(_ unknownFields: SwiftProtobuf.UnknownStorage) {
@@ -9033,6 +9855,18 @@ public class SSKProtoSyncMessageSentUnidentifiedDeliveryStatus: NSObject, Codabl
     @objc
     public var hasUnidentified: Bool {
         return proto.hasUnidentified
+    }
+
+    @objc
+    public var destinationServiceIDBinary: Data? {
+        guard hasDestinationServiceIDBinary else {
+            return nil
+        }
+        return proto.destinationServiceIDBinary
+    }
+    @objc
+    public var hasDestinationServiceIDBinary: Bool {
+        return proto.hasDestinationServiceIDBinary
     }
 
     public var hasUnknownFields: Bool {
@@ -9114,6 +9948,9 @@ extension SSKProtoSyncMessageSentUnidentifiedDeliveryStatus {
         if hasUnidentified {
             builder.setUnidentified(unidentified)
         }
+        if let _value = destinationServiceIDBinary {
+            builder.setDestinationServiceIDBinary(_value)
+        }
         if let _value = unknownFields {
             builder.setUnknownFields(_value)
         }
@@ -9143,6 +9980,17 @@ public class SSKProtoSyncMessageSentUnidentifiedDeliveryStatusBuilder: NSObject 
     @objc
     public func setUnidentified(_ valueParam: Bool) {
         proto.unidentified = valueParam
+    }
+
+    @objc
+    @available(swift, obsoleted: 1.0)
+    public func setDestinationServiceIDBinary(_ valueParam: Data?) {
+        guard let valueParam = valueParam else { return }
+        proto.destinationServiceIDBinary = valueParam
+    }
+
+    public func setDestinationServiceIDBinary(_ valueParam: Data) {
+        proto.destinationServiceIDBinary = valueParam
     }
 
     public func setUnknownFields(_ unknownFields: SwiftProtobuf.UnknownStorage) {
@@ -9209,6 +10057,18 @@ public class SSKProtoSyncMessageSentStoryMessageRecipient: NSObject, Codable, NS
     @objc
     public var hasIsAllowedToReply: Bool {
         return proto.hasIsAllowedToReply
+    }
+
+    @objc
+    public var destinationServiceIDBinary: Data? {
+        guard hasDestinationServiceIDBinary else {
+            return nil
+        }
+        return proto.destinationServiceIDBinary
+    }
+    @objc
+    public var hasDestinationServiceIDBinary: Bool {
+        return proto.hasDestinationServiceIDBinary
     }
 
     public var hasUnknownFields: Bool {
@@ -9291,6 +10151,9 @@ extension SSKProtoSyncMessageSentStoryMessageRecipient {
         if hasIsAllowedToReply {
             builder.setIsAllowedToReply(isAllowedToReply)
         }
+        if let _value = destinationServiceIDBinary {
+            builder.setDestinationServiceIDBinary(_value)
+        }
         if let _value = unknownFields {
             builder.setUnknownFields(_value)
         }
@@ -9330,6 +10193,17 @@ public class SSKProtoSyncMessageSentStoryMessageRecipientBuilder: NSObject {
     @objc
     public func setIsAllowedToReply(_ valueParam: Bool) {
         proto.isAllowedToReply = valueParam
+    }
+
+    @objc
+    @available(swift, obsoleted: 1.0)
+    public func setDestinationServiceIDBinary(_ valueParam: Data?) {
+        guard let valueParam = valueParam else { return }
+        proto.destinationServiceIDBinary = valueParam
+    }
+
+    public func setDestinationServiceIDBinary(_ valueParam: Data) {
+        proto.destinationServiceIDBinary = valueParam
     }
 
     public func setUnknownFields(_ unknownFields: SwiftProtobuf.UnknownStorage) {
@@ -9436,6 +10310,18 @@ public class SSKProtoSyncMessageSent: NSObject, Codable, NSSecureCoding {
     @objc
     public var hasIsRecipientUpdate: Bool {
         return proto.hasIsRecipientUpdate
+    }
+
+    @objc
+    public var destinationServiceIDBinary: Data? {
+        guard hasDestinationServiceIDBinary else {
+            return nil
+        }
+        return proto.destinationServiceIDBinary
+    }
+    @objc
+    public var hasDestinationServiceIDBinary: Bool {
+        return proto.hasDestinationServiceIDBinary
     }
 
     public var hasUnknownFields: Bool {
@@ -9573,6 +10459,9 @@ extension SSKProtoSyncMessageSent {
         if let _value = editMessage {
             builder.setEditMessage(_value)
         }
+        if let _value = destinationServiceIDBinary {
+            builder.setDestinationServiceIDBinary(_value)
+        }
         if let _value = unknownFields {
             builder.setUnknownFields(_value)
         }
@@ -9676,6 +10565,17 @@ public class SSKProtoSyncMessageSentBuilder: NSObject {
 
     public func setEditMessage(_ valueParam: SSKProtoEditMessage) {
         proto.editMessage = valueParam.proto
+    }
+
+    @objc
+    @available(swift, obsoleted: 1.0)
+    public func setDestinationServiceIDBinary(_ valueParam: Data?) {
+        guard let valueParam = valueParam else { return }
+        proto.destinationServiceIDBinary = valueParam
+    }
+
+    public func setDestinationServiceIDBinary(_ valueParam: Data) {
+        proto.destinationServiceIDBinary = valueParam
     }
 
     public func setUnknownFields(_ unknownFields: SwiftProtobuf.UnknownStorage) {
@@ -9907,6 +10807,11 @@ public class SSKProtoSyncMessageBlocked: NSObject, Codable, NSSecureCoding {
         return proto.groupIds
     }
 
+    @objc
+    public var acisBinary: [Data] {
+        return proto.acisBinary
+    }
+
     public var hasUnknownFields: Bool {
         return !proto.unknownFields.data.isEmpty
     }
@@ -9983,6 +10888,7 @@ extension SSKProtoSyncMessageBlocked {
         builder.setNumbers(numbers)
         builder.setAcis(acis)
         builder.setGroupIds(groupIds)
+        builder.setAcisBinary(acisBinary)
         if let _value = unknownFields {
             builder.setUnknownFields(_value)
         }
@@ -10026,6 +10932,16 @@ public class SSKProtoSyncMessageBlockedBuilder: NSObject {
     @objc
     public func setGroupIds(_ wrappedItems: [Data]) {
         proto.groupIds = wrappedItems
+    }
+
+    @objc
+    public func addAcisBinary(_ valueParam: Data) {
+        proto.acisBinary.append(valueParam)
+    }
+
+    @objc
+    public func setAcisBinary(_ wrappedItems: [Data]) {
+        proto.acisBinary = wrappedItems
     }
 
     public func setUnknownFields(_ unknownFields: SwiftProtobuf.UnknownStorage) {
@@ -10270,6 +11186,18 @@ public class SSKProtoSyncMessageRead: NSObject, Codable, NSSecureCoding {
         return proto.hasSenderAci
     }
 
+    @objc
+    public var senderAciBinary: Data? {
+        guard hasSenderAciBinary else {
+            return nil
+        }
+        return proto.senderAciBinary
+    }
+    @objc
+    public var hasSenderAciBinary: Bool {
+        return proto.hasSenderAciBinary
+    }
+
     public var hasUnknownFields: Bool {
         return !proto.unknownFields.data.isEmpty
     }
@@ -10354,6 +11282,9 @@ extension SSKProtoSyncMessageRead {
         if let _value = senderAci {
             builder.setSenderAci(_value)
         }
+        if let _value = senderAciBinary {
+            builder.setSenderAciBinary(_value)
+        }
         if let _value = unknownFields {
             builder.setUnknownFields(_value)
         }
@@ -10390,6 +11321,17 @@ public class SSKProtoSyncMessageReadBuilder: NSObject {
     @objc
     public func setTimestamp(_ valueParam: UInt64) {
         proto.timestamp = valueParam
+    }
+
+    @objc
+    @available(swift, obsoleted: 1.0)
+    public func setSenderAciBinary(_ valueParam: Data?) {
+        guard let valueParam = valueParam else { return }
+        proto.senderAciBinary = valueParam
+    }
+
+    public func setSenderAciBinary(_ valueParam: Data) {
+        proto.senderAciBinary = valueParam
     }
 
     public func setUnknownFields(_ unknownFields: SwiftProtobuf.UnknownStorage) {
@@ -10445,6 +11387,18 @@ public class SSKProtoSyncMessageViewed: NSObject, Codable, NSSecureCoding {
     @objc
     public var hasSenderAci: Bool {
         return proto.hasSenderAci
+    }
+
+    @objc
+    public var senderAciBinary: Data? {
+        guard hasSenderAciBinary else {
+            return nil
+        }
+        return proto.senderAciBinary
+    }
+    @objc
+    public var hasSenderAciBinary: Bool {
+        return proto.hasSenderAciBinary
     }
 
     public var hasUnknownFields: Bool {
@@ -10531,6 +11485,9 @@ extension SSKProtoSyncMessageViewed {
         if let _value = senderAci {
             builder.setSenderAci(_value)
         }
+        if let _value = senderAciBinary {
+            builder.setSenderAciBinary(_value)
+        }
         if let _value = unknownFields {
             builder.setUnknownFields(_value)
         }
@@ -10567,6 +11524,17 @@ public class SSKProtoSyncMessageViewedBuilder: NSObject {
     @objc
     public func setTimestamp(_ valueParam: UInt64) {
         proto.timestamp = valueParam
+    }
+
+    @objc
+    @available(swift, obsoleted: 1.0)
+    public func setSenderAciBinary(_ valueParam: Data?) {
+        guard let valueParam = valueParam else { return }
+        proto.senderAciBinary = valueParam
+    }
+
+    public func setSenderAciBinary(_ valueParam: Data) {
+        proto.senderAciBinary = valueParam
     }
 
     public func setUnknownFields(_ unknownFields: SwiftProtobuf.UnknownStorage) {
@@ -11067,6 +12035,18 @@ public class SSKProtoSyncMessageViewOnceOpen: NSObject, Codable, NSSecureCoding 
         return proto.hasSenderAci
     }
 
+    @objc
+    public var senderAciBinary: Data? {
+        guard hasSenderAciBinary else {
+            return nil
+        }
+        return proto.senderAciBinary
+    }
+    @objc
+    public var hasSenderAciBinary: Bool {
+        return proto.hasSenderAciBinary
+    }
+
     public var hasUnknownFields: Bool {
         return !proto.unknownFields.data.isEmpty
     }
@@ -11151,6 +12131,9 @@ extension SSKProtoSyncMessageViewOnceOpen {
         if let _value = senderAci {
             builder.setSenderAci(_value)
         }
+        if let _value = senderAciBinary {
+            builder.setSenderAciBinary(_value)
+        }
         if let _value = unknownFields {
             builder.setUnknownFields(_value)
         }
@@ -11187,6 +12170,17 @@ public class SSKProtoSyncMessageViewOnceOpenBuilder: NSObject {
     @objc
     public func setTimestamp(_ valueParam: UInt64) {
         proto.timestamp = valueParam
+    }
+
+    @objc
+    @available(swift, obsoleted: 1.0)
+    public func setSenderAciBinary(_ valueParam: Data?) {
+        guard let valueParam = valueParam else { return }
+        proto.senderAciBinary = valueParam
+    }
+
+    public func setSenderAciBinary(_ valueParam: Data) {
+        proto.senderAciBinary = valueParam
     }
 
     public func setUnknownFields(_ unknownFields: SwiftProtobuf.UnknownStorage) {
@@ -11700,6 +12694,18 @@ public class SSKProtoSyncMessageMessageRequestResponse: NSObject, Codable, NSSec
         return proto.hasType
     }
 
+    @objc
+    public var threadAciBinary: Data? {
+        guard hasThreadAciBinary else {
+            return nil
+        }
+        return proto.threadAciBinary
+    }
+    @objc
+    public var hasThreadAciBinary: Bool {
+        return proto.hasThreadAciBinary
+    }
+
     public var hasUnknownFields: Bool {
         return !proto.unknownFields.data.isEmpty
     }
@@ -11782,6 +12788,9 @@ extension SSKProtoSyncMessageMessageRequestResponse {
         if let _value = type {
             builder.setType(_value)
         }
+        if let _value = threadAciBinary {
+            builder.setThreadAciBinary(_value)
+        }
         if let _value = unknownFields {
             builder.setUnknownFields(_value)
         }
@@ -11822,6 +12831,17 @@ public class SSKProtoSyncMessageMessageRequestResponseBuilder: NSObject {
     @objc
     public func setType(_ valueParam: SSKProtoSyncMessageMessageRequestResponseType) {
         proto.type = SSKProtoSyncMessageMessageRequestResponseTypeUnwrap(valueParam)
+    }
+
+    @objc
+    @available(swift, obsoleted: 1.0)
+    public func setThreadAciBinary(_ valueParam: Data?) {
+        guard let valueParam = valueParam else { return }
+        proto.threadAciBinary = valueParam
+    }
+
+    public func setThreadAciBinary(_ valueParam: Data) {
+        proto.threadAciBinary = valueParam
     }
 
     public func setUnknownFields(_ unknownFields: SwiftProtobuf.UnknownStorage) {
@@ -13467,6 +14487,18 @@ public class SSKProtoSyncMessageDeleteForMeConversationIdentifier: NSObject, Cod
         return proto.hasThreadE164
     }
 
+    @objc
+    public var threadServiceIDBinary: Data? {
+        guard hasThreadServiceIDBinary else {
+            return nil
+        }
+        return proto.threadServiceIDBinary
+    }
+    @objc
+    public var hasThreadServiceIDBinary: Bool {
+        return proto.hasThreadServiceIDBinary
+    }
+
     public var hasUnknownFields: Bool {
         return !proto.unknownFields.data.isEmpty
     }
@@ -13549,6 +14581,9 @@ extension SSKProtoSyncMessageDeleteForMeConversationIdentifier {
         if let _value = threadE164 {
             builder.setThreadE164(_value)
         }
+        if let _value = threadServiceIDBinary {
+            builder.setThreadServiceIDBinary(_value)
+        }
         if let _value = unknownFields {
             builder.setUnknownFields(_value)
         }
@@ -13595,6 +14630,17 @@ public class SSKProtoSyncMessageDeleteForMeConversationIdentifierBuilder: NSObje
 
     public func setThreadE164(_ valueParam: String) {
         proto.threadE164 = valueParam
+    }
+
+    @objc
+    @available(swift, obsoleted: 1.0)
+    public func setThreadServiceIDBinary(_ valueParam: Data?) {
+        guard let valueParam = valueParam else { return }
+        proto.threadServiceIDBinary = valueParam
+    }
+
+    public func setThreadServiceIDBinary(_ valueParam: Data) {
+        proto.threadServiceIDBinary = valueParam
     }
 
     public func setUnknownFields(_ unknownFields: SwiftProtobuf.UnknownStorage) {
@@ -13659,6 +14705,18 @@ public class SSKProtoSyncMessageDeleteForMeAddressableMessage: NSObject, Codable
     @objc
     public var hasAuthorE164: Bool {
         return proto.hasAuthorE164
+    }
+
+    @objc
+    public var authorServiceIDBinary: Data? {
+        guard hasAuthorServiceIDBinary else {
+            return nil
+        }
+        return proto.authorServiceIDBinary
+    }
+    @objc
+    public var hasAuthorServiceIDBinary: Bool {
+        return proto.hasAuthorServiceIDBinary
     }
 
     @objc
@@ -13749,6 +14807,9 @@ extension SSKProtoSyncMessageDeleteForMeAddressableMessage {
         if let _value = authorE164 {
             builder.setAuthorE164(_value)
         }
+        if let _value = authorServiceIDBinary {
+            builder.setAuthorServiceIDBinary(_value)
+        }
         if hasSentTimestamp {
             builder.setSentTimestamp(sentTimestamp)
         }
@@ -13787,6 +14848,17 @@ public class SSKProtoSyncMessageDeleteForMeAddressableMessageBuilder: NSObject {
 
     public func setAuthorE164(_ valueParam: String) {
         proto.authorE164 = valueParam
+    }
+
+    @objc
+    @available(swift, obsoleted: 1.0)
+    public func setAuthorServiceIDBinary(_ valueParam: Data?) {
+        guard let valueParam = valueParam else { return }
+        proto.authorServiceIDBinary = valueParam
+    }
+
+    public func setAuthorServiceIDBinary(_ valueParam: Data) {
+        proto.authorServiceIDBinary = valueParam
     }
 
     @objc
@@ -16520,6 +17592,18 @@ public class SSKProtoContactDetails: NSObject, Codable, NSSecureCoding {
     }
 
     @objc
+    public var aciBinary: Data? {
+        guard hasAciBinary else {
+            return nil
+        }
+        return proto.aciBinary
+    }
+    @objc
+    public var hasAciBinary: Bool {
+        return proto.hasAciBinary
+    }
+
+    @objc
     public var name: String? {
         guard hasName else {
             return nil
@@ -16645,6 +17729,9 @@ extension SSKProtoContactDetails {
         if let _value = aci {
             builder.setAci(_value)
         }
+        if let _value = aciBinary {
+            builder.setAciBinary(_value)
+        }
         if let _value = name {
             builder.setName(_value)
         }
@@ -16695,6 +17782,17 @@ public class SSKProtoContactDetailsBuilder: NSObject {
 
     public func setAci(_ valueParam: String) {
         proto.aci = valueParam
+    }
+
+    @objc
+    @available(swift, obsoleted: 1.0)
+    public func setAciBinary(_ valueParam: Data?) {
+        guard let valueParam = valueParam else { return }
+        proto.aciBinary = valueParam
+    }
+
+    public func setAciBinary(_ valueParam: Data) {
+        proto.aciBinary = valueParam
     }
 
     @objc
@@ -17987,6 +19085,18 @@ public class SSKProtoBodyRange: NSObject, Codable, NSSecureCoding {
         return proto.hasStyle
     }
 
+    @objc
+    public var mentionAciBinary: Data? {
+        guard hasMentionAciBinary else {
+            return nil
+        }
+        return proto.mentionAciBinary
+    }
+    @objc
+    public var hasMentionAciBinary: Bool {
+        return proto.hasMentionAciBinary
+    }
+
     public var hasUnknownFields: Bool {
         return !proto.unknownFields.data.isEmpty
     }
@@ -18072,6 +19182,9 @@ extension SSKProtoBodyRange {
         if let _value = style {
             builder.setStyle(_value)
         }
+        if let _value = mentionAciBinary {
+            builder.setMentionAciBinary(_value)
+        }
         if let _value = unknownFields {
             builder.setUnknownFields(_value)
         }
@@ -18111,6 +19224,17 @@ public class SSKProtoBodyRangeBuilder: NSObject {
     @objc
     public func setStyle(_ valueParam: SSKProtoBodyRangeStyle) {
         proto.style = SSKProtoBodyRangeStyleUnwrap(valueParam)
+    }
+
+    @objc
+    @available(swift, obsoleted: 1.0)
+    public func setMentionAciBinary(_ valueParam: Data?) {
+        guard let valueParam = valueParam else { return }
+        proto.mentionAciBinary = valueParam
+    }
+
+    public func setMentionAciBinary(_ valueParam: Data) {
+        proto.mentionAciBinary = valueParam
     }
 
     public func setUnknownFields(_ unknownFields: SwiftProtobuf.UnknownStorage) {

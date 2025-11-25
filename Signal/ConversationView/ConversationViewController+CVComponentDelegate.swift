@@ -105,6 +105,19 @@ extension ConversationViewController: CVComponentDelegate {
         self.presentContextMenu(with: messageActions, focusedOn: cell, andModel: itemViewModel)
     }
 
+    public func didLongPressPoll(
+        _ cell: CVCell,
+        itemViewModel: CVItemViewModelImpl,
+        shouldAllowReply: Bool
+    ) {
+        let messageActions = MessageActions.pollActions(
+            itemViewModel: itemViewModel,
+            shouldAllowReply: shouldAllowReply,
+            delegate: self
+        )
+        self.presentContextMenu(with: messageActions, focusedOn: cell, andModel: itemViewModel)
+    }
+
     public func didChangeLongPress(_ itemViewModel: CVItemViewModelImpl) {
         AssertIsOnMainThread()
 
@@ -313,6 +326,8 @@ extension ConversationViewController: CVComponentDelegate {
         self.present(sheet, animated: true)
     }
 
+    // MARK: -
+
     public func didTapUndownloadableMedia() {
         let toast = ToastController(text: OWSLocalizedString(
             "UNAVAILABLE_MEDIA_TAP_TOAST",
@@ -328,9 +343,13 @@ extension ConversationViewController: CVComponentDelegate {
                 "FILE_UNAVAILABLE_SHEET_TITLE",
                 comment: "Title for sheet shown when tapping a document/file that has expired and is unavailable for download"
             ),
-            message: OWSLocalizedString(
-                "FILE_UNAVAILABLE_SHEET_MESSAGE",
-                comment: "Message for sheet shown when tapping a document/file that has expired and is unavailable for download"
+            message: String.localizedStringWithFormat(
+                OWSLocalizedString(
+                    "UNAVAILABLE_ATTACHMENT_FILE_SHEET_MESSAGE_%d",
+                    tableName: "PluralAware",
+                    comment: "Message for sheet shown when tapping a document/file that has expired and is unavailable for download. Embeds {{ the number of days that files are available, e.g. '45' }}."
+                ),
+                _freeTierMediaDays(),
             )
         )
         actionSheet.addAction(.okay)
@@ -344,9 +363,13 @@ extension ConversationViewController: CVComponentDelegate {
                 "OVERSIZE_TEXT_UNAVAILABLE_SHEET_TITLE",
                 comment: "Title for sheet shown when tapping oversized text that has expired and is unavailable for download"
             ),
-            message: OWSLocalizedString(
-                "OVERSIZE_TEXT_UNAVAILABLE_SHEET_MESSAGE",
-                comment: "Message for sheet shown when tapping oversized text that has expired and is unavailable for download"
+            message: String.localizedStringWithFormat(
+                OWSLocalizedString(
+                    "UNAVAILABLE_ATTACHMENT_OVERSIZE_TEXT_SHEET_MESSAGE_%d",
+                    tableName: "PluralAware",
+                    comment: "Message for sheet shown when tapping oversized text that has expired and is unavailable for download. Embeds {{ the number of days that files are available, e.g. '45' }}."
+                ),
+                _freeTierMediaDays(),
             )
         )
         actionSheet.addAction(.okay)
@@ -360,9 +383,13 @@ extension ConversationViewController: CVComponentDelegate {
                 "AUDIO_UNAVAILABLE_SHEET_TITLE",
                 comment: "Title for sheet shown when tapping a voice message that has expired and is unavailable for download"
             ),
-            message: OWSLocalizedString(
-                "AUDIO_UNAVAILABLE_SHEET_MESSAGE",
-                comment: "Message for sheet shown when tapping a voice message that has expired and is unavailable for download"
+            message: String.localizedStringWithFormat(
+                OWSLocalizedString(
+                    "UNAVAILABLE_ATTACHMENT_AUDIO_SHEET_MESSAGE_%d",
+                    tableName: "PluralAware",
+                    comment: "Message for sheet shown when tapping a voice message that has expired and is unavailable for download. Embeds {{ the number of days that files are available, e.g. '45' }}."
+                ),
+                _freeTierMediaDays(),
             )
         )
         actionSheet.addAction(.okay)
@@ -376,9 +403,13 @@ extension ConversationViewController: CVComponentDelegate {
                 "STICKER_UNAVAILABLE_SHEET_TITLE",
                 comment: "Title for sheet shown when tapping a sticker that has expired and is unavailable for download"
             ),
-            message: OWSLocalizedString(
-                "STICKER_UNAVAILABLE_SHEET_MESSAGE",
-                comment: "Message for sheet shown when tapping a sticker that has expired and is unavailable for download"
+            message: String.localizedStringWithFormat(
+                OWSLocalizedString(
+                    "UNAVAILABLE_ATTACHMENT_STICKER_SHEET_MESSAGE_%d",
+                    tableName: "PluralAware",
+                    comment: "Message for sheet shown when tapping a sticker that has expired and is unavailable for download. Embeds {{ the number of days that files are available, e.g. '45' }}."
+                ),
+                _freeTierMediaDays(),
             )
         )
         actionSheet.addAction(.okay)
@@ -390,6 +421,15 @@ extension ConversationViewController: CVComponentDelegate {
         let toastText = OWSLocalizedString("VIDEO_BROKEN",
                                            comment: "Toast alert text shown when tapping on a video that cannot be played.")
         presentToastCVC(toastText)
+    }
+
+    private func _freeTierMediaDays() -> UInt64 {
+        let db = DependenciesBridge.shared.db
+        let subscriptionConfigManager = DependenciesBridge.shared.subscriptionConfigManager
+
+        return db.read { tx in
+            subscriptionConfigManager.backupConfigurationOrDefault(tx: tx).freeTierMediaDays
+        }
     }
 
     // MARK: - Messages
@@ -736,10 +776,13 @@ extension ConversationViewController: CVComponentDelegate {
 
         alert.addAction(OWSActionSheets.cancelAction)
 
-        alert.addAction(ActionSheetAction(title: OWSLocalizedString("FINGERPRINT_SHRED_KEYMATERIAL_BUTTON",
-                                                                   comment: ""),
-                                          accessibilityIdentifier: "reset_session",
-                                          style: .default) { [weak self] _ in
+        alert.addAction(ActionSheetAction(
+            title: OWSLocalizedString(
+                "FINGERPRINT_SHRED_KEYMATERIAL_BUTTON",
+                comment: ""
+            ),
+            style: .default
+        ) { [weak self] _ in
             guard let self = self else { return }
             guard let contactThread = self.thread as? TSContactThread else {
                 // Corrupt Message errors only appear in contact threads.
@@ -759,17 +802,7 @@ extension ConversationViewController: CVComponentDelegate {
     public func didTapSessionRefreshMessage(_ message: TSErrorMessage) {
         dismissKeyBoard()
 
-        let headerImageView = UIImageView(image: UIImage(named: "chat-session-refresh"))
-
-        let headerView = UIView()
-        headerView.addSubview(headerImageView)
-        headerImageView.autoPinEdge(toSuperviewEdge: .top, withInset: 22)
-        headerImageView.autoPinEdge(toSuperviewEdge: .bottom)
-        headerImageView.autoHCenterInSuperview()
-        headerImageView.autoSetDimension(.width, toSize: 200)
-        headerImageView.autoSetDimension(.height, toSize: 110)
-
-        let sessionRefreshedActionSheet = ActionSheetController(
+        OWSActionSheets.showContactSupportActionSheet(
             title: OWSLocalizedString(
                 "SESSION_REFRESH_ALERT_TITLE",
                 comment: "Title for the session refresh alert"
@@ -777,19 +810,10 @@ extension ConversationViewController: CVComponentDelegate {
             message: OWSLocalizedString(
                 "SESSION_REFRESH_ALERT_MESSAGE",
                 comment: "Description for the session refresh alert"
-            )
+            ),
+            emailFilter: .custom("Signal iOS Session Refresh"),
+            fromViewController: self
         )
-        sessionRefreshedActionSheet.addAction(ActionSheetAction(title: CommonStrings.contactSupport) { _ in
-            ContactSupportActionSheet.present(
-                emailFilter: .custom("Signal iOS Session Refresh"),
-                logDumper: .fromGlobals(),
-                fromViewController: self
-            )
-        })
-        sessionRefreshedActionSheet.addAction(OWSActionSheets.okayAction)
-        sessionRefreshedActionSheet.customHeader = headerView
-
-        presentActionSheet(sessionRefreshedActionSheet)
     }
 
     // See: resendGroupUpdate
@@ -801,7 +825,7 @@ extension ConversationViewController: CVComponentDelegate {
             return
         }
         Task {
-            await GroupManager.sendGroupUpdateMessage(groupId: groupId)
+            _ = await GroupManager.sendGroupUpdateMessage(groupId: groupId)
             Logger.info("Group updated, removing group creation error.")
 
             await SSKEnvironment.shared.databaseStorageRef.awaitableWrite { tx in
@@ -836,9 +860,10 @@ extension ConversationViewController: CVComponentDelegate {
                                           message: String(format: CallStrings.callBackAlertMessageFormat,
                                                           displayName))
 
-        alert.addAction(ActionSheetAction(title: CallStrings.callBackAlertCallButton,
-                                          accessibilityIdentifier: "call_back",
-                                          style: .default) { [weak self] _ in
+        alert.addAction(ActionSheetAction(
+            title: CallStrings.callBackAlertCallButton,
+            style: .default
+        ) { [weak self] _ in
             guard let self = self else { return }
             switch call.offerType {
             case .audio:
@@ -883,7 +908,6 @@ extension ConversationViewController: CVComponentDelegate {
                     "MISSED_CALL_BLOCKED_SYSTEM_SETTINGS_SHEET_BLOCK_ACTION",
                     comment: "Action to block contact in Signal for sheet shown when the user taps a missed call from a contact blocked in iOS settings."
                 ),
-                accessibilityIdentifier: "block_contact",
                 style: .destructive
             ) { [weak self] _ in
                 guard self != nil else { return }
@@ -913,6 +937,9 @@ extension ConversationViewController: CVComponentDelegate {
         AssertIsOnMainThread()
         if SSKEnvironment.shared.spamChallengeResolverRef.isPausingMessages {
             SpamCaptchaViewController.presentActionSheet(from: self)
+            DependenciesBridge.shared.db.write { tx in
+                SupportKeyValueStore().setLastChallengeDate(value: Date(), transaction: tx)
+            }
         } else {
             SSKEnvironment.shared.spamChallengeResolverRef.retryPausedMessagesIfReady()
         }
@@ -1272,5 +1299,99 @@ extension ConversationViewController: CVComponentDelegate {
 
     public func didTapJoinCallLinkCall(callLink: CallLink) {
         GroupCallViewController.presentLobby(for: callLink)
+    }
+
+    public func didTapViewVotes(poll: OWSPoll) {
+        let message: TSMessage? = DependenciesBridge.shared.db.read { tx in
+            InteractionFinder.fetch(rowId: poll.interactionId, transaction: tx) as? TSMessage
+        }
+
+        guard let message else {
+            return
+        }
+
+        let pollDetails = PollDetailsViewController(
+            poll: poll,
+            message: message,
+            pollManager: DependenciesBridge.shared.pollMessageManager,
+            db: DependenciesBridge.shared.db,
+            databaseChangeObserver: DependenciesBridge.shared.databaseChangeObserver
+        )
+        pollDetails.delegate = self
+        self.present(OWSNavigationController(rootViewController: pollDetails), animated: true)
+    }
+
+    public func didTapViewPoll(pollInteractionUniqueId: String) {
+        ensureInteractionLoadedThenScrollToInteraction(
+            pollInteractionUniqueId,
+            alignment: .centerIfNotEntirelyOnScreen,
+            isAnimated: true
+        )
+    }
+
+    public func didTapVoteOnPoll(poll: OWSPoll, optionIndex: UInt32, isUnvote: Bool) {
+        guard let groupThread = self.thread as? TSGroupThread else {
+            return
+        }
+        do {
+            try DependenciesBridge.shared.db.write { tx in
+                let targetPoll = DependenciesBridge.shared.interactionStore.fetchInteraction(
+                    rowId: poll.interactionId,
+                    tx: tx
+                )
+
+                guard let targetPoll else {
+                    return
+                }
+
+                guard let pollVoteMessage = try DependenciesBridge.shared.pollMessageManager.applyPendingVoteToLocalState(
+                    pollInteraction: targetPoll,
+                    optionIndex: optionIndex,
+                    isUnvote: isUnvote,
+                    thread: groupThread,
+                    tx: tx
+                ) else {
+                    Logger.error("Unable to update local poll state with votes")
+                    return
+                }
+
+                // Touch message so it reloads to show updated vote state.
+                SSKEnvironment.shared.databaseStorageRef.touch(interaction: targetPoll, shouldReindex: false, tx: tx)
+
+                let preparedMessage = PreparedOutgoingMessage.preprepared(
+                    transientMessageWithoutAttachments: pollVoteMessage
+                )
+
+                SSKEnvironment.shared.messageSenderJobQueueRef.add(
+                    message: preparedMessage,
+                    transaction: tx
+                )
+            }
+        } catch {
+            Logger.error("Unable to update local poll state with votes: \(error)")
+        }
+    }
+}
+
+// MARK: - OWSNavigationChildController
+
+extension ConversationViewController: OWSNavigationChildController {
+    public var shouldCancelNavigationBack: Bool {
+        // If presentedViewController is not nil, it means we haven't finished dismissing
+        // and should not allow the back navigation gesture.
+        return presentedViewController != nil
+    }
+}
+
+// MARK: - PollDetailsViewControllerDelegate
+extension ConversationViewController: PollDetailsViewControllerDelegate {
+    public func terminatePoll(poll: OWSPoll) {
+        if let groupThread = self.thread as? TSGroupThread {
+            do {
+                try DependenciesBridge.shared.pollMessageManager.sendPollTerminateMessage(poll: poll, thread: groupThread)
+            } catch {
+                Logger.error("Failed to end poll: \(error)")
+            }
+        }
     }
 }

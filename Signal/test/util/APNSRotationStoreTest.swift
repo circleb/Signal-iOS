@@ -14,7 +14,7 @@ final class APNSRotationStoreTest: SignalBaseTest {
         super.setUp()
 
         let remoteConfigManager = SSKEnvironment.shared.remoteConfigManagerRef as! StubbableRemoteConfigManager
-        remoteConfigManager.cachedConfig = RemoteConfig(
+        remoteConfigManager._currentConfig = RemoteConfig(
             clockSkew: 0,
             valueFlags: ["ios.enableAutoAPNSRotation": "true"],
         )
@@ -27,8 +27,6 @@ final class APNSRotationStoreTest: SignalBaseTest {
     }
 
     func testHasNoPushToken() {
-        // Make sure we don't have an APNS token
-        SSKEnvironment.shared.preferencesRef.removeAllValues()
         let now = Date().ows_millisecondsSince1970
 
         // Make sure we are otherwise eligible to rotate, so

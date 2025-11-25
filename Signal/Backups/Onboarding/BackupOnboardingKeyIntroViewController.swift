@@ -8,16 +8,17 @@ import SignalUI
 import SwiftUI
 
 class BackupOnboardingKeyIntroViewController: HostingController<BackupOnboardingKeyIntroView> {
-    private let onDeviceAuthSucceeded: () -> Void
+    private let onDeviceAuthSucceeded: (LocalDeviceAuthentication.AuthSuccess) -> Void
     private let viewModel: BackupsOnboardingKeyIntroViewModel
 
-    init(onDeviceAuthSucceeded: @escaping () -> Void) {
+    init(onDeviceAuthSucceeded: @escaping (LocalDeviceAuthentication.AuthSuccess) -> Void) {
         self.onDeviceAuthSucceeded = onDeviceAuthSucceeded
         self.viewModel = BackupsOnboardingKeyIntroViewModel()
 
         super.init(wrappedView: BackupOnboardingKeyIntroView(viewModel: viewModel))
 
         viewModel.actionsDelegate = self
+        OWSTableViewController2.removeBackButtonText(viewController: self)
     }
 }
 
@@ -26,8 +27,8 @@ class BackupOnboardingKeyIntroViewController: HostingController<BackupOnboarding
 extension BackupOnboardingKeyIntroViewController: BackupsOnboardingKeyIntroViewModel.ActionsDelegate {
     fileprivate func onContinue() {
         Task {
-            if await LocalDeviceAuthentication().performBiometricAuth() {
-                onDeviceAuthSucceeded()
+            if let authSuccess = await LocalDeviceAuthentication().performBiometricAuth() {
+                onDeviceAuthSucceeded(authSuccess)
             }
         }
     }
@@ -48,7 +49,38 @@ private class BackupsOnboardingKeyIntroViewModel {
 }
 
 struct BackupOnboardingKeyIntroView: View {
+    private struct BulletPoint: Identifiable {
+        let image: UIImage
+        let text: String
+
+        var id: String { text }
+    }
+
     fileprivate let viewModel: BackupsOnboardingKeyIntroViewModel
+
+    private let bulletPoints: [BulletPoint] = [
+        BulletPoint(
+            image: .number,
+            text: OWSLocalizedString(
+                "BACKUP_ONBOARDING_KEY_INTRO_BULLET_1",
+                comment: "Text for a bullet point in a view introducing the 'Recovery Key' during an onboarding flow."
+            ),
+        ),
+        BulletPoint(
+            image: .lock,
+            text: OWSLocalizedString(
+                "BACKUP_ONBOARDING_KEY_INTRO_BULLET_2",
+                comment: "Text for a bullet point in a view introducing the 'Recovery Key' during an onboarding flow."
+            ),
+        ),
+        BulletPoint(
+            image: .errorCircle,
+            text: OWSLocalizedString(
+                "BACKUP_ONBOARDING_KEY_INTRO_BULLET_3",
+                comment: "Text for a bullet point in a view introducing the 'Recovery Key' during an onboarding flow."
+            ),
+        ),
+    ]
 
     var body: some View {
         ScrollableContentPinnedFooterView {
@@ -62,38 +94,42 @@ struct BackupOnboardingKeyIntroView: View {
 
                 Text(OWSLocalizedString(
                     "BACKUP_ONBOARDING_KEY_INTRO_TITLE",
-                    comment: "Title for a view introducing the 'Backup Key' during an onboarding flow."
+                    comment: "Title for a view introducing the 'Recovery Key' during an onboarding flow."
                 ))
                 .font(.title)
                 .fontWeight(.semibold)
                 .foregroundStyle(Color.Signal.label)
 
-                Spacer().frame(height: 12)
+                Spacer().frame(height: 32)
 
-                Text(OWSLocalizedString(
-                    "BACKUP_ONBOARDING_KEY_INTRO_SUBTITLE",
-                    comment: "Subtitle for a view introducing the 'Backup Key' during an onboarding flow."
-                ))
-                .font(.body)
-                .foregroundStyle(Color.Signal.secondaryLabel)
+                VStack(alignment: .leading, spacing: 24) {
+                    ForEach(bulletPoints) { bulletPoint in
+                        HStack(alignment: .top, spacing: 12) {
+                            Image(uiImage: bulletPoint.image)
+                                .frame(width: 24, height: 24)
+
+                            Text(bulletPoint.text)
+                        }
+                        .multilineTextAlignment(.leading)
+                        .foregroundStyle(Color.Signal.label)
+                    }
+                }
             }
-            .padding(.horizontal, 48)
+            .padding(.horizontal)
         } pinnedFooter: {
             Button {
                 viewModel.onContinue()
             } label: {
-                Text(CommonStrings.continueButton)
-                    .foregroundStyle(.white)
-                    .font(.headline)
-                    .padding(.vertical, 14)
+                Text(OWSLocalizedString(
+                    "BACKUP_ONBOARDING_KEY_INTRO_CONTINUE_BUTTON_TITLE",
+                    comment: "Title for a continue button for a view introducing the 'Recovery Key' during an onboarding flow."
+                ))
             }
-            .buttonStyle(.plain)
-            .frame(maxWidth: .infinity)
-            .background(Color.Signal.ultramarine)
-            .cornerRadius(12)
-            .padding(.horizontal, 40)
+            .buttonStyle(Registration.UI.LargePrimaryButtonStyle())
+            .padding(.horizontal, 24)
         }
         .multilineTextAlignment(.center)
+        .padding(.horizontal)
         .background(Color.Signal.groupedBackground)
     }
 }

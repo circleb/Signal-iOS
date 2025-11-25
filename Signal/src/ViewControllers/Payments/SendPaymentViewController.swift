@@ -72,44 +72,8 @@ public class SendPaymentViewController: OWSViewController {
         recipient.isIdentifiedPayment
     }
 
-    public var isUsingPresentedStyle: Bool {
+    private var isUsingPresentedStyle: Bool {
         return presentingViewController != nil
-    }
-
-    open var tableBackgroundColor: UIColor {
-        AssertIsOnMainThread()
-
-        return Self.tableBackgroundColor(isUsingPresentedStyle: isUsingPresentedStyle)
-    }
-
-    public static func tableBackgroundColor(isUsingPresentedStyle: Bool) -> UIColor {
-        AssertIsOnMainThread()
-
-        if isUsingPresentedStyle {
-            return Theme.tableView2PresentedBackgroundColor
-        } else {
-            return Theme.tableView2BackgroundColor
-        }
-    }
-
-    public var cellBackgroundColor: UIColor {
-        Self.cellBackgroundColor(isUsingPresentedStyle: isUsingPresentedStyle)
-    }
-
-    public static func cellBackgroundColor(isUsingPresentedStyle: Bool) -> UIColor {
-        if isUsingPresentedStyle {
-            return Theme.tableCell2PresentedBackgroundColor
-        } else {
-            return Theme.tableCell2BackgroundColor
-        }
-    }
-
-    public var cellSelectedBackgroundColor: UIColor {
-        if isUsingPresentedStyle {
-            return Theme.tableCell2PresentedSelectedBackgroundColor
-        } else {
-            return Theme.tableCell2SelectedBackgroundColor
-        }
     }
 
     public init(
@@ -208,7 +172,6 @@ public class SendPaymentViewController: OWSViewController {
                 case .fromPaymentSettings:
                     actionSheet.addAction(ActionSheetAction(
                         title: CommonStrings.sendMessage,
-                        accessibilityIdentifier: "payments.settings.send_message",
                         style: .default,
                         handler: { [weak fromViewController] _ in
                             guard let fromViewController = fromViewController else { return }
@@ -331,7 +294,6 @@ public class SendPaymentViewController: OWSViewController {
                 "PAYMENTS_RECIPIENT_PAYMENTS_NOT_ENABLED_BUTTON",
                 comment: "The label for the 'send request' button in alerts and action sheets."
             ),
-            accessibilityIdentifier: "OWSActionSheets.sendPaymentAuthorizationRequest",
             style: .default
         ) { _ in
             sendActivationRequest(recipientAddress: recipientAddress)
@@ -412,7 +374,7 @@ public class SendPaymentViewController: OWSViewController {
     open override func viewDidLoad() {
         super.viewDidLoad()
 
-        view.backgroundColor = tableBackgroundColor
+        view.backgroundColor = OWSTableViewController2.tableBackgroundColor(isUsingPresentedStyle: isUsingPresentedStyle)
 
         addListeners()
 
@@ -471,13 +433,11 @@ public class SendPaymentViewController: OWSViewController {
     private func updateContents() {
         AssertIsOnMainThread()
 
-        view.backgroundColor = tableBackgroundColor
+        view.backgroundColor = OWSTableViewController2.tableBackgroundColor(isUsingPresentedStyle: isUsingPresentedStyle)
         navigationItem.title = nil
         if mode.isModalRootView {
-            navigationItem.leftBarButtonItem = .doneButton(dismissingFrom: self)
-            navigationItem.rightBarButtonItem = nil
+            navigationItem.rightBarButtonItem = .doneButton(dismissingFrom: self)
         } else {
-            navigationItem.leftBarButtonItem = nil
             navigationItem.rightBarButtonItem = nil
         }
 
@@ -607,7 +567,7 @@ public class SendPaymentViewController: OWSViewController {
             label.font = buttonFont
             label.textColor = Theme.primaryTextColor
             button.addSubview(label)
-            button.backgroundColor = cellBackgroundColor
+            button.backgroundColor = OWSTableViewController2.cellBackgroundColor(isUsingPresentedStyle: isUsingPresentedStyle)
             label.autoCenterInSuperview()
 
             return button
@@ -616,7 +576,7 @@ public class SendPaymentViewController: OWSViewController {
             let button = OWSButton(imageName: imageName,
                                    tintColor: Theme.primaryTextColor,
                                    block: block)
-            button.backgroundColor = cellBackgroundColor
+            button.backgroundColor = OWSTableViewController2.cellBackgroundColor(isUsingPresentedStyle: isUsingPresentedStyle)
             return button
         }
         var keyboardRows = [UIView]()
@@ -740,16 +700,16 @@ public class SendPaymentViewController: OWSViewController {
     // MARK: -
 
     private func createSubviews() {
-
         rootStack.axis = .vertical
         rootStack.alignment = .fill
-        rootStack.layoutMargins = UIEdgeInsets(top: 0, leading: 0, bottom: 24, trailing: 0)
-        rootStack.isLayoutMarginsRelativeArrangement = true
+        rootStack.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(rootStack)
-        rootStack.autoPinEdge(toSuperviewMargin: .leading, withInset: 20)
-        rootStack.autoPinEdge(toSuperviewMargin: .trailing, withInset: 20)
-        rootStack.autoPin(toTopLayoutGuideOf: self, withInset: 0)
-        rootStack.autoPinEdge(.bottom, to: .bottom, of: keyboardLayoutGuideViewSafeArea)
+        NSLayoutConstraint.activate([
+            rootStack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            rootStack.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor, constant: 20),
+            rootStack.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor, constant: -20),
+            rootStack.bottomAnchor.constraint(equalTo: keyboardLayoutGuide.topAnchor, constant: -24),
+        ])
 
         bigAmountLabel.font = UIFont.regularFont(ofSize: 60)
         bigAmountLabel.textAlignment = .center
@@ -758,7 +718,7 @@ public class SendPaymentViewController: OWSViewController {
         bigAmountLabel.setContentHuggingVerticalHigh()
         bigAmountLabel.setCompressionResistanceVerticalHigh()
 
-        smallAmountLabel.font = UIFont.dynamicTypeBody2
+        smallAmountLabel.font = UIFont.dynamicTypeSubheadline
         smallAmountLabel.textColor = Theme.secondaryTextAndIconColor
         smallAmountLabel.textAlignment = .center
         smallAmountLabel.setContentHuggingVerticalHigh()
@@ -1033,10 +993,13 @@ public class SendPaymentViewController: OWSViewController {
         // There's no point doing a "transfer in" transaction in order to
         // enable a "transfer out".
         if mode != .fromTransferOutFlow {
-            actionSheet.addAction(ActionSheetAction(title: OWSLocalizedString("SETTINGS_PAYMENTS_PAYMENT_ADD_MONEY",
-                                                                             comment: "Label for the 'add money' button in the 'send payment' UI."),
-                                                    accessibilityIdentifier: "payments.settings.add_money",
-                                                    style: .default) { [weak self] _ in
+            actionSheet.addAction(ActionSheetAction(
+                title: OWSLocalizedString(
+                    "SETTINGS_PAYMENTS_PAYMENT_ADD_MONEY",
+                    comment: "Label for the 'add money' button in the 'send payment' UI."
+                ),
+                style: .default
+            ) { [weak self] _ in
                 self?.didTapAddMoneyButton()
             })
         }
@@ -1109,10 +1072,13 @@ public class SendPaymentViewController: OWSViewController {
         let actionSheet = ActionSheetController(title: title,
                                                 message: message)
 
-        actionSheet.addAction(ActionSheetAction(title: OWSLocalizedString("SETTINGS_PAYMENTS_ENABLE_ACTION",
-                                                                         comment: "Label for the 'enable payments' button in the 'payments not enabled' alert."),
-                                                accessibilityIdentifier: "payments.send.enable",
-                                                style: .default) { _ in
+        actionSheet.addAction(ActionSheetAction(
+            title: OWSLocalizedString(
+                "SETTINGS_PAYMENTS_ENABLE_ACTION",
+                comment: "Label for the 'enable payments' button in the 'payments not enabled' alert."
+            ),
+            style: .default
+        ) { _ in
             Self.didTapEnablePaymentsButton()
         })
 

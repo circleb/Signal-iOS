@@ -7,6 +7,12 @@ import Foundation
 
 public enum AttachmentDownloads {
 
+    /// There's two sources of truth for calculating download progress,
+    /// OWSProgress handles partial progress and AttachmentDownloadManager.downloadAttachment
+    /// handles errors and success. To avoid double counting progress updates
+    /// we keep a set of completed downloads and ignore progress
+    /// updates if the download has already completed. However, we still send the
+    /// attachmentDownloadProgressNotification in this case.
     public static let attachmentDownloadProgressNotification = Notification.Name("AttachmentDownloadProgressNotification")
 
     /// Key for a CGFloat progress value from 0 to 1
@@ -100,8 +106,12 @@ public enum AttachmentDownloads {
         }
     }
 
-    public enum Error: Swift.Error {
+    public enum Error: Swift.Error, Equatable {
         case expiredCredentials
+        case blockedByActiveCall
+        case blockedByPendingMessageRequest
+        case blockedByAutoDownloadSettings
+        case blockedByNetworkState
     }
 
     public struct CdnInfo {
@@ -114,7 +124,7 @@ public protocol AttachmentDownloadManager {
 
     func backupCdnInfo(
         metadata: BackupReadCredential
-    ) async throws -> AttachmentDownloads.CdnInfo
+    ) async throws -> BackupCdnInfo
 
     func downloadBackup(
         metadata: BackupReadCredential,
@@ -145,6 +155,12 @@ public protocol AttachmentDownloadManager {
         tx: DBWriteTransaction
     )
 
+    /// There's two sources of truth for calculating download progress,
+    /// OWSProgress handles partial progress and this method returning (or throwing)
+    /// handles errors and success. To avoid double counting progress updates
+    /// we keep a set of completed downloads and ignore progress
+    /// updates if the download has already completed. However, we still send the
+    /// attachmentDownloadProgressNotification in this case.
     func downloadAttachment(
         id: Attachment.IDType,
         priority: AttachmentDownloadPriority,
@@ -157,20 +173,9 @@ public protocol AttachmentDownloadManager {
     func beginDownloadingIfNecessary()
 
     func cancelDownload(for attachmentId: Attachment.IDType, tx: DBWriteTransaction)
-
-    func downloadProgress(for attachmentId: Attachment.IDType, tx: DBReadTransaction) -> CGFloat?
 }
 
 extension AttachmentDownloadManager {
-
-    public func downloadBackup(
-        metadata: BackupReadCredential
-    ) -> Promise<URL> {
-        return downloadBackup(
-            metadata: metadata,
-            progress: nil
-        )
-    }
 
     public func downloadTransientAttachment(
         metadata: AttachmentDownloads.DownloadMetadata

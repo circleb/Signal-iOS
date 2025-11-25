@@ -5,6 +5,7 @@
 
 import AVFoundation
 import Foundation
+public import LibSignalClient
 public import SignalServiceKit
 public import SignalUI
 
@@ -60,8 +61,8 @@ extension ConversationViewController: AttachmentApprovalViewControllerDataSource
         return [displayName]
     }
 
-    public func attachmentApprovalMentionableAddresses(tx: DBReadTransaction) -> [SignalServiceAddress] {
-        supportsMentions ? thread.recipientAddresses(with: SDSDB.shimOnlyBridge(tx)) : []
+    public func attachmentApprovalMentionableAcis(tx: DBReadTransaction) -> [Aci] {
+        supportsMentions ? thread.recipientAddresses(with: tx).compactMap(\.aci) : []
     }
 
     public func attachmentApprovalMentionCacheInvalidationKey() -> String {
@@ -216,35 +217,49 @@ extension ConversationViewController: ConversationHeaderViewDelegate {
 
 extension ConversationViewController: ConversationInputTextViewDelegate {
     public func didAttemptAttachmentPaste() {
-        ModalActivityIndicatorViewController.present(fromViewController: self) { modal in
-            let attachment: SignalAttachment? = await SignalAttachment.attachmentFromPasteboard()
+        // If trying to paste a sticker, forego anything async since
+        // the pasteboard will be cleared as soon as paste() exits.
+        if SignalAttachment.pasteboardHasStickerAttachment() {
+            do throws(SignalAttachmentError) {
+                self.didPasteAttachments([try SignalAttachment.stickerAttachmentFromPasteboard()].compacted())
+            } catch {
+                self.showErrorAlert(attachmentError: error)
+            }
+            return
+        }
 
-            await MainActor.run {
+        ModalActivityIndicatorViewController.present(fromViewController: self, asyncBlock: { modal in
+            do throws(SignalAttachmentError) {
+                let attachments = try await SignalAttachment.attachmentsFromPasteboard()
                 modal.dismiss {
-                    // Note: attachment might be nil or have an error at this point; that's fine.
-                    self.didPasteAttachment(attachment)
+                    // Note: attachment array might be nil at this point; that's fine.
+                    self.didPasteAttachments(attachments)
+                }
+            } catch {
+                modal.dismiss {
+                    self.showErrorAlert(attachmentError: error)
                 }
             }
-        }
+        })
     }
 
-    func didPasteAttachment(_ attachment: SignalAttachment?) {
+    func didPasteAttachments(_ attachments: [SignalAttachment]?) {
         AssertIsOnMainThread()
 
-        guard let attachment = attachment else {
-            owsFailDebug("Missing attachment.")
+        guard let attachments, attachments.count > 0 else {
+            owsFailDebug("Missing attachments")
             return
         }
 
         // If the thing we pasted is sticker-like, send it immediately
         // and render it borderless.
-        if attachment.isBorderless {
+        if attachments.count == 1, let a = attachments.first, a.isBorderless {
             Task {
-                await self.sendAttachments([attachment], from: self, messageBody: nil)
+                await self.sendAttachments([a], from: self, messageBody: nil)
             }
         } else {
             dismissKeyBoard()
-            showApprovalDialog(forAttachment: attachment)
+            showApprovalDialog(forAttachments: attachments)
         }
     }
 
@@ -299,96 +314,6 @@ extension ConversationViewController: ConversationSearchControllerDelegate {
             alignment: .centerIfNotEntirelyOnScreen,
             isAnimated: true
         )
-    }
-}
-
-// MARK: -
-
-extension ConversationViewController: InputAccessoryViewPlaceholderDelegate {
-    public func inputAccessoryPlaceholderKeyboardIsPresenting(animationDuration: TimeInterval,
-                                                              animationCurve: UIView.AnimationCurve) {
-        AssertIsOnMainThread()
-
-        handleKeyboardStateChange(animationDuration: animationDuration,
-                                  animationCurve: animationCurve)
-    }
-
-    public func inputAccessoryPlaceholderKeyboardDidPresent() {
-        AssertIsOnMainThread()
-
-        updateBottomBarPosition()
-        updateContentInsets()
-    }
-
-    public func inputAccessoryPlaceholderKeyboardIsDismissing(animationDuration: TimeInterval,
-                                                              animationCurve: UIView.AnimationCurve) {
-        AssertIsOnMainThread()
-
-        handleKeyboardStateChange(animationDuration: animationDuration,
-                                  animationCurve: animationCurve)
-    }
-
-    public func inputAccessoryPlaceholderKeyboardDidDismiss() {
-        AssertIsOnMainThread()
-
-        updateBottomBarPosition()
-        updateContentInsets()
-        updateScrollingContent()
-    }
-
-    public func inputAccessoryPlaceholderKeyboardIsDismissingInteractively() {
-        AssertIsOnMainThread()
-
-        // No animation, just follow along with the keyboard.
-        self.isDismissingInteractively = true
-        updateBottomBarPosition()
-        self.isDismissingInteractively = false
-    }
-
-    private func handleKeyboardStateChange(animationDuration: TimeInterval,
-                                           animationCurve: UIView.AnimationCurve) {
-        AssertIsOnMainThread()
-
-        if let transitionCoordinator = self.transitionCoordinator,
-           transitionCoordinator.isInteractive {
-            return
-        }
-
-        let isAnimatingHeightChange = viewState.inputToolbar?.isAnimatingHeightChange ?? false
-        let duration = isAnimatingHeightChange ? ConversationInputToolbar.heightChangeAnimationDuration : animationDuration
-
-        if shouldAnimateKeyboardChanges, duration > 0 {
-            if hasViewDidAppearEverCompleted {
-                // Make note of when the keyboard animation will block
-                // loads from landing during the keyboard animation.
-                // It isn't safe to block loads for long, so we cap
-                // how long they will be blocked for.
-                let animationCompletionDate = Date().addingTimeInterval(duration)
-                let lastKeyboardAnimationDate = Date().addingTimeInterval(-1.0)
-                if viewState.lastKeyboardAnimationDate == nil || viewState.lastKeyboardAnimationDate! < lastKeyboardAnimationDate {
-                    viewState.lastKeyboardAnimationDate = animationCompletionDate
-                }
-            }
-
-            // The animation curve provided by the keyboard notifications
-            // is a private value not represented in UIViewAnimationOptions.
-            // We don't use a block based animation here because it's not
-            // possible to pass a curve directly to block animations.
-            UIView.animate(
-                withDuration: duration,
-                delay: 0,
-                options: animationCurve.asAnimationOptions,
-                animations: { [self] in
-                    updateBottomBarPosition()
-                    // To minimize risk, only animatedly update insets when animating quoted reply for now
-                    if isAnimatingHeightChange { updateContentInsets() }
-                }
-            )
-            if !isAnimatingHeightChange { updateContentInsets() }
-        } else {
-            updateBottomBarPosition()
-            updateContentInsets()
-        }
     }
 }
 

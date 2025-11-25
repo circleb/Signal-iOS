@@ -13,10 +13,11 @@ public protocol CallLinkRecordStore {
     func insertFromBackup(
         rootKey: CallLinkRootKey,
         adminPasskey: Data?,
-        name: String,
-        restrictions: CallLinkRecord.Restrictions,
-        expiration: UInt64,
-        isUpcoming: Bool,
+        name: String?,
+        restrictions: CallLinkRecord.Restrictions?,
+        revoked: Bool?,
+        expiration: Int64?,
+        isUpcoming: Bool?,
         tx: DBWriteTransaction
     ) throws -> CallLinkRecord
     func fetchOrInsert(rootKey: CallLinkRootKey, tx: DBWriteTransaction) throws -> (record: CallLinkRecord, inserted: Bool)
@@ -55,10 +56,11 @@ public class CallLinkRecordStoreImpl: CallLinkRecordStore {
     public func insertFromBackup(
         rootKey: CallLinkRootKey,
         adminPasskey: Data?,
-        name: String,
-        restrictions: CallLinkRecord.Restrictions,
-        expiration: UInt64,
-        isUpcoming: Bool,
+        name: String?,
+        restrictions: CallLinkRecord.Restrictions?,
+        revoked: Bool?,
+        expiration: Int64?,
+        isUpcoming: Bool?,
         tx: DBWriteTransaction
     ) throws -> CallLinkRecord {
         return try CallLinkRecord.insertFromBackup(
@@ -66,6 +68,7 @@ public class CallLinkRecordStoreImpl: CallLinkRecordStore {
             adminPasskey: adminPasskey,
             name: name,
             restrictions: restrictions,
+            revoked: revoked,
             expiration: expiration,
             isUpcoming: isUpcoming,
             tx: tx
@@ -157,7 +160,7 @@ public class CallLinkRecordStoreImpl: CallLinkRecordStore {
 final class MockCallLinkRecordStore: CallLinkRecordStore {
     func fetch(rowId: Int64, tx: DBReadTransaction) throws -> CallLinkRecord? { fatalError() }
     func fetch(roomId: Data, tx: DBReadTransaction) throws -> CallLinkRecord? { fatalError() }
-    func insertFromBackup(rootKey: SignalRingRTC.CallLinkRootKey, adminPasskey: Data?, name: String, restrictions: CallLinkRecord.Restrictions, expiration: UInt64, isUpcoming: Bool, tx: DBWriteTransaction) throws -> CallLinkRecord { fatalError() }
+    func insertFromBackup(rootKey: CallLinkRootKey, adminPasskey: Data?, name: String?, restrictions: CallLinkRecord.Restrictions?, revoked: Bool?, expiration: Int64?, isUpcoming: Bool?, tx: DBWriteTransaction) throws -> CallLinkRecord { fatalError() }
     func fetchOrInsert(rootKey: CallLinkRootKey, tx: DBWriteTransaction) throws -> (record: CallLinkRecord, inserted: Bool) { fatalError() }
     func update(_ callLinkRecord: CallLinkRecord, tx: DBWriteTransaction) throws { fatalError() }
     func delete(_ callLinkRecord: CallLinkRecord, tx: DBWriteTransaction) throws { fatalError() }

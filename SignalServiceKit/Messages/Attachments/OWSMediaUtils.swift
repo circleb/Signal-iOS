@@ -38,7 +38,7 @@ public enum OWSMediaUtils {
         guard FileManager.default.fileExists(atPath: path) else {
             throw OWSMediaError.failure(description: "Media file missing.")
         }
-        guard Data.ows_isValidImage(atPath: path) else {
+        guard (try? DataImageSource.forPath(path))?.ows_isValidImage ?? false else {
             throw OWSMediaError.failure(description: "Invalid image.")
         }
         guard let originalImage = UIImage(contentsOfFile: path) else {
@@ -51,7 +51,7 @@ public enum OWSMediaUtils {
         guard FileManager.default.fileExists(atPath: path) else {
             throw OWSMediaError.failure(description: "Media file missing.")
         }
-        guard Data.ows_isValidImage(atPath: path) else {
+        guard (try? DataImageSource.forPath(path))?.ows_isValidImage ?? false else {
             throw OWSMediaError.failure(description: "Invalid image.")
         }
         guard let originalImage = UIImage(contentsOfFile: path) else {
@@ -61,7 +61,7 @@ public enum OWSMediaUtils {
     }
 
     public static func thumbnail(forImageData imageData: Data, maxDimensionPoints: CGFloat) throws -> UIImage {
-        guard imageData.ows_isValidImage else {
+        guard DataImageSource(imageData).ows_isValidImage else {
             throw OWSMediaError.failure(description: "Invalid image.")
         }
         guard let originalImage = UIImage(data: imageData) else {
@@ -71,7 +71,7 @@ public enum OWSMediaUtils {
     }
 
     public static func thumbnail(forImageData imageData: Data, maxDimensionPixels: CGFloat) throws -> UIImage {
-        guard imageData.ows_isValidImage else {
+        guard DataImageSource(imageData).ows_isValidImage else {
             throw OWSMediaError.failure(description: "Invalid image.")
         }
         guard let originalImage = UIImage(data: imageData) else {
@@ -84,105 +84,49 @@ public enum OWSMediaUtils {
         guard FileManager.default.fileExists(atPath: path) else {
             throw OWSMediaError.failure(description: "Media file missing.")
         }
-        guard Data.ows_isValidImage(atPath: path) else {
+        guard let imageSource = try? DataImageSource.forPath(path), imageSource.ows_isValidImage else {
             throw OWSMediaError.failure(description: "Invalid image.")
         }
-        let data = try Data(contentsOf: URL(fileURLWithPath: path))
-        guard let stillImage = data.stillForWebpData() else {
+        guard let stillImage = imageSource.stillForWebpData() else {
             throw OWSMediaError.failure(description: "Could not generate still.")
         }
         return try thumbnail(forImage: stillImage, maxDimensionPoints: maxDimensionPoints)
     }
 
-    public static func thumbnail(forVideoAtPath path: String, maxDimensionPoints: CGFloat) throws -> UIImage {
-        guard isVideoOfValidContentTypeAndSize(path: path) else {
-            throw OWSMediaError.failure(description: "Media file has missing or invalid length.")
-        }
-
-        let scale = UIScreen.main.scale
-        let maxDimensionPixels = maxDimensionPoints * scale
-        let maxSizePixels = CGSize(width: maxDimensionPixels, height: maxDimensionPixels)
-        let url = URL(fileURLWithPath: path)
-        let asset = AVURLAsset(url: url, options: nil)
-        guard isValidVideo(asset: asset) else {
-            throw OWSMediaError.failure(description: "Invalid video.")
-        }
-        return try thumbnail(forVideo: asset, maxSizePixels: maxSizePixels)
-    }
-
     public static let videoStillFrameMimeType = MimeType.imageJpeg
 
-    public static func thumbnail(forVideo asset: AVAsset, maxSizePixels: CGSize) throws -> UIImage {
+    public static func generateThumbnail(forVideo asset: AVAsset, maxSizePixels: CGSize) throws -> UIImage {
+        try validateVideoAsset(asset)
         let generator = AVAssetImageGenerator(asset: asset)
         generator.maximumSize = maxSizePixels
         generator.appliesPreferredTrackTransform = true
         let time: CMTime = CMTimeMake(value: 1, timescale: 60)
         let cgImage = try generator.copyCGImage(at: time, actualTime: nil)
-        let image = UIImage(cgImage: cgImage, scale: UIScreen.main.scale, orientation: .up)
-        return image
+        return UIImage(cgImage: cgImage, scale: UIScreen.main.scale, orientation: .up)
     }
 
-    public static func thumbnailData(forVideo asset: AVAsset, maxSizePixels: CGSize) throws -> Data {
-        let image = try thumbnail(forVideo: asset, maxSizePixels: maxSizePixels)
-        owsAssertDebug(Self.videoStillFrameMimeType == MimeType.imageJpeg)
-        guard let data = image.jpegData(compressionQuality: 0.8) else {
-            throw OWSAssertionError("Unable to serialize image!")
-        }
-        return data
-    }
-
-    public static func isValidVideo(path: String) -> Bool {
-        return isValidVideo(path: path, ignoreSize: false)
-    }
-
-    public static func isValidVideo(path: String, ignoreSize: Bool) -> Bool {
-        let pathValidationMethod: (String) -> Bool
-        if ignoreSize {
-            pathValidationMethod = self.isVideoOfValidContentType(path:)
-        } else {
-            pathValidationMethod = self.isVideoOfValidContentTypeAndSize(path:)
-        }
-        guard pathValidationMethod(path) else {
-            Logger.error("Media file has missing or invalid length.")
-            return false
-        }
-
-        let url = URL(fileURLWithPath: path)
-        let asset = AVURLAsset(url: url, options: nil)
-        return isValidVideo(asset: asset)
-    }
-
-    public static func isVideoOfValidContentTypeAndSize(path: String) -> Bool {
-        return isVideoOfValidContentType(path: path)
-            && isVideoOfValidSize(path: path)
-    }
-
-    public static func isVideoOfValidContentType(path: String) -> Bool {
-        guard FileManager.default.fileExists(atPath: path) else {
-            Logger.error("Media file missing.")
-            return false
-        }
-        let fileExtension = URL(fileURLWithPath: path).pathExtension
-        guard let contentType = MimeTypeUtil.mimeTypeForFileExtension(fileExtension) else {
-            Logger.error("Media file has unknown content type.")
-            return false
+    public static func validateVideoExtension(ofPath path: String) throws {
+        guard let contentType = MimeTypeUtil.mimeTypeForFileExtension((path as NSString).pathExtension) else {
+            throw OWSGenericError("video file has unknown content type")
         }
         guard MimeTypeUtil.isSupportedVideoMimeType(contentType) else {
-            Logger.error("Media file has invalid content type.")
-            return false
+            throw OWSGenericError("video file has invalid content type")
         }
-        return true
     }
 
-    public static func isVideoOfValidSize(path: String) -> Bool {
-        guard let fileSize = OWSFileSystem.fileSize(ofPath: path) else {
-            Logger.error("Media file has unknown length.")
-            return false
+    public static func validateVideoSize(atPath path: String) throws {
+        let fileSize = try OWSFileSystem.fileSize(ofPath: path)
+        guard fileSize <= kMaxFileSizeVideo else {
+            throw OWSGenericError("video file is too large")
         }
-        return fileSize.uintValue <= kMaxFileSizeVideo
     }
 
-    public static func isValidVideo(asset: AVAsset) -> Bool {
+    public static func validateVideoAsset(atPath path: String) throws {
+        let asset = AVURLAsset(url: URL(fileURLWithPath: path), options: nil)
+        try validateVideoAsset(asset)
+    }
+
+    public static func validateVideoAsset(_ asset: AVAsset) throws {
         var maxTrackSize = CGSize.zero
         for track: AVAssetTrack in asset.tracks(withMediaType: .video) {
             let trackSize: CGSize = track.naturalSize
@@ -190,25 +134,11 @@ public enum OWSMediaUtils {
             maxTrackSize.height = max(maxTrackSize.height, trackSize.height)
         }
         if maxTrackSize.width < 1.0 || maxTrackSize.height < 1.0 {
-            Logger.error("Invalid video size: \(maxTrackSize)")
-            return false
+            throw OWSGenericError("invalid video size: \(maxTrackSize)")
         }
         if maxTrackSize.width > kMaxVideoDimensions || maxTrackSize.height > kMaxVideoDimensions {
-            Logger.error("Invalid video dimensions: \(maxTrackSize)")
-            return false
+            throw OWSGenericError("invalid video dimensions: \(maxTrackSize)")
         }
-        return true
-    }
-
-    public static func videoResolution(url: URL) -> CGSize {
-        var maxTrackSize = CGSize.zero
-        let asset = AVURLAsset(url: url)
-        for track: AVAssetTrack in asset.tracks(withMediaType: .video) {
-            let trackSize: CGSize = track.naturalSize
-            maxTrackSize.width = max(maxTrackSize.width, trackSize.width)
-            maxTrackSize.height = max(maxTrackSize.height, trackSize.height)
-        }
-        return maxTrackSize
     }
 
     // MARK: Constants
@@ -230,4 +160,20 @@ public enum OWSMediaUtils {
     public static let kMaxVideoDimensions: CGFloat = 4096 // 4k video width
     public static let kMaxAnimatedImageDimensions: UInt = 12 * 1024
     public static let kMaxStillImageDimensions: UInt = 12 * 1024
+
+    /// Text past this size on send (excluding forwarding) is truncated to this length and the rest
+    /// is sent as an oversize text attachment.
+    /// Text past this side on receive is considered an invalid message and will be dropped.
+    public static let kOversizeTextMessageSizeThresholdBytes = 2 * 1024
+    /// Oversize text attachments past this size will be truncated on send.
+    public static let kMaxOversizeTextMessageSendSizeBytes = 64 * 1024
+    /// Oversize text attachments past this size will be rejected on receive. (Larger than send
+    /// to support legacy cases)
+    public static let kMaxOversizeTextMessageReceiveSizeBytes = 128 * 1024
+}
+
+@objc
+class OWSMediaUtilsObjc: NSObject {
+    @objc
+    public static let kOversizeTextMessageSizeThresholdBytes = UInt(OWSMediaUtils.kOversizeTextMessageSizeThresholdBytes)
 }

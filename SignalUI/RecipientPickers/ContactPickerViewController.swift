@@ -92,7 +92,6 @@ open class ContactPickerViewController: OWSViewController, OWSNavigationChildCon
     }
 
     private func applyTheme() {
-        tableViewController.applyTheme(to: self)
         searchBar.searchFieldBackgroundColorOverride = Theme.searchFieldElevatedBackgroundColor
         tableView.sectionIndexColor = Theme.primaryTextColor
         if let owsNavigationController = navigationController as? OWSNavigationController {
@@ -104,15 +103,11 @@ open class ContactPickerViewController: OWSViewController, OWSNavigationChildCon
 
     public var navbarBackgroundColorOverride: UIColor? { tableViewController.tableBackgroundColor }
 
-    public func applyTheme(to viewController: UIViewController) {
-        tableViewController.applyTheme(to: viewController)
-    }
-
     // MARK: Contacts
 
     private let collation = UILocalizedIndexedCollation.current()
 
-    private let allowedContactKeys: [CNKeyDescriptor] = ContactsFrameworkContactStoreAdaptee.fullContactKeys
+    private let allowedContactKeys: [CNKeyDescriptor] = SystemContact.contactKeys
 
     private let sortOrder: CNContactSortOrder = CNContactsUserDefaults.shared().sortOrder
 

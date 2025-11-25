@@ -11,16 +11,16 @@ internal class BackupArchiveMessageAttachmentArchiver: BackupArchiveProtoStreamW
 
     private let attachmentManager: AttachmentManager
     private let attachmentStore: AttachmentStore
-    private let backupAttachmentDownloadManager: BackupAttachmentDownloadManager
+    private let backupAttachmentDownloadScheduler: BackupAttachmentDownloadScheduler
 
     init(
         attachmentManager: AttachmentManager,
         attachmentStore: AttachmentStore,
-        backupAttachmentDownloadManager: BackupAttachmentDownloadManager,
+        backupAttachmentDownloadScheduler: BackupAttachmentDownloadScheduler,
     ) {
         self.attachmentManager = attachmentManager
         self.attachmentStore = attachmentStore
-        self.backupAttachmentDownloadManager = backupAttachmentDownloadManager
+        self.backupAttachmentDownloadScheduler = backupAttachmentDownloadScheduler
     }
 
     /// We tend to deal with all attachments for a given message back-to-back, but in separate steps.
@@ -105,16 +105,13 @@ internal class BackupArchiveMessageAttachmentArchiver: BackupArchiveProtoStreamW
     }
 
     public func archiveOversizeTextAttachment(
-        messageRowId: Int64,
-        messageId: BackupArchive.InteractionUniqueId,
+        _ referencedAttachment: ReferencedAttachment,
         context: BackupArchive.ArchivingContext
     ) -> BackupArchive.ArchiveInteractionResult<BackupProto_FilePointer?> {
-        return self.archiveSingleAttachment(
-            ownerType: .oversizeText,
-            messageId: messageId,
-            messageRowId: messageRowId,
-            context: context
-        )
+        return .success(referencedAttachment.asBackupFilePointer(
+            currentBackupAttachmentUploadEra: context.currentBackupAttachmentUploadEra,
+            attachmentByteCounter: context.attachmentByteCounter,
+        ))
     }
 
     public func archiveLinkPreviewAttachment(
@@ -437,6 +434,7 @@ internal class BackupArchiveMessageAttachmentArchiver: BackupArchiveProtoStreamW
         let errors = attachmentManager.createAttachmentPointers(
             from: attachments,
             uploadEra: uploadEra,
+            attachmentByteCounter: context.attachmentByteCounter,
             tx: context.tx
         )
 
@@ -486,7 +484,7 @@ internal class BackupArchiveMessageAttachmentArchiver: BackupArchiveProtoStreamW
 
         do {
             try results.forEach {
-                try backupAttachmentDownloadManager.enqueueFromBackupIfNeeded(
+                try backupAttachmentDownloadScheduler.enqueueFromBackupIfNeeded(
                     $0,
                     restoreStartTimestampMs: context.startTimestampMs,
                     backupPlan: backupPlan,
@@ -586,22 +584,15 @@ extension ReferencedAttachment {
 
         proto.locatorInfo = self.asBackupFilePointerLocatorInfo(currentBackupAttachmentUploadEra: currentBackupAttachmentUploadEra)
 
-        if let incrementalMacInfo = attachment.mediaTierInfo?.incrementalMacInfo ?? attachment.transitTierInfo?.incrementalMacInfo {
-            proto.incrementalMac = incrementalMacInfo.mac
-            proto.incrementalMacChunkSize = incrementalMacInfo.chunkSize
-        }
-
-        if attachment.mediaName != nil {
-            guard
-                let unencryptedByteCount =
-                    attachment.streamInfo?.unencryptedByteCount
-                    ?? attachment.mediaTierInfo?.unencryptedByteCount
-            else {
-                return proto
-            }
+        if
+            attachment.mediaName != nil,
+            let unencryptedByteCount =
+                attachment.streamInfo?.unencryptedByteCount
+                ?? attachment.mediaTierInfo?.unencryptedByteCount
+        {
             attachmentByteCounter.addToByteCount(
                 attachmentID: attachment.id,
-                byteCount: UInt64(Cryptography.estimatedMediaTierCDNSize(unencryptedSize: unencryptedByteCount))
+                byteCount: Cryptography.estimatedMediaTierCDNSize(unencryptedSize: UInt64(safeCast: unencryptedByteCount)) ?? UInt64(UInt32.max),
             )
         }
 
@@ -624,17 +615,26 @@ extension ReferencedAttachment {
         // When encryption keys don't match: if we reupload (e.g. forward) an
         // attachment after 3+ days, we rotate to a new encryption key; transit
         // tier info uses this new random key and can't be the fallback here.
+        let transitTierInfoToExport: Attachment.TransitTierInfo?
         if
-            let transitTierInfo = attachment.transitTierInfo,
-            transitTierInfo.encryptionKey == attachment.encryptionKey
+            let latestTransitTierInfo = attachment.latestTransitTierInfo,
+            latestTransitTierInfo.encryptionKey == attachment.encryptionKey
         {
-            locatorInfo.transitCdnKey = transitTierInfo.cdnKey
-            locatorInfo.transitCdnNumber = transitTierInfo.cdnNumber
-            locatorInfo.transitTierUploadTimestamp = transitTierInfo.uploadTimestamp
+            transitTierInfoToExport = latestTransitTierInfo
+        } else if let originalTransitTierInfo = attachment.originalTransitTierInfo {
+            transitTierInfoToExport = originalTransitTierInfo
+        } else {
+            transitTierInfoToExport = nil
+        }
+
+        if let transitTierInfoToExport {
+            locatorInfo.transitCdnKey = transitTierInfoToExport.cdnKey
+            locatorInfo.transitCdnNumber = transitTierInfoToExport.cdnNumber
+            locatorInfo.transitTierUploadTimestamp = transitTierInfoToExport.uploadTimestamp
             // We may overwrite this below with plaintext hash integrity check,
             // which is desired. We only use encrypted digest integrity check
             // if we don't have a plaintext hash and DO have a transit tier upload.
-            switch transitTierInfo.integrityCheck {
+            switch transitTierInfoToExport.integrityCheck {
             case .digestSHA256Ciphertext(let data):
                 locatorInfo.integrityCheck = .encryptedDigest(data)
             case .sha256ContentHash(let data):
@@ -642,7 +642,15 @@ extension ReferencedAttachment {
             }
         }
 
-        if let plaintextHash = attachment.sha256ContentHash {
+        // If we have absolutely no present-time source of data
+        // for this attachment, even if we have a plaintext hash because
+        // we _previously_ had data, don't bother exporting it. Its unrecoverable.
+        let isTotallyMissingAttachment =
+            attachment.streamInfo == nil
+            && transitTierInfoToExport == nil
+            && attachment.mediaTierInfo == nil
+
+        if !isTotallyMissingAttachment, let plaintextHash = attachment.sha256ContentHash {
             locatorInfo.integrityCheck = .plaintextHash(plaintextHash)
             if let mediaTierCdnNumber = attachment.mediaTierInfo?.cdnNumber {
                 locatorInfo.mediaTierCdnNumber = mediaTierCdnNumber
@@ -657,7 +665,7 @@ extension ReferencedAttachment {
             if
                 let unencryptedByteCount = attachment.streamInfo?.unencryptedByteCount
                     ?? attachment.mediaTierInfo?.unencryptedByteCount
-                    ?? attachment.transitTierInfo?.unencryptedByteCount
+                    ?? attachment.latestTransitTierInfo?.unencryptedByteCount
             {
                 locatorInfo.size = unencryptedByteCount
             }

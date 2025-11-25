@@ -4,6 +4,7 @@
 //
 
 import UIKit
+import SignalServiceKit
 
 public extension UIViewController {
 
@@ -79,30 +80,41 @@ public extension UIViewController {
 
 public extension UINavigationController {
 
-    func pushViewController(_ viewController: UIViewController,
-                            animated: Bool,
-                            completion: (() -> Void)?) {
-        CATransaction.begin()
-        CATransaction.setCompletionBlock(completion)
+    func pushViewController(
+        _ viewController: UIViewController,
+        animated: Bool,
+        completion: @escaping () -> Void
+    ) {
         pushViewController(viewController, animated: animated)
-        CATransaction.commit()
+        addCompletion(animated: animated, completion: completion)
     }
 
-    func popViewController(animated: Bool,
-                           completion: (() -> Void)?) {
-        CATransaction.begin()
-        CATransaction.setCompletionBlock(completion)
+    func popViewController(
+        animated: Bool,
+        completion: @escaping () -> Void
+    ) {
         popViewController(animated: animated)
-        CATransaction.commit()
+        addCompletion(animated: animated, completion: completion)
     }
 
-    func popToViewController(_ viewController: UIViewController,
-                             animated: Bool,
-                             completion: (() -> Void)?) {
-        CATransaction.begin()
-        CATransaction.setCompletionBlock(completion)
+    func popToViewController(
+        _ viewController: UIViewController,
+        animated: Bool,
+        completion: @escaping () -> Void
+    ) {
         self.popToViewController(viewController, animated: animated)
-        CATransaction.commit()
+        addCompletion(animated: animated, completion: completion)
+    }
+
+    private func addCompletion(animated: Bool, completion: @escaping () -> Void) {
+        guard animated else { return completion() }
+        guard let transitionCoordinator else {
+            owsFailBeta("Missing transitionCoordinator even though transition is animated")
+            return completion()
+        }
+        transitionCoordinator.animate(alongsideTransition: nil) { _ in
+            completion()
+        }
     }
 }
 

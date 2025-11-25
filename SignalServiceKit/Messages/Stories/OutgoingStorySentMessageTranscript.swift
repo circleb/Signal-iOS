@@ -42,7 +42,7 @@ public class OutgoingStorySentMessageTranscript: OWSOutgoingSyncMessage {
             return nil
         }
         return (try? JSONDecoder().decode(
-            [ServiceIdUppercaseString: StoryRecipientState].self, from: encodedRecipientStates
+            [ServiceIdUppercaseString<ServiceId>: StoryRecipientState].self, from: encodedRecipientStates
         ))?.mapKeys(injectiveTransform: { $0.wrappedValue })
     }
 
@@ -95,7 +95,12 @@ public class OutgoingStorySentMessageTranscript: OWSOutgoingSyncMessage {
     private func applyRecipientStates(_ recipientStates: [ServiceId: StoryRecipientState], sentBuilder: SSKProtoSyncMessageSentBuilder) {
         for (serviceId, state) in recipientStates {
             let builder = SSKProtoSyncMessageSentStoryMessageRecipient.builder()
-            builder.setDestinationServiceID(serviceId.serviceIdString)
+            if BuildFlags.serviceIdStrings {
+                builder.setDestinationServiceID(serviceId.serviceIdString)
+            }
+            if BuildFlags.serviceIdBinaryVariableOverhead {
+                builder.setDestinationServiceIDBinary(serviceId.serviceIdBinary)
+            }
             builder.setDistributionListIds(state.contexts.map { $0.uuidString })
             builder.setIsAllowedToReply(state.allowsReplies)
             sentBuilder.addStoryMessageRecipients(builder.buildInfallibly())

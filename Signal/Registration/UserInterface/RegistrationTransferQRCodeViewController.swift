@@ -10,55 +10,46 @@ public import SignalUI
 
 public class RegistrationTransferQRCodeViewController: OWSViewController, OWSNavigationChildController {
 
-    public var preferredNavigationBarStyle: OWSNavigationBarStyle { .solid }
-    public var navbarBackgroundColorOverride: UIColor? { .clear }
-
     public var prefersNavigationBarHidden: Bool { true }
-
-    public override var preferredStatusBarStyle: UIStatusBarStyle {
-        return isQRCodeExpanded ? .lightContent : super.preferredStatusBarStyle
-    }
 
     private lazy var qrCodeView = QRCodeView(contentInset: 8)
 
-    private lazy var expansionButton: ExpansionButton = {
-        let button = ExpansionButton()
-        button.addTarget(self, action: #selector(toggleQRCodeExpansion), for: .touchUpInside)
+    private lazy var expansionButton: UIButton = {
+        let button = UIButton(configuration: .filled(), primaryAction: UIAction { [weak self] _ in
+            self?.toggleQRCodeExpansion()
+        })
+        button.configuration?.cornerStyle = .capsule
+        button.configuration?.imagePadding = 4
+        button.configuration?.titleTextAttributesTransformer = .defaultFont(.dynamicTypeHeadlineClamped)
+        button.configuration?.contentInsets = .init(hMargin: 16, vMargin: 8)
         return button
     }()
 
-    private lazy var qrCodeSizeButtonSpacer = SpacerView()
-
     private lazy var compactQRCodeContainer: UIView = {
         let view = UIView()
-
         view.layer.cornerRadius = 12
-        view.backgroundColor = Theme.secondaryBackgroundColor
+        view.directionalLayoutMargins = .init(margin: 16)
+        view.backgroundColor = .Signal.secondaryBackground
 
         view.addSubview(qrCodeView)
+        qrCodeView.translatesAutoresizingMaskIntoConstraints = false
+
         view.addSubview(expansionButton)
+        expansionButton.translatesAutoresizingMaskIntoConstraints = false
 
-        qrCodeView.autoPinEdge(toSuperviewEdge: .top, withInset: 16)
-        expansionButton.autoPinEdge(.top, to: .bottom, of: qrCodeView, withOffset: 12)
-        expansionButton.autoPinEdge(toSuperviewEdge: .bottom, withInset: 16)
+        NSLayoutConstraint.activate([
+            qrCodeView.widthAnchor.constraint(equalTo: qrCodeView.heightAnchor),
 
-        qrCodeView.autoPinEdge(toSuperviewEdge: .leading, withInset: 16)
-        qrCodeView.autoPinEdge(toSuperviewEdge: .trailing, withInset: 16)
+            qrCodeView.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
+            qrCodeView.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
+            qrCodeView.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
 
-        expansionButton.autoHCenterInSuperview()
+            expansionButton.topAnchor.constraint(equalTo: qrCodeView.bottomAnchor, constant: 12),
+            expansionButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            expansionButton.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
+        ])
 
         return view
-    }()
-
-    private lazy var explanationLabel2: UILabel = {
-        let explanationLabel2 = UILabel.explanationLabelForRegistration(
-            text: OWSLocalizedString(
-                "DEVICE_TRANSFER_QRCODE_EXPLANATION2",
-                comment: "The second explanation for the device transfer qr code view"
-            )
-        )
-        explanationLabel2.setContentHuggingHigh()
-        return explanationLabel2
     }()
 
     private lazy var closeButton: UIButton = {
@@ -72,100 +63,120 @@ public class RegistrationTransferQRCodeViewController: OWSViewController, OWSNav
         return closeButton
     }()
 
-    private let titleLabel = UILabel.titleLabelForRegistration(
-        text: OWSLocalizedString(
-            "DEVICE_TRANSFER_QRCODE_TITLE",
-            comment: "The title for the device transfer qr code view"
+    private let titleLabel: UILabel = {
+        let label = UILabel.titleLabelForRegistration(
+            text: OWSLocalizedString(
+                "DEVICE_TRANSFER_QRCODE_TITLE",
+                comment: "The title for the device transfer qr code view"
+            )
         )
-    )
+        label.accessibilityIdentifier = "onboarding.transferQRCode.titleLabel"
+        return label
+    }()
 
-    private let explanationLabel = UILabel.explanationLabelForRegistration(
-        text: OWSLocalizedString(
-            "DEVICE_TRANSFER_QRCODE_EXPLANATION",
-            comment: "The explanation for the device transfer qr code view"
+    private let explanationLabel: UILabel = {
+        let label = UILabel.explanationLabelForRegistration(
+            text: OWSLocalizedString(
+                "DEVICE_TRANSFER_QRCODE_EXPLANATION",
+                comment: "The explanation for the device transfer qr code view"
+            )
         )
-    )
+        label.accessibilityIdentifier = "onboarding.transferQRCode.bodyLabel"
+        return label
+    }()
 
-    private lazy var helpButton = OWSFlatButton.linkButtonForRegistration(
-        title: OWSLocalizedString(
-            "DEVICE_TRANSFER_QRCODE_NOT_SEEING",
-            comment: "A prompt to provide further explanation if the user is not seeing the transfer on both devices."
-        ),
-        target: self,
-        selector: #selector(didTapHelp)
-    )
+    private lazy var explanationLabel2: UILabel = {
+        let explanationLabel2 = UILabel.explanationLabelForRegistration(
+            text: OWSLocalizedString(
+                "DEVICE_TRANSFER_QRCODE_EXPLANATION2",
+                comment: "The second explanation for the device transfer qr code view"
+            )
+        )
+        return explanationLabel2
+    }()
 
-    private lazy var cancelButton = OWSFlatButton.linkButtonForRegistration(
-        title: CommonStrings.cancelButton,
-        target: self,
-        selector: #selector(didTapCancel)
-    )
+    private lazy var bottomButtonsContainer: UIView = {
+        let helpButton = UIButton(
+            configuration: .mediumBorderless(title: OWSLocalizedString(
+                "DEVICE_TRANSFER_QRCODE_NOT_SEEING",
+                comment: "A prompt to provide further explanation if the user is not seeing the transfer on both devices."
+            )),
+            primaryAction: UIAction { [weak self] _ in
+                self?.didTapHelp()
+            }
+        )
+        helpButton.enableMultilineLabel()
+
+        var cancelButton = UIButton(
+            configuration: .mediumSecondary(title: CommonStrings.cancelButton),
+            primaryAction: UIAction { [weak self] _ in
+                self?.didTapCancel()
+            }
+        )
+
+        return UIStackView.verticalButtonStack(buttons: [ helpButton, cancelButton ], isFullWidthButtons: false)
+    }()
 
     private let url: URL
+
     public init(url: URL) {
         self.url = url
+
         super.init()
+
+        navigationItem.hidesBackButton = true
     }
 
-    override public func loadView() {
-        view = UIView()
+    override public func viewDidLoad() {
+        super.viewDidLoad()
 
-        view.backgroundColor = Theme.backgroundColor
+        view.backgroundColor = .Signal.background
 
-        view.addSubview(titleLabel)
-        titleLabel.accessibilityIdentifier = "onboarding.transferQRCode.titleLabel"
-        titleLabel.setContentHuggingHigh()
-
-        explanationLabel.textColor = Theme.primaryTextColor
-        explanationLabel.accessibilityIdentifier = "onboarding.transferQRCode.bodyLabel"
-        explanationLabel.setContentHuggingHigh()
-
-        qrCodeView.setContentHuggingVerticalLow()
-
-        helpButton.button.titleLabel?.textAlignment = .center
-        helpButton.button.titleLabel?.numberOfLines = 0
-        helpButton.button.titleLabel?.lineBreakMode = .byWordWrapping
-
-        let stackView = UIStackView(arrangedSubviews: [
-            titleLabel,
-            explanationLabel,
-            compactQRCodeContainer,
-            explanationLabel2,
-            UIView.vStretchingSpacer(),
-            helpButton,
-            cancelButton
+        // Put QR code view into full-width container to allow centering of the rounded edges view.
+        let qrCodeContainerView = UIView.container()
+        qrCodeContainerView.addSubview(compactQRCodeContainer)
+        compactQRCodeContainer.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            compactQRCodeContainer.topAnchor.constraint(equalTo: qrCodeContainerView.topAnchor),
+            compactQRCodeContainer.bottomAnchor.constraint(equalTo: qrCodeContainerView.bottomAnchor),
+            compactQRCodeContainer.leadingAnchor.constraint(greaterThanOrEqualTo: qrCodeContainerView.leadingAnchor),
+            compactQRCodeContainer.centerXAnchor.constraint(equalTo: qrCodeContainerView.centerXAnchor),
         ])
-        stackView.axis = .vertical
-        stackView.alignment = .center
-        stackView.spacing = 20
-        view.addSubview(stackView)
-        stackView.autoPinEdge(toSuperviewMargin: .top, withInset: 20)
-        stackView.autoPinLeadingToSuperviewMargin()
-        stackView.autoPinTrailingToSuperviewMargin()
-        stackView.autoPinBottomToSuperviewMargin()
 
-        qrCodeView.autoPinToSquareAspectRatio()
-        qrCodeView.autoMatch(
-            .width,
-            to: .width,
-            of: view,
-            withMultiplier: Constants.compactQRCodeWidthMultiple
-        ).priority = .defaultHigh
-        qrCodeView.autoSetDimension(
-            .width,
-            toSize: Constants.compactQRCodeMinSize,
-            relation: .greaterThanOrEqual
-        ).priority = .required
+        // Content view.
+        let stackView = addStaticContentStackView(
+            arrangedSubviews: [
+                .spacer(withHeight: 16),
+                titleLabel,
+                explanationLabel,
+                qrCodeContainerView,
+                explanationLabel2,
+                .vStretchingSpacer(),
+                bottomButtonsContainer,
+            ],
+            isScrollable: true
+        )
+        stackView.setCustomSpacing(24, after: explanationLabel)
+        stackView.setCustomSpacing(24, after: compactQRCodeContainer)
 
-        for view in [titleLabel, explanationLabel, explanationLabel2] {
-            view.setCompressionResistanceHigh()
-            view.autoPinEdge(toSuperviewMargin: .leading)
-            view.autoPinEdge(toSuperviewMargin: .trailing)
-        }
+        // QR code view.
+        qrCodeView.translatesAutoresizingMaskIntoConstraints = false
+        qrCodeView.setContentHuggingVerticalLow()
+        NSLayoutConstraint.activate([
+            {
+                let constraint = qrCodeView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: Constants.compactQRCodeWidthMultiple)
+                constraint.priority = .defaultHigh
+                return constraint
+            }(),
+            qrCodeView.widthAnchor.constraint(greaterThanOrEqualToConstant: Constants.compactQRCodeMinSize),
+        ])
 
         view.addSubview(closeButton)
-        closeButton.autoPinLeadingToSuperviewMargin()
-        closeButton.autoPinTopToSuperviewMargin(withInset: 8)
+        closeButton.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            closeButton.leadingAnchor.constraint(equalTo: contentLayoutGuide.leadingAnchor),
+            closeButton.topAnchor.constraint(equalTo: contentLayoutGuide.topAnchor, constant: 8),
+        ])
 
         updateExpansionState(animated: false)
 
@@ -173,11 +184,6 @@ public class RegistrationTransferQRCodeViewController: OWSViewController, OWSNav
             target: self,
             action: #selector(compactQRCode)
         ))
-    }
-
-    override public func viewDidLoad() {
-        super.viewDidLoad()
-        navigationItem.setHidesBackButton(true, animated: false)
     }
 
     override public func viewDidAppear(_ animated: Bool) {
@@ -197,6 +203,17 @@ public class RegistrationTransferQRCodeViewController: OWSViewController, OWSNav
         AppEnvironment.shared.deviceTransferServiceRef.stopAcceptingTransfersFromOldDevices()
     }
 
+    public override func viewWillTransition(to size: CGSize, with coordinator: any UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+
+        guard isQRCodeExpanded else { return }
+
+        coordinator.animate { context in
+            self.isQRCodeExpanded = false
+            self.updateExpansionState(animated: false)
+        }
+    }
+
     // MARK: - QR Code expansion
 
     private var isQRCodeExpanded = false
@@ -207,19 +224,20 @@ public class RegistrationTransferQRCodeViewController: OWSViewController, OWSNav
         let otherViews = [
             titleLabel,
             explanationLabel,
-            helpButton,
-            cancelButton
+            bottomButtonsContainer,
         ]
 
         let animations: () -> Void = {
             if self.isQRCodeExpanded {
-                let desiredSize = UIScreen.main.bounds.width - (Constants.expandedQRCodeMargin * 2)
+                let darkTraitCollection = UITraitCollection(userInterfaceStyle: .dark)
+
+                let desiredSize = min(self.contentLayoutGuide.layoutFrame.width, 0.7 * self.contentLayoutGuide.layoutFrame.height) - (Constants.expandedQRCodeMargin * 2)
                 let qrExpandScale = desiredSize / self.qrCodeView.frame.width
                 let currentQRCenterY = self.view.convert(
                     self.qrCodeView.center,
                     from: self.qrCodeView.superview
                 ).y
-                let desiredQRCenterY = self.view.frame.height * 0.4
+                let desiredQRCenterY = self.contentLayoutGuide.layoutFrame.minY + 0.4 * self.contentLayoutGuide.layoutFrame.height
                 let qrExpandYOffset = desiredQRCenterY - currentQRCenterY
                 self.qrCodeView.layer.anchorPoint = .init(x: 0.5, y: 0.5)
                 self.qrCodeView.transform = .scale(qrExpandScale)
@@ -243,24 +261,41 @@ public class RegistrationTransferQRCodeViewController: OWSViewController, OWSNav
                 let labelYOffset = max(0, desiredLabelTop - currentLabelTop)
                 self.explanationLabel2.transform = .translate(CGPoint(x: 0, y: labelYOffset))
 
-                self.explanationLabel2.textColor = Theme.darkThemePrimaryColor
+                self.explanationLabel2.textColor = .Signal.secondaryLabel.resolvedColor(with: darkTraitCollection)
+                self.compactQRCodeContainer.backgroundColor = .clear
+                self.view.backgroundColor = .Signal.background.resolvedColor(with: darkTraitCollection)
+
                 self.closeButton.alpha = 1
                 otherViews.forEach { $0.alpha = 0 }
-                self.compactQRCodeContainer.backgroundColor = .clear
-                self.view.backgroundColor = .ows_black
-                self.qrCodeView.backgroundColor = .ows_white
-                self.expansionButton.mode = .contract
+
+                // Expand/collapse button
+                self.expansionButton.configuration?.title = OWSLocalizedString(
+                    "DEVICE_TRANSFER_CONTRACT_QR_CODE_BUTTON",
+                    comment: "Button shown to contract a QR code and exit the fullscreen view."
+                )
+                self.expansionButton.configuration?.image = Theme.iconImage(.minimize16)
+                self.expansionButton.configuration?.baseForegroundColor = Theme.darkThemePrimaryColor
+                self.expansionButton.configuration?.baseBackgroundColor = Theme.darkThemeSecondaryBackgroundColor
             } else {
                 self.qrCodeView.transform = .identity
                 self.expansionButton.transform = .identity
                 self.explanationLabel2.transform = .identity
-                self.explanationLabel2.textColor = Theme.primaryTextColor
+
+                self.explanationLabel2.textColor = .Signal.secondaryLabel
+                self.compactQRCodeContainer.backgroundColor = .Signal.secondaryBackground
+                self.view.backgroundColor = .Signal.background
+
                 self.closeButton.alpha = 0
                 otherViews.forEach { $0.alpha = 1 }
-                self.compactQRCodeContainer.backgroundColor = Theme.secondaryBackgroundColor
-                self.view.backgroundColor = Theme.backgroundColor
-                self.qrCodeView.backgroundColor = .ows_white
-                self.expansionButton.mode = .expand
+
+                // Expand/collapse button
+                self.expansionButton.configuration?.title = OWSLocalizedString(
+                    "DEVICE_TRANSFER_EXPAND_QR_CODE_BUTTON",
+                    comment: "Button shown to expand a QR code and view it fullscreen."
+                )
+                self.expansionButton.configuration?.image = Theme.iconImage(.maximize16)
+                self.expansionButton.configuration?.baseForegroundColor = .Signal.label
+                self.expansionButton.configuration?.baseBackgroundColor = .clear
             }
         }
 
@@ -291,7 +326,6 @@ public class RegistrationTransferQRCodeViewController: OWSViewController, OWSNav
 
     weak var permissionActionSheetController: ActionSheetController?
 
-    @objc
     func didTapHelp() {
         guard !isQRCodeExpanded else { return }
         let turnOnView = TurnOnPermissionView(
@@ -326,13 +360,14 @@ public class RegistrationTransferQRCodeViewController: OWSViewController, OWSNav
                     )
                 )
             ],
-            button: OWSFlatButton.primaryButtonForRegistration(
-                title: OWSLocalizedString(
+            button: UIButton(
+                configuration: .largePrimary(title: OWSLocalizedString(
                     "LOCAL_NETWORK_PERMISSION_ACTION_SHEET_NEED_HELP",
                     comment: "A button asking the user if they need further help getting their transfer working."
-                ),
-                target: self,
-                selector: #selector(didTapContactSupport)
+                )),
+                primaryAction: UIAction { [weak self] _ in
+                    self?.didTapContactSupport()
+                }
             )
         )
 
@@ -343,19 +378,17 @@ public class RegistrationTransferQRCodeViewController: OWSViewController, OWSNav
         presentActionSheet(actionSheetController)
     }
 
-    @objc
     func didTapCancel() {
         guard !isQRCodeExpanded else { return }
         Logger.info("")
 
-        guard let navigationController = navigationController else {
+        guard let navigationController else {
             return owsFailBeta("unexpectedly missing nav controller")
         }
 
         navigationController.popViewController(animated: true)
     }
 
-    @objc
     func didTapContactSupport() {
         guard !isQRCodeExpanded else { return }
         Logger.info("")
@@ -368,108 +401,6 @@ public class RegistrationTransferQRCodeViewController: OWSViewController, OWSNav
             logDumper: .fromGlobals(),
             fromViewController: self
         )
-    }
-
-    // MARK: - Expand/Contract Button
-
-    private class ExpansionButton: UIButton {
-        enum Mode {
-            case expand
-            case contract
-
-            var text: String {
-                switch self {
-                case .expand:
-                    return OWSLocalizedString(
-                        "DEVICE_TRANSFER_EXPAND_QR_CODE_BUTTON",
-                        comment: "Button shown to expand a QR code and view it fullscreen."
-                    )
-                case .contract:
-                    return OWSLocalizedString(
-                        "DEVICE_TRANSFER_CONTRACT_QR_CODE_BUTTON",
-                        comment: "Button shown to contract a QR code and exit the fullscreen view."
-                    )
-                }
-            }
-
-            var image: UIImage {
-                switch self {
-                case .expand:
-                    return Theme.iconImage(.maximize)
-                case .contract:
-                    return Theme.iconImage(.minimize)
-                }
-            }
-
-            var backgroundColor: UIColor {
-                switch self {
-                case .expand: return .clear
-                case .contract: return Theme.darkThemeSecondaryBackgroundColor
-                }
-            }
-
-            var textColor: UIColor {
-                switch self {
-                case .expand: return Theme.primaryTextColor
-                case .contract: return Theme.darkThemePrimaryColor
-                }
-            }
-        }
-
-        var mode: Mode = .expand {
-            didSet {
-                updateForMode()
-            }
-        }
-
-        private lazy var _imageView = UIImageView()
-        private lazy var _label = UILabel()
-
-        init() {
-            super.init(frame: .zero)
-
-            addSubview(_imageView)
-            addSubview(_label)
-
-            _imageView.autoPinLeadingToSuperviewMargin()
-            _imageView.autoPinEdge(toSuperviewEdge: .leading, withInset: 12)
-            _label.autoPinEdge(.leading, to: .trailing, of: _imageView, withOffset: 4)
-            _imageView.autoPinHeight(toHeightOf: _label, offset: -4)
-            _imageView.autoPinEdge(
-                .top,
-                to: .top,
-                of: _label,
-                withOffset: 2
-            )
-            _label.autoPinEdge(toSuperviewEdge: .top, withInset: 6, relation: .greaterThanOrEqual)
-            _label.autoPinEdge(toSuperviewEdge: .bottom, withInset: 8, relation: .lessThanOrEqual)
-            _label.autoPinEdge(toSuperviewEdge: .trailing, withInset: 16)
-
-            _imageView.autoPinToSquareAspectRatio()
-            _label.setContentHuggingHigh()
-            _imageView.setContentHuggingHigh()
-
-            updateForMode()
-        }
-
-        required init?(coder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
-
-        private func updateForMode() {
-            _label.text = mode.text
-            _imageView.image = mode.image
-            _imageView.tintColor = mode.textColor
-            _label.textColor = mode.textColor
-            backgroundColor = mode.backgroundColor
-            layer.cornerRadius = bounds.height / 2
-        }
-
-        override var bounds: CGRect {
-            didSet {
-                layer.cornerRadius = bounds.height / 2
-            }
-        }
     }
 
     // MARK: - Constants

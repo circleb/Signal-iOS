@@ -36,11 +36,10 @@ class StoryInfoSheet: OWSTableSheetViewController {
         }
     }
 
-    public override func updateTableContents(shouldReload: Bool = true) {
+    public override func tableContents() -> OWSTableContents {
         storyMessage = SSKEnvironment.shared.databaseStorageRef.read { StoryMessage.anyFetch(uniqueId: storyMessage.uniqueId, transaction: $0) ?? storyMessage }
 
         let contents = OWSTableContents()
-        defer { tableViewController.setContents(contents, shouldReload: shouldReload) }
 
         let metadataSection = OWSTableSection()
         metadataSection.hasBackground = false
@@ -49,6 +48,8 @@ class StoryInfoSheet: OWSTableSheetViewController {
         metadataSection.add(.init(customCellBlock: { [weak self] in
             let cell = OWSTableItem.newCell()
             cell.selectionStyle = .none
+            cell.layoutMargins = .zero
+            cell.contentView.layoutMargins = .zero
 
             guard let stackView = self?.buildMetadataStackView() else { return cell }
             cell.contentView.addSubview(stackView)
@@ -63,6 +64,8 @@ class StoryInfoSheet: OWSTableSheetViewController {
         case .incoming:
             contents.add(buildSenderSection())
         }
+
+        return contents
     }
 
     private let byteCountFormatter: ByteCountFormatter = ByteCountFormatter()
@@ -276,6 +279,10 @@ class StoryInfoSheet: OWSTableSheetViewController {
                 )
                 cell.configure(configuration: configuration, transaction: transaction)
             }
+            cell.layoutMargins = .zero
+            cell.contentView.layoutMargins = .zero
+            cell.overrideUserInterfaceStyle = .dark
+
             return cell
         }, actionBlock: { [weak self] in
             guard let self = self else { return }

@@ -4,6 +4,7 @@
 //
 
 public import Foundation
+import LibSignalClient
 public import SignalServiceKit
 public import SignalUI
 
@@ -65,6 +66,10 @@ public class CVLoader: NSObject {
                     return ConversationViewModel.load(for: thread, tx: transaction)
                 }()
 
+                guard let localAci = DependenciesBridge.shared.tsAccountManager.localIdentifiers(tx: transaction)?.aci else {
+                    throw OWSAssertionError("User not registered")
+                }
+
                 let loadContext = CVLoadContext(
                     loadRequest: loadRequest,
                     threadViewModel: threadViewModel,
@@ -72,6 +77,7 @@ public class CVLoader: NSObject {
                     spoilerState: spoilerState,
                     messageLoader: messageLoader,
                     prevRenderState: prevRenderState,
+                    localAci: localAci,
                     transaction: transaction
                 )
 
@@ -166,7 +172,11 @@ public class CVLoader: NSObject {
                 return LoadState(
                     threadViewModel: threadViewModel,
                     conversationViewModel: conversationViewModel,
-                    items: self.buildRenderItems(loadContext: loadContext, updatedInteractionIds: updatedInteractionIds)
+                    items: self.buildRenderItems(
+                        loadContext: loadContext,
+                        updatedInteractionIds: updatedInteractionIds,
+                        localAci: localAci,
+                    )
                 )
             }
 
@@ -193,14 +203,16 @@ public class CVLoader: NSObject {
 
     // MARK: -
 
-    private func buildRenderItems(loadContext: CVLoadContext,
-                                  updatedInteractionIds: Set<String>) -> [CVRenderItem] {
+    private func buildRenderItems(
+        loadContext: CVLoadContext,
+        updatedInteractionIds: Set<String>,
+        localAci: Aci,
+    ) -> [CVRenderItem] {
 
         let conversationStyle = loadContext.conversationStyle
 
         // Don't cache in the reset() case.
-        let canReuseState = (loadRequest.canReuseComponentStates &&
-                                conversationStyle.isEqualForCellRendering(prevRenderState.conversationStyle))
+        let canReuseState = loadRequest.canReuseComponentStates && conversationStyle == prevRenderState.conversationStyle
 
         var itemModelBuilder = CVItemModelBuilder(loadContext: loadContext)
 
@@ -214,7 +226,7 @@ public class CVLoader: NSObject {
             itemModelBuilder.reuseComponentStates(prevRenderState: prevRenderState,
                                                   updatedInteractionIds: updatedInteractionIds)
         }
-        let itemModels: [CVItemModel] = itemModelBuilder.buildItems()
+        let itemModels: [CVItemModel] = itemModelBuilder.buildItems(localAci: localAci)
 
         var renderItems = [CVRenderItem]()
         for itemModel in itemModels {
@@ -319,6 +331,11 @@ public class CVLoader: NSObject {
     ) -> CVRenderItem? {
         AssertIsOnMainThread()
 
+        guard let localAci = DependenciesBridge.shared.tsAccountManager.localIdentifiers(tx: transaction)?.aci else {
+            owsFailDebug("User not registered")
+            return nil
+        }
+
         let threadViewModel = ThreadViewModel(thread: thread,
                                               forChatList: false,
                                               transaction: transaction)
@@ -328,17 +345,22 @@ public class CVLoader: NSObject {
         )
         let avatarBuilder = CVAvatarBuilder(transaction: transaction)
         let itemBuildingContext = CVItemBuildingContextImpl(
+            prevRenderState: nil,
             threadViewModel: threadViewModel,
             viewStateSnapshot: viewStateSnapshot,
             transaction: transaction,
-            avatarBuilder: avatarBuilder
+            avatarBuilder: avatarBuilder,
+            localAci: localAci
         )
-        guard let itemModel = CVItemModelBuilder.buildStandaloneItem(interaction: interaction,
-                                                                     thread: thread,
-                                                                     threadAssociatedData: threadAssociatedData,
-                                                                     threadViewModel: threadViewModel,
-                                                                     itemBuildingContext: itemBuildingContext,
-                                                                     transaction: transaction) else {
+        guard let itemModel = CVItemModelBuilder.buildStandaloneItem(
+            interaction: interaction,
+            thread: thread,
+            threadAssociatedData: threadAssociatedData,
+            threadViewModel: threadViewModel,
+            itemBuildingContext: itemBuildingContext,
+            localAci: localAci,
+            transaction: transaction,
+        ) else {
             owsFailDebug("Couldn't build item model.")
             return nil
         }
@@ -355,6 +377,11 @@ public class CVLoader: NSObject {
 
         guard let thread = interaction.thread(tx: transaction) else {
             owsFailDebug("Missing thread for interaction.")
+            return nil
+        }
+
+        guard let localAci = DependenciesBridge.shared.tsAccountManager.localIdentifiers(tx: transaction)?.aci else {
+            owsFailDebug("User not registered")
             return nil
         }
 
@@ -382,10 +409,12 @@ public class CVLoader: NSObject {
         )
         let avatarBuilder = CVAvatarBuilder(transaction: transaction)
         let itemBuildingContext = CVItemBuildingContextImpl(
+            prevRenderState: nil,
             threadViewModel: threadViewModel,
             viewStateSnapshot: viewStateSnapshot,
             transaction: transaction,
-            avatarBuilder: avatarBuilder
+            avatarBuilder: avatarBuilder,
+            localAci: localAci
         )
         do {
             return try CVComponentState.build(interaction: interaction,
@@ -435,7 +464,7 @@ public class CVLoader: NSObject {
         case .textOnlyMessage, .audio, .genericAttachment, .paymentAttachment, .archivedPaymentAttachment,
                 .undownloadableAttachment,
                 .contactShare, .bodyMedia, .viewOnce, .stickerMessage, .quoteOnlyMessage,
-                .giftBadge:
+                .giftBadge, .poll:
             rootComponent = CVComponentMessage(itemModel: itemModel)
         case .typingIndicator:
             guard let typingIndicator = itemModel.componentState.typingIndicator else {

@@ -66,13 +66,6 @@ class OWSRequestFactoryTest: XCTestCase {
 
     // MARK: - Donations
 
-    func testDonationConfiguration() {
-        let request = OWSRequestFactory.donationConfiguration()
-
-        XCTAssertEqual(request.url.path, "v1/subscription/configuration")
-        XCTAssertEqual(request.method, "GET")
-    }
-
     func testBoostStripeCreatePaymentIntentWithAmount() {
         let testCases: [(paymentMethod: OWSRequestFactory.StripePaymentMethod, expectedValue: String)] = [
             (.card, "CARD"),
@@ -181,21 +174,10 @@ class OWSRequestFactoryTest: XCTestCase {
         XCTAssertEqual(request.method, "PUT")
     }
 
-    func testSubscriptionReceiptCredentialsRequest() {
-        let request = OWSRequestFactory.subscriptionReceiptCredentialsRequest(
-            subscriberID: .init([255, 128]),
-            request: .init([128, 255])
-        )
-
-        XCTAssertEqual(request.url.path, "v1/subscription/_4A/receipt_credentials")
-        XCTAssertEqual(request.method, "POST")
-        XCTAssertEqual(Set(request.parameters.keys), Set(["receiptCredentialRequest"]))
-        XCTAssertEqual(request.parameters["receiptCredentialRequest"] as? String, "gP8=")
-    }
-
     func testSubscriptionRedeemReceiptCredential() {
         let request = OWSRequestFactory.subscriptionRedeemReceiptCredential(
-            receiptCredentialPresentation: .init([255, 128])
+            receiptCredentialPresentation: .init([255, 128]),
+            displayBadgesOnProfile: false,
         )
 
         XCTAssertEqual(request.url.path, "v1/donation/redeem-receipt")
@@ -207,25 +189,6 @@ class OWSRequestFactoryTest: XCTestCase {
         XCTAssertEqual(request.parameters["receiptCredentialPresentation"] as? String, "/4A=")
         XCTAssertEqual(request.parameters["visible"] as? Bool, false)
         XCTAssertEqual(request.parameters["primary"] as? Bool, false)
-    }
-
-    func testBoostReceiptCredentialsWithPaymentIntentId() {
-        let request = OWSRequestFactory.boostReceiptCredentials(
-            with: "abc_123",
-            for: "STRIPE",
-            request: .init([128, 255])
-        )
-
-        XCTAssertEqual(request.url.path, "v1/subscription/boost/receipt_credentials")
-        XCTAssertEqual(request.method, "POST")
-        XCTAssertEqual(Set(request.parameters.keys), Set([
-            "paymentIntentId",
-            "receiptCredentialRequest",
-            "processor",
-        ]))
-        XCTAssertEqual(request.parameters["paymentIntentId"] as? String, "abc_123")
-        XCTAssertEqual(request.parameters["receiptCredentialRequest"] as? String, "gP8=")
-        XCTAssertEqual(request.parameters["processor"] as? String, "STRIPE")
     }
 
     // MARK: - Spam

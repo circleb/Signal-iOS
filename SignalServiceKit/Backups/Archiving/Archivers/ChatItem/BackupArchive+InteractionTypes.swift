@@ -7,15 +7,30 @@ extension BackupArchive {
     public struct InteractionUniqueId: BackupArchive.LoggableId, Hashable {
         let value: String
         let timestamp: UInt64
+        let isPoll: Bool
 
         public init(interaction: TSInteraction) {
             self.value = interaction.uniqueId
             self.timestamp = interaction.timestamp
+            self.isPoll = (interaction as? TSMessage)?.isPoll ?? false
+        }
+
+        /// Constructs an ID for an `InteractionRecord` from which constructing
+        /// a `TSInteraction` fails.
+        public init(invalidInteractionRecord: InteractionRecord) {
+            self.value = invalidInteractionRecord.uniqueId
+            self.timestamp = invalidInteractionRecord.timestamp
+            self.isPoll = invalidInteractionRecord.isPoll ?? false
         }
 
         // MARK: BackupArchive.LoggableId
 
-        public var typeLogString: String { "TSInteraction" }
+        public var typeLogString: String {
+            if isPoll {
+                return "TSInteraction_Poll"
+            }
+            return "TSInteraction"
+        }
         public var idLogString: String { "\(value):\(timestamp)" }
     }
 }

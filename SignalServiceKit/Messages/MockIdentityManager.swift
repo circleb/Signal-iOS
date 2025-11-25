@@ -10,6 +10,7 @@ public import LibSignalClient
 
 open class MockIdentityManager: OWSIdentityManager {
     private let recipientIdFinder: RecipientIdFinder
+    public var generatedKeyPairs = [ECKeyPair]()
 
     init(recipientIdFinder: RecipientIdFinder) {
         self.recipientIdFinder = recipientIdFinder
@@ -57,6 +58,12 @@ open class MockIdentityManager: OWSIdentityManager {
         recipientIdentities[recipient.uniqueId] = nil
     }
 
+    open func generateNewIdentityKeyPair() -> ECKeyPair {
+        let keyPair = ECKeyPair.generateKeyPair()
+        generatedKeyPairs.append(keyPair)
+        return keyPair
+    }
+
     open func libSignalStore(for identity: OWSIdentity, tx: DBReadTransaction) throws -> IdentityStore { fatalError() }
     open func groupContainsUnverifiedMember(_ groupUniqueID: String, tx: DBReadTransaction) -> Bool { fatalError() }
     open func recipientIdentity(for address: SignalServiceAddress, tx: DBReadTransaction) -> OWSRecipientIdentity? { fatalError() }
@@ -78,7 +85,6 @@ open class MockIdentityManager: OWSIdentityManager {
     open func verificationState(for address: SignalServiceAddress, tx: DBReadTransaction) -> VerificationState { fatalError() }
     open func setVerificationState(_ verificationState: VerificationState, of identityKey: Data, for address: SignalServiceAddress, isUserInitiatedChange: Bool, tx: DBWriteTransaction) -> ChangeVerificationStateResult { fatalError() }
     open func processIncomingVerifiedProto(_ verified: SSKProtoVerified, tx: DBWriteTransaction) throws { fatalError() }
-    open func processIncomingPniChangePhoneNumber(proto: SSKProtoSyncMessagePniChangeNumber, updatedPni updatedPniString: String?, preKeyManager: PreKeyManager, tx: DBWriteTransaction) { fatalError() }
     open func shouldSharePhoneNumber(with serviceId: ServiceId, tx: DBReadTransaction) -> Bool { fatalError() }
     open func setShouldSharePhoneNumber(with recipient: Aci, tx: DBWriteTransaction) { fatalError() }
     open func clearShouldSharePhoneNumber(with recipient: Aci, tx: DBWriteTransaction) { fatalError() }

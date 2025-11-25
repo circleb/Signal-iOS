@@ -18,8 +18,6 @@ public enum SentMessageTranscriptTarget {
             return thread
         }
     }
-
-    var threadUniqueId: String { thread.uniqueId }
 }
 
 public enum SentMessageTranscriptType {
@@ -27,8 +25,7 @@ public enum SentMessageTranscriptType {
     public struct Message {
         public let target: SentMessageTranscriptTarget
 
-        public let body: String?
-        public let bodyRanges: MessageBodyRanges?
+        public let body: ValidatedInlineMessageBody?
 
         public let attachmentPointerProtos: [SSKProtoAttachmentPointer]
 
@@ -58,6 +55,8 @@ public enum SentMessageTranscriptType {
 
         public let storyTimestamp: UInt64?
         public let storyAuthorAci: Aci?
+
+        public let makePollCreateBuilder: ((Int64, DBWriteTransaction) throws -> Void)?
     }
 
     public struct PaymentNotification {

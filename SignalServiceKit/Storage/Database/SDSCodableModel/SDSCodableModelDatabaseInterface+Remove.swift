@@ -10,8 +10,6 @@ extension SDSCodableModelDatabaseInterfaceImpl {
         _ model: Model,
         transaction: DBWriteTransaction
     ) {
-        let transaction = SDSDB.shimOnlyBridge(transaction)
-
         guard model.shouldBeSaved else {
             Logger.warn("Skipping delete of \(Model.self).")
             return
@@ -22,41 +20,6 @@ extension SDSCodableModelDatabaseInterfaceImpl {
         removeModelFromDatabase(model, transaction: transaction)
 
         model.anyDidRemove(transaction: transaction)
-    }
-
-    func removeAllModelsWithInstantiation<Model: SDSCodableModel>(
-        modelType: Model.Type,
-        transaction: DBWriteTransaction
-    ) {
-        let transaction = SDSDB.shimOnlyBridge(transaction)
-
-        var uniqueIdsToRemove = [String]()
-        modelType.anyEnumerateUniqueIds(transaction: transaction) { uniqueId, _ in
-            uniqueIdsToRemove.append(uniqueId)
-        }
-
-        var index: Int = 0
-        Batching.loop(batchSize: Batching.kDefaultBatchSize) { stop in
-            guard index < uniqueIdsToRemove.count else {
-                stop.pointee = true
-                return
-            }
-
-            let uniqueIdToRemove = uniqueIdsToRemove[index]
-
-            index += 1
-
-            guard let instanceToRemove: Model = fetchModel(
-                modelType: modelType,
-                uniqueId: uniqueIdToRemove,
-                transaction: transaction
-            ) else {
-                owsFailDebug("Missing instance!")
-                return
-            }
-
-            removeModel(instanceToRemove, transaction: transaction)
-        }
     }
 
     private func removeModelFromDatabase<Model: SDSCodableModel>(

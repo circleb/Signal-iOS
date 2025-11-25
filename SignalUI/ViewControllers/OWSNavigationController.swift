@@ -55,8 +55,8 @@ extension OWSNavigationChildController {
 /// unsaved changes.
 open class OWSNavigationController: UINavigationController {
 
-    private var owsNavigationBar: OWSNavigationBar {
-        return navigationBar as! OWSNavigationBar
+    private var owsNavigationBar: OWSNavigationBar? {
+        return navigationBar as? OWSNavigationBar
     }
 
     private weak var externalDelegate: UINavigationControllerDelegate?
@@ -75,7 +75,11 @@ open class OWSNavigationController: UINavigationController {
     }
 
     public init() {
-        super.init(navigationBarClass: OWSNavigationBar.self, toolbarClass: nil)
+        if #available(iOS 26, *), BuildFlags.iOS26SDKIsAvailable {
+            super.init(nibName: nil, bundle: nil)
+        } else {
+            super.init(navigationBarClass: OWSNavigationBar.self, toolbarClass: nil)
+        }
 
         super.delegate = self
 
@@ -111,6 +115,11 @@ open class OWSNavigationController: UINavigationController {
         super.viewDidLoad()
 
         interactivePopGestureRecognizer?.delegate = self
+#if compiler(>=6.2)
+        if #available(iOS 26.0, *) {
+            interactiveContentPopGestureRecognizer?.delegate = self
+        }
+#endif
     }
 
     open override func viewWillAppear(_ animated: Bool) {
@@ -127,7 +136,7 @@ open class OWSNavigationController: UINavigationController {
     }
 
     public override var preferredStatusBarStyle: UIStatusBarStyle {
-        if let forcedStyle = owsNavigationBar.forcedStatusBarStyle {
+        if let forcedStyle = owsNavigationBar?.forcedStatusBarStyle {
             return forcedStyle
         }
         if !CurrentAppContext().isMainApp {
@@ -135,7 +144,7 @@ open class OWSNavigationController: UINavigationController {
         } else if let presentedViewController = self.presentedViewController {
             return presentedViewController.preferredStatusBarStyle
         } else {
-            return Theme.isDarkThemeEnabled ? .lightContent : .darkContent
+            return super.preferredStatusBarStyle
         }
     }
 
@@ -159,7 +168,7 @@ open class OWSNavigationController: UINavigationController {
         let navChildController = viewController.getFinalNavigationChildController()
         let shouldHideNavbar = navChildController?.prefersNavigationBarHidden ?? false
 
-        if !shouldHideNavbar {
+        if !shouldHideNavbar, let owsNavigationBar {
             // Only update visible attributes if we aren't hiding; if its hidden anyway
             // they won't matter and seeing them blink then hide is weird.
             owsNavigationBar.navbarBackgroundColorOverride = navChildController?.navbarBackgroundColorOverride
@@ -218,7 +227,15 @@ extension OWSNavigationController: UIGestureRecognizerDelegate {
     }
 
     public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+#if compiler(>=6.2)
+        if #available(iOS 26.0, *) {
+            owsAssertDebug(gestureRecognizer === self.interactivePopGestureRecognizer || gestureRecognizer === self.interactiveContentPopGestureRecognizer)
+        } else {
+            owsAssertDebug(gestureRecognizer === self.interactivePopGestureRecognizer)
+        }
+#else
         owsAssertDebug(gestureRecognizer === self.interactivePopGestureRecognizer)
+#endif
 
         guard viewControllers.count > 1 else {
             return false
@@ -241,6 +258,11 @@ extension OWSNavigationController: UINavigationBarDelegate {
     // if a view has unsaved changes.
     public func navigationBar(_ navigationBar: UINavigationBar, shouldPop item: UINavigationItem) -> Bool {
         owsAssertDebug(interactivePopGestureRecognizer?.delegate === self)
+#if compiler(>=6.2)
+        if #available(iOS 26.0, *) {
+            owsAssertDebug(interactiveContentPopGestureRecognizer?.delegate === self)
+        }
+#endif
 
         // wasBackButtonClicked is true if the back button was pressed but not
         // if a back gesture was performed or if the view is popped programmatically.
