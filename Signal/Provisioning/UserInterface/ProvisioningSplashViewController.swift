@@ -138,8 +138,8 @@ class ProvisioningSplashViewController: ProvisioningBaseViewController {
 
         view.bringSubviewToFront(modeSwitchButton)
         
-        primaryView.addSubview(stackView)
-        stackView.autoPinEdgesToSuperviewMargins()
+        // stackView is already added to view via addStaticContentStackView
+        // No need to add it again
         
         // If SSO was enabled before view loaded, update UI now
         if isSSOEnabled {
@@ -148,9 +148,7 @@ class ProvisioningSplashViewController: ProvisioningBaseViewController {
         }
     }
 
-    override func shouldShowBackButton() -> Bool {
-        return false
-    }
+
 
     // MARK: - SSO Integration
 

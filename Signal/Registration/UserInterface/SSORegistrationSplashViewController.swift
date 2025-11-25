@@ -36,8 +36,11 @@ public class SSORegistrationSplashViewController: OWSViewController {
     // UI Components
     private let stackView = UIStackView()
     private lazy var ssoLoginButton: OWSFlatButton = {
-        let button = OWSFlatButton.primaryButtonForRegistration(
+        let button = OWSFlatButton.button(
             title: "Sign in with Heritage SSO",
+            font: UIFont.dynamicTypeBody.semibold(),
+            titleColor: UIColor.Signal.label,
+            backgroundColor: UIColor.Signal.ultramarine,
             target: self,
             selector: #selector(handleSSOLogin)
         )
@@ -47,16 +50,22 @@ public class SSORegistrationSplashViewController: OWSViewController {
     private let welcomeLabel = UILabel()
     private let setupOptionsStackView = UIStackView()
     private lazy var createAccountButton: OWSFlatButton = {
-        let button = OWSFlatButton.primaryButtonForRegistration(
+        let button = OWSFlatButton.button(
             title: "Configure Chat",
+            font: UIFont.dynamicTypeBody.semibold(),
+            titleColor: UIColor.Signal.label,
+            backgroundColor: UIColor.Signal.ultramarine,
             target: self,
             selector: #selector(createAccountPressed)
         )
         return button
     }()
     private lazy var transferAccountButton: OWSFlatButton = {
-        let button = OWSFlatButton.secondaryButtonForRegistration(
+        let button = OWSFlatButton.button(
             title: "Transfer chats from Signal",
+            font: UIFont.dynamicTypeBody.semibold(),
+            titleColor: UIColor.Signal.secondaryLabel,
+            backgroundColor: UIColor.Signal.secondaryFill,
             target: self,
             selector: #selector(transferAccountPressed)
         )

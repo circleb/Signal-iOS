@@ -30,8 +30,11 @@ class SSOAuthenticationViewController: OWSViewController {
     private let titleLabel = UILabel()
     private let subtitleLabel = UILabel()
     private lazy var loginButton: OWSFlatButton = {
-        let button = OWSFlatButton.primaryButtonForRegistration(
+        let button = OWSFlatButton.button(
             title: "Sign in with Heritage SSO",
+            font: UIFont.dynamicTypeBody.semibold(),
+            titleColor: UIColor.Signal.label,
+            backgroundColor: UIColor.Signal.ultramarine,
             target: self,
             selector: #selector(handleSSOLogin)
         )
@@ -40,8 +43,11 @@ class SSOAuthenticationViewController: OWSViewController {
     private let loadingIndicator = UIActivityIndicatorView(style: .large)
     private let errorLabel = UILabel()
     private lazy var retryButton: OWSFlatButton = {
-        let button = OWSFlatButton.primaryButtonForRegistration(
+        let button = OWSFlatButton.button(
             title: "Retry SSO Login",
+            font: UIFont.dynamicTypeBody.semibold(),
+            titleColor: UIColor.Signal.label,
+            backgroundColor: UIColor.Signal.ultramarine,
             target: self,
             selector: #selector(handleSSOLogin)
         )
