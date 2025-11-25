@@ -353,38 +353,8 @@ class DonationSettingsViewController: OWSTableViewController2 {
     }
 
     private func otherWaysToDonateSection() -> OWSTableSection? {
-        guard Self.canSendGiftBadges else { return nil }
-
-        let title = OWSLocalizedString(
-            "DONATION_VIEW_OTHER_WAYS_TO_DONATE_TITLE",
-            comment: "Title for the \"other ways to donate\" section on the donation view."
-        )
-        let section = OWSTableSection(title: title)
-
-        section.add(.disclosureItem(
-            icon: .donateGift,
-            withText: OWSLocalizedString(
-                "DONATION_VIEW_DONATE_ON_BEHALF_OF_A_FRIEND",
-                comment: "Title for the \"donate for a friend\" button on the donation view."
-            ),
-            actionBlock: { [weak self] in
-                guard let self = self else { return }
-
-                // It's possible (but unlikely) to lose the ability to send gifts while this button is
-                // visible. For example, Apple Pay could be disabled in parental controls after this
-                // screen is opened.
-                guard Self.canSendGiftBadges else {
-                    // We might want to show a better UI here, but making the button a no-op is
-                    // preferable to launching the view controller.
-                    return
-                }
-
-                let vc = BadgeGiftingChooseBadgeViewController()
-                self.navigationController?.pushViewController(vc, animated: true)
-            }
-        ))
-
-        return section
+        // Badge gifting disabled
+        return nil
     }
 
     private func moreSection(

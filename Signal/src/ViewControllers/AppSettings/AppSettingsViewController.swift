@@ -35,8 +35,6 @@ class AppSettingsViewController: OWSTableViewController2 {
         navigationItem.rightBarButtonItem = .doneButton(dismissingFrom: self)
 
         defaultSeparatorInsetLeading = Self.cellHInnerMargin + 24 + OWSTableItem.iconSpacing
-
-        updateHasExpiredGiftBadge()
         updateTableContents()
 
         let tsAccountManager = DependenciesBridge.shared.tsAccountManager
@@ -61,19 +59,7 @@ class AppSettingsViewController: OWSTableViewController2 {
             object: nil
         )
 
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(subscriptionStateDidChange),
-            name: DonationReceiptCredentialRedemptionJob.didSucceedNotification,
-            object: nil
-        )
 
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(hasExpiredGiftBadgeDidChange),
-            name: .hasExpiredGiftBadgeDidChangeNotification,
-            object: nil
-        )
     }
 
     private func updateLocalUserProfile(tx: DBReadTransaction) {
@@ -97,29 +83,7 @@ class AppSettingsViewController: OWSTableViewController2 {
         updateTableContents()
     }
 
-    @objc
-    private func subscriptionStateDidChange() {
-        AssertIsOnMainThread()
 
-        updateTableContents()
-    }
-
-    private var hasExpiredGiftBadge: Bool = false
-
-    private func updateHasExpiredGiftBadge() {
-        self.hasExpiredGiftBadge = DonationSettingsViewController.shouldShowExpiredGiftBadgeSheetWithSneakyTransaction()
-    }
-
-    @objc
-    private func hasExpiredGiftBadgeDidChange() {
-        AssertIsOnMainThread()
-
-        let oldValue = self.hasExpiredGiftBadge
-        self.updateHasExpiredGiftBadge()
-        if oldValue != self.hasExpiredGiftBadge {
-            self.updateTableContents()
-        }
-    }
 
     override func themeDidChange() {
         super.themeDidChange()
@@ -181,27 +145,7 @@ class AppSettingsViewController: OWSTableViewController2 {
                 }
             ))
         }
-        section1.add(.init(customCellBlock: { [weak self] in
-            guard let self = self else { return UITableViewCell() }
-            let accessoryContentView: UIView?
-            if self.hasExpiredGiftBadge {
-                let imageView = UIImageView(image: UIImage(imageLiteralResourceName: "info-fill"))
-                imageView.tintColor = Theme.accentBlueColor
-                imageView.autoSetDimensions(to: CGSize(square: 24))
-                accessoryContentView = imageView
-            } else {
-                accessoryContentView = nil
-            }
-            return OWSTableItem.buildCell(
-                icon: .settingsDonate,
-                itemName: OWSLocalizedString("SETTINGS_DONATE", comment: "Title for the 'donate to signal' link in settings."),
-                accessoryType: .disclosureIndicator,
-                accessoryContentView: accessoryContentView,
-                accessibilityIdentifier: UIView.accessibilityIdentifier(in: self, name: "donate")
-            )
-        }, actionBlock: { [weak self] in
-            self?.didTapDonate()
-        }))
+
         contents.add(section1)
 
         let section2 = OWSTableSection()
@@ -572,12 +516,7 @@ class AppSettingsViewController: OWSTableViewController2 {
         return usernameLinkButton
     }
 
-    private func didTapDonate() {
-        navigationController?.pushViewController(
-            DonationSettingsViewController(),
-            animated: true
-        )
-    }
+
 }
 
 extension AppSettingsViewController: UsernameChangeDelegate {

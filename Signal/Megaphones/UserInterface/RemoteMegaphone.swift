@@ -85,68 +85,13 @@ class RemoteMegaphone: MegaphoneView {
             markAsCompleteWithSneakyTransaction()
             dismiss()
         case .donate:
-            let done = { [weak self] in
-                guard let self else { return }
-                // Snooze regardless of outcome.
-                self.markAsSnoozedWithSneakyTransaction()
-                self.dismiss(animated: false)
-            }
-
-            guard DonationUtilities.canDonateInAnyWay(
-                tsAccountManager: DependenciesBridge.shared.tsAccountManager,
-            ) else {
-                done()
-                DonationViewsUtil.openDonateWebsite()
-                return
-            }
-
-            let donateVc = DonateViewController(preferredDonateMode: .oneTime) { finishResult in
-                let frontVc = { CurrentAppContext().frontmostViewController() }
-                switch finishResult {
-                case let .completedDonation(donateSheet, receiptCredentialSuccessMode):
-                    donateSheet.dismiss(animated: true) {
-                        guard
-                            let frontVc = frontVc(),
-                            let badgeThanksSheetPresenter = BadgeThanksSheetPresenter.fromGlobalsWithSneakyTransaction(
-                                successMode: receiptCredentialSuccessMode
-                            )
-                        else { return }
-
-                        Task {
-                            await badgeThanksSheetPresenter.presentAndRecordBadgeThanks(
-                                fromViewController: frontVc
-                            )
-                        }
-                    }
-                case let .monthlySubscriptionCancelled(donateSheet, toastText):
-                    donateSheet.dismiss(animated: true) {
-                        frontVc()?.presentToast(text: toastText)
-                    }
-                }
-            }
-
-            let navController = OWSNavigationController(rootViewController: donateVc)
-            fromViewController.present(navController, animated: true, completion: done)
+            // Donation disabled - snooze and dismiss
+            markAsSnoozedWithSneakyTransaction()
+            dismiss()
         case .donateFriend:
-            let done = { [weak self] in
-                guard let self else { return }
-                // Snooze regardless of outcome.
-                self.markAsSnoozedWithSneakyTransaction()
-                self.dismiss(animated: false)
-            }
-
-            guard DonationUtilities.canDonate(
-                inMode: .gift,
-                tsAccountManager: DependenciesBridge.shared.tsAccountManager,
-            ) else {
-                done()
-                DonationViewsUtil.openDonateWebsite()
-                return
-            }
-
-            let donateVc = BadgeGiftingChooseBadgeViewController()
-            let navController = OWSNavigationController(rootViewController: donateVc)
-            fromViewController.present(navController, animated: true, completion: done)
+            // Badge gifting disabled - snooze and dismiss
+            markAsSnoozedWithSneakyTransaction()
+            dismiss()
         case .unrecognized(let actionId):
             owsFailDebug("Unrecognized action with ID \(actionId) should never have made it into \(buttonDescriptor) button!")
             dismiss()
