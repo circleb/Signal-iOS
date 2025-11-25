@@ -11203,14 +11203,6 @@
 				B5D17C9D2E4273C500799EBD /* TSAccountManager.swift */,
 				B5D17C9E2E4273C500799EBD /* TSAccountManagerImpl.swift */,
 				B5D17C9F2E4273C500799EBD /* TSAccountManagerObjcBridge.swift */,
-				B5D17CA02E4273C500799EBD /* TSRegistrationState.swift */,
-			);
-			path = TSAccountManager;
-			sourceTree = "<group>";
-		};
-		B5D17CAF2E4273C500799EBD /* Account */ = {
-			isa = PBXGroup;
-			children = (
 				B5F0373B2E4EF50500F529AF /* PinnedURL.swift */,
 				B5F0373C2E4EF50500F529AF /* PinnedURLsService.swift */,
 				B5F0373D2E4EF50500F529AF /* PinnedURLsStore.swift */,
@@ -11222,7 +11214,6 @@
 				B524D3862E4305F6004B1E4D /* WebAppsService.swift */,
 				B524D3872E4305F6004B1E4D /* WebAppsStore.swift */,
 				B5D17C8D2E4273C500799EBD /* PhoneNumberDiscoverabilityManager */,
-
 				B5D17CA12E4273C500799EBD /* TSAccountManager */,
 				B5D17CA22E4273C500799EBD /* IdentityKeyChecker.swift */,
 				B5D17CA32E4273C500799EBD /* IdentityKeyMismatchManager.swift */,
@@ -13780,7 +13771,7 @@
 		F9C5C898289451B900548EEE /* SignalServiceKit */ = {
 			isa = PBXGroup;
 			children = (
-				B5D17CAF2E4273C500799EBD /* Account */,
+				F9C5C9BA289453B100548EEE /* Account */,
 				7255A4C32B98D5A800E95368 /* Attachments */,
 				720547F12B9C8F5E00E2CF2F /* Avatars */,
 				665C0D5A2ADF537000539A37 /* Backups */,
