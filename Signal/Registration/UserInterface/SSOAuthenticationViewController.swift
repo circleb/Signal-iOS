@@ -31,7 +31,7 @@ class SSOAuthenticationViewController: OWSViewController {
     private let subtitleLabel = UILabel()
     private lazy var loginButton: UIButton = {
         let button = UIButton(
-            configuration: .largePrimary(title: "Sign in with Heritage SSO"),
+            configuration: .largePrimary(title: SSOStrings.signInWithHeritageSSO),
             primaryAction: UIAction { [weak self] _ in
                 self?.handleSSOLogin()
             }
@@ -42,7 +42,7 @@ class SSOAuthenticationViewController: OWSViewController {
     private let errorLabel = UILabel()
     private lazy var retryButton: UIButton = {
         let button = UIButton(
-            configuration: .largePrimary(title: "Retry SSO Login"),
+            configuration: .largePrimary(title: SSOStrings.retrySSOLogin),
             primaryAction: UIAction { [weak self] _ in
                 self?.handleSSOLogin()
             }

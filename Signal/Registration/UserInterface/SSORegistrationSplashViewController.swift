@@ -37,7 +37,7 @@ public class SSORegistrationSplashViewController: OWSViewController {
     private let stackView = UIStackView()
     private lazy var ssoLoginButton: UIButton = {
         let button = UIButton(
-            configuration: .largePrimary(title: "Sign in with Heritage SSO"),
+            configuration: .largePrimary(title: SSOStrings.signInWithHeritageSSO),
             primaryAction: UIAction { [weak self] _ in
                 self?.handleSSOLogin()
             }
@@ -45,7 +45,7 @@ public class SSORegistrationSplashViewController: OWSViewController {
         return button
     }()
     private lazy var registerButton: UIButton = {
-        var config = UIButton.Configuration.largePrimary(title: "Register with HCP")
+        var config = UIButton.Configuration.largePrimary(title: SSOStrings.registerWithHCP)
         config.baseBackgroundColor = UIColor.Signal.secondaryFill
         config.baseForegroundColor = UIColor.Signal.label
         let button = UIButton(
@@ -61,7 +61,7 @@ public class SSORegistrationSplashViewController: OWSViewController {
     private let setupOptionsStackView = UIStackView()
     private lazy var createAccountButton: UIButton = {
         let button = UIButton(
-            configuration: .largePrimary(title: "Configure Chat"),
+            configuration: .largePrimary(title: SSOStrings.configureChat),
             primaryAction: UIAction { [weak self] _ in
                 self?.createAccountPressed()
             }
@@ -69,7 +69,7 @@ public class SSORegistrationSplashViewController: OWSViewController {
         return button
     }()
     private lazy var transferAccountButton: UIButton = {
-        var config = UIButton.Configuration.largePrimary(title: "Transfer chats from Signal")
+        var config = UIButton.Configuration.largePrimary(title: SSOStrings.transferChatsFromSignal)
         config.baseBackgroundColor = UIColor.Signal.secondaryFill
         config.baseForegroundColor = UIColor.Signal.secondaryLabel
         let button = UIButton(
@@ -85,7 +85,7 @@ public class SSORegistrationSplashViewController: OWSViewController {
     private let errorLabel = UILabel()
     private lazy var retryButton: UIButton = {
         let button = UIButton(
-            configuration: .largePrimary(title: "Retry"),
+            configuration: .largePrimary(title: SSOStrings.retry),
             primaryAction: UIAction { [weak self] _ in
                 self?.handleSSOLogin()
             }
@@ -348,7 +348,7 @@ public class SSORegistrationSplashViewController: OWSViewController {
     @objc
     private func handleRegistration() {
         let url = URL(string: "https://my.homesteadheritage.org/register")!
-        let webVC = SSOWebViewController(url: url, title: "Register with HCP")
+        let webVC = SSOWebViewController(url: url, title: SSOStrings.registerWithHCP)
         let navController = UINavigationController(rootViewController: webVC)
         navController.modalPresentationStyle = .pageSheet
         present(navController, animated: true)

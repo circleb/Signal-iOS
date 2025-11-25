@@ -121,3 +121,12 @@ extension Registration {
         }
     }
 }
+
+public enum SSOStrings {
+    public static let signInWithHeritageSSO = "Sign In"
+    public static let registerWithHCP = "Register"
+    public static let retrySSOLogin = "Retry Login"
+    public static let retry = "Retry"
+    public static let configureChat = "Configure Chat"
+    public static let transferChatsFromSignal = "Transfer chats from Signal"
+}

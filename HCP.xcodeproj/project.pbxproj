@@ -1705,6 +1705,7 @@
 		B58EC7AF2ED58F4400708A56 /* PreKeyUploadBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6659A0302A7C5B9700066AB7 /* PreKeyUploadBundle.swift */; };
 		B58EC7B02ED58FED00708A56 /* PreKeyTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17345BA2A5E000300C6426D /* PreKeyTarget.swift */; };
 		B58EC7B12ED5901D00708A56 /* MockPreKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6659A0272A7C11ED00066AB7 /* MockPreKeyManager.swift */; };
+
 		B5B894402E4FA7C900472CA9 /* SSOAvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5B8943E2E4FA7C900472CA9 /* SSOAvatarView.swift */; };
 		B5B894412E4FA7C900472CA9 /* SSOAccountMenuActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5B8943C2E4FA7C900472CA9 /* SSOAccountMenuActions.swift */; };
 		B5D17C732E42711B00799EBD /* SSOAuthenticationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C712E42711B00799EBD /* SSOAuthenticationViewController.swift */; };
@@ -5708,6 +5709,7 @@
 		B58EC7A92ED5855B00708A56 /* PreKeyTaskAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreKeyTaskAPIClient.swift; sourceTree = "<group>"; };
 		B58EC7AB2ED5869100708A56 /* PreKeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreKeyManager.swift; sourceTree = "<group>"; };
 		B58EC7AC2ED5869100708A56 /* PreKeyTaskManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreKeyTaskManager.swift; sourceTree = "<group>"; };
+
 		B5B8943C2E4FA7C900472CA9 /* SSOAccountMenuActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAccountMenuActions.swift; sourceTree = "<group>"; };
 		B5B8943E2E4FA7C900472CA9 /* SSOAvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAvatarView.swift; sourceTree = "<group>"; };
 		B5D17C712E42711B00799EBD /* SSOAuthenticationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAuthenticationViewController.swift; sourceTree = "<group>"; };
@@ -10664,6 +10666,7 @@
 		76EB04C818170B33006006FC /* util */ = {
 			isa = PBXGroup;
 			children = (
+
 				F9B3A92C293553930071EB95 /* ASWebAuthenticationSession+Util.swift */,
 				34F1071F26D005340053EF4D /* BatchUpdate.swift */,
 				4C751BE423FA0284002A8AF1 /* ContactSupportActionSheet.swift */,
@@ -17021,6 +17024,7 @@
 				8847E6F226A0EFBD0063E319 /* AvatarEditViewController.swift in Sources */,
 				8847E6F026A078200063E319 /* AvatarHistoryManager.swift in Sources */,
 				883A7FC3269F4C0000841DF9 /* AvatarSettingsViewController.swift in Sources */,
+
 				4C2F454F214C00E1004871FF /* AvatarTableViewCell.swift in Sources */,
 				32C584A825B81C6600256804 /* AvatarViewController.swift in Sources */,
 				B95A765C2B76C5BB00AA7E97 /* AvatarViewPresentationContextProvider.swift in Sources */,

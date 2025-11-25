@@ -105,7 +105,7 @@ class ProvisioningSplashViewController: ProvisioningBaseViewController {
 
         // SSO Login Button
         let ssoLoginButton = UIButton(
-            configuration: .largePrimary(title: "Sign in with Heritage SSO"),
+            configuration: .largePrimary(title: SSOStrings.signInWithHeritageSSO),
             primaryAction: UIAction { [weak self] _ in
                 self?.handleSSOLogin()
             }
