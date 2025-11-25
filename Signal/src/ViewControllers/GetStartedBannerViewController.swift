@@ -141,6 +141,10 @@ class GetStartedBannerViewController: UIViewController, UICollectionViewDelegate
     }
 
     func fetchContent() -> [GetStartedBannerEntry] {
+        // Disabled: Get Started cards are turned off
+        return []
+        
+        /* Original implementation:
         SSKEnvironment.shared.databaseStorageRef.read { readTx -> [GetStartedBannerEntry] in
             var activeCards = Self.getActiveCards(readTx: readTx)
 
@@ -177,6 +181,7 @@ class GetStartedBannerViewController: UIViewController, UICollectionViewDelegate
 
             return activeCards
         }
+        */
     }
 
     func updateContent() {
