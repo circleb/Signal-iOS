@@ -30,7 +30,7 @@ class ProvisioningTransferChoiceViewController: ProvisioningBaseViewController {
             "ONBOARDING_CHOOSE_RESTORE_METHOD_IPAD_WARNING",
             comment: "Warning message for iPad users about phone requirement"
         )
-        ipadWarningLabel.font = .dynamicTypeBody2.medium()
+        ipadWarningLabel.font = .dynamicTypeFootnote.medium()
         ipadWarningLabel.textColor = .systemOrange
         ipadWarningLabel.numberOfLines = 0
         ipadWarningLabel.textAlignment = .center
