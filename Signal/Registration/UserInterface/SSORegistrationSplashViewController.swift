@@ -35,56 +35,49 @@ public class SSORegistrationSplashViewController: OWSViewController {
 
     // UI Components
     private let stackView = UIStackView()
-    private lazy var ssoLoginButton: OWSFlatButton = {
-        let button = OWSFlatButton.button(
-            title: "Sign in with Heritage SSO",
-            font: UIFont.dynamicTypeBody.semibold(),
-            titleColor: UIColor.Signal.label,
-            backgroundColor: UIColor.Signal.ultramarine,
-            target: self,
-            selector: #selector(handleSSOLogin)
+    private lazy var ssoLoginButton: UIButton = {
+        let button = UIButton(
+            configuration: .largePrimary(title: "Sign in with Heritage SSO"),
+            primaryAction: UIAction { [weak self] _ in
+                self?.handleSSOLogin()
+            }
         )
         return button
     }()
     private let howdyLabel = UILabel()
     private let welcomeLabel = UILabel()
     private let setupOptionsStackView = UIStackView()
-    private lazy var createAccountButton: OWSFlatButton = {
-        let button = OWSFlatButton.button(
-            title: "Configure Chat",
-            font: UIFont.dynamicTypeBody.semibold(),
-            titleColor: UIColor.Signal.label,
-            backgroundColor: UIColor.Signal.ultramarine,
-            target: self,
-            selector: #selector(createAccountPressed)
+    private lazy var createAccountButton: UIButton = {
+        let button = UIButton(
+            configuration: .largePrimary(title: "Configure Chat"),
+            primaryAction: UIAction { [weak self] _ in
+                self?.createAccountPressed()
+            }
         )
         return button
     }()
-    private lazy var transferAccountButton: OWSFlatButton = {
-        let button = OWSFlatButton.button(
-            title: "Transfer chats from Signal",
-            font: UIFont.dynamicTypeBody.semibold(),
-            titleColor: UIColor.Signal.secondaryLabel,
-            backgroundColor: UIColor.Signal.secondaryFill,
-            target: self,
-            selector: #selector(transferAccountPressed)
+    private lazy var transferAccountButton: UIButton = {
+        var config = UIButton.Configuration.largePrimary(title: "Transfer chats from Signal")
+        config.baseBackgroundColor = UIColor.Signal.secondaryFill
+        config.baseForegroundColor = UIColor.Signal.secondaryLabel
+        let button = UIButton(
+            configuration: config,
+            primaryAction: UIAction { [weak self] _ in
+                self?.transferAccountPressed()
+            }
         )
         return button
     }()
     private let loadingIndicator = UIActivityIndicatorView(style: .large)
     private let errorView = UIView()
     private let errorLabel = UILabel()
-    private lazy var retryButton: OWSFlatButton = {
-        let button = OWSFlatButton()
-        button.setTitle(title: "Retry", font: UIFont.dynamicTypeBodyClamped.semibold(), titleColor: .white)
-        button.setBackgroundColors(upColor: .ows_accentBlue)
-        button.cornerRadius = 12
-        button.setSize(width: 280, height: 44)
-        button.addTarget(target: self, selector: #selector(handleSSOLogin))
-        
-        // Force the button to maintain its height by overriding any internal constraints
-        button.autoSetDimension(.height, toSize: 44, relation: .equal)
-        
+    private lazy var retryButton: UIButton = {
+        let button = UIButton(
+            configuration: .largePrimary(title: "Retry"),
+            primaryAction: UIAction { [weak self] _ in
+                self?.handleSSOLogin()
+            }
+        )
         return button
     }()
     
@@ -168,13 +161,7 @@ public class SSORegistrationSplashViewController: OWSViewController {
 
         // SSO Login Button
         ssoLoginButton.accessibilityIdentifier = "registration.splash.ssoLoginButton"
-        stackView.addArrangedSubview(ssoLoginButton)
-        ssoLoginButton.autoSetDimension(ALDimension.width, toSize: 280)
-        ssoLoginButton.autoHCenterInSuperview()
-        NSLayoutConstraint.autoSetPriority(.defaultLow) {
-            ssoLoginButton.autoPinEdge(toSuperviewEdge: ALEdge.leading)
-            ssoLoginButton.autoPinEdge(toSuperviewEdge: ALEdge.trailing)
-        }
+        stackView.addArrangedSubview(ssoLoginButton.enclosedInVerticalStackView(isFullWidthButton: true))
 
         // Welcome Label
         welcomeLabel.font = UIFont.dynamicTypeTitle2
@@ -193,23 +180,11 @@ public class SSORegistrationSplashViewController: OWSViewController {
 
         // Create Account Button
         createAccountButton.accessibilityIdentifier = "registration.splash.createAccountButton"
-        setupOptionsStackView.addArrangedSubview(createAccountButton)
-        createAccountButton.autoSetDimension(ALDimension.width, toSize: 280)
-        createAccountButton.autoHCenterInSuperview()
-        NSLayoutConstraint.autoSetPriority(.defaultLow) {
-            createAccountButton.autoPinEdge(toSuperviewEdge: ALEdge.leading)
-            createAccountButton.autoPinEdge(toSuperviewEdge: ALEdge.trailing)
-        }
+        setupOptionsStackView.addArrangedSubview(createAccountButton.enclosedInVerticalStackView(isFullWidthButton: true))
 
         // Transfer Account Button
         transferAccountButton.accessibilityIdentifier = "registration.splash.transferAccountButton"
-        setupOptionsStackView.addArrangedSubview(transferAccountButton)
-        transferAccountButton.autoSetDimension(ALDimension.width, toSize: 280)
-        transferAccountButton.autoHCenterInSuperview()
-        NSLayoutConstraint.autoSetPriority(.defaultLow) {
-            transferAccountButton.autoPinEdge(toSuperviewEdge: ALEdge.leading)
-            transferAccountButton.autoPinEdge(toSuperviewEdge: ALEdge.trailing)
-        }
+        setupOptionsStackView.addArrangedSubview(transferAccountButton.enclosedInVerticalStackView(isFullWidthButton: true))
 
         // Loading Indicator
         loadingIndicator.color = Theme.primaryTextColor
@@ -331,20 +306,6 @@ public class SSORegistrationSplashViewController: OWSViewController {
             // Force layout update to ensure retry button is visible and properly sized
             view.setNeedsLayout()
             view.layoutIfNeeded()
-            
-            // Additional layout update for the error view specifically
-            errorView.setNeedsLayout()
-            errorView.layoutIfNeeded()
-            
-            // Debug: Print button frame to see what's happening
-            print("Retry button frame: \(retryButton.frame)")
-            print("Retry button bounds: \(retryButton.bounds)")
-            print("Retry button height: \(retryButton.frame.height)")
-            print("Retry button internal button height: \(retryButton.button.frame.height)")
-            print("Retry button constraints: \(retryButton.constraints)")
-            
-            // Ensure the retry button is properly configured
-            // The button title and size are already set in setupUI()
         }
     }
 

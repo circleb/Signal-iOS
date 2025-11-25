@@ -29,27 +29,23 @@ class SSOAuthenticationViewController: OWSViewController {
     private let stackView = UIStackView()
     private let titleLabel = UILabel()
     private let subtitleLabel = UILabel()
-    private lazy var loginButton: OWSFlatButton = {
-        let button = OWSFlatButton.button(
-            title: "Sign in with Heritage SSO",
-            font: UIFont.dynamicTypeBody.semibold(),
-            titleColor: UIColor.Signal.label,
-            backgroundColor: UIColor.Signal.ultramarine,
-            target: self,
-            selector: #selector(handleSSOLogin)
+    private lazy var loginButton: UIButton = {
+        let button = UIButton(
+            configuration: .largePrimary(title: "Sign in with Heritage SSO"),
+            primaryAction: UIAction { [weak self] _ in
+                self?.handleSSOLogin()
+            }
         )
         return button
     }()
     private let loadingIndicator = UIActivityIndicatorView(style: .large)
     private let errorLabel = UILabel()
-    private lazy var retryButton: OWSFlatButton = {
-        let button = OWSFlatButton.button(
-            title: "Retry SSO Login",
-            font: UIFont.dynamicTypeBody.semibold(),
-            titleColor: UIColor.Signal.label,
-            backgroundColor: UIColor.Signal.ultramarine,
-            target: self,
-            selector: #selector(handleSSOLogin)
+    private lazy var retryButton: UIButton = {
+        let button = UIButton(
+            configuration: .largePrimary(title: "Retry SSO Login"),
+            primaryAction: UIAction { [weak self] _ in
+                self?.handleSSOLogin()
+            }
         )
         return button
     }()
@@ -150,13 +146,7 @@ class SSOAuthenticationViewController: OWSViewController {
 
         // Login Button
         loginButton.accessibilityIdentifier = "sso.auth.loginButton"
-        stackView.addArrangedSubview(loginButton)
-        loginButton.autoSetDimension(ALDimension.width, toSize: 280)
-        loginButton.autoHCenterInSuperview()
-        NSLayoutConstraint.autoSetPriority(.defaultLow) {
-            loginButton.autoPinEdge(toSuperviewEdge: ALEdge.leading)
-            loginButton.autoPinEdge(toSuperviewEdge: ALEdge.trailing)
-        }
+        stackView.addArrangedSubview(loginButton.enclosedInVerticalStackView(isFullWidthButton: true))
 
         // Loading Indicator
         loadingIndicator.color = Theme.primaryTextColor
@@ -173,13 +163,7 @@ class SSOAuthenticationViewController: OWSViewController {
 
         // Retry Button
         retryButton.accessibilityIdentifier = "sso.auth.retryButton"
-        stackView.addArrangedSubview(retryButton)
-        retryButton.autoSetDimension(ALDimension.width, toSize: 280)
-        retryButton.autoHCenterInSuperview()
-        NSLayoutConstraint.autoSetPriority(.defaultLow) {
-            retryButton.autoPinEdge(toSuperviewEdge: ALEdge.leading)
-            retryButton.autoPinEdge(toSuperviewEdge: ALEdge.trailing)
-        }
+        stackView.addArrangedSubview(retryButton.enclosedInVerticalStackView(isFullWidthButton: true))
 
         // Initially hide loading and error components
         loadingIndicator.isHidden = true
