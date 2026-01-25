@@ -1705,7 +1705,6 @@
 		B58EC7AF2ED58F4400708A56 /* PreKeyUploadBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6659A0302A7C5B9700066AB7 /* PreKeyUploadBundle.swift */; };
 		B58EC7B02ED58FED00708A56 /* PreKeyTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17345BA2A5E000300C6426D /* PreKeyTarget.swift */; };
 		B58EC7B12ED5901D00708A56 /* MockPreKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6659A0272A7C11ED00066AB7 /* MockPreKeyManager.swift */; };
-
 		B5B894402E4FA7C900472CA9 /* SSOAvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5B8943E2E4FA7C900472CA9 /* SSOAvatarView.swift */; };
 		B5B894412E4FA7C900472CA9 /* SSOAccountMenuActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5B8943C2E4FA7C900472CA9 /* SSOAccountMenuActions.swift */; };
 		B5D17C732E42711B00799EBD /* SSOAuthenticationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C712E42711B00799EBD /* SSOAuthenticationViewController.swift */; };
@@ -5709,7 +5708,6 @@
 		B58EC7A92ED5855B00708A56 /* PreKeyTaskAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreKeyTaskAPIClient.swift; sourceTree = "<group>"; };
 		B58EC7AB2ED5869100708A56 /* PreKeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreKeyManager.swift; sourceTree = "<group>"; };
 		B58EC7AC2ED5869100708A56 /* PreKeyTaskManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreKeyTaskManager.swift; sourceTree = "<group>"; };
-
 		B5B8943C2E4FA7C900472CA9 /* SSOAccountMenuActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAccountMenuActions.swift; sourceTree = "<group>"; };
 		B5B8943E2E4FA7C900472CA9 /* SSOAvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAvatarView.swift; sourceTree = "<group>"; };
 		B5D17C712E42711B00799EBD /* SSOAuthenticationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAuthenticationViewController.swift; sourceTree = "<group>"; };
@@ -10666,7 +10664,6 @@
 		76EB04C818170B33006006FC /* util */ = {
 			isa = PBXGroup;
 			children = (
-
 				F9B3A92C293553930071EB95 /* ASWebAuthenticationSession+Util.swift */,
 				34F1071F26D005340053EF4D /* BatchUpdate.swift */,
 				4C751BE423FA0284002A8AF1 /* ContactSupportActionSheet.swift */,
@@ -15058,6 +15055,8 @@
 				453518771FC635DD00210559 /* Embed Foundation Extensions */,
 				4535189F1FC63DBF00210559 /* Embed Frameworks */,
 				71D9A11BAC977B7A24A418F9 /* [CP] Embed Pods Frameworks */,
+				776579C371A5AF0A97F4D3A6 /* Generate WebRTC dSYM */,
+				776579C371A5AF0A97F4D3A6 /* Generate WebRTC dSYM */,
 			);
 			buildRules = (
 			);
@@ -16528,6 +16527,26 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
+		776579C371A5AF0A97F4D3A6 /* Generate WebRTC dSYM */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/SignalRingRTC/WebRTC/WebRTC.framework",
+			);
+			name = "Generate WebRTC dSYM";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"${DWARF_DSYM_FOLDER_PATH}/WebRTC.framework.dSYM",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "${PODS_ROOT}/../Scripts/generate_webrtc_dsym.sh";
+		};
 		81CB2E425DCF15C299057FCC /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -17024,7 +17043,6 @@
 				8847E6F226A0EFBD0063E319 /* AvatarEditViewController.swift in Sources */,
 				8847E6F026A078200063E319 /* AvatarHistoryManager.swift in Sources */,
 				883A7FC3269F4C0000841DF9 /* AvatarSettingsViewController.swift in Sources */,
-
 				4C2F454F214C00E1004871FF /* AvatarTableViewCell.swift in Sources */,
 				32C584A825B81C6600256804 /* AvatarViewController.swift in Sources */,
 				B95A765C2B76C5BB00AA7E97 /* AvatarViewPresentationContextProvider.swift in Sources */,
@@ -20288,6 +20306,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_ENTITLEMENTS = SignalShareExtension/SignalShareExtension.entitlements;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = JVP5CFJTCN;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
@@ -20340,6 +20359,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_ENTITLEMENTS = "SignalShareExtension/SignalShareExtension-AppStore.entitlements";
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = JVP5CFJTCN;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -20489,7 +20509,7 @@
 				CLANG_ADDRESS_SANITIZER_CONTAINER_OVERFLOW = NO;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Signal/Signal.entitlements;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = JVP5CFJTCN;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -20608,6 +20628,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_ENTITLEMENTS = SignalShareExtension/SignalShareExtension.entitlements;
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = JVP5CFJTCN;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -20753,7 +20774,7 @@
 				CLANG_ADDRESS_SANITIZER_CONTAINER_OVERFLOW = NO;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Signal/Signal.entitlements;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = JVP5CFJTCN;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_OPTIMIZATION_LEVEL = 3;
@@ -20876,6 +20897,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_ENTITLEMENTS = SignalShareExtension/SignalShareExtension.entitlements;
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = JVP5CFJTCN;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -21126,7 +21148,7 @@
 				CLANG_UNDEFINED_BEHAVIOR_SANITIZER_INTEGER = YES;
 				CODE_SIGN_ENTITLEMENTS = Signal/Signal.entitlements;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = JVP5CFJTCN;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -21170,7 +21192,7 @@
 				CLANG_ADDRESS_SANITIZER_CONTAINER_OVERFLOW = NO;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "Signal/Signal-AppStore.entitlements";
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = JVP5CFJTCN;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_OPTIMIZATION_LEVEL = 3;

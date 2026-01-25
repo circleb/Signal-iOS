@@ -395,22 +395,42 @@ end
 
 # Configure WebRTC dSYM generation to handle missing dSYM files from XCFramework
 def configure_webrtc_dsym_generation(installer)
-  # Add a build phase to generate dSYM for WebRTC framework
-  installer.pods_project.targets.each do |target|
-    if target.name == 'HCP'
-      # Find the "Copy Bundle Resources" phase or create a new one
-      copy_phase = target.build_phases.find { |phase| phase.is_a?(Xcodeproj::Project::Object::PBXResourcesBuildPhase) }
-      
-      if copy_phase
-        # Add our dSYM generation script as a build phase
-        script_phase = target.new_shell_script_build_phase('Generate WebRTC dSYM')
-        script_phase.shell_script = '${PODS_ROOT}/../Scripts/generate_webrtc_dsym.sh'
-        script_phase.input_paths = ['${PODS_XCFRAMEWORKS_BUILD_DIR}/SignalRingRTC/WebRTC/WebRTC.framework']
-        script_phase.output_paths = ['${DWARF_DSYM_FOLDER_PATH}/WebRTC.framework.dSYM']
-        
-        # Move the script phase to run after the frameworks are copied
-        target.build_phases.insert(target.build_phases.index(copy_phase) + 1, script_phase)
-      end
-    end
-  end
+  # Access the main project (not the Pods project)
+  main_project_path = 'HCP.xcodeproj'
+  return unless File.exist?(main_project_path)
+  
+  require 'xcodeproj'
+  project = Xcodeproj::Project.open(main_project_path)
+  
+  # Find the HCP target in the main project
+  hcp_target = project.targets.find { |target| target.name == 'HCP' }
+  return unless hcp_target
+  
+  # Check if the build phase already exists to avoid duplicates
+  existing_phase = hcp_target.build_phases.find { |phase| 
+    phase.is_a?(Xcodeproj::Project::Object::PBXShellScriptBuildPhase) && 
+    phase.name == 'Generate WebRTC dSYM'
+  }
+  return if existing_phase
+  
+  # Find the "Embed Frameworks" phase to add our script after it
+  embed_phase = hcp_target.build_phases.find { |phase| 
+    phase.is_a?(Xcodeproj::Project::Object::PBXCopyFilesBuildPhase) &&
+    phase.dst_subfolder_spec == 10  # 10 = Frameworks
+  }
+  
+  # If no embed phase, find the last build phase
+  insert_index = embed_phase ? hcp_target.build_phases.index(embed_phase) + 1 : hcp_target.build_phases.count
+  
+  # Create the script build phase
+  script_phase = hcp_target.new_shell_script_build_phase('Generate WebRTC dSYM')
+  script_phase.shell_script = '${PODS_ROOT}/../Scripts/generate_webrtc_dsym.sh'
+  script_phase.input_paths = ['${PODS_XCFRAMEWORKS_BUILD_DIR}/SignalRingRTC/WebRTC/WebRTC.framework']
+  script_phase.output_paths = ['${DWARF_DSYM_FOLDER_PATH}/WebRTC.framework.dSYM']
+  script_phase.run_only_for_deployment_postprocessing = '0'
+  
+  # Insert the script phase at the appropriate position
+  hcp_target.build_phases.insert(insert_index, script_phase)
+  
+  project.save
 end
