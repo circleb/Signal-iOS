@@ -15056,7 +15056,6 @@
 				4535189F1FC63DBF00210559 /* Embed Frameworks */,
 				71D9A11BAC977B7A24A418F9 /* [CP] Embed Pods Frameworks */,
 				776579C371A5AF0A97F4D3A6 /* Generate WebRTC dSYM */,
-				776579C371A5AF0A97F4D3A6 /* Generate WebRTC dSYM */,
 			);
 			buildRules = (
 			);

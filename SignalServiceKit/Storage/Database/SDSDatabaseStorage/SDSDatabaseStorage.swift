@@ -121,6 +121,10 @@ public class SDSDatabaseStorage: NSObject, DB {
         //
         // We only reach this point by a predictable code path; the autoreleasepool
         // should be drained by this point.
+        let pool = weakPool
+        weakPool = pool
+        let storage = weakGrdbStorage
+        weakGrdbStorage = storage
         owsAssertDebug(weakPool == nil)
         owsAssertDebug(weakGrdbStorage == nil)
     }
