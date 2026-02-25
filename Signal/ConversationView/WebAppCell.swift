@@ -31,6 +31,7 @@ class WebAppCell: UITableViewCell {
 
     private func setupUI() {
         backgroundColor = .clear
+        contentView.backgroundColor = .systemBackground
         selectionStyle = .none
 
         // Background image
@@ -94,6 +95,7 @@ class WebAppCell: UITableViewCell {
         nameLabel.textColor = Theme.primaryTextColor
         descriptionLabel.textColor = Theme.secondaryTextAndIconColor
         categoryLabel.textColor = .ows_accentBlue
+        contentView.backgroundColor = .systemBackground
     }
 
     func configure(with webApp: WebApp) {

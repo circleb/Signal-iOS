@@ -11,7 +11,16 @@
 		<string>LazyDatabaseMigratorTask</string>
 	</array>
 	<key>BuildDetails</key>
-	<dict/>
+	<dict>
+		<key>DateTime</key>
+		<string>Tue Feb 24 23:29:29 UTC 2026</string>
+		<key>SignalCommit</key>
+		<string>ff21d172b9a0d8ba48bd10fd8592f5ae47895d47 Post-merge: HCP fixes for 7.87 and build</string>
+		<key>Timestamp</key>
+		<integer>1771975769</integer>
+		<key>XCodeVersion</key>
+		<string>2600.2620</string>
+	</dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
@@ -31,7 +40,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>7.87</string>
+	<string>7.88</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleURLTypes</key>

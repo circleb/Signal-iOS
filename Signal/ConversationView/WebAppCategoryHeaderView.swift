@@ -41,12 +41,15 @@ class WebAppCategoryHeaderView: UITableViewHeaderFooterView {
 
     private func applyTheme() {
         titleLabel.textColor = Theme.primaryTextColor
-        backgroundView?.backgroundColor = Theme.backgroundColor
+        // Let the list controller's grouped background show through
+        backgroundView?.backgroundColor = .clear
+        contentView.backgroundColor = .clear
     }
 
     private func setupUI() {
         backgroundView = UIView()
-        backgroundView?.backgroundColor = Theme.backgroundColor
+        backgroundView?.backgroundColor = .clear
+        contentView.backgroundColor = .clear
 
         titleLabel.font = .dynamicTypeHeadline
         titleLabel.textColor = Theme.primaryTextColor

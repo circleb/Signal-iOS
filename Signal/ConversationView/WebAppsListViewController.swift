@@ -16,7 +16,7 @@ class WebAppsListViewController: UIViewController {
     private let searchController = UISearchController(searchResultsController: nil)
     
     // UI Components
-    let tableView = UITableView()
+    let tableView: UITableView
     private let refreshControl = UIRefreshControl()
     private let loadingIndicator = UIActivityIndicatorView(style: .large)
     private let emptyStateView = EmptyStateView()
@@ -40,6 +40,7 @@ class WebAppsListViewController: UIViewController {
         self.webAppsService = webAppsService
         self.userInfoStore = userInfoStore
         self.ssoService = ssoService
+        self.tableView = UITableView(frame: .zero, style: .insetGrouped)
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -68,7 +69,8 @@ class WebAppsListViewController: UIViewController {
 
     private func setupUI() {
         title = "Portal"
-        view.backgroundColor = Theme.backgroundColor
+        // Use a grouped-style background so white cells sit on gray, like Settings
+        view.backgroundColor = .systemGroupedBackground
 
         // Initialize data arrays
         allCategories = []
@@ -80,6 +82,10 @@ class WebAppsListViewController: UIViewController {
         tableView.dataSource = self
         tableView.register(WebAppCell.self, forCellReuseIdentifier: "WebAppCell")
         tableView.register(WebAppCategoryHeaderView.self, forHeaderFooterViewReuseIdentifier: "CategoryHeader")
+        tableView.backgroundColor = .clear
+        if #available(iOS 15.0, *) {
+            tableView.sectionHeaderTopPadding = 0
+        }
 
         // Setup refresh control
         refreshControl.addTarget(self, action: #selector(refreshWebApps), for: .valueChanged)
