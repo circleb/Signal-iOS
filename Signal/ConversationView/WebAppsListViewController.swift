@@ -135,18 +135,36 @@ class WebAppsListViewController: UIViewController {
         contextMenuButton.addSubview(ssoAvatarView)
         ssoAvatarView.autoPinEdgesToSuperviewEdges()
         
-        // Set as left bar button item
-        let barButtonItem = UIBarButtonItem(customView: contextMenuButton)
+        // Left: avatar (account menu). Right: bell (notifications & lists).
+        let avatarBarButtonItem = UIBarButtonItem(customView: contextMenuButton)
 #if compiler(>=6.2)
         if #available(iOS 26.0, *) {
-            // Hide the shared background to prevent liquid glass artifacts
-            barButtonItem.hidesSharedBackground = true
+            avatarBarButtonItem.hidesSharedBackground = true
         }
 #endif
-        navigationItem.leftBarButtonItem = barButtonItem
-        
+        navigationItem.leftBarButtonItem = avatarBarButtonItem
+
+        let bellBarButtonItem = UIBarButtonItem(
+            image: UIImage(systemName: "bell"),
+            style: .plain,
+            target: self,
+            action: #selector(openNotificationsAndListsSheet)
+        )
+        bellBarButtonItem.accessibilityLabel = OWSLocalizedString("NOTIFICATIONS_AND_LISTS_TITLE", comment: "Accessibility label for notifications and lists button.")
+        navigationItem.rightBarButtonItem = bellBarButtonItem
+
         // Update menu actions
         updateMenuActions()
+    }
+
+    @objc private func openNotificationsAndListsSheet() {
+        let sheet = NotificationsAndListsViewController()
+        let nav = OWSNavigationController(rootViewController: sheet)
+        if let sheetPC = nav.sheetPresentationController {
+            sheetPC.detents = [UISheetPresentationController.Detent.medium(), UISheetPresentationController.Detent.large()]
+            sheetPC.prefersGrabberVisible = true
+        }
+        present(nav, animated: true)
     }
     
     private func setupNotifications() {

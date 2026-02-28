@@ -651,6 +651,9 @@
 		50597BBC2B97C449004681E1 /* UsernameLookupRecordStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50597BBB2B97C449004681E1 /* UsernameLookupRecordStore.swift */; };
 		50597BBF2B97D629004681E1 /* SearchableNameFinder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50597BBE2B97D629004681E1 /* SearchableNameFinder.swift */; };
 		505AB9322DB2B21900592A70 /* AccountChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 505AB9312DB2B21900592A70 /* AccountChecker.swift */; };
+		B524D3A32E430639004B1E4D /* DirectusConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3A02E430639004B1E4D /* DirectusConfig.swift */; };
+		B524D3A42E430639004B1E4D /* DirectusSubscriptionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3A12E430639004B1E4D /* DirectusSubscriptionService.swift */; };
+		B524D3A52E430639004B1E4D /* DirectusSubscriptionTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3A22E430639004B1E4D /* DirectusSubscriptionTypes.swift */; };
 		505B228329F73ABE005578F3 /* OWSOutgoingResendResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 505B228229F73ABE005578F3 /* OWSOutgoingResendResponse.swift */; };
 		505C2BC22E85D72B0009237F /* KeyedConcurrentTaskQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 505C2BC12E85D72B0009237F /* KeyedConcurrentTaskQueue.swift */; };
 		505C2ED42997015800C23FB2 /* LinkDeviceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 505C2ED32997015800C23FB2 /* LinkDeviceViewController.swift */; };
@@ -1331,6 +1334,8 @@
 		7254655E2BA032A900EABFD2 /* StorageServiceContactTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 505C2EDA29974D2000C23FB2 /* StorageServiceContactTest.swift */; };
 		725465602BA033E200EABFD2 /* UserNotificationsPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88D23D0923CEBF4400B0E74B /* UserNotificationsPresenter.swift */; };
 		725465612BA033E200EABFD2 /* NotificationPresenterImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88D23D0A23CEBF4400B0E74B /* NotificationPresenterImpl.swift */; };
+		B524D39E2E430639004B1E4D /* NonSignalNotificationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D39D2E430639004B1E4D /* NonSignalNotificationStore.swift */; };
+		B524D39F2E430639004B1E4D /* StoredNonSignalNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D39C2E430639004B1E4D /* StoredNonSignalNotification.swift */; };
 		725465622BA0348600EABFD2 /* GroupCallPeekClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D95777B92B46411300CFE3AE /* GroupCallPeekClient.swift */; };
 		725465632BA0348600EABFD2 /* GroupCallManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32525F9427C74B1A0099E801 /* GroupCallManager.swift */; };
 		725465642BA0369D00EABFD2 /* AppSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5033D46A29DB9F17007FEADA /* AppSetup.swift */; };
@@ -1664,6 +1669,7 @@
 		A5E7C675248C5443007C949A /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = A5E7C673248C5442007C949A /* InfoPlist.strings */; };
 		B524D3922E430639004B1E4D /* WebAppCategoryHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D38E2E430639004B1E4D /* WebAppCategoryHeaderView.swift */; };
 		B524D3932E430639004B1E4D /* WebAppsListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3902E430639004B1E4D /* WebAppsListViewController.swift */; };
+		B524D39B2E430639004B1E4D /* NotificationsAndListsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D39A2E430639004B1E4D /* NotificationsAndListsViewController.swift */; };
 		B524D3942E430639004B1E4D /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D38D2E430639004B1E4D /* EmptyStateView.swift */; };
 		B524D3952E430639004B1E4D /* WebAppCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D38F2E430639004B1E4D /* WebAppCell.swift */; };
 		B524D3962E430639004B1E4D /* WebAppWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3912E430639004B1E4D /* WebAppWebViewController.swift */; };
@@ -4668,6 +4674,9 @@
 		50597BBB2B97C449004681E1 /* UsernameLookupRecordStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsernameLookupRecordStore.swift; sourceTree = "<group>"; };
 		50597BBE2B97D629004681E1 /* SearchableNameFinder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchableNameFinder.swift; sourceTree = "<group>"; };
 		505AB9312DB2B21900592A70 /* AccountChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountChecker.swift; sourceTree = "<group>"; };
+		B524D3A02E430639004B1E4D /* DirectusConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectusConfig.swift; sourceTree = "<group>"; };
+		B524D3A12E430639004B1E4D /* DirectusSubscriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectusSubscriptionService.swift; sourceTree = "<group>"; };
+		B524D3A22E430639004B1E4D /* DirectusSubscriptionTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectusSubscriptionTypes.swift; sourceTree = "<group>"; };
 		505B228229F73ABE005578F3 /* OWSOutgoingResendResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OWSOutgoingResendResponse.swift; sourceTree = "<group>"; };
 		505C2BC12E85D72B0009237F /* KeyedConcurrentTaskQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyedConcurrentTaskQueue.swift; sourceTree = "<group>"; };
 		505C2ED32997015800C23FB2 /* LinkDeviceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkDeviceViewController.swift; sourceTree = "<group>"; };
@@ -5619,6 +5628,8 @@
 		88D1D40322EF8A9700F472C5 /* ThreadDetailsInteraction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadDetailsInteraction.swift; sourceTree = "<group>"; };
 		88D23D0923CEBF4400B0E74B /* UserNotificationsPresenter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserNotificationsPresenter.swift; sourceTree = "<group>"; };
 		88D23D0A23CEBF4400B0E74B /* NotificationPresenterImpl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotificationPresenterImpl.swift; sourceTree = "<group>"; };
+		B524D39C2E430639004B1E4D /* StoredNonSignalNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoredNonSignalNotification.swift; sourceTree = "<group>"; };
+		B524D39D2E430639004B1E4D /* NonSignalNotificationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NonSignalNotificationStore.swift; sourceTree = "<group>"; };
 		88D23D1123CEBFB200B0E74B /* NotificationActionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationActionHandler.swift; sourceTree = "<group>"; };
 		88D6E93D254CF712003142D9 /* group_call_leave.aiff */ = {isa = PBXFileReference; lastKnownFileType = audio.aiff; path = group_call_leave.aiff; sourceTree = "<group>"; };
 		88D6E93E254CF712003142D9 /* group_call_join.aiff */ = {isa = PBXFileReference; lastKnownFileType = audio.aiff; path = group_call_join.aiff; sourceTree = "<group>"; };
@@ -5672,6 +5683,7 @@
 		B524D38E2E430639004B1E4D /* WebAppCategoryHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppCategoryHeaderView.swift; sourceTree = "<group>"; };
 		B524D38F2E430639004B1E4D /* WebAppCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppCell.swift; sourceTree = "<group>"; };
 		B524D3902E430639004B1E4D /* WebAppsListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppsListViewController.swift; sourceTree = "<group>"; };
+		B524D39A2E430639004B1E4D /* NotificationsAndListsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsAndListsViewController.swift; sourceTree = "<group>"; };
 		B524D3912E430639004B1E4D /* WebAppWebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppWebViewController.swift; sourceTree = "<group>"; };
 		B57FD4AF2E5A554100DEA1C6 /* AccessRequestFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessRequestFormView.swift; sourceTree = "<group>"; };
 		B57FD4B02E5A554100DEA1C6 /* BlockedMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockedMessageView.swift; sourceTree = "<group>"; };
@@ -8303,6 +8315,7 @@
 				B524D38E2E430639004B1E4D /* WebAppCategoryHeaderView.swift */,
 				B524D38F2E430639004B1E4D /* WebAppCell.swift */,
 				B524D3902E430639004B1E4D /* WebAppsListViewController.swift */,
+				B524D39A2E430639004B1E4D /* NotificationsAndListsViewController.swift */,
 				B524D3912E430639004B1E4D /* WebAppWebViewController.swift */,
 				34D1F0951F867BFC0066283D /* CellViews */,
 				347C3839252CE6C900F3D941 /* Components */,
@@ -11157,10 +11170,12 @@
 			isa = PBXGroup;
 			children = (
 				D979DA152B8D1FDD000EEAB8 /* BadgeCountFetcher.swift */,
+				B524D39D2E430639004B1E4D /* NonSignalNotificationStore.swift */,
 				F9C5CB92289453B200548EEE /* NoopNotificationPresenterImpl.swift */,
 				664657402AC4FB720099DE1C /* NotificationPresenter.swift */,
 				88D23D0A23CEBF4400B0E74B /* NotificationPresenterImpl.swift */,
 				5063B41D2C5432A30041CA51 /* ResolvableValue.swift */,
+				B524D39C2E430639004B1E4D /* StoredNonSignalNotification.swift */,
 				88D23D0923CEBF4400B0E74B /* UserNotificationsPresenter.swift */,
 			);
 			path = Notifications;
@@ -14244,6 +14259,9 @@
 		F9C5C9BA289453B100548EEE /* Account */ = {
 			isa = PBXGroup;
 			children = (
+				B524D3A02E430639004B1E4D /* DirectusConfig.swift */,
+				B524D3A12E430639004B1E4D /* DirectusSubscriptionService.swift */,
+				B524D3A22E430639004B1E4D /* DirectusSubscriptionTypes.swift */,
 				B58EC7A32ED580C900708A56 /* MockRegistrationStateChangeManager.swift */,
 				B58EC7A42ED580C900708A56 /* RegistrationStateChangeManager.swift */,
 				B58EC7A52ED580C900708A56 /* RegistrationStateChangeManagerImpl.swift */,
@@ -17067,6 +17085,7 @@
 				500FE4E2288A373100FA090C /* BadgeGiftingAlreadyRedeemedSheet.swift in Sources */,
 				B524D3922E430639004B1E4D /* WebAppCategoryHeaderView.swift in Sources */,
 				B524D3932E430639004B1E4D /* WebAppsListViewController.swift in Sources */,
+				B524D39B2E430639004B1E4D /* NotificationsAndListsViewController.swift in Sources */,
 				B524D3942E430639004B1E4D /* EmptyStateView.swift in Sources */,
 				B524D3952E430639004B1E4D /* WebAppCell.swift in Sources */,
 				B524D3962E430639004B1E4D /* WebAppWebViewController.swift in Sources */,
@@ -17859,6 +17878,9 @@
 				6646572C2AC347B70099DE1C /* AccountAttributesUpdater.swift in Sources */,
 				6646572E2AC349C80099DE1C /* AccountAttributesUpdaterImpl.swift in Sources */,
 				505AB9322DB2B21900592A70 /* AccountChecker.swift in Sources */,
+				B524D3A32E430639004B1E4D /* DirectusConfig.swift in Sources */,
+				B524D3A42E430639004B1E4D /* DirectusSubscriptionService.swift in Sources */,
+				B524D3A52E430639004B1E4D /* DirectusSubscriptionTypes.swift in Sources */,
 				F915A76C29CB669800EB6F68 /* AccountDataReport.swift in Sources */,
 				F915A76E29CB6B4E00EB6F68 /* AccountDataReportRequestFactory.swift in Sources */,
 				C18D6FE02D4D8FB40085E3B9 /* AccountEntropyPool.swift in Sources */,
@@ -18442,6 +18464,8 @@
 				5079F3B62DA4713C008430EC /* NotificationPrecondition.swift in Sources */,
 				664657412AC4FB720099DE1C /* NotificationPresenter.swift in Sources */,
 				725465612BA033E200EABFD2 /* NotificationPresenterImpl.swift in Sources */,
+				B524D39E2E430639004B1E4D /* NonSignalNotificationStore.swift in Sources */,
+				B524D39F2E430639004B1E4D /* StoredNonSignalNotification.swift in Sources */,
 				D9C7CECF28ECC043001E87B6 /* NSAttributedString+SSK.swift in Sources */,
 				507E1BDF2A0E13B100650611 /* NSKeyedUnarchiver+SSK.swift in Sources */,
 				F9C5CE0B289453B400548EEE /* NSNotificationCenter+OWS.swift in Sources */,

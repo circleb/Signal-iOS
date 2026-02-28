@@ -1267,6 +1267,24 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
         appReadiness.runNowOrWhenAppDidBecomeReadySync {
+            let userInfo = notification.request.content.userInfo
+            if !AppNotificationUserInfo.isSignalNotification(userInfo: userInfo) {
+                let content = notification.request.content
+                let stored = StoredNonSignalNotification(
+                    identifier: notification.request.identifier,
+                    title: content.title,
+                    body: content.body,
+                    date: Date(),
+                    isRead: false,
+                    actionURL: (userInfo["url"] as? String) ?? (userInfo["link"] as? String)
+                )
+                let store = NonSignalNotificationStore(keyValueStore: KeyValueStore(collection: "NonSignalNotifications"))
+                Task {
+                    await SSKEnvironment.shared.databaseStorageRef.awaitableWrite { tx in
+                        store.append(stored, transaction: tx)
+                    }
+                }
+            }
             // We need to respect the in-app notification sound preference. This method, which is called
             // for modern UNUserNotification users, could be a place to do that, but since we'd still
             // need to handle this behavior for legacy UINotification users anyway, we "allow" all

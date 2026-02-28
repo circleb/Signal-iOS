@@ -18,6 +18,25 @@ public class NotificationActionHandler {
     ) async throws {
         owsAssertDebug(appReadiness.isAppReady)
 
+        let rawUserInfo = response.notification.request.content.userInfo
+        if !AppNotificationUserInfo.isSignalNotification(userInfo: rawUserInfo) {
+            // Non-Signal (e.g. HCP) notification: store for the notifications list and mark as read.
+            let content = response.notification.request.content
+            let stored = StoredNonSignalNotification(
+                identifier: response.notification.request.identifier,
+                title: content.title,
+                body: content.body,
+                date: Date(),
+                isRead: true,
+                actionURL: (rawUserInfo["url"] as? String) ?? (rawUserInfo["link"] as? String)
+            )
+            let store = NonSignalNotificationStore(keyValueStore: KeyValueStore(collection: "NonSignalNotifications"))
+            await SSKEnvironment.shared.databaseStorageRef.awaitableWrite { tx in
+                store.append(stored, transaction: tx)
+            }
+            return
+        }
+
         let userInfo = AppNotificationUserInfo(response.notification.request.content.userInfo)
 
         switch response.actionIdentifier {

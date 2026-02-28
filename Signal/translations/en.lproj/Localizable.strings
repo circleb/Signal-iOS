@@ -5584,6 +5584,27 @@
 /* Title for notification permission action sheet */
 "NOTIFICATION_PERMISSION_ACTION_SHEET_TITLE" = "Turn on Notifications";
 
+/* Title for the Notifications and Lists sheet */
+"NOTIFICATIONS_AND_LISTS_TITLE" = "Notifications & Lists";
+
+/* Section header for list subscriptions */
+"NOTIFICATIONS_LISTS_SUBSCRIPTIONS_HEADER" = "List Subscriptions";
+
+/* Prompt to sign in to manage subscriptions */
+"NOTIFICATIONS_LISTS_SIGN_IN_PROMPT" = "Sign in to manage your notification list subscriptions.";
+
+/* Save subscriptions button */
+"NOTIFICATIONS_LISTS_SAVE" = "Save Subscriptions";
+
+/* Section header for received notifications */
+"NOTIFICATIONS_LISTS_RECEIVED_HEADER" = "Received Notifications";
+
+/* Empty state when there are no non-Signal notifications */
+"NOTIFICATIONS_LISTS_NO_NOTIFICATIONS" = "No notifications yet.";
+
+/* Loading indicator for subscriptions */
+"NOTIFICATIONS_LISTS_LOADING" = "Loading…";
+
 /* Snooze action text for contact permission reminder megaphone */
 "NOTIFICATION_PERMISSION_NOT_NOW_ACTION" = "Not Now";
 
