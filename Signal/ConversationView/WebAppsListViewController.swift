@@ -7,6 +7,9 @@ import UIKit
 import SignalUI
 import SignalServiceKit
 
+extension Notification.Name {
+    static let nonSignalNotificationsDidChange = Notification.Name("nonSignalNotificationsDidChange")
+}
 
 
 class WebAppsListViewController: UIViewController {
@@ -25,12 +28,17 @@ class WebAppsListViewController: UIViewController {
     private var ssoAvatarView: SSOAvatarView!
     private var contextMenuButton: ContextMenuButton!
     private var ssoMenuActions: SSOAccountMenuActions!
+    private var bellBarButtonItem: UIBarButtonItem!
 
     // Data
     private var allWebApps: [WebApp] = []
     private var allCategories: [WebAppCategory] = []
     private var filteredCategories: [WebAppCategory] = []
     private var isSearching = false
+
+    // Notifications
+    private let nonSignalStore = NonSignalNotificationStore(keyValueStore: KeyValueStore(collection: "NonSignalNotifications"))
+    private var hasUnreadNonSignalNotifications = false
 
 
 
@@ -65,6 +73,7 @@ class WebAppsListViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         checkSSOStatus()
+        refreshNotificationBadgeState()
     }
 
     private func setupUI() {
@@ -144,7 +153,7 @@ class WebAppsListViewController: UIViewController {
 #endif
         navigationItem.leftBarButtonItem = avatarBarButtonItem
 
-        let bellBarButtonItem = UIBarButtonItem(
+        bellBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "bell.fill"),
             style: .plain,
             target: self,
@@ -155,6 +164,7 @@ class WebAppsListViewController: UIViewController {
 
         // Update menu actions
         updateMenuActions()
+        refreshNotificationBadgeState()
     }
 
     @objc private func openNotificationsAndListsSheet() {
@@ -164,6 +174,7 @@ class WebAppsListViewController: UIViewController {
             sheetPC.detents = [UISheetPresentationController.Detent.medium(), UISheetPresentationController.Detent.large()]
             sheetPC.prefersGrabberVisible = true
         }
+        nav.presentationController?.delegate = self
         present(nav, animated: true)
     }
     
@@ -179,6 +190,13 @@ class WebAppsListViewController: UIViewController {
             self,
             selector: #selector(ssoUserDidSignOut),
             name: .ssoUserDidSignOut,
+            object: nil
+        )
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(nonSignalNotificationsDidChange),
+            name: .nonSignalNotificationsDidChange,
             object: nil
         )
     }
@@ -216,6 +234,13 @@ class WebAppsListViewController: UIViewController {
         
         // User is signed in, hide any existing overlay
         hideSignInOverlay()
+    }
+
+    @objc private func nonSignalNotificationsDidChange() {
+        let hadUnread = hasUnreadNonSignalNotifications
+        refreshNotificationBadgeState(skipIconUpdate: true)
+        let transitionToUnread = !hadUnread && hasUnreadNonSignalNotifications
+        updateBellIcon(animated: transitionToUnread)
     }
     
     private func showSignInOverlay() {
@@ -319,6 +344,48 @@ class WebAppsListViewController: UIViewController {
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }
+
+    /// If true, only updates hasUnreadNonSignalNotifications from DB; caller will call updateBellIcon.
+    private func refreshNotificationBadgeState(skipIconUpdate: Bool = false) {
+        SSKEnvironment.shared.databaseStorageRef.read { tx in
+            let all = nonSignalStore.fetchAll(transaction: tx)
+            hasUnreadNonSignalNotifications = all.contains { !$0.isRead }
+        }
+        if !skipIconUpdate {
+            updateBellIcon(animated: false)
+        }
+    }
+
+    /// Shared symbol config so plain and badge bells render at the same size.
+    private static let bellSymbolConfig = UIImage.SymbolConfiguration(pointSize: 18, weight: .regular)
+
+    private func updateBellIcon(animated: Bool = false) {
+        guard bellBarButtonItem != nil else { return }
+        let newImage: UIImage?
+        if hasUnreadNonSignalNotifications {
+            let config = Self.bellSymbolConfig.applying(UIImage.SymbolConfiguration.preferringMulticolor())
+            newImage = UIImage(systemName: "bell.badge.fill", withConfiguration: config)?
+                .withRenderingMode(.alwaysOriginal)
+        } else {
+            newImage = UIImage(systemName: "bell.fill", withConfiguration: Self.bellSymbolConfig)
+        }
+        guard let newImage else { return }
+        let applyImage = {
+            self.bellBarButtonItem.image = newImage
+        }
+        if animated, let view = bellBarButtonItem.value(forKey: "view") as? UIView {
+            UIView.transition(
+                with: view,
+                duration: 0.25,
+                options: .transitionCrossDissolve,
+                animations: applyImage,
+                completion: nil
+            )
+        } else {
+            applyImage()
+        }
+    }
+
 }
 
 extension WebAppsListViewController: UITableViewDataSource, UITableViewDelegate {
@@ -404,6 +471,13 @@ extension WebAppsListViewController: UISearchResultsUpdating {
     }
 }
 
+extension WebAppsListViewController: UIAdaptivePresentationControllerDelegate {
+    func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+        // Sheet was dismissed; refresh unread state in case notifications were read.
+        refreshNotificationBadgeState()
+    }
+}
+
 extension WebAppsListViewController: SSOAuthenticationViewControllerDelegate {
     func ssoAuthenticationViewController(_ controller: SSOAuthenticationViewController, didAuthenticate userInfo: SSOUserInfo) {
         // User successfully signed in, hide overlay and update UI
@@ -423,3 +497,4 @@ extension WebAppsListViewController: SSOAuthenticationViewControllerDelegate {
         // The overlay will remain visible until user signs in or app is closed
     }
 } 
+

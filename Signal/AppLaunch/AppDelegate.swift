@@ -1271,9 +1271,12 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             if !AppNotificationUserInfo.isSignalNotification(userInfo: userInfo) {
                 let content = notification.request.content
 
-                // Prefer a Bulletin endpoint URL if a bulletin-id is present; otherwise fall back to generic url/link.
-                let bulletinIdString: String? = (userInfo["bulletin-id"] as? String)
+                // Prefer a Bulletin endpoint URL if a bulletin id is present (support both \"bulletin-id\" and \"bulletinId\"); otherwise fall back to generic url/link.
+                let bulletinIdString: String? =
+                    (userInfo["bulletin-id"] as? String)
                     ?? (userInfo["bulletin-id"] as? NSNumber)?.stringValue
+                    ?? (userInfo["bulletinId"] as? String)
+                    ?? (userInfo["bulletinId"] as? NSNumber)?.stringValue
                 let bulletinURLString: String?
                 if let bulletinIdString {
                     bulletinURLString = "https://cms.homesteadheritage.org/items/Bulletin/\(bulletinIdString)"
@@ -1297,6 +1300,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
                     await SSKEnvironment.shared.databaseStorageRef.awaitableWrite { tx in
                         store.append(stored, transaction: tx)
                     }
+                    NotificationCenter.default.post(name: .nonSignalNotificationsDidChange, object: nil)
                 }
             }
             // We need to respect the in-app notification sound preference. This method, which is called
