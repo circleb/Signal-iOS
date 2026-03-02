@@ -135,7 +135,7 @@ class WebAppsListViewController: UIViewController {
         contextMenuButton.addSubview(ssoAvatarView)
         ssoAvatarView.autoPinEdgesToSuperviewEdges()
         
-        // Left: avatar (account menu). Right: bell (notifications & lists).
+        // Left: avatar (account menu). Right: bell (notifications).
         let avatarBarButtonItem = UIBarButtonItem(customView: contextMenuButton)
 #if compiler(>=6.2)
         if #available(iOS 26.0, *) {
@@ -145,7 +145,7 @@ class WebAppsListViewController: UIViewController {
         navigationItem.leftBarButtonItem = avatarBarButtonItem
 
         let bellBarButtonItem = UIBarButtonItem(
-            image: UIImage(systemName: "bell"),
+            image: UIImage(systemName: "bell.fill"),
             style: .plain,
             target: self,
             action: #selector(openNotificationsAndListsSheet)

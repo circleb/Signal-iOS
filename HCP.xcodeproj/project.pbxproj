@@ -651,9 +651,6 @@
 		50597BBC2B97C449004681E1 /* UsernameLookupRecordStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50597BBB2B97C449004681E1 /* UsernameLookupRecordStore.swift */; };
 		50597BBF2B97D629004681E1 /* SearchableNameFinder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50597BBE2B97D629004681E1 /* SearchableNameFinder.swift */; };
 		505AB9322DB2B21900592A70 /* AccountChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 505AB9312DB2B21900592A70 /* AccountChecker.swift */; };
-		B524D3A32E430639004B1E4D /* DirectusConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3A02E430639004B1E4D /* DirectusConfig.swift */; };
-		B524D3A42E430639004B1E4D /* DirectusSubscriptionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3A12E430639004B1E4D /* DirectusSubscriptionService.swift */; };
-		B524D3A52E430639004B1E4D /* DirectusSubscriptionTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3A22E430639004B1E4D /* DirectusSubscriptionTypes.swift */; };
 		505B228329F73ABE005578F3 /* OWSOutgoingResendResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 505B228229F73ABE005578F3 /* OWSOutgoingResendResponse.swift */; };
 		505C2BC22E85D72B0009237F /* KeyedConcurrentTaskQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 505C2BC12E85D72B0009237F /* KeyedConcurrentTaskQueue.swift */; };
 		505C2ED42997015800C23FB2 /* LinkDeviceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 505C2ED32997015800C23FB2 /* LinkDeviceViewController.swift */; };
@@ -1334,8 +1331,6 @@
 		7254655E2BA032A900EABFD2 /* StorageServiceContactTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 505C2EDA29974D2000C23FB2 /* StorageServiceContactTest.swift */; };
 		725465602BA033E200EABFD2 /* UserNotificationsPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88D23D0923CEBF4400B0E74B /* UserNotificationsPresenter.swift */; };
 		725465612BA033E200EABFD2 /* NotificationPresenterImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88D23D0A23CEBF4400B0E74B /* NotificationPresenterImpl.swift */; };
-		B524D39E2E430639004B1E4D /* NonSignalNotificationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D39D2E430639004B1E4D /* NonSignalNotificationStore.swift */; };
-		B524D39F2E430639004B1E4D /* StoredNonSignalNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D39C2E430639004B1E4D /* StoredNonSignalNotification.swift */; };
 		725465622BA0348600EABFD2 /* GroupCallPeekClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D95777B92B46411300CFE3AE /* GroupCallPeekClient.swift */; };
 		725465632BA0348600EABFD2 /* GroupCallManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32525F9427C74B1A0099E801 /* GroupCallManager.swift */; };
 		725465642BA0369D00EABFD2 /* AppSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5033D46A29DB9F17007FEADA /* AppSetup.swift */; };
@@ -1669,10 +1664,15 @@
 		A5E7C675248C5443007C949A /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = A5E7C673248C5442007C949A /* InfoPlist.strings */; };
 		B524D3922E430639004B1E4D /* WebAppCategoryHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D38E2E430639004B1E4D /* WebAppCategoryHeaderView.swift */; };
 		B524D3932E430639004B1E4D /* WebAppsListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3902E430639004B1E4D /* WebAppsListViewController.swift */; };
-		B524D39B2E430639004B1E4D /* NotificationsAndListsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D39A2E430639004B1E4D /* NotificationsAndListsViewController.swift */; };
 		B524D3942E430639004B1E4D /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D38D2E430639004B1E4D /* EmptyStateView.swift */; };
 		B524D3952E430639004B1E4D /* WebAppCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D38F2E430639004B1E4D /* WebAppCell.swift */; };
 		B524D3962E430639004B1E4D /* WebAppWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3912E430639004B1E4D /* WebAppWebViewController.swift */; };
+		B524D39B2E430639004B1E4D /* NotificationsAndListsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D39A2E430639004B1E4D /* NotificationsAndListsViewController.swift */; };
+		B524D39E2E430639004B1E4D /* NonSignalNotificationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D39D2E430639004B1E4D /* NonSignalNotificationStore.swift */; };
+		B524D39F2E430639004B1E4D /* StoredNonSignalNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D39C2E430639004B1E4D /* StoredNonSignalNotification.swift */; };
+		B524D3A32E430639004B1E4D /* DirectusConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3A02E430639004B1E4D /* DirectusConfig.swift */; };
+		B524D3A42E430639004B1E4D /* DirectusSubscriptionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3A12E430639004B1E4D /* DirectusSubscriptionService.swift */; };
+		B524D3A52E430639004B1E4D /* DirectusSubscriptionTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B524D3A22E430639004B1E4D /* DirectusSubscriptionTypes.swift */; };
 		B57FD4B12E5A554100DEA1C6 /* AccessRequestFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57FD4AF2E5A554100DEA1C6 /* AccessRequestFormView.swift */; };
 		B57FD4B22E5A554100DEA1C6 /* BlockedMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57FD4B02E5A554100DEA1C6 /* BlockedMessageView.swift */; };
 		B58EC7882ED56DAE00708A56 /* ServiceId.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58EC77D2ED56DAE00708A56 /* ServiceId.swift */; };
@@ -1711,6 +1711,7 @@
 		B58EC7AF2ED58F4400708A56 /* PreKeyUploadBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6659A0302A7C5B9700066AB7 /* PreKeyUploadBundle.swift */; };
 		B58EC7B02ED58FED00708A56 /* PreKeyTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17345BA2A5E000300C6426D /* PreKeyTarget.swift */; };
 		B58EC7B12ED5901D00708A56 /* MockPreKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6659A0272A7C11ED00066AB7 /* MockPreKeyManager.swift */; };
+		B59079B52F55EF1300BDE11B /* BulletinViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59079B42F55EF1300BDE11B /* BulletinViewController.swift */; };
 		B5B894402E4FA7C900472CA9 /* SSOAvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5B8943E2E4FA7C900472CA9 /* SSOAvatarView.swift */; };
 		B5B894412E4FA7C900472CA9 /* SSOAccountMenuActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5B8943C2E4FA7C900472CA9 /* SSOAccountMenuActions.swift */; };
 		B5D17C732E42711B00799EBD /* SSOAuthenticationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D17C712E42711B00799EBD /* SSOAuthenticationViewController.swift */; };
@@ -4674,9 +4675,6 @@
 		50597BBB2B97C449004681E1 /* UsernameLookupRecordStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsernameLookupRecordStore.swift; sourceTree = "<group>"; };
 		50597BBE2B97D629004681E1 /* SearchableNameFinder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchableNameFinder.swift; sourceTree = "<group>"; };
 		505AB9312DB2B21900592A70 /* AccountChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountChecker.swift; sourceTree = "<group>"; };
-		B524D3A02E430639004B1E4D /* DirectusConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectusConfig.swift; sourceTree = "<group>"; };
-		B524D3A12E430639004B1E4D /* DirectusSubscriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectusSubscriptionService.swift; sourceTree = "<group>"; };
-		B524D3A22E430639004B1E4D /* DirectusSubscriptionTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectusSubscriptionTypes.swift; sourceTree = "<group>"; };
 		505B228229F73ABE005578F3 /* OWSOutgoingResendResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OWSOutgoingResendResponse.swift; sourceTree = "<group>"; };
 		505C2BC12E85D72B0009237F /* KeyedConcurrentTaskQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyedConcurrentTaskQueue.swift; sourceTree = "<group>"; };
 		505C2ED32997015800C23FB2 /* LinkDeviceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkDeviceViewController.swift; sourceTree = "<group>"; };
@@ -5628,8 +5626,6 @@
 		88D1D40322EF8A9700F472C5 /* ThreadDetailsInteraction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadDetailsInteraction.swift; sourceTree = "<group>"; };
 		88D23D0923CEBF4400B0E74B /* UserNotificationsPresenter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserNotificationsPresenter.swift; sourceTree = "<group>"; };
 		88D23D0A23CEBF4400B0E74B /* NotificationPresenterImpl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotificationPresenterImpl.swift; sourceTree = "<group>"; };
-		B524D39C2E430639004B1E4D /* StoredNonSignalNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoredNonSignalNotification.swift; sourceTree = "<group>"; };
-		B524D39D2E430639004B1E4D /* NonSignalNotificationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NonSignalNotificationStore.swift; sourceTree = "<group>"; };
 		88D23D1123CEBFB200B0E74B /* NotificationActionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationActionHandler.swift; sourceTree = "<group>"; };
 		88D6E93D254CF712003142D9 /* group_call_leave.aiff */ = {isa = PBXFileReference; lastKnownFileType = audio.aiff; path = group_call_leave.aiff; sourceTree = "<group>"; };
 		88D6E93E254CF712003142D9 /* group_call_join.aiff */ = {isa = PBXFileReference; lastKnownFileType = audio.aiff; path = group_call_join.aiff; sourceTree = "<group>"; };
@@ -5683,8 +5679,13 @@
 		B524D38E2E430639004B1E4D /* WebAppCategoryHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppCategoryHeaderView.swift; sourceTree = "<group>"; };
 		B524D38F2E430639004B1E4D /* WebAppCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppCell.swift; sourceTree = "<group>"; };
 		B524D3902E430639004B1E4D /* WebAppsListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppsListViewController.swift; sourceTree = "<group>"; };
-		B524D39A2E430639004B1E4D /* NotificationsAndListsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsAndListsViewController.swift; sourceTree = "<group>"; };
 		B524D3912E430639004B1E4D /* WebAppWebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppWebViewController.swift; sourceTree = "<group>"; };
+		B524D39A2E430639004B1E4D /* NotificationsAndListsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsAndListsViewController.swift; sourceTree = "<group>"; };
+		B524D39C2E430639004B1E4D /* StoredNonSignalNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoredNonSignalNotification.swift; sourceTree = "<group>"; };
+		B524D39D2E430639004B1E4D /* NonSignalNotificationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NonSignalNotificationStore.swift; sourceTree = "<group>"; };
+		B524D3A02E430639004B1E4D /* DirectusConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectusConfig.swift; sourceTree = "<group>"; };
+		B524D3A12E430639004B1E4D /* DirectusSubscriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectusSubscriptionService.swift; sourceTree = "<group>"; };
+		B524D3A22E430639004B1E4D /* DirectusSubscriptionTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectusSubscriptionTypes.swift; sourceTree = "<group>"; };
 		B57FD4AF2E5A554100DEA1C6 /* AccessRequestFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessRequestFormView.swift; sourceTree = "<group>"; };
 		B57FD4B02E5A554100DEA1C6 /* BlockedMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockedMessageView.swift; sourceTree = "<group>"; };
 		B58EC76D2ED56DAE00708A56 /* IdentityKeyChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentityKeyChecker.swift; sourceTree = "<group>"; };
@@ -5720,6 +5721,7 @@
 		B58EC7A92ED5855B00708A56 /* PreKeyTaskAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreKeyTaskAPIClient.swift; sourceTree = "<group>"; };
 		B58EC7AB2ED5869100708A56 /* PreKeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreKeyManager.swift; sourceTree = "<group>"; };
 		B58EC7AC2ED5869100708A56 /* PreKeyTaskManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreKeyTaskManager.swift; sourceTree = "<group>"; };
+		B59079B42F55EF1300BDE11B /* BulletinViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulletinViewController.swift; sourceTree = "<group>"; };
 		B5B8943C2E4FA7C900472CA9 /* SSOAccountMenuActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAccountMenuActions.swift; sourceTree = "<group>"; };
 		B5B8943E2E4FA7C900472CA9 /* SSOAvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAvatarView.swift; sourceTree = "<group>"; };
 		B5D17C712E42711B00799EBD /* SSOAuthenticationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOAuthenticationViewController.swift; sourceTree = "<group>"; };
@@ -8303,6 +8305,7 @@
 		3448BFC01EDF0EA7005B2D69 /* ConversationView */ = {
 			isa = PBXGroup;
 			children = (
+				B59079B42F55EF1300BDE11B /* BulletinViewController.swift */,
 				B57FD4AF2E5A554100DEA1C6 /* AccessRequestFormView.swift */,
 				B57FD4B02E5A554100DEA1C6 /* BlockedMessageView.swift */,
 				B5F1D1C42E56232F007FA412 /* SSOWebViewController.swift */,
@@ -17471,6 +17474,7 @@
 				B99287FB2CF0FE8D000D62C4 /* LinkedDevicesEducationSheet.swift in Sources */,
 				B9E322E92CD191CF006DAF3B /* LinkedDevicesView.swift in Sources */,
 				B9A53B952CF799590000578B /* LinkOrSyncPickerSheet.swift in Sources */,
+				B59079B52F55EF1300BDE11B /* BulletinViewController.swift in Sources */,
 				76C87FE128BE8E2400BD8709 /* LinkPreviewAttachmentViewController.swift in Sources */,
 				507B69122C5044F800F1C6D7 /* LinkPreviewGroupLink.swift in Sources */,
 				4542DF54208D40AC007B4E76 /* LoadingViewController.swift in Sources */,

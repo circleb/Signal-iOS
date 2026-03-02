@@ -22,13 +22,27 @@ public class NotificationActionHandler {
         if !AppNotificationUserInfo.isSignalNotification(userInfo: rawUserInfo) {
             // Non-Signal (e.g. HCP) notification: store for the notifications list and mark as read.
             let content = response.notification.request.content
+
+            // Prefer a Bulletin endpoint URL if a bulletin-id is present; otherwise fall back to generic url/link.
+            let bulletinIdString: String? = (rawUserInfo["bulletin-id"] as? String)
+                ?? (rawUserInfo["bulletin-id"] as? NSNumber)?.stringValue
+            let bulletinURLString: String?
+            if let bulletinIdString {
+                bulletinURLString = "https://cms.homesteadheritage.org/items/Bulletin/\(bulletinIdString)"
+            } else {
+                bulletinURLString = nil
+            }
+            let actionURL = bulletinURLString
+                ?? (rawUserInfo["url"] as? String)
+                ?? (rawUserInfo["link"] as? String)
+
             let stored = StoredNonSignalNotification(
                 identifier: response.notification.request.identifier,
                 title: content.title,
                 body: content.body,
                 date: Date(),
                 isRead: true,
-                actionURL: (rawUserInfo["url"] as? String) ?? (rawUserInfo["link"] as? String)
+                actionURL: actionURL
             )
             let store = NonSignalNotificationStore(keyValueStore: KeyValueStore(collection: "NonSignalNotifications"))
             await SSKEnvironment.shared.databaseStorageRef.awaitableWrite { tx in

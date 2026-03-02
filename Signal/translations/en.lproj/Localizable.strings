@@ -5584,11 +5584,10 @@
 /* Title for notification permission action sheet */
 "NOTIFICATION_PERMISSION_ACTION_SHEET_TITLE" = "Turn on Notifications";
 
-/* Title for the Notifications and Lists sheet */
-"NOTIFICATIONS_AND_LISTS_TITLE" = "Notifications & Lists";
-
-/* Section header for list subscriptions */
-"NOTIFICATIONS_LISTS_SUBSCRIPTIONS_HEADER" = "List Subscriptions";
+/* Title for the Notifications sheet */
+"NOTIFICATIONS_AND_LISTS_TITLE" = "Notifications";
+"NOTIFICATIONS_LISTS_MANAGE_BUTTON" = "Manage Notifications";
+"NOTIFICATIONS_LISTS_SHOW_NOTIFICATIONS_BUTTON" = "Show Bulletins";
 
 /* Prompt to sign in to manage subscriptions */
 "NOTIFICATIONS_LISTS_SIGN_IN_PROMPT" = "Sign in to manage your notification list subscriptions.";

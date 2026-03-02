@@ -1270,13 +1270,27 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             let userInfo = notification.request.content.userInfo
             if !AppNotificationUserInfo.isSignalNotification(userInfo: userInfo) {
                 let content = notification.request.content
+
+                // Prefer a Bulletin endpoint URL if a bulletin-id is present; otherwise fall back to generic url/link.
+                let bulletinIdString: String? = (userInfo["bulletin-id"] as? String)
+                    ?? (userInfo["bulletin-id"] as? NSNumber)?.stringValue
+                let bulletinURLString: String?
+                if let bulletinIdString {
+                    bulletinURLString = "https://cms.homesteadheritage.org/items/Bulletin/\(bulletinIdString)"
+                } else {
+                    bulletinURLString = nil
+                }
+                let actionURL = bulletinURLString
+                    ?? (userInfo["url"] as? String)
+                    ?? (userInfo["link"] as? String)
+
                 let stored = StoredNonSignalNotification(
                     identifier: notification.request.identifier,
                     title: content.title,
                     body: content.body,
                     date: Date(),
                     isRead: false,
-                    actionURL: (userInfo["url"] as? String) ?? (userInfo["link"] as? String)
+                    actionURL: actionURL
                 )
                 let store = NonSignalNotificationStore(keyValueStore: KeyValueStore(collection: "NonSignalNotifications"))
                 Task {
