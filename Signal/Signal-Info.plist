@@ -58,9 +58,9 @@
 	<key>CFBundleVersion</key>
 	<string>2</string>
 	<key>DirectusAPIKey</key>
-	<string></string>
+	<string>pL3m35S0fEBxLaHC-1G9lkhE6f1oLzJd</string>
 	<key>DirectusBaseURL</key>
-	<string></string>
+	<string>https://cms.homesteadheritage.org</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LOGS_EMAIL</key>

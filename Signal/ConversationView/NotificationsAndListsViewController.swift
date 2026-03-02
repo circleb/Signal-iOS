@@ -84,13 +84,17 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
                 let pivots = (try? await directusService.getDeviceSubscriptionPivotsByEmail(email)) ?? []
                 var selected = Set(pivots.map(\.subscriptionsId))
                 if selected.isEmpty {
-                    selected = Set(subs.filter(\.isDefault).map(\.id))
+                    selected = Set(subs.filter { $0.isDefault == true }.map(\.id))
                 }
                 self.subscriptions = subs
                 self.selectedSubscriptionIds = selected
                 self.subscriptionsError = nil
             } catch {
-                self.subscriptionsError = error.localizedDescription
+                if let directusError = error as? DirectusSubscriptionError, case .notConfigured = directusError {
+                    self.subscriptionsError = OWSLocalizedString("NOTIFICATIONS_LISTS_DIRECTUS_NOT_CONFIGURED", comment: "Shown when the notification list service is not configured for this build.")
+                } else {
+                    self.subscriptionsError = error.localizedDescription
+                }
             }
             self.isLoadingSubscriptions = false
             self.updateTableContents()
@@ -134,7 +138,7 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
         }
         for sub in subscriptions {
             let isSelected = selectedSubscriptionIds.contains(sub.id)
-            let isDefault = sub.isDefault
+            let isDefault = sub.isDefault ?? false
             section.add(OWSTableItem(customCellBlock: {
                 let cell = OWSTableItem.newCell()
                 cell.textLabel?.text = sub.label
@@ -143,7 +147,7 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
                 cell.selectionStyle = isDefault ? .none : .default
                 return cell
             }, actionBlock: { [weak self] in
-                guard let self, !sub.isDefault else { return }
+                guard let self, !isDefault else { return }
                 if selectedSubscriptionIds.contains(sub.id) {
                     selectedSubscriptionIds.remove(sub.id)
                 } else {

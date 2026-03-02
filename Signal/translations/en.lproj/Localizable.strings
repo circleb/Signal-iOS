@@ -5605,6 +5605,9 @@
 /* Loading indicator for subscriptions */
 "NOTIFICATIONS_LISTS_LOADING" = "Loading…";
 
+/* Shown when the notification list service (Directus) is not configured for this build */
+"NOTIFICATIONS_LISTS_DIRECTUS_NOT_CONFIGURED" = "Notification list subscriptions are not available for this build.";
+
 /* Snooze action text for contact permission reminder megaphone */
 "NOTIFICATION_PERMISSION_NOT_NOW_ACTION" = "Not Now";
 

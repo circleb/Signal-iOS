@@ -19,7 +19,8 @@ public struct DirectusSubscription: Codable, Equatable {
     public let sort: Int?
     public let label: String
     public let slug: String
-    public let isDefault: Bool
+    /// Directus may return null for this field; we treat null as false.
+    public let isDefault: Bool?
     public let description: String?
 
     enum CodingKeys: String, CodingKey {
