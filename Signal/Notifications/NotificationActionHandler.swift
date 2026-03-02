@@ -20,7 +20,7 @@ public class NotificationActionHandler {
 
         let rawUserInfo = response.notification.request.content.userInfo
         if !AppNotificationUserInfo.isSignalNotification(userInfo: rawUserInfo) {
-            // Non-Signal (e.g. HCP) notification: store for the notifications list and mark as read.
+            // Non-Signal (e.g. HCP) notification: store for the notifications list as unread.
             let content = response.notification.request.content
 
             // Prefer a Bulletin endpoint URL if a bulletin id is present (support both \"bulletin-id\" and \"bulletinId\"); otherwise fall back to generic url/link.
@@ -44,7 +44,7 @@ public class NotificationActionHandler {
                 title: content.title,
                 body: content.body,
                 date: Date(),
-                isRead: true,
+                isRead: false,
                 actionURL: actionURL
             )
             let store = NonSignalNotificationStore(keyValueStore: KeyValueStore(collection: "NonSignalNotifications"))

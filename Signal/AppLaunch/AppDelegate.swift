@@ -10,6 +10,7 @@ import Intents
 import SignalServiceKit
 import SignalUI
 import UIKit
+import UserNotifications
 import WebRTC
 
 enum LaunchPreflightError {
@@ -1651,10 +1652,51 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         return .notHandled
     }
 
+    /// When the app was terminated, notifications that arrived are never stored via willPresent.
+    /// On become-active, persist any delivered non-Signal notifications into the local store so they appear in the sheet.
+    private func persistDeliveredNonSignalNotificationsIfNeeded() {
+        UNUserNotificationCenter.current().getDeliveredNotifications { delivered in
+            guard !delivered.isEmpty else { return }
+            let nonSignal = delivered.filter { !AppNotificationUserInfo.isSignalNotification(userInfo: $0.request.content.userInfo) }
+            guard !nonSignal.isEmpty else { return }
+            let store = NonSignalNotificationStore(keyValueStore: KeyValueStore(collection: "NonSignalNotifications"))
+            let toStore: [StoredNonSignalNotification] = nonSignal.map { notification in
+                let content = notification.request.content
+                let userInfo = content.userInfo
+                let bulletinIdString: String? =
+                    (userInfo["bulletin-id"] as? String)
+                    ?? (userInfo["bulletin-id"] as? NSNumber)?.stringValue
+                    ?? (userInfo["bulletinId"] as? String)
+                    ?? (userInfo["bulletinId"] as? NSNumber)?.stringValue
+                let bulletinURLString: String? = bulletinIdString.map { "https://cms.homesteadheritage.org/items/Bulletin/\($0)" }
+                let actionURL = bulletinURLString
+                    ?? (userInfo["url"] as? String)
+                    ?? (userInfo["link"] as? String)
+                return StoredNonSignalNotification(
+                    identifier: notification.request.identifier,
+                    title: content.title,
+                    body: content.body,
+                    date: notification.date,
+                    isRead: false,
+                    actionURL: actionURL
+                )
+            }
+            SSKEnvironment.shared.databaseStorageRef.write { tx in
+                for stored in toStore {
+                    store.append(stored, transaction: tx)
+                }
+            }
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .nonSignalNotificationsDidChange, object: nil)
+            }
+        }
+    }
+
     private func clearAppropriateNotificationsAndRestoreBadgeCount() {
         AssertIsOnMainThread()
 
         appReadiness.runNowOrWhenAppDidBecomeReadySync {
+            self.persistDeliveredNonSignalNotificationsIfNeeded()
             let oldBadgeValue = UIApplication.shared.applicationIconBadgeNumber
             SSKEnvironment.shared.notificationPresenterRef.clearNotificationsForAppActivate()
             UIApplication.shared.applicationIconBadgeNumber = oldBadgeValue
