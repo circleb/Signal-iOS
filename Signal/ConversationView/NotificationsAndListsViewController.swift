@@ -18,6 +18,7 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
     private let directusService: DirectusSubscriptionServiceProtocol
     private let userInfoStore: SSOUserInfoStore
     private let nonSignalStore: NonSignalNotificationStore
+    private let isPreview: Bool
 
     private var subscriptions: [DirectusSubscription] = []
     private var selectedSubscriptionIds: Set<String> = []
@@ -35,17 +36,20 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
         self.directusService = DirectusSubscriptionService()
         self.userInfoStore = SSOUserInfoStoreImpl()
         self.nonSignalStore = NonSignalNotificationStore(keyValueStore: KeyValueStore(collection: "NonSignalNotifications"))
+        self.isPreview = false
         super.init()
     }
 
     init(
         directusService: DirectusSubscriptionServiceProtocol,
         userInfoStore: SSOUserInfoStore,
-        nonSignalStore: NonSignalNotificationStore
+        nonSignalStore: NonSignalNotificationStore,
+        isPreview: Bool = false
     ) {
         self.directusService = directusService
         self.userInfoStore = userInfoStore
         self.nonSignalStore = nonSignalStore
+        self.isPreview = isPreview
         super.init()
     }
 
@@ -107,6 +111,11 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
     }
 
     private func reloadNotifications() {
+        guard !isPreview else {
+            // In preview mode we rely on debug helpers to seed notifications.
+            updateTableContents()
+            return
+        }
         SSKEnvironment.shared.databaseStorageRef.read { tx in
             self.notifications = self.nonSignalStore.fetchAll(transaction: tx)
         }
@@ -230,13 +239,27 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
             let notifCopy = notif
             section.add(OWSTableItem(
                 customCellBlock: {
-                    let cell = UITableViewCell(style: .subtitle, reuseIdentifier: nil)
+                    let cell = UITableViewCell(style: .default, reuseIdentifier: nil)
                     OWSTableItem.configureCell(cell)
-                    cell.textLabel?.text = notifCopy.title
-                    cell.detailTextLabel?.text = notifCopy.body
-                    cell.textLabel?.numberOfLines = 1
-                    cell.detailTextLabel?.numberOfLines = 3
-                    cell.detailTextLabel?.lineBreakMode = .byTruncatingTail
+
+                    let titleLabel = UILabel()
+                    titleLabel.font = .boldSystemFont(ofSize: 20)
+                    titleLabel.textColor = .label
+                    titleLabel.numberOfLines = 1
+                    titleLabel.lineBreakMode = .byTruncatingTail
+                    titleLabel.text = notifCopy.title
+
+                    let bodyLabel = UILabel()
+                    bodyLabel.font = .systemFont(ofSize: 15)
+                    bodyLabel.textColor = .secondaryLabel
+                    bodyLabel.numberOfLines = 2
+                    bodyLabel.lineBreakMode = .byTruncatingTail
+                    bodyLabel.text = notifCopy.body
+
+                    let stack = UIStackView(arrangedSubviews: [titleLabel, bodyLabel])
+                    stack.axis = .vertical
+                    stack.spacing = 4
+
                     cell.accessoryView = notifCopy.isRead ? nil : {
                         let dot = UIView()
                         dot.backgroundColor = .systemBlue
@@ -244,6 +267,15 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
                         dot.frame = CGRect(x: 0, y: 0, width: 8, height: 8)
                         return dot
                     }()
+
+                    cell.contentView.addSubview(stack)
+                    stack.translatesAutoresizingMaskIntoConstraints = false
+                    NSLayoutConstraint.activate([
+                        stack.topAnchor.constraint(equalTo: cell.contentView.topAnchor, constant: 20),
+                        stack.bottomAnchor.constraint(equalTo: cell.contentView.bottomAnchor, constant: -20),
+                        stack.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: 20),
+                        stack.trailingAnchor.constraint(equalTo: cell.contentView.trailingAnchor, constant: -20)
+                    ])
                     return cell
                 },
                 actionBlock: { [weak self] in
@@ -286,7 +318,8 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
 
 extension NotificationsAndListsViewController {
 
-    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+    /// Swipe right (leading): Mark as read (only for unread).
+    func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let notificationsSectionIndex = areSubscriptionsVisible ? Section.notifications.rawValue : Section.subscriptions.rawValue
         guard indexPath.section == notificationsSectionIndex,
               indexPath.row < notifications.count else { return nil }
@@ -304,10 +337,289 @@ extension NotificationsAndListsViewController {
         return UISwipeActionsConfiguration(actions: [action])
     }
 
+    /// Swipe left (trailing): Delete notification.
+    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let notificationsSectionIndex = areSubscriptionsVisible ? Section.notifications.rawValue : Section.subscriptions.rawValue
+        guard indexPath.section == notificationsSectionIndex,
+              indexPath.row < notifications.count else { return nil }
+        let notif = notifications[indexPath.row]
+        let action = ContextualActionBuilder.makeContextualAction(
+            style: .destructive,
+            color: UIColor.Signal.red,
+            image: "trash-fill",
+            title: CommonStrings.deleteButton
+        ) { [weak self] completion in
+            self?.deleteNotification(identifier: notif.identifier)
+            completion(true)
+        }
+        return UISwipeActionsConfiguration(actions: [action])
+    }
+
+    func tableView(_ tableView: UITableView, willBeginEditingRowAt indexPath: IndexPath) {
+        let notificationsSectionIndex = areSubscriptionsVisible ? Section.notifications.rawValue : Section.subscriptions.rawValue
+        guard indexPath.section == notificationsSectionIndex,
+              let cell = tableView.cellForRow(at: indexPath) else { return }
+
+        // Match the visual style of inset sections by rounding the swipe container.
+        let radius: CGFloat = 24
+        if let container = cell.superview {
+            container.layer.cornerRadius = radius
+            container.layer.masksToBounds = true
+            container.clipsToBounds = true
+        } else {
+            cell.layer.cornerRadius = radius
+            cell.layer.masksToBounds = true
+            cell.clipsToBounds = true
+        }
+    }
+
+    func tableView(_ tableView: UITableView, didEndEditingRowAt indexPath: IndexPath?) {
+        guard let indexPath,
+              let cell = tableView.cellForRow(at: indexPath) else { return }
+        if let container = cell.superview {
+            container.layer.cornerRadius = 0
+            container.layer.masksToBounds = false
+            container.clipsToBounds = false
+        } else {
+            cell.layer.cornerRadius = 0
+            cell.layer.masksToBounds = false
+            cell.clipsToBounds = false
+        }
+    }
+
     private func markNotificationAsRead(identifier: String) {
         SSKEnvironment.shared.databaseStorageRef.write { tx in
             nonSignalStore.markAsRead(identifier: identifier, transaction: tx)
         }
         reloadNotifications()
+        NotificationCenter.default.post(name: .nonSignalNotificationsDidChange, object: nil)
+    }
+
+    private func deleteNotification(identifier: String) {
+        if !isPreview {
+            SSKEnvironment.shared.databaseStorageRef.write { tx in
+                nonSignalStore.remove(identifier: identifier, transaction: tx)
+            }
+        } else {
+            notifications.removeAll { $0.identifier == identifier }
+        }
+        reloadNotifications()
+        NotificationCenter.default.post(name: .nonSignalNotificationsDidChange, object: nil)
     }
 }
+
+#if DEBUG && canImport(SwiftUI)
+import SwiftUI
+
+// MARK: - Debug preview mocks
+
+private final class MockDirectusSubscriptionService: DirectusSubscriptionServiceProtocol {
+    func getSubscriptions() async throws -> [DirectusSubscription] {
+        let json = """
+        {
+          "data": [
+            {
+              "id": "1",
+              "sort": 1,
+              "label": "Critical updates",
+              "slug": "critical-updates",
+              "is_default": true,
+              "description": "Security alerts and important account notices."
+            },
+            {
+              "id": "2",
+              "sort": 2,
+              "label": "Product news",
+              "slug": "product-news",
+              "is_default": false,
+              "description": "New features and product announcements."
+            },
+            {
+              "id": "3",
+              "sort": 3,
+              "label": "Tips & tricks",
+              "slug": "tips-tricks",
+              "is_default": false,
+              "description": "Occasional tips to get more out of Signal."
+            }
+          ]
+        }
+        """
+        let data = Data(json.utf8)
+        let decoded = try JSONDecoder().decode(DirectusSubscriptionResponse.self, from: data)
+        return decoded.data
+    }
+
+    func getEnrolledDevicesByEmail(_ email: String) async throws -> [DirectusHcpEnrolledDevice] {
+        // Not needed for preview; return empty.
+        return []
+    }
+
+    func getDeviceSubscriptionPivotsByEmail(_ email: String) async throws -> [DirectusMemberSubscriptionPivot] {
+        let json = """
+        {
+          "data": [
+            {
+              "id": "pivot-1",
+              "hcp_enrolled_devices_id": "device-1",
+              "Subscriptions_id": "1"
+            },
+            {
+              "id": "pivot-2",
+              "hcp_enrolled_devices_id": "device-1",
+              "Subscriptions_id": "2"
+            }
+          ]
+        }
+        """
+        let data = Data(json.utf8)
+        let decoded = try JSONDecoder().decode(DirectusMemberSubscriptionPivotResponse.self, from: data)
+        return decoded.data.pivots
+    }
+
+    func createDeviceSubscriptionPivot(deviceId: String, subscriptionId: String) async throws -> DirectusMemberSubscriptionPivot {
+        // No-op implementation for preview.
+        let json = """
+        {
+          "data": [
+            {
+              "id": "pivot-\\(deviceId)-\\(subscriptionId)",
+              "hcp_enrolled_devices_id": "\\(deviceId)",
+              "Subscriptions_id": "\\(subscriptionId)"
+            }
+          ]
+        }
+        """
+        let data = Data(json.utf8)
+        let decoded = try JSONDecoder().decode(DirectusMemberSubscriptionPivotResponse.self, from: data)
+        return decoded.data.pivots[0]
+    }
+
+    func deleteDeviceSubscriptionPivot(pivotId: String) async throws {
+        // No-op for preview.
+    }
+
+    func saveUserSubscriptions(email: String, selectedSubscriptionIds: Set<String>) async throws {
+        // No-op for preview; we don't persist anything.
+    }
+}
+
+private final class MockSSOUserInfoStore: SSOUserInfoStore {
+    private let userInfo: SSOUserInfo
+
+    init() {
+        self.userInfo = SSOUserInfo(
+            phoneNumber: "+1 555-0100",
+            email: "hcp@example.com",
+            name: "Example HCP",
+            sub: "preview-sub",
+            accessToken: "preview-access-token",
+            refreshToken: nil,
+            roles: ["hcp"],
+            groups: [],
+            realmAccess: nil,
+            resourceAccess: nil
+        )
+    }
+
+    func storeUserInfo(_ userInfo: SSOUserInfo) {}
+
+    func getUserInfo() -> SSOUserInfo? {
+        return userInfo
+    }
+
+    func clearUserInfo() {}
+
+    func getUserRoles() -> [String] {
+        return userInfo.roles
+    }
+
+    func getUserGroups() -> [String] {
+        return userInfo.groups
+    }
+
+    func hasRole(_ role: String) -> Bool {
+        return userInfo.roles.contains(role)
+    }
+
+    func hasGroup(_ group: String) -> Bool {
+        return userInfo.groups.contains(group)
+    }
+
+    func hasAnyRole(_ roles: [String]) -> Bool {
+        return roles.contains { userInfo.roles.contains($0) }
+    }
+
+    func hasAnyGroup(_ groups: [String]) -> Bool {
+        return groups.contains { userInfo.groups.contains($0) }
+    }
+}
+
+// MARK: - Debug helpers for notifications
+
+extension NotificationsAndListsViewController {
+    func _debugLoadSampleNotifications() {
+        notifications = [
+            StoredNonSignalNotification(
+                identifier: "notif-1",
+                title: "New bulletin available",
+                body: "There’s a new clinical bulletin about medication safety. Tap to read more.",
+                date: Date(),
+                isRead: false,
+                actionURL: "https://cms.homesteadheritage.org/items/Bulletin/93"
+            ),
+            StoredNonSignalNotification(
+                identifier: "notif-2",
+                title: "New bulletin available",
+                body: "There’s a new clinical bulletin about medication safety. Tap to read more.",
+                date: Date(),
+                isRead: false,
+                actionURL: "https://cms.homesteadheritage.org/items/Bulletin/93"
+            ),
+            StoredNonSignalNotification(
+                identifier: "notif-3",
+                title: "System maintenance window",
+                body: "Directus will undergo scheduled maintenance tonight from 2–3 AM.",
+                date: Date().addingTimeInterval(-3600),
+                isRead: true,
+                actionURL: "https://cms.homesteadheritage.org/items/Bulletin/93"
+            )
+        ]
+    }
+}
+
+// MARK: - SwiftUI preview
+
+private struct NotificationsAndListsViewControllerPreview: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> UIViewController {
+        let mockDirectus = MockDirectusSubscriptionService()
+        let mockUserInfoStore = MockSSOUserInfoStore()
+        let nonSignalStore = NonSignalNotificationStore(
+            keyValueStore: KeyValueStore(collection: "MockNonSignalNotifications")
+        )
+
+        let viewController = NotificationsAndListsViewController(
+            directusService: mockDirectus,
+            userInfoStore: mockUserInfoStore,
+            nonSignalStore: nonSignalStore,
+            isPreview: true
+        )
+
+        viewController._debugLoadSampleNotifications()
+
+        let navController = OWSNavigationController(rootViewController: viewController)
+        return navController
+    }
+
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
+        // No-op
+    }
+}
+
+struct NotificationsAndListsViewController_Previews: PreviewProvider {
+    static var previews: some View {
+        NotificationsAndListsViewControllerPreview()
+            .ignoresSafeArea()
+    }
+}
+#endif

@@ -41,4 +41,11 @@ public final class NonSignalNotificationStore {
         list[idx] = item
         try? keyValueStore.setCodable(optional: list, key: storageKey, transaction: transaction)
     }
+
+    /// Removes the notification with the given identifier from storage.
+    public func remove(identifier: String, transaction: DBWriteTransaction) {
+        var list = (try? keyValueStore.getCodableValue(forKey: storageKey, failDebugOnParseError: false, transaction: transaction) as [StoredNonSignalNotification]?) ?? []
+        list.removeAll { $0.identifier == identifier }
+        try? keyValueStore.setCodable(optional: list, key: storageKey, transaction: transaction)
+    }
 }
