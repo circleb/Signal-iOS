@@ -214,7 +214,8 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
                     cell.textLabel?.text = notifCopy.title
                     cell.detailTextLabel?.text = notifCopy.body
                     cell.textLabel?.numberOfLines = 1
-                    cell.detailTextLabel?.numberOfLines = 0
+                    cell.detailTextLabel?.numberOfLines = 3
+                    cell.detailTextLabel?.lineBreakMode = .byTruncatingTail
                     cell.accessoryView = notifCopy.isRead ? nil : {
                         let dot = UIView()
                         dot.backgroundColor = .systemBlue
