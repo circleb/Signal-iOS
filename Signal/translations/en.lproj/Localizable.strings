@@ -5600,6 +5600,8 @@
 
 /* Empty state when there are no non-Signal notifications */
 "NOTIFICATIONS_LISTS_NO_NOTIFICATIONS" = "No notifications yet.";
+"NOTIFICATIONS_LISTS_TITLE_NOTIFICATIONS" = "Notifications";
+"NOTIFICATIONS_LISTS_TITLE_SUBSCRIPTIONS" = "Subscriptions";
 
 /* Loading indicator for subscriptions */
 "NOTIFICATIONS_LISTS_LOADING" = "Loading…";

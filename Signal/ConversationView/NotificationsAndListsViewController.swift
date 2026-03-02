@@ -55,18 +55,10 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        var config = UIButton.Configuration.filled()
-        config.title = OWSLocalizedString(
-            "NOTIFICATIONS_LISTS_MANAGE_BUTTON",
-            comment: "Button title to show the notification list subscriptions."
-        )
-        config.baseBackgroundColor = UIColor.Signal.ultramarine
-        config.baseForegroundColor = .white
-        config.cornerStyle = .medium
-        config.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 12, bottom: 4, trailing: 12)
-        manageButton.configuration = config
+        manageButton.configuration = UIButton.Configuration.plain()
         manageButton.addTarget(self, action: #selector(toggleSubscriptionsVisibility), for: .touchUpInside)
-        navigationItem.titleView = manageButton
+        navigationItem.leftBarButtonItem = UIBarButtonItem(customView: manageButton)
+        updateNavigationForCurrentMode()
         loadData()
     }
 
@@ -129,6 +121,35 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
             contents.add(buildNotificationsSection())
         }
         self.contents = contents
+    }
+
+    private func updateNavigationForCurrentMode() {
+        var config = manageButton.configuration ?? UIButton.Configuration.plain()
+        config.title = nil
+        config.baseForegroundColor = .label
+        config.cornerStyle = .capsule
+        config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 10, bottom: 6, trailing: 10)
+
+        let (symbolName, titleKey, titleComment): (String, String, String) = {
+            if areSubscriptionsVisible {
+                return (
+                    "chevron.left",
+                    "NOTIFICATIONS_LISTS_TITLE_SUBSCRIPTIONS",
+                    "Title for the subscriptions management view in the notifications sheet."
+                )
+            } else {
+                return (
+                    "gear.badge",
+                    "NOTIFICATIONS_LISTS_TITLE_NOTIFICATIONS",
+                    "Title for the notifications list in the notifications sheet."
+                )
+            }
+        }()
+
+        config.image = UIImage(systemName: symbolName)
+        manageButton.configuration = config
+
+        navigationItem.title = OWSLocalizedString(titleKey, comment: titleComment)
     }
 
     private func buildSubscriptionsSection() -> OWSTableSection {
@@ -236,12 +257,7 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
     @objc
     private func toggleSubscriptionsVisibility() {
         areSubscriptionsVisible.toggle()
-        var config = manageButton.configuration ?? UIButton.Configuration.filled()
-        config.title = OWSLocalizedString(
-            areSubscriptionsVisible ? "NOTIFICATIONS_LISTS_SHOW_NOTIFICATIONS_BUTTON" : "NOTIFICATIONS_LISTS_MANAGE_BUTTON",
-            comment: "Button title to toggle between showing notification list subscriptions and received notifications."
-        )
-        manageButton.configuration = config
+        updateNavigationForCurrentMode()
         updateTableContents()
     }
 
