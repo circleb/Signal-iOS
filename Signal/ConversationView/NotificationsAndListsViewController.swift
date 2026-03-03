@@ -257,7 +257,30 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
     private func buildNotificationsSection() -> OWSTableSection {
         let section = OWSTableSection()
         if notifications.isEmpty {
-            section.add(OWSTableItem.label(withText: OWSLocalizedString("NOTIFICATIONS_LISTS_NO_NOTIFICATIONS", comment: "Empty state when there are no non-Signal notifications.")))
+            let emptyText = OWSLocalizedString("NOTIFICATIONS_LISTS_NO_NOTIFICATIONS", comment: "Empty state when there are no non-Signal notifications.")
+            section.add(OWSTableItem(customCellBlock: {
+                let cell = OWSTableItem.newCell()
+                cell.accessoryType = .none
+                cell.selectionStyle = .none
+                let label = UILabel()
+                label.text = emptyText
+                label.font = .preferredFont(forTextStyle: .body)
+                label.textColor = .secondaryLabel
+                label.textAlignment = .center
+                label.numberOfLines = 0
+                label.translatesAutoresizingMaskIntoConstraints = false
+                cell.contentView.addSubview(label)
+                let padding: CGFloat = 64
+                NSLayoutConstraint.activate([
+                    label.centerXAnchor.constraint(equalTo: cell.contentView.centerXAnchor),
+                    label.centerYAnchor.constraint(equalTo: cell.contentView.centerYAnchor),
+                    label.leadingAnchor.constraint(greaterThanOrEqualTo: cell.contentView.leadingAnchor, constant: 20),
+                    cell.contentView.trailingAnchor.constraint(greaterThanOrEqualTo: label.trailingAnchor, constant: 20),
+                    label.topAnchor.constraint(greaterThanOrEqualTo: cell.contentView.topAnchor, constant: padding),
+                    cell.contentView.bottomAnchor.constraint(greaterThanOrEqualTo: label.bottomAnchor, constant: padding)
+                ])
+                return cell
+            }))
             return section
         }
         for notif in notifications {
