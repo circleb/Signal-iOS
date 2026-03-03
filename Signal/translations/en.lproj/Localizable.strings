@@ -5608,6 +5608,44 @@
 /* No comment provided by engineer. */
 "NOTIFICATIONS_FOOTER_WARNING" = "Actions include “Mark as Read,” “Reply,” and “Call Back.”";
 
+/* Title for the Notifications sheet */
+"NOTIFICATIONS_AND_LISTS_TITLE" = "Notifications";
+"NOTIFICATIONS_LISTS_MANAGE_BUTTON" = "Manage Notifications";
+"NOTIFICATIONS_LISTS_SHOW_NOTIFICATIONS_BUTTON" = "Show Bulletins";
+"NOTIFICATIONS_LISTS_OPEN_BULLETIN" = "View All Bulletins";
+
+/* Prompt to sign in to manage subscriptions */
+"NOTIFICATIONS_LISTS_SIGN_IN_PROMPT" = "Sign in to manage your notification list subscriptions.";
+
+/* Save subscriptions button */
+"NOTIFICATIONS_LISTS_SAVE" = "Save Subscriptions";
+
+/* Section header for received notifications */
+"NOTIFICATIONS_LISTS_RECEIVED_HEADER" = "Received Notifications";
+
+/* Empty state when there are no non-Signal notifications */
+"NOTIFICATIONS_LISTS_NO_NOTIFICATIONS" = "No notifications yet.";
+"NOTIFICATIONS_LISTS_TITLE_NOTIFICATIONS" = "Notifications";
+"NOTIFICATIONS_LISTS_TITLE_SUBSCRIPTIONS" = "Subscriptions";
+
+/* Loading indicator for subscriptions */
+"NOTIFICATIONS_LISTS_LOADING" = "Loading…";
+
+/* Descriptive text shown above the list of notification subscriptions */
+"NOTIFICATIONS_LISTS_SUBSCRIPTIONS_DESCRIPTION" = "Choose which lists you'd like to receive notification for. Turn off a list to stop those notifications.";
+
+/* Shown when the notification list service (Directus) is not configured for this build */
+"NOTIFICATIONS_LISTS_DIRECTUS_NOT_CONFIGURED" = "Notification list subscriptions are not available for this build.";
+
+/* Title shown when system notifications are disabled for Signal but the notifications sheet is opened */
+"NOTIFICATIONS_LISTS_SYSTEM_NOTIFICATIONS_DISABLED_TITLE" = "Notifications are off for HCP";
+
+/* Message explaining that system notifications must be enabled to receive non-Signal notifications on this device */
+"NOTIFICATIONS_LISTS_SYSTEM_NOTIFICATIONS_DISABLED_MESSAGE" = "To receive these notifications on this device, enable HCP notifications in iOS Settings.";
+
+/* Button label to open the iOS Settings app from the notifications sheet */
+"NOTIFICATIONS_LISTS_OPEN_SETTINGS_BUTTON" = "Open Settings";
+
 /* No comment provided by engineer. */
 "NOTIFICATIONS_NONE" = "No Name or Content";
 
