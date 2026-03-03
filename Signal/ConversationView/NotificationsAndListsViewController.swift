@@ -32,6 +32,16 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
     private static let subscriptionCellReuse = "SubscriptionCell"
     private static let notificationCellReuse = "NotificationCell"
 
+    /// Same cache as WebAppsListViewController; used to show bulletin button only when app is in cache and to open with bookmarks.
+    private lazy var webAppsService: WebAppsServiceProtocol = {
+        let cache = WebAppsStoreImpl(keyValueStore: KeyValueStore(collection: "WebApps"))
+        return WebAppsService(
+            networkManager: SSKEnvironment.shared.networkManagerRef,
+            cache: cache,
+            databaseStorage: SSKEnvironment.shared.databaseStorageRef
+        )
+    }()
+
     override init() {
         self.directusService = DirectusSubscriptionService()
         self.userInfoStore = SSOUserInfoStoreImpl()
@@ -61,12 +71,12 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
         super.viewDidLoad()
         manageButton.configuration = UIButton.Configuration.plain()
         manageButton.addTarget(self, action: #selector(toggleSubscriptionsVisibility), for: .touchUpInside)
-        navigationItem.leftBarButtonItem = UIBarButtonItem(customView: manageButton)
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
+        navigationItem.leftBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .close,
             target: self,
             action: #selector(closeButtonTapped)
         )
+        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: manageButton)
         updateNavigationForCurrentMode()
         loadData()
     }
@@ -78,6 +88,22 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         reloadNotifications()
+        ensureWebAppsCacheForBulletinButton()
+    }
+
+    /// If bulletin web app isn't in cache (e.g. user opened notifications before Web Apps tab), fetch from API so the "View full bulletin" button can appear.
+    private func ensureWebAppsCacheForBulletinButton() {
+        // Prefer lookup by stable Directus id, but fall back to legacy entry-based lookup for compatibility.
+        if webAppsService.getCachedWebApp(byId: Self.bulletinWebAppId) != nil ||
+            webAppsService.getCachedWebApp(byEntry: Self.bulletinEntry) != nil {
+            return
+        }
+        Task {
+            _ = try? await webAppsService.fetchWebApps().awaitable()
+            await MainActor.run { [weak self] in
+                self?.updateTableContents()
+            }
+        }
     }
 
     private func loadData() {
@@ -151,7 +177,7 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
         let (symbolName, titleKey, titleComment): (String, String, String) = {
             if areSubscriptionsVisible {
                 return (
-                    "chevron.left",
+                    "bell.badge",
                     "NOTIFICATIONS_LISTS_TITLE_SUBSCRIPTIONS",
                     "Title for the subscriptions management view in the notifications sheet."
                 )
@@ -254,6 +280,10 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
         }
     }
 
+    /// Bulletin web app from Directus (prefer id, fall back to entry for compatibility).
+    private static let bulletinWebAppId = "a648ffbc-5ada-45be-bd53-46ae0135a55e"
+    private static let bulletinEntry = "my.homesteadheritage.org/bulletin"
+
     private func buildNotificationsSection() -> OWSTableSection {
         let section = OWSTableSection()
         if notifications.isEmpty {
@@ -281,8 +311,7 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
                 ])
                 return cell
             }))
-            return section
-        }
+        } else {
         for notif in notifications {
             let notifCopy = notif
             section.add(OWSTableItem(
@@ -364,6 +393,20 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
                     self?.didSelectNotification(notifCopy)
                 }
             ))
+        }
+        }
+        let bulletinApp = webAppsService.getCachedWebApp(byId: Self.bulletinWebAppId)
+            ?? webAppsService.getCachedWebApp(byEntry: Self.bulletinEntry)
+        // Button only when bulletin web app is in cache. Opens same as WebAppsListViewController (bookmarks, etc.).
+        if bulletinApp != nil {
+            let openBulletinTitle = OWSLocalizedString("NOTIFICATIONS_LISTS_OPEN_BULLETIN", comment: "Button to open the full bulletin in the web app.")
+            section.add(OWSTableItem.disclosureItem(withText: openBulletinTitle) { [weak self] in
+                guard let self,
+                      let webApp = self.webAppsService.getCachedWebApp(byId: Self.bulletinWebAppId)
+                        ?? self.webAppsService.getCachedWebApp(byEntry: Self.bulletinEntry) else { return }
+                let webVC = WebAppWebViewController(webApp: webApp, webAppsService: self.webAppsService, userInfoStore: self.userInfoStore)
+                self.navigationController?.pushViewController(webVC, animated: true)
+            })
         }
         return section
     }

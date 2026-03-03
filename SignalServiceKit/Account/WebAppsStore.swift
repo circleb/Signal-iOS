@@ -18,6 +18,7 @@ public protocol WebAppsStore {
     func getLastFetchDate(tx: DBReadTransaction) -> Date?
     func isCacheExpired(tx: DBReadTransaction) -> Bool
     func getWebApp(by entry: String, tx: DBReadTransaction) -> WebApp?
+    func getWebApp(byId id: String, tx: DBReadTransaction) -> WebApp?
     func getWebAppsByType(_ type: String, tx: DBReadTransaction) -> [WebApp]
 }
 
@@ -97,6 +98,10 @@ public class WebAppsStoreImpl: WebAppsStore {
 
     public func getWebApp(by entry: String, tx: DBReadTransaction) -> WebApp? {
         return getWebApps(tx: tx)?.first { $0.entry == entry }
+    }
+
+    public func getWebApp(byId id: String, tx: DBReadTransaction) -> WebApp? {
+        return getWebApps(tx: tx)?.first { $0.id == id }
     }
 
     public func getWebAppsByType(_ type: String, tx: DBReadTransaction) -> [WebApp] {

@@ -6,6 +6,7 @@
 import Foundation
 
 public struct WebApp: Codable {
+    public let id: String?            // API ID (e.g. Directus UUID)
     public let entry: String           // Domain/URL for the web app
     public let name: String           // Display name
     public let description: String    // App description
@@ -17,8 +18,9 @@ public struct WebApp: Codable {
     public let type: String          // App type (sublist, rss, etc.)
     public let parent: String        // Parent app reference
     public let kcRole: [String]?     // Required Keycloak roles for access (user needs one of these roles)
-    
-    public init(entry: String, name: String, description: String, icon: String, image: String, category: String, urlsPermitted: [String], location: [String], type: String, parent: String, kcRole: [String]? = nil) {
+
+    public init(entry: String, name: String, description: String, icon: String, image: String, category: String, urlsPermitted: [String], location: [String], type: String, parent: String, id: String? = nil, kcRole: [String]? = nil) {
+        self.id = id
         self.entry = entry
         self.name = name
         self.description = description

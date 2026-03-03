@@ -13,7 +13,6 @@ class WebAppCell: UITableViewCell {
     private let nameLabel = UILabel()
     private let descriptionLabel = UILabel()
     private let categoryLabel = UILabel()
-    private let backgroundImageView = UIImageView()
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -30,15 +29,7 @@ class WebAppCell: UITableViewCell {
     }
 
     private func setupUI() {
-        backgroundColor = .clear
-        contentView.backgroundColor = .systemBackground
         selectionStyle = .none
-
-        // Background image
-        backgroundImageView.contentMode = .scaleAspectFill
-        backgroundImageView.clipsToBounds = true
-        backgroundImageView.layer.cornerRadius = 12
-        backgroundImageView.alpha = 0.1
 
         // Icon
         iconImageView.contentMode = .scaleAspectFit
@@ -50,18 +41,16 @@ class WebAppCell: UITableViewCell {
 
         descriptionLabel.font = .dynamicTypeBody
         descriptionLabel.textColor = Theme.secondaryTextAndIconColor
-        descriptionLabel.numberOfLines = 2
+        descriptionLabel.lineBreakMode = .byWordWrapping
+        descriptionLabel.numberOfLines = 3
 
         categoryLabel.font = .dynamicTypeCaption1
         categoryLabel.textColor = .ows_accentBlue
 
         // Layout
-        contentView.addSubview(backgroundImageView)
         contentView.addSubview(iconImageView)
         contentView.addSubview(nameLabel)
         contentView.addSubview(descriptionLabel)
-
-        backgroundImageView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16))
 
         iconImageView.autoSetDimensions(to: CGSize(width: 40, height: 40))
         iconImageView.autoPinEdge(toSuperviewEdge: .leading, withInset: 24)
@@ -73,6 +62,7 @@ class WebAppCell: UITableViewCell {
 
         descriptionLabel.autoPinEdge(.leading, to: .leading, of: nameLabel)
         descriptionLabel.autoPinEdge(.top, to: .bottom, of: nameLabel, withOffset: 4)
+        descriptionLabel.autoPinEdge(toSuperviewEdge: .trailing, withInset: 16)
         descriptionLabel.autoPinEdge(toSuperviewEdge: .bottom, withInset: 16)
     }
 
@@ -95,7 +85,6 @@ class WebAppCell: UITableViewCell {
         nameLabel.textColor = Theme.primaryTextColor
         descriptionLabel.textColor = Theme.secondaryTextAndIconColor
         categoryLabel.textColor = .ows_accentBlue
-        contentView.backgroundColor = .systemBackground
     }
 
     func configure(with webApp: WebApp) {
@@ -109,24 +98,82 @@ class WebAppCell: UITableViewCell {
         } else {
             iconImageView.image = UIImage(systemName: "app.fill")
         }
-
-        // Set background image if available
-        if !webApp.image.isEmpty {
-            // Load background image from bundle or network
-            // For now, use a gradient based on the image name
-            backgroundImageView.backgroundColor = gradientColor(for: webApp.image)
-        }
-    }
-
-    private func gradientColor(for imageName: String) -> UIColor {
-        // Create gradient colors based on image name
-        switch imageName {
-        case "bluegradient.jpg":
-            return UIColor.systemBlue.withAlphaComponent(0.1)
-        case "neutralgradient.jpg":
-            return UIColor.systemGray.withAlphaComponent(0.1)
-        default:
-            return UIColor.systemBlue.withAlphaComponent(0.1)
-        }
     }
 } 
+
+#if DEBUG
+import SwiftUI
+
+struct WebAppCell_Previews: PreviewProvider {
+    static var previews: some View {
+        WebAppCellTablePreview()
+            .previewLayout(.sizeThatFits)
+            .previewDisplayName("WebAppCell in UITableView")
+    }
+
+    private struct WebAppCellTablePreview: UIViewControllerRepresentable {
+        func makeUIViewController(context: Context) -> UIViewController {
+            let tableViewController = UITableViewController(style: .insetGrouped)
+            tableViewController.tableView.register(WebAppCell.self, forCellReuseIdentifier: "WebAppCell")
+            tableViewController.tableView.dataSource = context.coordinator
+            tableViewController.tableView.delegate = context.coordinator
+            tableViewController.tableView.rowHeight = UITableView.automaticDimension
+            tableViewController.tableView.estimatedRowHeight = 80
+            return tableViewController
+        }
+
+        func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
+            // No dynamic updates needed for static preview data.
+        }
+
+        func makeCoordinator() -> Coordinator {
+            Coordinator()
+        }
+
+        final class Coordinator: NSObject, UITableViewDataSource, UITableViewDelegate {
+            private let webApps: [WebApp] = [
+                WebApp(
+                    entry: "https://example.com/index.html",
+                    name: "Sample Web App",
+                    description: "Short description.",
+                    icon: "text.pad.header",
+                    image: "bluegradient.jpg",
+                    category: "Category",
+                    urlsPermitted: ["https://example.com/*"],
+                    location: ["preview"],
+                    type: "preview",
+                    parent: "preview-parent",
+                    id: "preview-1",
+                    kcRole: nil
+                ),
+                WebApp(
+                    entry: "https://example.com/long.html",
+                    name: "Very Long Web App Name That Wraps Nicely",
+                    description: "This is a longer description for the web app that should wrap onto a second line when there is enough text to do so, demonstrating the two-line behavior in the cell within a real UITableView environment.",
+                    icon: "birthday.cake.fill",
+                    image: "bluegradient.jpg",
+                    category: "Category",
+                    urlsPermitted: ["https://example.com/*"],
+                    location: ["preview"],
+                    type: "preview",
+                    parent: "preview-parent",
+                    id: "preview-2",
+                    kcRole: nil
+                )
+            ]
+
+            func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+                webApps.count
+            }
+
+            func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+                guard let cell = tableView.dequeueReusableCell(withIdentifier: "WebAppCell", for: indexPath) as? WebAppCell else {
+                    return UITableViewCell(style: .default, reuseIdentifier: nil)
+                }
+                cell.configure(with: webApps[indexPath.row])
+                return cell
+            }
+        }
+    }
+}
+#endif

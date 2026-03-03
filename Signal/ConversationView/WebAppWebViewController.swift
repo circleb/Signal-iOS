@@ -196,7 +196,22 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController, W
             }
         }
         
-        guard let url = URL(string: "https://\(webApp.entry)") else {
+        // Prefer the first permitted URL so we load the app's actual page (e.g. /bulletin), not the site homepage.
+        let url: URL? = {
+            guard let first = webApp.urlsPermitted.first, first.lowercased().hasPrefix("http") else {
+                return URL(string: "https://\(webApp.entry)")
+            }
+            // Strip trailing wildcard for initial load (e.g. "https://.../bulletin*" -> "https://.../bulletin")
+            let urlString: String
+            if let starIndex = first.firstIndex(of: "*") {
+                urlString = String(first[..<starIndex])
+            } else {
+                urlString = first
+            }
+            return URL(string: urlString) ?? URL(string: "https://\(webApp.entry)")
+        }()
+        
+        guard let url else {
             showError(WebAppsError.invalidURL)
             return
         }

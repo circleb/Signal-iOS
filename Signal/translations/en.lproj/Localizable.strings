@@ -5588,6 +5588,7 @@
 "NOTIFICATIONS_AND_LISTS_TITLE" = "Notifications";
 "NOTIFICATIONS_LISTS_MANAGE_BUTTON" = "Manage Notifications";
 "NOTIFICATIONS_LISTS_SHOW_NOTIFICATIONS_BUTTON" = "Show Bulletins";
+"NOTIFICATIONS_LISTS_OPEN_BULLETIN" = "View All Bulletins";
 
 /* Prompt to sign in to manage subscriptions */
 "NOTIFICATIONS_LISTS_SIGN_IN_PROMPT" = "Sign in to manage your notification list subscriptions.";
