@@ -99,7 +99,7 @@ public class ReferencedAttachmentBackupThumbnail: ReferencedAttachment {
 
 extension ReferencedAttachment {
 
-    public func previewText() -> String {
+    public func previewText(includeEmoji: Bool = true) -> String {
         let mimeType = attachment.mimeType
 
         let attachmentString: String
@@ -108,48 +108,51 @@ extension ReferencedAttachment {
             let isLoopingVideo = reference.renderingFlag == .shouldLoop
                 && MimeTypeUtil.isSupportedVideoMimeType(mimeType)
 
-            if (isGIF || isLoopingVideo) {
+            if isGIF || isLoopingVideo {
                 attachmentString = OWSLocalizedString(
                     "ATTACHMENT_TYPE_GIF",
-                    comment: "Short text label for a gif attachment, used for thread preview and on the lock screen"
+                    comment: "Short text label for a gif attachment, used for thread preview and on the lock screen",
                 )
             } else {
                 attachmentString = OWSLocalizedString(
                     "ATTACHMENT_TYPE_PHOTO",
-                    comment: "Short text label for a photo attachment, used for thread preview and on the lock screen"
+                    comment: "Short text label for a photo attachment, used for thread preview and on the lock screen",
                 )
             }
         } else if MimeTypeUtil.isSupportedImageMimeType(mimeType) {
             attachmentString = OWSLocalizedString(
                 "ATTACHMENT_TYPE_PHOTO",
-                comment: "Short text label for a photo attachment, used for thread preview and on the lock screen"
+                comment: "Short text label for a photo attachment, used for thread preview and on the lock screen",
             )
         } else if MimeTypeUtil.isSupportedVideoMimeType(mimeType) {
             attachmentString = OWSLocalizedString(
                 "ATTACHMENT_TYPE_VIDEO",
-                comment: "Short text label for a video attachment, used for thread preview and on the lock screen"
+                comment: "Short text label for a video attachment, used for thread preview and on the lock screen",
             )
         } else if MimeTypeUtil.isSupportedAudioMimeType(mimeType) {
             if reference.renderingFlag == .voiceMessage {
                 attachmentString = OWSLocalizedString(
                     "ATTACHMENT_TYPE_VOICE_MESSAGE",
-                    comment: "Short text label for a voice message attachment, used for thread preview and on the lock screen"
+                    comment: "Short text label for a voice message attachment, used for thread preview and on the lock screen",
                 )
             } else {
                 attachmentString = OWSLocalizedString(
                     "ATTACHMENT_TYPE_AUDIO",
-                    comment: "Short text label for a audio attachment, used for thread preview and on the lock screen"
+                    comment: "Short text label for a audio attachment, used for thread preview and on the lock screen",
                 )
             }
         } else {
             attachmentString = OWSLocalizedString(
                 "ATTACHMENT_TYPE_FILE",
-                comment: "Short text label for a file attachment, used for thread preview and on the lock screen"
+                comment: "Short text label for a file attachment, used for thread preview and on the lock screen",
             )
         }
 
-        let emoji = self.previewEmoji()
-        return String(format: "%@ %@", emoji, attachmentString)
+        if includeEmoji {
+            let emoji = self.previewEmoji()
+            return String(format: "%@ %@", emoji, attachmentString)
+        }
+        return attachmentString
     }
 
     public func previewEmoji() -> String {

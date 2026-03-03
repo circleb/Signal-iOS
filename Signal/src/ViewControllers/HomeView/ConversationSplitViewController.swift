@@ -9,8 +9,6 @@ import SignalUI
 
 class ConversationSplitViewController: UISplitViewController, ConversationSplit {
 
-    fileprivate var deviceTransferNavController: OutgoingDeviceTransferNavigationController?
-
     let homeVC: HomeTabBarController
     private let detailPlaceholderVC = NoSelectedConversationViewController()
 
@@ -81,6 +79,9 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
         delegate = self
         preferredDisplayMode = .oneBesideSecondary
         presentsWithGesture = false
+
+        minimumPrimaryColumnWidth = 280
+        maximumPrimaryColumnWidth = 400
         preferredPrimaryColumnWidthFraction = 0.42
 
         NotificationCenter.default.addObserver(self, selector: #selector(applyTheme), name: .themeDidChange, object: nil)
@@ -88,17 +89,23 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
             self,
             selector: #selector(orientationDidChange),
             name: UIDevice.orientationDidChangeNotification,
-            object: UIDevice.current
+            object: UIDevice.current,
         )
         NotificationCenter.default.addObserver(self, selector: #selector(didBecomeActive), name: .OWSApplicationDidBecomeActive, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(didStartTransfer), name: .outgoingDeviceTransferDidStart, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(didEndTransfer), name: .outgoingDeviceTransferDidEnd, object: nil)
 
         applyTheme()
     }
 
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+
+        if let windowScene = view.window?.windowScene, windowScene.activationState == .foregroundActive {
+            lastActiveInterfaceOrientation = windowScene.interfaceOrientation
+        }
     }
 
     @objc
@@ -124,28 +131,15 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
         }
     }
 
-    @objc
-    private func didStartTransfer() {
-        // Disable the device transfer listener while the new device restore flow is active
-        AppEnvironment.shared.deviceTransferServiceRef.removeObserver(self)
-        AppEnvironment.shared.deviceTransferServiceRef.stopListeningForNewDevices()
-    }
-
-    @objc
-    private func didEndTransfer() {
-        AppEnvironment.shared.deviceTransferServiceRef.addObserver(self)
-        AppEnvironment.shared.deviceTransferServiceRef.startListeningForNewDevices()
-    }
-
     func closeSelectedConversation(animated: Bool) {
-        guard let selectedConversationViewController = selectedConversationViewController else { return }
+        guard let selectedConversationViewController else { return }
 
         if isCollapsed {
             // If we're currently displaying the conversation in the primary nav controller, remove it
             // and everything it pushed to the navigation stack from the nav controller. We don't want
             // to just pop to root as we might have opened this conversation from the archive.
             if let selectedConversationIndex = chatListNavController.viewControllers.firstIndex(of: selectedConversationViewController) {
-                let targetViewController = chatListNavController.viewControllers[max(0, selectedConversationIndex-1)]
+                let targetViewController = chatListNavController.viewControllers[max(0, selectedConversationIndex - 1)]
                 chatListNavController.popToViewController(targetViewController, animated: animated)
             }
         } else {
@@ -157,7 +151,7 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
         threadUniqueId: String,
         action: ConversationViewAction,
         focusMessageId: String?,
-        animated: Bool
+        animated: Bool,
     ) {
         AssertIsOnMainThread()
 
@@ -179,7 +173,7 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
                     threadUniqueId: threadUniqueId,
                     action: action,
                     focusMessageId: focusMessageId,
-                    animated: animated
+                    animated: animated,
                 )
             }
             return
@@ -192,7 +186,7 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
                         threadUniqueId: threadUniqueId,
                         action: action,
                         focusMessageId: focusMessageId,
-                        animated: animated
+                        animated: animated,
                     )
                 }
                 return
@@ -219,7 +213,7 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
                 selectedConversationVC.ensureInteractionLoadedThenScrollToInteraction(
                     focusMessageId,
                     alignment: .centerIfNotEntirelyOnScreen,
-                    isAnimated: animated
+                    isAnimated: animated,
                 )
             }
 
@@ -230,7 +224,7 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
         // can maintain its scroll position when navigating back.
         homeVC.chatListViewController.updateLastViewedThreadUniqueId(
             threadUniqueId,
-            animated: animated
+            animated: animated,
         )
 
         let conversationViewController = SSKEnvironment.shared.databaseStorageRef.read { tx in
@@ -239,11 +233,11 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
                 threadViewModel: ThreadViewModel(
                     threadUniqueId: threadUniqueId,
                     forChatList: false,
-                    transaction: tx
+                    transaction: tx,
                 ),
                 action: action,
                 focusMessageId: focusMessageId,
-                tx: tx
+                tx: tx,
             )
         }
 
@@ -334,9 +328,9 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
     }
 
     override var shouldAutorotate: Bool {
-        if let presentedViewController = presentedViewController {
+        if let presentedViewController {
             return presentedViewController.shouldAutorotate
-        } else if let selectedConversationViewController = selectedConversationViewController {
+        } else if let selectedConversationViewController {
             return selectedConversationViewController.shouldAutorotate
         } else {
             return super.shouldAutorotate
@@ -344,7 +338,7 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
     }
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
-        if let presentedViewController = presentedViewController {
+        if let presentedViewController {
             return presentedViewController.supportedInterfaceOrientations
         } else {
             return super.supportedInterfaceOrientations
@@ -370,8 +364,10 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
             // If we already have a detail VC displayed, we want to replace it.
             // The normal behavior of `showDetailViewController` pushes on
             // top of it in collapsed mode.
-            if let currentDetailVC = currentDetailViewController,
-               let detailVCIndex = viewControllersToDisplay.firstIndex(of: currentDetailVC) {
+            if
+                let currentDetailVC = currentDetailViewController,
+                let detailVCIndex = viewControllersToDisplay.firstIndex(of: currentDetailVC)
+            {
                 viewControllersToDisplay = Array(viewControllersToDisplay[0..<detailVCIndex])
             }
             viewControllersToDisplay.append(viewController)
@@ -414,8 +410,8 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
             modifierFlags: .command,
             discoverabilityTitle: OWSLocalizedString(
                 "KEY_COMMAND_NEW_MESSAGE",
-                comment: "A keyboard command to present the new message dialog."
-            )
+                comment: "A keyboard command to present the new message dialog.",
+            ),
         ),
         UIKeyCommand(
             action: #selector(showNewGroupView),
@@ -423,14 +419,14 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
             modifierFlags: .command,
             discoverabilityTitle: OWSLocalizedString(
                 "KEY_COMMAND_NEW_GROUP",
-                comment: "A keyboard command to present the new group dialog."
-            )
+                comment: "A keyboard command to present the new group dialog.",
+            ),
         ),
         UIKeyCommand(
             action: #selector(showAppSettings),
             input: ",",
             modifierFlags: .command,
-            discoverabilityTitle: CommonStrings.openAppSettingsButton
+            discoverabilityTitle: CommonStrings.openAppSettingsButton,
         ),
         UIKeyCommand(
             action: #selector(focusSearch),
@@ -438,8 +434,8 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
             modifierFlags: .command,
             discoverabilityTitle: OWSLocalizedString(
                 "KEY_COMMAND_SEARCH",
-                comment: "A keyboard command to begin a search on the conversation list."
-            )
+                comment: "A keyboard command to begin a search on the conversation list.",
+            ),
         ),
         UIKeyCommand(
             action: #selector(selectPreviousConversation),
@@ -447,8 +443,8 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
             modifierFlags: .alternate,
             discoverabilityTitle: OWSLocalizedString(
                 "KEY_COMMAND_PREVIOUS_CONVERSATION",
-                comment: "A keyboard command to jump to the previous conversation in the list."
-            )
+                comment: "A keyboard command to jump to the previous conversation in the list.",
+            ),
         ),
         UIKeyCommand(
             action: #selector(selectNextConversation),
@@ -456,9 +452,9 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
             modifierFlags: .alternate,
             discoverabilityTitle: OWSLocalizedString(
                 "KEY_COMMAND_NEXT_CONVERSATION",
-                comment: "A keyboard command to jump to the next conversation in the list."
-            )
-        )
+                comment: "A keyboard command to jump to the next conversation in the list.",
+            ),
+        ),
     ] + [
         UIKeyCommand(
             action: #selector(selectPreviousConversation),
@@ -466,8 +462,8 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
             modifierFlags: [.control, .shift],
             discoverabilityTitle: OWSLocalizedString(
                 "KEY_COMMAND_PREVIOUS_CONVERSATION",
-                comment: "A keyboard command to jump to the previous conversation in the list."
-            )
+                comment: "A keyboard command to jump to the previous conversation in the list.",
+            ),
         ),
         UIKeyCommand(
             action: #selector(selectNextConversation),
@@ -475,8 +471,8 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
             modifierFlags: .control,
             discoverabilityTitle: OWSLocalizedString(
                 "KEY_COMMAND_NEXT_CONVERSATION",
-                comment: "A keyboard command to jump to the next conversation in the list."
-            )
+                comment: "A keyboard command to jump to the next conversation in the list.",
+            ),
         ),
     ].map {
         $0.wantsPriorityOverSystemBehavior = true
@@ -491,8 +487,8 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
                 modifierFlags: [.command, .shift],
                 discoverabilityTitle: OWSLocalizedString(
                     "KEY_COMMAND_CONVERSATION_INFO",
-                    comment: "A keyboard command to open the current conversation's settings."
-                )
+                    comment: "A keyboard command to open the current conversation's settings.",
+                ),
             ),
             UIKeyCommand(
                 action: #selector(openAllMedia),
@@ -500,8 +496,8 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
                 modifierFlags: [.command, .shift],
                 discoverabilityTitle: OWSLocalizedString(
                     "KEY_COMMAND_ALL_MEDIA",
-                    comment: "A keyboard command to open the current conversation's all media view."
-                )
+                    comment: "A keyboard command to open the current conversation's all media view.",
+                ),
             ),
             UIKeyCommand(
                 action: #selector(openGifSearch),
@@ -509,8 +505,8 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
                 modifierFlags: [.command, .shift],
                 discoverabilityTitle: OWSLocalizedString(
                     "KEY_COMMAND_GIF_SEARCH",
-                    comment: "A keyboard command to open the current conversations GIF picker."
-                )
+                    comment: "A keyboard command to open the current conversations GIF picker.",
+                ),
             ),
             UIKeyCommand(
                 action: #selector(openAttachmentKeyboard),
@@ -518,8 +514,8 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
                 modifierFlags: .command,
                 discoverabilityTitle: OWSLocalizedString(
                     "KEY_COMMAND_ATTACHMENTS",
-                    comment: "A keyboard command to open the current conversation's attachment picker."
-                )
+                    comment: "A keyboard command to open the current conversation's attachment picker.",
+                ),
             ),
             UIKeyCommand(
                 action: #selector(openStickerKeyboard),
@@ -527,8 +523,8 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
                 modifierFlags: [.command, .shift],
                 discoverabilityTitle: OWSLocalizedString(
                     "KEY_COMMAND_STICKERS",
-                    comment: "A keyboard command to open the current conversation's sticker picker."
-                )
+                    comment: "A keyboard command to open the current conversation's sticker picker.",
+                ),
             ),
             UIKeyCommand(
                 action: #selector(archiveSelectedConversation),
@@ -536,8 +532,8 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
                 modifierFlags: [.command, .shift],
                 discoverabilityTitle: OWSLocalizedString(
                     "KEY_COMMAND_ARCHIVE",
-                    comment: "A keyboard command to archive the current conversation."
-                )
+                    comment: "A keyboard command to archive the current conversation.",
+                ),
             ),
             UIKeyCommand(
                 action: #selector(unarchiveSelectedConversation),
@@ -545,8 +541,8 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
                 modifierFlags: [.command, .shift],
                 discoverabilityTitle: OWSLocalizedString(
                     "KEY_COMMAND_UNARCHIVE",
-                    comment: "A keyboard command to unarchive the current conversation."
-                )
+                    comment: "A keyboard command to unarchive the current conversation.",
+                ),
             ),
             UIKeyCommand(
                 action: #selector(focusInputToolbar),
@@ -554,9 +550,9 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
                 modifierFlags: [.command, .shift],
                 discoverabilityTitle: OWSLocalizedString(
                     "KEY_COMMAND_FOCUS_COMPOSER",
-                    comment: "A keyboard command to focus the current conversation's input field."
-                )
-            )
+                    comment: "A keyboard command to focus the current conversation's input field.",
+                ),
+            ),
         ]
     }
 
@@ -592,6 +588,11 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
         homeVC.chatListViewController.showAppSettings()
     }
 
+    @objc
+    func showCameraView(completion: ((UINavigationController) -> Void)? = nil) {
+        homeVC.chatListViewController.presentCameraView(completion: completion)
+    }
+
     func showAppSettingsWithMode(_ mode: ChatListViewController.ShowAppSettingsMode, completion: (() -> Void)? = nil) {
         homeVC.chatListViewController.showAppSettings(mode: mode, completion: completion)
     }
@@ -623,7 +624,7 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
 
     @objc
     func openConversationSettings() {
-        guard let selectedConversationViewController = selectedConversationViewController else {
+        guard let selectedConversationViewController else {
             return owsFailDebug("unexpectedly missing selected conversation")
         }
 
@@ -632,7 +633,7 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
 
     @objc
     func focusInputToolbar() {
-        guard let selectedConversationViewController = selectedConversationViewController else {
+        guard let selectedConversationViewController else {
             return owsFailDebug("unexpectedly missing selected conversation")
         }
 
@@ -641,7 +642,7 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
 
     @objc
     func openAllMedia() {
-        guard let selectedConversationViewController = selectedConversationViewController else {
+        guard let selectedConversationViewController else {
             return owsFailDebug("unexpectedly missing selected conversation")
         }
 
@@ -650,7 +651,7 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
 
     @objc
     func openStickerKeyboard() {
-        guard let selectedConversationViewController = selectedConversationViewController else {
+        guard let selectedConversationViewController else {
             return owsFailDebug("unexpectedly missing selected conversation")
         }
 
@@ -659,7 +660,7 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
 
     @objc
     func openAttachmentKeyboard() {
-        guard let selectedConversationViewController = selectedConversationViewController else {
+        guard let selectedConversationViewController else {
             return owsFailDebug("unexpectedly missing selected conversation")
         }
 
@@ -668,7 +669,7 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
 
     @objc
     func openGifSearch() {
-        guard let selectedConversationViewController = selectedConversationViewController else {
+        guard let selectedConversationViewController else {
             return owsFailDebug("unexpectedly missing selected conversation")
         }
 
@@ -701,8 +702,10 @@ extension ConversationSplitViewController: UISplitViewControllerDelegate {
         // See if the current conversation is currently in the view hierarchy. If not,
         // show the placeholder view as no conversation is selected. The conversation
         // was likely popped from the stack while the split view was collapsed.
-        guard let currentConversationVC = selectedConversationViewController,
-              let conversationVCIndex = chatListNavController.viewControllers.firstIndex(of: currentConversationVC) else {
+        guard
+            let currentConversationVC = selectedConversationViewController,
+            let conversationVCIndex = chatListNavController.viewControllers.firstIndex(of: currentConversationVC)
+        else {
             self.selectedConversationViewController = nil
             return detailPlaceholderVC
         }
@@ -746,7 +749,7 @@ extension ConversationSplitViewController: UINavigationControllerDelegate {
     func navigationController(_ navigationController: UINavigationController, interactionControllerFor animationController: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
         return navigationTransitionDelegate?.navigationController?(
             navigationController,
-            interactionControllerFor: animationController
+            interactionControllerFor: animationController,
         )
     }
 
@@ -755,7 +758,7 @@ extension ConversationSplitViewController: UINavigationControllerDelegate {
             navigationController,
             animationControllerFor: operation,
             from: fromVC,
-            to: toVC
+            to: toVC,
         )
     }
 }
@@ -781,45 +784,4 @@ private class NoSelectedConversationViewController: OWSViewController {
 
         logoImageView.autoCenterInSuperview()
     }
-}
-
-extension ConversationSplitViewController: DeviceTransferServiceObserver {
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-
-        if !BuildFlags.Backups.registrationFlow {
-            AppEnvironment.shared.deviceTransferServiceRef.addObserver(self)
-            AppEnvironment.shared.deviceTransferServiceRef.startListeningForNewDevices()
-        }
-    }
-
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-
-        if let windowScene = view.window?.windowScene, windowScene.activationState == .foregroundActive {
-            lastActiveInterfaceOrientation = windowScene.interfaceOrientation
-        }
-    }
-
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-
-        if !BuildFlags.Backups.registrationFlow {
-            AppEnvironment.shared.deviceTransferServiceRef.removeObserver(self)
-            AppEnvironment.shared.deviceTransferServiceRef.stopListeningForNewDevices()
-        }
-    }
-
-    func deviceTransferServiceDiscoveredNewDevice(peerId: MCPeerID, discoveryInfo: [String: String]?) {
-        guard deviceTransferNavController?.presentingViewController == nil else { return }
-        let navController = OutgoingDeviceTransferNavigationController()
-        deviceTransferNavController = navController
-        navController.present(fromViewController: self)
-    }
-
-    func deviceTransferServiceDidStartTransfer(progress: Progress) {}
-
-    func deviceTransferServiceDidEndTransfer(error: DeviceTransferService.Error?) {}
-
-    func deviceTransferServiceDidRequestAppRelaunch() {}
 }

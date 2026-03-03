@@ -464,6 +464,94 @@ public struct BackupProto_AccountData: @unchecked Sendable {
 
   }
 
+  public enum AppTheme: SwiftProtobuf.Enum, Swift.CaseIterable {
+    public typealias RawValue = Int
+
+    /// Interpret as "System"
+    case unknownAppTheme // = 0
+    case system // = 1
+    case light // = 2
+    case dark // = 3
+    case UNRECOGNIZED(Int)
+
+    public init() {
+      self = .unknownAppTheme
+    }
+
+    public init?(rawValue: Int) {
+      switch rawValue {
+      case 0: self = .unknownAppTheme
+      case 1: self = .system
+      case 2: self = .light
+      case 3: self = .dark
+      default: self = .UNRECOGNIZED(rawValue)
+      }
+    }
+
+    public var rawValue: Int {
+      switch self {
+      case .unknownAppTheme: return 0
+      case .system: return 1
+      case .light: return 2
+      case .dark: return 3
+      case .UNRECOGNIZED(let i): return i
+      }
+    }
+
+    // The compiler won't synthesize support with the UNRECOGNIZED case.
+    public static let allCases: [BackupProto_AccountData.AppTheme] = [
+      .unknownAppTheme,
+      .system,
+      .light,
+      .dark,
+    ]
+
+  }
+
+  public enum CallsUseLessDataSetting: SwiftProtobuf.Enum, Swift.CaseIterable {
+    public typealias RawValue = Int
+
+    /// Interpret as "Never"
+    case unknownCallDataSetting // = 0
+    case never // = 1
+    case mobileDataOnly // = 2
+    case wifiAndMobileData // = 3
+    case UNRECOGNIZED(Int)
+
+    public init() {
+      self = .unknownCallDataSetting
+    }
+
+    public init?(rawValue: Int) {
+      switch rawValue {
+      case 0: self = .unknownCallDataSetting
+      case 1: self = .never
+      case 2: self = .mobileDataOnly
+      case 3: self = .wifiAndMobileData
+      default: self = .UNRECOGNIZED(rawValue)
+      }
+    }
+
+    public var rawValue: Int {
+      switch self {
+      case .unknownCallDataSetting: return 0
+      case .never: return 1
+      case .mobileDataOnly: return 2
+      case .wifiAndMobileData: return 3
+      case .UNRECOGNIZED(let i): return i
+      }
+    }
+
+    // The compiler won't synthesize support with the UNRECOGNIZED case.
+    public static let allCases: [BackupProto_AccountData.CallsUseLessDataSetting] = [
+      .unknownCallDataSetting,
+      .never,
+      .mobileDataOnly,
+      .wifiAndMobileData,
+    ]
+
+  }
+
   public struct UsernameLink: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -732,11 +820,6 @@ public struct BackupProto_AccountData: @unchecked Sendable {
     /// Clears the value of `backupTier`. Subsequent reads from it will return its default value.
     public mutating func clearBackupTier() {_uniqueStorage()._backupTier = nil}
 
-    public var showSealedSenderIndicators: Bool {
-      get {return _storage._showSealedSenderIndicators}
-      set {_uniqueStorage()._showSealedSenderIndicators = newValue}
-    }
-
     public var defaultSentMediaQuality: BackupProto_AccountData.SentMediaQuality {
       get {return _storage._defaultSentMediaQuality}
       set {_uniqueStorage()._defaultSentMediaQuality = newValue}
@@ -770,6 +853,23 @@ public struct BackupProto_AccountData: @unchecked Sendable {
     public var hasPinReminders: Bool {return _storage._pinReminders != nil}
     /// Clears the value of `pinReminders`. Subsequent reads from it will return its default value.
     public mutating func clearPinReminders() {_uniqueStorage()._pinReminders = nil}
+
+    /// If unset, treat the same as "Unknown" case
+    public var appTheme: BackupProto_AccountData.AppTheme {
+      get {return _storage._appTheme}
+      set {_uniqueStorage()._appTheme = newValue}
+    }
+
+    /// If unset, treat the same as "Unknown" case
+    public var callsUseLessDataSetting: BackupProto_AccountData.CallsUseLessDataSetting {
+      get {return _storage._callsUseLessDataSetting}
+      set {_uniqueStorage()._callsUseLessDataSetting = newValue}
+    }
+
+    public var allowSealedSenderFromAnyone: Bool {
+      get {return _storage._allowSealedSenderFromAnyone}
+      set {_uniqueStorage()._allowSealedSenderFromAnyone = newValue}
+    }
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -2123,6 +2223,16 @@ public struct BackupProto_ChatItem: @unchecked Sendable {
     set {_uniqueStorage()._item = .poll(newValue)}
   }
 
+  /// only set if message is pinned
+  public var pinDetails: BackupProto_ChatItem.PinDetails {
+    get {return _storage._pinDetails ?? BackupProto_ChatItem.PinDetails()}
+    set {_uniqueStorage()._pinDetails = newValue}
+  }
+  /// Returns true if `pinDetails` has been explicitly set.
+  public var hasPinDetails: Bool {return _storage._pinDetails != nil}
+  /// Clears the value of `pinDetails`. Subsequent reads from it will return its default value.
+  public mutating func clearPinDetails() {_uniqueStorage()._pinDetails = nil}
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// If unset, importers should skip this item without throwing an error.
@@ -2197,6 +2307,44 @@ public struct BackupProto_ChatItem: @unchecked Sendable {
     // methods supported on all messages.
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    public init() {}
+  }
+
+  public struct PinDetails: Sendable {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    public var pinnedAtTimestamp: UInt64 = 0
+
+    public var pinExpiry: BackupProto_ChatItem.PinDetails.OneOf_PinExpiry? = nil
+
+    /// timestamp when the pin should expire
+    public var pinExpiresAtTimestamp: UInt64 {
+      get {
+        if case .pinExpiresAtTimestamp(let v)? = pinExpiry {return v}
+        return 0
+      }
+      set {pinExpiry = .pinExpiresAtTimestamp(newValue)}
+    }
+
+    public var pinNeverExpires: Bool {
+      get {
+        if case .pinNeverExpires(let v)? = pinExpiry {return v}
+        return false
+      }
+      set {pinExpiry = .pinNeverExpires(newValue)}
+    }
+
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    public enum OneOf_PinExpiry: Equatable, Sendable {
+      /// timestamp when the pin should expire
+      case pinExpiresAtTimestamp(UInt64)
+      case pinNeverExpires(Bool)
+
+    }
 
     public init() {}
   }
@@ -4024,6 +4172,14 @@ public struct BackupProto_ChatUpdateMessage: Sendable {
     set {update = .pollTerminate(newValue)}
   }
 
+  public var pinMessage: BackupProto_PinMessageUpdate {
+    get {
+      if case .pinMessage(let v)? = update {return v}
+      return BackupProto_PinMessageUpdate()
+    }
+    set {update = .pinMessage(newValue)}
+  }
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// If unset, importers should ignore the update message without throwing an error.
@@ -4038,6 +4194,7 @@ public struct BackupProto_ChatUpdateMessage: Sendable {
     case groupCall(BackupProto_GroupCall)
     case learnedProfileChange(BackupProto_LearnedProfileChatUpdate)
     case pollTerminate(BackupProto_PollTerminateUpdate)
+    case pinMessage(BackupProto_PinMessageUpdate)
 
   }
 
@@ -5662,6 +5819,21 @@ public struct BackupProto_PollTerminateUpdate: Sendable {
   public init() {}
 }
 
+public struct BackupProto_PinMessageUpdate: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  public var targetSentTimestamp: UInt64 = 0
+
+  /// recipient id
+  public var authorID: UInt64 = 0
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
 public struct BackupProto_StickerPack: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -6650,6 +6822,14 @@ extension BackupProto_AccountData.SentMediaQuality: SwiftProtobuf._ProtoNameProv
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNKNOWN_QUALITY\0\u{1}STANDARD\0\u{1}HIGH\0")
 }
 
+extension BackupProto_AccountData.AppTheme: SwiftProtobuf._ProtoNameProviding {
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNKNOWN_APP_THEME\0\u{1}SYSTEM\0\u{1}LIGHT\0\u{1}DARK\0")
+}
+
+extension BackupProto_AccountData.CallsUseLessDataSetting: SwiftProtobuf._ProtoNameProviding {
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNKNOWN_CALL_DATA_SETTING\0\u{1}NEVER\0\u{1}MOBILE_DATA_ONLY\0\u{1}WIFI_AND_MOBILE_DATA\0")
+}
+
 extension BackupProto_AccountData.UsernameLink: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = BackupProto_AccountData.protoMessageName + ".UsernameLink"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}entropy\0\u{1}serverId\0\u{1}color\0")
@@ -6745,7 +6925,7 @@ extension BackupProto_AccountData.AutoDownloadSettings.AutoDownloadOption: Swift
 
 extension BackupProto_AccountData.AccountSettings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = BackupProto_AccountData.protoMessageName + ".AccountSettings"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}readReceipts\0\u{1}sealedSenderIndicators\0\u{1}typingIndicators\0\u{1}linkPreviews\0\u{1}notDiscoverableByPhoneNumber\0\u{1}preferContactAvatars\0\u{1}universalExpireTimerSeconds\0\u{1}preferredReactionEmoji\0\u{1}displayBadgesOnProfile\0\u{1}keepMutedChatsArchived\0\u{1}hasSetMyStoriesPrivacy\0\u{1}hasViewedOnboardingStory\0\u{1}storiesDisabled\0\u{1}storyViewReceiptsEnabled\0\u{1}hasSeenGroupStoryEducationSheet\0\u{1}hasCompletedUsernameOnboarding\0\u{1}phoneNumberSharingMode\0\u{1}defaultChatStyle\0\u{1}customChatColors\0\u{1}optimizeOnDeviceStorage\0\u{1}backupTier\0\u{1}showSealedSenderIndicators\0\u{1}defaultSentMediaQuality\0\u{1}autoDownloadSettings\0\u{2}\u{2}screenLockTimeoutMinutes\0\u{1}pinReminders\0\u{c}\u{19}\u{1}")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}readReceipts\0\u{1}sealedSenderIndicators\0\u{1}typingIndicators\0\u{1}linkPreviews\0\u{1}notDiscoverableByPhoneNumber\0\u{1}preferContactAvatars\0\u{1}universalExpireTimerSeconds\0\u{1}preferredReactionEmoji\0\u{1}displayBadgesOnProfile\0\u{1}keepMutedChatsArchived\0\u{1}hasSetMyStoriesPrivacy\0\u{1}hasViewedOnboardingStory\0\u{1}storiesDisabled\0\u{1}storyViewReceiptsEnabled\0\u{1}hasSeenGroupStoryEducationSheet\0\u{1}hasCompletedUsernameOnboarding\0\u{1}phoneNumberSharingMode\0\u{1}defaultChatStyle\0\u{1}customChatColors\0\u{1}optimizeOnDeviceStorage\0\u{1}backupTier\0\u{2}\u{2}defaultSentMediaQuality\0\u{1}autoDownloadSettings\0\u{2}\u{2}screenLockTimeoutMinutes\0\u{1}pinReminders\0\u{1}appTheme\0\u{1}callsUseLessDataSetting\0\u{1}allowSealedSenderFromAnyone\0\u{c}\u{16}\u{1}\u{c}\u{19}\u{1}")
 
   fileprivate class _StorageClass {
     var _readReceipts: Bool = false
@@ -6769,11 +6949,13 @@ extension BackupProto_AccountData.AccountSettings: SwiftProtobuf.Message, SwiftP
     var _customChatColors: [BackupProto_ChatStyle.CustomChatColor] = []
     var _optimizeOnDeviceStorage: Bool = false
     var _backupTier: UInt64? = nil
-    var _showSealedSenderIndicators: Bool = false
     var _defaultSentMediaQuality: BackupProto_AccountData.SentMediaQuality = .unknownQuality
     var _autoDownloadSettings: BackupProto_AccountData.AutoDownloadSettings? = nil
     var _screenLockTimeoutMinutes: UInt32? = nil
     var _pinReminders: Bool? = nil
+    var _appTheme: BackupProto_AccountData.AppTheme = .unknownAppTheme
+    var _callsUseLessDataSetting: BackupProto_AccountData.CallsUseLessDataSetting = .unknownCallDataSetting
+    var _allowSealedSenderFromAnyone: Bool = false
 
       // This property is used as the initial default value for new instances of the type.
       // The type itself is protecting the reference to its storage via CoW semantics.
@@ -6805,11 +6987,13 @@ extension BackupProto_AccountData.AccountSettings: SwiftProtobuf.Message, SwiftP
       _customChatColors = source._customChatColors
       _optimizeOnDeviceStorage = source._optimizeOnDeviceStorage
       _backupTier = source._backupTier
-      _showSealedSenderIndicators = source._showSealedSenderIndicators
       _defaultSentMediaQuality = source._defaultSentMediaQuality
       _autoDownloadSettings = source._autoDownloadSettings
       _screenLockTimeoutMinutes = source._screenLockTimeoutMinutes
       _pinReminders = source._pinReminders
+      _appTheme = source._appTheme
+      _callsUseLessDataSetting = source._callsUseLessDataSetting
+      _allowSealedSenderFromAnyone = source._allowSealedSenderFromAnyone
     }
   }
 
@@ -6849,11 +7033,13 @@ extension BackupProto_AccountData.AccountSettings: SwiftProtobuf.Message, SwiftP
         case 19: try { try decoder.decodeRepeatedMessageField(value: &_storage._customChatColors) }()
         case 20: try { try decoder.decodeSingularBoolField(value: &_storage._optimizeOnDeviceStorage) }()
         case 21: try { try decoder.decodeSingularUInt64Field(value: &_storage._backupTier) }()
-        case 22: try { try decoder.decodeSingularBoolField(value: &_storage._showSealedSenderIndicators) }()
         case 23: try { try decoder.decodeSingularEnumField(value: &_storage._defaultSentMediaQuality) }()
         case 24: try { try decoder.decodeSingularMessageField(value: &_storage._autoDownloadSettings) }()
         case 26: try { try decoder.decodeSingularUInt32Field(value: &_storage._screenLockTimeoutMinutes) }()
         case 27: try { try decoder.decodeSingularBoolField(value: &_storage._pinReminders) }()
+        case 28: try { try decoder.decodeSingularEnumField(value: &_storage._appTheme) }()
+        case 29: try { try decoder.decodeSingularEnumField(value: &_storage._callsUseLessDataSetting) }()
+        case 30: try { try decoder.decodeSingularBoolField(value: &_storage._allowSealedSenderFromAnyone) }()
         default: break
         }
       }
@@ -6929,9 +7115,6 @@ extension BackupProto_AccountData.AccountSettings: SwiftProtobuf.Message, SwiftP
       try { if let v = _storage._backupTier {
         try visitor.visitSingularUInt64Field(value: v, fieldNumber: 21)
       } }()
-      if _storage._showSealedSenderIndicators != false {
-        try visitor.visitSingularBoolField(value: _storage._showSealedSenderIndicators, fieldNumber: 22)
-      }
       if _storage._defaultSentMediaQuality != .unknownQuality {
         try visitor.visitSingularEnumField(value: _storage._defaultSentMediaQuality, fieldNumber: 23)
       }
@@ -6944,6 +7127,15 @@ extension BackupProto_AccountData.AccountSettings: SwiftProtobuf.Message, SwiftP
       try { if let v = _storage._pinReminders {
         try visitor.visitSingularBoolField(value: v, fieldNumber: 27)
       } }()
+      if _storage._appTheme != .unknownAppTheme {
+        try visitor.visitSingularEnumField(value: _storage._appTheme, fieldNumber: 28)
+      }
+      if _storage._callsUseLessDataSetting != .unknownCallDataSetting {
+        try visitor.visitSingularEnumField(value: _storage._callsUseLessDataSetting, fieldNumber: 29)
+      }
+      if _storage._allowSealedSenderFromAnyone != false {
+        try visitor.visitSingularBoolField(value: _storage._allowSealedSenderFromAnyone, fieldNumber: 30)
+      }
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -6974,11 +7166,13 @@ extension BackupProto_AccountData.AccountSettings: SwiftProtobuf.Message, SwiftP
         if _storage._customChatColors != rhs_storage._customChatColors {return false}
         if _storage._optimizeOnDeviceStorage != rhs_storage._optimizeOnDeviceStorage {return false}
         if _storage._backupTier != rhs_storage._backupTier {return false}
-        if _storage._showSealedSenderIndicators != rhs_storage._showSealedSenderIndicators {return false}
         if _storage._defaultSentMediaQuality != rhs_storage._defaultSentMediaQuality {return false}
         if _storage._autoDownloadSettings != rhs_storage._autoDownloadSettings {return false}
         if _storage._screenLockTimeoutMinutes != rhs_storage._screenLockTimeoutMinutes {return false}
         if _storage._pinReminders != rhs_storage._pinReminders {return false}
+        if _storage._appTheme != rhs_storage._appTheme {return false}
+        if _storage._callsUseLessDataSetting != rhs_storage._callsUseLessDataSetting {return false}
+        if _storage._allowSealedSenderFromAnyone != rhs_storage._allowSealedSenderFromAnyone {return false}
         return true
       }
       if !storagesAreEqual {return false}
@@ -8438,7 +8632,7 @@ extension BackupProto_DistributionList.PrivacyMode: SwiftProtobuf._ProtoNameProv
 
 extension BackupProto_ChatItem: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ChatItem"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}chatId\0\u{1}authorId\0\u{1}dateSent\0\u{1}expireStartDate\0\u{1}expiresInMs\0\u{1}revisions\0\u{1}sms\0\u{1}incoming\0\u{1}outgoing\0\u{1}directionless\0\u{1}standardMessage\0\u{1}contactMessage\0\u{1}stickerMessage\0\u{1}remoteDeletedMessage\0\u{1}updateMessage\0\u{1}paymentNotification\0\u{1}giftBadge\0\u{1}viewOnceMessage\0\u{1}directStoryReplyMessage\0\u{1}poll\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}chatId\0\u{1}authorId\0\u{1}dateSent\0\u{1}expireStartDate\0\u{1}expiresInMs\0\u{1}revisions\0\u{1}sms\0\u{1}incoming\0\u{1}outgoing\0\u{1}directionless\0\u{1}standardMessage\0\u{1}contactMessage\0\u{1}stickerMessage\0\u{1}remoteDeletedMessage\0\u{1}updateMessage\0\u{1}paymentNotification\0\u{1}giftBadge\0\u{1}viewOnceMessage\0\u{1}directStoryReplyMessage\0\u{1}poll\0\u{1}pinDetails\0")
 
   fileprivate class _StorageClass {
     var _chatID: UInt64 = 0
@@ -8450,6 +8644,7 @@ extension BackupProto_ChatItem: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
     var _sms: Bool = false
     var _directionalDetails: BackupProto_ChatItem.OneOf_DirectionalDetails?
     var _item: BackupProto_ChatItem.OneOf_Item?
+    var _pinDetails: BackupProto_ChatItem.PinDetails? = nil
 
       // This property is used as the initial default value for new instances of the type.
       // The type itself is protecting the reference to its storage via CoW semantics.
@@ -8469,6 +8664,7 @@ extension BackupProto_ChatItem: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
       _sms = source._sms
       _directionalDetails = source._directionalDetails
       _item = source._item
+      _pinDetails = source._pinDetails
     }
   }
 
@@ -8663,6 +8859,7 @@ extension BackupProto_ChatItem: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
             _storage._item = .poll(v)
           }
         }()
+        case 21: try { try decoder.decodeSingularMessageField(value: &_storage._pinDetails) }()
         default: break
         }
       }
@@ -8754,6 +8951,9 @@ extension BackupProto_ChatItem: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
       }()
       case nil: break
       }
+      try { if let v = _storage._pinDetails {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 21)
+      } }()
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -8772,6 +8972,7 @@ extension BackupProto_ChatItem: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
         if _storage._sms != rhs_storage._sms {return false}
         if _storage._directionalDetails != rhs_storage._directionalDetails {return false}
         if _storage._item != rhs_storage._item {return false}
+        if _storage._pinDetails != rhs_storage._pinDetails {return false}
         return true
       }
       if !storagesAreEqual {return false}
@@ -8879,6 +9080,68 @@ extension BackupProto_ChatItem.DirectionlessMessageDetails: SwiftProtobuf.Messag
   }
 
   public static func ==(lhs: BackupProto_ChatItem.DirectionlessMessageDetails, rhs: BackupProto_ChatItem.DirectionlessMessageDetails) -> Bool {
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension BackupProto_ChatItem.PinDetails: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = BackupProto_ChatItem.protoMessageName + ".PinDetails"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}pinnedAtTimestamp\0\u{1}pinExpiresAtTimestamp\0\u{1}pinNeverExpires\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularUInt64Field(value: &self.pinnedAtTimestamp) }()
+      case 2: try {
+        var v: UInt64?
+        try decoder.decodeSingularUInt64Field(value: &v)
+        if let v = v {
+          if self.pinExpiry != nil {try decoder.handleConflictingOneOf()}
+          self.pinExpiry = .pinExpiresAtTimestamp(v)
+        }
+      }()
+      case 3: try {
+        var v: Bool?
+        try decoder.decodeSingularBoolField(value: &v)
+        if let v = v {
+          if self.pinExpiry != nil {try decoder.handleConflictingOneOf()}
+          self.pinExpiry = .pinNeverExpires(v)
+        }
+      }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    if self.pinnedAtTimestamp != 0 {
+      try visitor.visitSingularUInt64Field(value: self.pinnedAtTimestamp, fieldNumber: 1)
+    }
+    switch self.pinExpiry {
+    case .pinExpiresAtTimestamp?: try {
+      guard case .pinExpiresAtTimestamp(let v)? = self.pinExpiry else { preconditionFailure() }
+      try visitor.visitSingularUInt64Field(value: v, fieldNumber: 2)
+    }()
+    case .pinNeverExpires?: try {
+      guard case .pinNeverExpires(let v)? = self.pinExpiry else { preconditionFailure() }
+      try visitor.visitSingularBoolField(value: v, fieldNumber: 3)
+    }()
+    case nil: break
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: BackupProto_ChatItem.PinDetails, rhs: BackupProto_ChatItem.PinDetails) -> Bool {
+    if lhs.pinnedAtTimestamp != rhs.pinnedAtTimestamp {return false}
+    if lhs.pinExpiry != rhs.pinExpiry {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -11069,7 +11332,7 @@ extension BackupProto_Poll.PollOption.PollVote: SwiftProtobuf.Message, SwiftProt
 
 extension BackupProto_ChatUpdateMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ChatUpdateMessage"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}simpleUpdate\0\u{1}groupChange\0\u{1}expirationTimerChange\0\u{1}profileChange\0\u{1}threadMerge\0\u{1}sessionSwitchover\0\u{1}individualCall\0\u{1}groupCall\0\u{1}learnedProfileChange\0\u{1}pollTerminate\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}simpleUpdate\0\u{1}groupChange\0\u{1}expirationTimerChange\0\u{1}profileChange\0\u{1}threadMerge\0\u{1}sessionSwitchover\0\u{1}individualCall\0\u{1}groupCall\0\u{1}learnedProfileChange\0\u{1}pollTerminate\0\u{1}pinMessage\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -11207,6 +11470,19 @@ extension BackupProto_ChatUpdateMessage: SwiftProtobuf.Message, SwiftProtobuf._M
           self.update = .pollTerminate(v)
         }
       }()
+      case 11: try {
+        var v: BackupProto_PinMessageUpdate?
+        var hadOneofValue = false
+        if let current = self.update {
+          hadOneofValue = true
+          if case .pinMessage(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.update = .pinMessage(v)
+        }
+      }()
       default: break
       }
     }
@@ -11257,6 +11533,10 @@ extension BackupProto_ChatUpdateMessage: SwiftProtobuf.Message, SwiftProtobuf._M
     case .pollTerminate?: try {
       guard case .pollTerminate(let v)? = self.update else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 10)
+    }()
+    case .pinMessage?: try {
+      guard case .pinMessage(let v)? = self.update else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 11)
     }()
     case nil: break
     }
@@ -13540,6 +13820,41 @@ extension BackupProto_PollTerminateUpdate: SwiftProtobuf.Message, SwiftProtobuf.
   public static func ==(lhs: BackupProto_PollTerminateUpdate, rhs: BackupProto_PollTerminateUpdate) -> Bool {
     if lhs.targetSentTimestamp != rhs.targetSentTimestamp {return false}
     if lhs.question != rhs.question {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension BackupProto_PinMessageUpdate: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".PinMessageUpdate"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}targetSentTimestamp\0\u{1}authorId\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularUInt64Field(value: &self.targetSentTimestamp) }()
+      case 2: try { try decoder.decodeSingularUInt64Field(value: &self.authorID) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.targetSentTimestamp != 0 {
+      try visitor.visitSingularUInt64Field(value: self.targetSentTimestamp, fieldNumber: 1)
+    }
+    if self.authorID != 0 {
+      try visitor.visitSingularUInt64Field(value: self.authorID, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: BackupProto_PinMessageUpdate, rhs: BackupProto_PinMessageUpdate) -> Bool {
+    if lhs.targetSentTimestamp != rhs.targetSentTimestamp {return false}
+    if lhs.authorID != rhs.authorID {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

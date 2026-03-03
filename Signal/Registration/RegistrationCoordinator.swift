@@ -112,11 +112,6 @@ public protocol RegistrationCoordinator {
     /// If not allowed, an error step may be returned.
     func skipAndCreateNewPINCode() -> Guarantee<RegistrationStep>
 
-    /// When registering, the server will inform us (via an error code) if device transfer is
-    /// possible from an existing device. In this case, the user must either transfer or explicitly
-    /// decline transferring; this method informs the flow of the latter choice.
-    func skipDeviceTransfer() -> Guarantee<RegistrationStep>
-
     /// Set the target restore method to be used in the next step to restore the system.
     func updateRestoreMethod(method: RegistrationRestoreMethod) -> Guarantee<RegistrationStep>
 
@@ -143,7 +138,7 @@ public protocol RegistrationCoordinator {
         givenName: OWSUserProfile.NameComponent,
         familyName: OWSUserProfile.NameComponent?,
         avatarData: Data?,
-        phoneNumberDiscoverability: PhoneNumberDiscoverability
+        phoneNumberDiscoverability: PhoneNumberDiscoverability,
     ) -> Guarantee<RegistrationStep>
 
     /// The user has hit a reglock timeout and is acknowledging it.
@@ -160,12 +155,12 @@ public protocol RegistrationCoordinator {
     func resetRestoreMode() -> Guarantee<RegistrationStep>
 
     /// Clear out the chosen restore method.  This will result in the user being sent back
-    /// to the UI to choose a new restore method. 
+    /// to the UI to choose a new restore method.
     func resetRestoreMethodChoice() -> Guarantee<RegistrationStep>
 
     /// Additional step to have the user confirm restoring from backup.
     func confirmRestoreFromBackup(
-        progress: OWSSequentialProgressRootSink<BackupRestoreProgressPhase>
+        progress: OWSSequentialProgressRootSink<BackupRestoreProgressPhase>,
     ) -> Guarantee<RegistrationStep>
 
     /// Cancel from the backup entry screen and clear out any key that has been entered.

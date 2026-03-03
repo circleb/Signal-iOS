@@ -11,23 +11,47 @@ import MediaPlayer
 import Photos
 public import SignalServiceKit
 
+public struct ApprovedAttachments {
+    public let isViewOnce: Bool
+    public let imageQuality: ImageQuality
+    public let attachments: [PreviewableAttachment]
+
+    private init(isViewOnce: Bool, imageQuality: ImageQuality, attachments: [PreviewableAttachment]) {
+        owsPrecondition(!isViewOnce || attachments.count <= 1)
+        self.isViewOnce = isViewOnce
+        self.imageQuality = imageQuality
+        self.attachments = attachments
+    }
+
+    public init(viewOnceAttachment: PreviewableAttachment, imageQuality: ImageQuality) {
+        self.init(isViewOnce: true, imageQuality: imageQuality, attachments: [viewOnceAttachment])
+    }
+
+    public init(nonViewOnceAttachments: [PreviewableAttachment], imageQuality: ImageQuality) {
+        self.init(isViewOnce: false, imageQuality: imageQuality, attachments: nonViewOnceAttachments)
+    }
+}
+
 public protocol AttachmentApprovalViewControllerDelegate: AnyObject {
 
-    func attachmentApproval(_ attachmentApproval: AttachmentApprovalViewController,
-                            didApproveAttachments attachments: [SignalAttachment], messageBody: MessageBody?)
+    func attachmentApproval(
+        _ attachmentApproval: AttachmentApprovalViewController,
+        didApproveAttachments approvedAttachments: ApprovedAttachments,
+        messageBody: MessageBody?,
+    )
 
     func attachmentApprovalDidCancel()
 
     func attachmentApproval(
         _ attachmentApproval: AttachmentApprovalViewController,
-        didChangeMessageBody newMessageBody: MessageBody?
+        didChangeMessageBody newMessageBody: MessageBody?,
     )
     func attachmentApproval(
         _ attachmentApproval: AttachmentApprovalViewController,
-        didChangeViewOnceState isViewOnce: Bool
+        didChangeViewOnceState isViewOnce: Bool,
     )
 
-    func attachmentApproval(_ attachmentApproval: AttachmentApprovalViewController, didRemoveAttachment attachment: SignalAttachment)
+    func attachmentApproval(_ attachmentApproval: AttachmentApprovalViewController, didRemoveAttachment attachmentApprovalItem: AttachmentApprovalItem)
 
     func attachmentApprovalDidTapAddMore(_ attachmentApproval: AttachmentApprovalViewController)
 }
@@ -63,7 +87,7 @@ public struct AttachmentApprovalViewControllerOptions: OptionSet {
 
 // MARK: -
 
-public class AttachmentApprovalViewController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate, OWSNavigationChildController {
+public final class AttachmentApprovalViewController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate, OWSNavigationChildController {
 
     // MARK: - Properties
 
@@ -75,15 +99,16 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
         if
             attachmentApprovalItemCollection.attachmentApprovalItems.count == 1,
             let firstItem = attachmentApprovalItemCollection.attachmentApprovalItems.first,
-            firstItem.attachment.dataSource.isValidImage || firstItem.attachment.dataSource.isValidVideo,
+            firstItem.attachment.isImage || firstItem.attachment.isVideo,
             !receivedOptions.contains(.disallowViewOnce)
         {
             options.insert(.canToggleViewOnce)
         }
 
         if
-            ImageQualityLevel.maximumForCurrentAppContext == .high,
-            attachmentApprovalItemCollection.attachmentApprovalItems.contains(where: { $0.attachment.dataSource.isValidImage }) {
+            ImageQualityLevel.maximumForCurrentAppContext() == .three,
+            attachmentApprovalItemCollection.attachmentApprovalItems.contains(where: { $0.attachment.isImage })
+        {
             options.insert(.canChangeQualityLevel)
         }
 
@@ -100,7 +125,7 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
         }
     }
 
-    lazy var outputQualityLevel: ImageQualityLevel = SSKEnvironment.shared.databaseStorageRef.read { .resolvedQuality(tx: $0) }
+    private var outputImageQuality: ImageQuality
 
     public weak var approvalDelegate: AttachmentApprovalViewControllerDelegate?
     public weak var approvalDataSource: AttachmentApprovalViewControllerDataSource?
@@ -110,7 +135,7 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
     // MARK: - Initializers
 
     @available(*, unavailable, message: "use attachment: constructor instead.")
-    required public init?(coder aDecoder: NSCoder) {
+    public required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
@@ -126,20 +151,38 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
         }
     }
 
-    public init(options: AttachmentApprovalViewControllerOptions, attachmentApprovalItems: [AttachmentApprovalItem]) {
+    public static func loadWithSneakyTransaction(
+        attachmentApprovalItems: [AttachmentApprovalItem],
+        options: AttachmentApprovalViewControllerOptions,
+    ) -> Self {
+        let databaseStorage = SSKEnvironment.shared.databaseStorageRef
+        return Self(
+            attachmentApprovalItems: attachmentApprovalItems,
+            defaultImageQuality: databaseStorage.read(block: ImageQuality.fetchValue(tx:)),
+            options: options,
+        )
+    }
+
+    private init(
+        attachmentApprovalItems: [AttachmentApprovalItem],
+        defaultImageQuality: ImageQuality,
+        options: AttachmentApprovalViewControllerOptions,
+    ) {
         assert(attachmentApprovalItems.count > 0)
 
+        self.outputImageQuality = defaultImageQuality
         self.receivedOptions = options
 
         let pageOptions: [UIPageViewController.OptionsKey: Any] = [.interPageSpacing: kSpacingBetweenItems]
-        super.init(transitionStyle: .scroll,
-                   navigationOrientation: .horizontal,
-                   options: pageOptions)
+        super.init(transitionStyle: .scroll, navigationOrientation: .horizontal, options: pageOptions)
 
         let isAddMoreVisibleBlock = { [weak self] in
             return self?.isAddMoreVisible ?? false
         }
-        self.attachmentApprovalItemCollection = AttachmentApprovalItemCollection(attachmentApprovalItems: attachmentApprovalItems, isAddMoreVisible: isAddMoreVisibleBlock)
+        self.attachmentApprovalItemCollection = AttachmentApprovalItemCollection(
+            attachmentApprovalItems: attachmentApprovalItems,
+            isAddMoreVisible: isAddMoreVisibleBlock,
+        )
         self.dataSource = self
         self.delegate = self
 
@@ -152,24 +195,24 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
         overrideUserInterfaceStyle = .dark
 
         observerToken = NotificationCenter.default.addObserver(forName: .OWSApplicationDidBecomeActive, object: nil, queue: .main) { [weak self] _ in
-            guard let self = self else { return }
+            guard let self else { return }
             self.updateContents(animated: false)
         }
     }
 
     deinit {
-        if let observerToken = observerToken {
+        if let observerToken {
             NotificationCenter.default.removeObserver(observerToken)
         }
     }
 
     public class func wrappedInNavController(
-        attachments: [SignalAttachment],
+        attachments: [PreviewableAttachment],
         initialMessageBody: MessageBody?,
         hasQuotedReplyDraft: Bool,
         approvalDelegate: AttachmentApprovalViewControllerDelegate,
         approvalDataSource: AttachmentApprovalViewControllerDataSource,
-        stickerSheetDelegate: StickerPickerSheetDelegate?
+        stickerSheetDelegate: StickerPickerSheetDelegate?,
     ) -> OWSNavigationController {
 
         let attachmentApprovalItems = attachments.map { AttachmentApprovalItem(attachment: $0, canSave: false) }
@@ -178,7 +221,7 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
         if hasQuotedReplyDraft {
             options.insert(.disallowViewOnce)
         }
-        let vc = AttachmentApprovalViewController(options: options, attachmentApprovalItems: attachmentApprovalItems)
+        let vc = AttachmentApprovalViewController.loadWithSneakyTransaction(attachmentApprovalItems: attachmentApprovalItems, options: options)
         // The data source needs to be set before the message body because it is needed to hydrate mentions.
         vc.approvalDataSource = approvalDataSource
         vc.setMessageBody(initialMessageBody, txProvider: DependenciesBridge.shared.db.readTxProvider)
@@ -214,11 +257,11 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
 
     // MARK: - View Lifecycle
 
-    public override var prefersStatusBarHidden: Bool {
+    override public var prefersStatusBarHidden: Bool {
         !UIDevice.current.hasIPhoneXNotch && !UIDevice.current.isIPad && !DependenciesBridge.shared.currentCallProvider.hasCurrentCall
     }
 
-    public override var preferredStatusBarStyle: UIStatusBarStyle {
+    override public var preferredStatusBarStyle: UIStatusBarStyle {
         .lightContent
     }
 
@@ -226,7 +269,7 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
         return true
     }
 
-    public override func viewDidLoad() {
+    override public func viewDidLoad() {
         super.viewDidLoad()
 
         self.definesPresentationContext = true
@@ -285,14 +328,14 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
             iOS15BottomToolviewVerticalPositionConstraint = constraint
         } else {
             NSLayoutConstraint.activate([
-                bottomToolView.contentLayoutGuide.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor)
+                bottomToolView.contentLayoutGuide.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor),
             ])
         }
 
         OWSTableViewController2.removeBackButtonText(viewController: self)
     }
 
-    public override func viewWillAppear(_ animated: Bool) {
+    override public func viewWillAppear(_ animated: Bool) {
         Logger.debug("")
         super.viewWillAppear(animated)
 
@@ -307,12 +350,12 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
         }
     }
 
-    public override func viewDidAppear(_ animated: Bool) {
+    override public func viewDidAppear(_ animated: Bool) {
         Logger.debug("")
         super.viewDidAppear(animated)
     }
 
-    public override func viewWillDisappear(_ animated: Bool) {
+    override public func viewWillDisappear(_ animated: Bool) {
         Logger.debug("")
         super.viewWillDisappear(animated)
 
@@ -320,7 +363,7 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
         stopObservingKeyboardNotifications()
     }
 
-    public override func viewSafeAreaInsetsDidChange() {
+    override public func viewSafeAreaInsetsDidChange() {
         super.viewSafeAreaInsetsDidChange()
 
         if let iOS15BottomToolviewVerticalPositionConstraint {
@@ -375,38 +418,41 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
     private func updateControlsVisibility(animated: Bool, completion: ((Bool) -> Void)? = nil) {
         let alpha: CGFloat = shouldHideControls ? 0 : 1
         if animated {
-            UIView.animate(withDuration: 0.15,
-                           animations: {
-                self.topBar.alpha = alpha
-                self.bottomToolView.alpha = alpha
-            }, completion: completion)
+            UIView.animate(
+                withDuration: 0.15,
+                animations: {
+                    self.topBar.alpha = alpha
+                    self.bottomToolView.alpha = alpha
+                },
+                completion: completion,
+            )
         } else {
             topBar.alpha = alpha
             bottomToolView.alpha = alpha
-            if let completion = completion {
+            if let completion {
                 completion(true)
             }
         }
     }
 
     private func updateBottomToolView(animated: Bool) {
-        guard let currentPageViewController = currentPageViewController else { return }
+        guard let currentPageViewController else { return }
 
         let isScreenNotFinal = options.contains(.isNotFinalScreen)
         let configuration = AttachmentApprovalToolbar.Configuration(
             isAddMoreVisible: isAddMoreVisible,
             isMediaStripVisible: attachmentApprovalItems.count > 1,
-            isMediaHighQualityEnabled: outputQualityLevel == .high,
+            isMediaHighQualityEnabled: outputImageQuality == .high,
             isViewOnceOn: isViewOnceEnabled,
             canToggleViewOnce: options.contains(.canToggleViewOnce),
             canChangeMediaQuality: options.contains(.canChangeQualityLevel),
             canSaveMedia: currentPageViewController.canSaveMedia,
-            doneButtonIcon: isScreenNotFinal ? .next : .send
+            doneButtonIcon: isScreenNotFinal ? .next : .send,
         )
         bottomToolView.update(
             currentAttachmentItem: currentPageViewController.attachmentApprovalItem,
             configuration: configuration,
-            animated: animated
+            animated: animated,
         )
     }
 
@@ -427,7 +473,7 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
     // MARK: - View Helpers
 
     func remove(attachmentApprovalItem: AttachmentApprovalItem) {
-        if attachmentApprovalItem == currentItem {
+        if attachmentApprovalItem.isIdenticalTo(currentItem) {
             if let nextItem = attachmentApprovalItemCollection.itemAfter(item: attachmentApprovalItem) {
                 setCurrentItem(nextItem, direction: .forward, animated: true)
             } else if let prevItem = attachmentApprovalItemCollection.itemBefore(item: attachmentApprovalItem) {
@@ -441,7 +487,7 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
         }
 
         attachmentApprovalItemCollection.remove(item: attachmentApprovalItem)
-        approvalDelegate?.attachmentApproval(self, didRemoveAttachment: attachmentApprovalItem.attachment)
+        approvalDelegate?.attachmentApproval(self, didRemoveAttachment: attachmentApprovalItem)
 
         // If media rail needs to be hidden, do it immediately.
         if attachmentApprovalItems.count < 2 {
@@ -460,8 +506,10 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
 
     // MARK: - UIPageViewControllerDelegate
 
-    public func pageViewController(_ pageViewController: UIPageViewController,
-                                   willTransitionTo pendingViewControllers: [UIViewController]) {
+    public func pageViewController(
+        _ pageViewController: UIPageViewController,
+        willTransitionTo pendingViewControllers: [UIViewController],
+    ) {
         Logger.debug("")
 
         owsAssertDebug(pendingViewControllers.count == 1)
@@ -479,10 +527,12 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
         }
     }
 
-    public func pageViewController(_ pageViewController: UIPageViewController,
-                                   didFinishAnimating finished: Bool,
-                                   previousViewControllers: [UIViewController],
-                                   transitionCompleted: Bool) {
+    public func pageViewController(
+        _ pageViewController: UIPageViewController,
+        didFinishAnimating finished: Bool,
+        previousViewControllers: [UIViewController],
+        transitionCompleted: Bool,
+    ) {
         Logger.debug("")
 
         assert(previousViewControllers.count == 1)
@@ -498,15 +548,17 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
         }
 
         updateContents(animated: true)
-        if let currentPageViewController = currentPageViewController {
+        if let currentPageViewController {
             updateSupplementaryToolbarView(using: currentPageViewController, animated: true)
         }
     }
 
     // MARK: - UIPageViewControllerDataSource
 
-    public func pageViewController(_ pageViewController: UIPageViewController,
-                                   viewControllerBefore viewController: UIViewController) -> UIViewController? {
+    public func pageViewController(
+        _ pageViewController: UIPageViewController,
+        viewControllerBefore viewController: UIViewController,
+    ) -> UIViewController? {
         guard let currentViewController = viewController as? AttachmentPrepViewController else {
             owsFailDebug("unexpected viewController: \(viewController)")
             return nil
@@ -520,8 +572,10 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
         return buildPage(item: previousItem)
     }
 
-    public func pageViewController(_ pageViewController: UIPageViewController,
-                                   viewControllerAfter viewController: UIViewController) -> UIViewController? {
+    public func pageViewController(
+        _ pageViewController: UIPageViewController,
+        viewControllerAfter viewController: UIViewController,
+    ) -> UIViewController? {
         guard let currentViewController = viewController as? AttachmentPrepViewController else {
             owsFailDebug("unexpected viewController: \(viewController)")
             return nil
@@ -550,33 +604,33 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
         return currentPageViewController?.attachmentApprovalItem
     }
 
-    private var cachedPages: [AttachmentApprovalItem: AttachmentPrepViewController] = [:]
+    private var cachedPages: [(key: AttachmentApprovalItem, value: AttachmentPrepViewController)] = []
     private func buildPage(item: AttachmentApprovalItem) -> AttachmentPrepViewController? {
-
-        if let cachedPage = cachedPages[item] {
-            Logger.debug("cache hit.")
-            return cachedPage
+        if let cachedPage = cachedPages.first(where: { $0.key.isIdenticalTo(item) }) {
+            return cachedPage.value
         }
 
-        Logger.debug("cache miss.")
-        guard let viewController = AttachmentPrepViewController.viewController(
-            for: item,
-            stickerSheetDelegate: stickerSheetDelegate
-        ) else {
+        guard
+            let viewController = AttachmentPrepViewController.viewController(
+                for: item,
+                stickerSheetDelegate: stickerSheetDelegate,
+            )
+        else {
             owsFailDebug("Failed to create AttachmentPrepViewController.")
             return nil
         }
 
         viewController.prepDelegate = self
-        cachedPages[item] = viewController
+        cachedPages.append((item, viewController))
 
         return viewController
     }
 
-    private func setCurrentItem(_ item: AttachmentApprovalItem,
-                                direction: UIPageViewController.NavigationDirection,
-                                animated: Bool) {
-
+    private func setCurrentItem(
+        _ item: AttachmentApprovalItem,
+        direction: UIPageViewController.NavigationDirection,
+        animated: Bool,
+    ) {
         guard let page = buildPage(item: item) else {
             owsFailDebug("unexpectedly unable to build new page")
             return
@@ -590,7 +644,6 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
         page.loadViewIfNeeded()
         updateContentLayoutMargins(for: page)
 
-        Logger.debug("currentItem for attachment: \(item.attachment.debugDescription)")
         setViewControllers([page], direction: direction, animated: animated) { _ in
             previousPage?.zoomOut(animated: false)
         }
@@ -636,10 +689,12 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
             }
         }
 
-        galleryRailView.configureCellViews(itemProvider: attachmentApprovalItemCollection,
-                                           focusedItem: currentItem,
-                                           cellViewBuilder: cellViewBuilder,
-                                           animated: animated)
+        galleryRailView.configureCellViews(
+            itemProvider: attachmentApprovalItemCollection,
+            focusedItem: currentItem,
+            cellViewBuilder: cellViewBuilder,
+            animated: animated,
+        )
     }
 
     var attachmentApprovalItemCollection: AttachmentApprovalItemCollection!
@@ -648,21 +703,18 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
         return attachmentApprovalItemCollection.attachmentApprovalItems
     }
 
-    private func prepareAttachments() async throws -> [SignalAttachment] {
-        let outputQualityLevel = self.outputQualityLevel
-        var results = [SignalAttachment]()
+    private func prepareAttachments() async throws -> [PreviewableAttachment] {
+        var results = [PreviewableAttachment]()
         for attachmentApprovalItem in attachmentApprovalItems {
             results.append(
-                try await self
-                    .prepareAttachment(attachmentApprovalItem: attachmentApprovalItem)
-                    .preparedForOutput(qualityLevel: outputQualityLevel)
+                try await self.prepareAttachment(attachmentApprovalItem: attachmentApprovalItem),
             )
         }
         return results
     }
 
     /// Returns a new SignalAttachment that reflects changes made in the editor.
-    private func prepareAttachment(attachmentApprovalItem: AttachmentApprovalItem) async throws -> SignalAttachment {
+    private func prepareAttachment(attachmentApprovalItem: AttachmentApprovalItem) async throws -> PreviewableAttachment {
         if let imageEditorModel = attachmentApprovalItem.imageEditorModel, imageEditorModel.isDirty() {
             return try await self.prepareImageAttachment(
                 attachmentApprovalItem: attachmentApprovalItem,
@@ -679,75 +731,69 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
         return attachmentApprovalItem.attachment
     }
 
-    #if compiler(>=6.2)
     @concurrent
-    #endif
     private nonisolated func prepareImageAttachment(
         attachmentApprovalItem: AttachmentApprovalItem,
         imageEditorModel: ImageEditorModel,
-    ) async throws -> SignalAttachment {
+    ) async throws -> PreviewableAttachment {
         assert(imageEditorModel.isDirty())
 
         guard let dstImage = await imageEditorModel.renderOutput() else {
             throw OWSAssertionError("Could not render for output.")
         }
 
-        var dataType = UTType.image
-        guard let dstData: Data = {
-            let isLossy: Bool = attachmentApprovalItem.attachment.mimeType.caseInsensitiveCompare(MimeType.imageJpeg.rawValue) == .orderedSame
-            if isLossy {
-                dataType = .jpeg
-                return dstImage.jpegData(compressionQuality: 0.9)
-            } else {
-                dataType = .png
-                return dstImage.pngData()
-            }
-        }() else {
+        let containerType: SignalAttachment.ContainerType
+        let dstData: Data?
+        let isLossy: Bool = attachmentApprovalItem.attachment.rawValue.mimeType.caseInsensitiveCompare(MimeType.imageJpeg.rawValue) == .orderedSame
+        if isLossy {
+            containerType = .jpg
+            dstData = dstImage.jpegData(compressionQuality: 0.9)
+        } else {
+            containerType = .png
+            dstData = dstImage.pngData()
+        }
+        guard let dstData else {
             throw OWSAssertionError("Could not export for output.")
         }
-        guard let dataSource = DataSourceValue(dstData, utiType: dataType.identifier) else {
-            throw OWSAssertionError("Could not prepare data source for output.")
-        }
+        let dataSource = try DataSourcePath(writingTempFileData: dstData, fileExtension: containerType.fileExtension)
 
         // Rewrite the filename's extension to reflect the output file format.
-        var filename: String? = attachmentApprovalItem.attachment.dataSource.sourceFilename?.filterFilename()
-        if let sourceFilename = attachmentApprovalItem.attachment.dataSource.sourceFilename?.filterFilename() {
-            if let fileExtension: String = MimeTypeUtil.fileExtensionForUtiType(dataType.identifier) {
+        var filename: String? = attachmentApprovalItem.attachment.rawValue.dataSource.sourceFilename?.filterFilename()
+        if let sourceFilename = attachmentApprovalItem.attachment.rawValue.dataSource.sourceFilename?.filterFilename() {
+            if let fileExtension: String = MimeTypeUtil.fileExtensionForUtiType(containerType.dataType.identifier) {
                 let sourceFilenameWithoutExtension = (sourceFilename as NSString).deletingPathExtension
                 filename = (sourceFilenameWithoutExtension as NSString).appendingPathExtension(fileExtension) ?? sourceFilenameWithoutExtension
             }
         }
         dataSource.sourceFilename = filename
 
-        return try SignalAttachment.imageAttachment(dataSource: dataSource, dataUTI: dataType.identifier)
+        return try PreviewableAttachment.imageAttachment(dataSource: dataSource, dataUTI: containerType.dataType.identifier)
     }
 
     private func prepareVideoAttachment(
         attachmentApprovalItem: AttachmentApprovalItem,
         videoEditorModel: VideoEditorModel,
-    ) async throws -> SignalAttachment {
+    ) async throws -> PreviewableAttachment {
         assert(videoEditorModel.needsRender)
         let fileUrl = try await videoEditorModel.render()
         let fileExtension = fileUrl.pathExtension
         guard let dataUTI = MimeTypeUtil.utiTypeForFileExtension(fileExtension) else {
             throw OWSAssertionError("Missing dataUTI.")
         }
-        let dataSource = try DataSourcePath(fileUrl: fileUrl, shouldDeleteOnDeallocation: true)
+        let dataSource = DataSourcePath(fileUrl: fileUrl, ownership: .owned)
         // Rewrite the filename's extension to reflect the output file format.
-        var filename: String? = attachmentApprovalItem.attachment.dataSource.sourceFilename?.filterFilename()
-        if let sourceFilename = attachmentApprovalItem.attachment.dataSource.sourceFilename?.filterFilename() {
+        var filename: String? = attachmentApprovalItem.attachment.rawValue.dataSource.sourceFilename?.filterFilename()
+        if let sourceFilename = attachmentApprovalItem.attachment.rawValue.dataSource.sourceFilename?.filterFilename() {
             let sourceFilenameWithoutExtension = (sourceFilename as NSString).deletingPathExtension
             filename = (sourceFilenameWithoutExtension as NSString).appendingPathExtension(fileExtension) ?? sourceFilenameWithoutExtension
         }
         dataSource.sourceFilename = filename
 
-        let dstAttachment = try SignalAttachment.videoAttachment(dataSource: dataSource, dataUTI: dataUTI)
-        dstAttachment.isViewOnceAttachment = attachmentApprovalItem.attachment.isViewOnceAttachment
-        return dstAttachment
+        return try PreviewableAttachment.videoAttachment(dataSource: dataSource, dataUTI: dataUTI)
     }
 
     func attachmentApprovalItem(before currentItem: AttachmentApprovalItem) -> AttachmentApprovalItem? {
-        guard let currentIndex = attachmentApprovalItems.firstIndex(of: currentItem) else {
+        guard let currentIndex = attachmentApprovalItems.firstIndex(where: { $0.isIdenticalTo(currentItem) }) else {
             owsFailDebug("currentIndex was unexpectedly nil")
             return nil
         }
@@ -762,7 +808,7 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
     }
 
     func attachmentApprovalItem(after currentItem: AttachmentApprovalItem) -> AttachmentApprovalItem? {
-        guard let currentIndex = attachmentApprovalItems.firstIndex(of: currentItem) else {
+        guard let currentIndex = attachmentApprovalItems.firstIndex(where: { $0.isIdenticalTo(currentItem) }) else {
             owsFailDebug("currentIndex was unexpectedly nil")
             return nil
         }
@@ -793,7 +839,7 @@ extension AttachmentApprovalViewController {
 
     @objc
     private func didTapSave() {
-        guard let currentItem = currentItem else { return }
+        guard let currentItem else { return }
         Task { @MainActor in
             do {
                 let saveableAsset: SaveableAsset = try SaveableAsset(attachmentApprovalItem: currentItem)
@@ -803,7 +849,7 @@ extension AttachmentApprovalViewController {
                     return
                 }
 
-                try await PHPhotoLibrary.shared().performChanges{
+                try await PHPhotoLibrary.shared().performChanges {
                     switch saveableAsset {
                     case .image(let image):
                         PHAssetCreationRequest.creationRequestForAsset(from: image)
@@ -816,18 +862,18 @@ extension AttachmentApprovalViewController {
 
                 let toastController = ToastController(text: OWSLocalizedString(
                     "ATTACHMENT_APPROVAL_MEDIA_DID_SAVE",
-                    comment: "toast alert shown after user taps the 'save' button"
+                    comment: "toast alert shown after user taps the 'save' button",
                 ))
                 toastController.presentToastView(
                     from: .bottom,
                     of: self.view,
-                    inset: self.bottomToolView.height + 16
+                    inset: self.bottomToolView.height + 16,
                 )
             } catch {
                 Logger.error("Failed to save attachment to photo library: \(error)")
                 OWSActionSheets.showErrorAlert(message: OWSLocalizedString(
                     "ATTACHMENT_APPROVAL_FAILED_TO_SAVE",
-                    comment: "alert text when Signal was unable to save a copy of the attachment to the system photo library"
+                    comment: "alert text when Signal was unable to save a copy of the attachment to the system photo library",
                 ))
             }
         }
@@ -854,16 +900,25 @@ extension AttachmentApprovalViewController {
         // make below are reflected afterwards.
         ModalActivityIndicatorViewController.present(fromViewController: self, canCancel: false, asyncBlock: { modalVC in
             do {
+                let imageQuality = self.outputImageQuality
                 let attachments = try await self.prepareAttachments()
                 modalVC.dismiss {
-                    if self.options.contains(.canToggleViewOnce), self.isViewOnceEnabled {
-                        for attachment in attachments {
-                            attachment.isViewOnceAttachment = true
-                        }
-                        assert(attachments.count <= 1)
-                    }
-
-                    self.approvalDelegate?.attachmentApproval(self, didApproveAttachments: attachments, messageBody: self.attachmentTextToolbar.messageBodyForSending)
+                    let isViewOnce = self.options.contains(.canToggleViewOnce) && self.isViewOnceEnabled
+                    let messageBody = self.attachmentTextToolbar.messageBodyForSending
+                    owsPrecondition(!isViewOnce || messageBody == nil)
+                    self.approvalDelegate?.attachmentApproval(
+                        self,
+                        didApproveAttachments: {
+                            if isViewOnce {
+                                // The `options` property and UI layer enforce this requirement.
+                                owsPrecondition(attachments.count == 1)
+                                return ApprovedAttachments(viewOnceAttachment: attachments.first!, imageQuality: imageQuality)
+                            } else {
+                                return ApprovedAttachments(nonViewOnceAttachments: attachments, imageQuality: imageQuality)
+                            }
+                        }(),
+                        messageBody: messageBody,
+                    )
                 }
             } catch {
                 owsFailDebug("Error: \(error)")
@@ -873,7 +928,7 @@ extension AttachmentApprovalViewController {
                         title: CommonStrings.errorAlertTitle,
                         message: (
                             (error as? SignalAttachmentError)?.localizedDescription
-                            ?? OWSLocalizedString("ATTACHMENT_APPROVAL_FAILED_TO_EXPORT", comment: "Error that outgoing attachments could not be exported.")
+                                ?? OWSLocalizedString("ATTACHMENT_APPROVAL_FAILED_TO_EXPORT", comment: "Error that outgoing attachments could not be exported."),
                         ),
                     )
                     actionSheet.overrideUserInterfaceStyle = .dark
@@ -913,13 +968,15 @@ extension AttachmentApprovalViewController: AttachmentTextToolbarDelegate {
     }
 
     private func hideContentDimmerView() {
-        UIView.animate(withDuration: 0.2,
-                       animations: {
-            self.contentDimmerView.alpha = 0
-        },
-                       completion: { _ in
-            self.contentDimmerView.removeFromSuperview()
-        })
+        UIView.animate(
+            withDuration: 0.2,
+            animations: {
+                self.contentDimmerView.alpha = 0
+            },
+            completion: { _ in
+                self.contentDimmerView.removeFromSuperview()
+            },
+        )
     }
 
     @objc
@@ -952,25 +1009,25 @@ extension AttachmentApprovalViewController: AttachmentTextToolbarDelegate {
             self,
             selector: #selector(handleKeyboardNotification(_:)),
             name: UIResponder.keyboardWillShowNotification,
-            object: nil
+            object: nil,
         )
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleKeyboardNotification(_:)),
             name: UIResponder.keyboardWillChangeFrameNotification,
-            object: nil
+            object: nil,
         )
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleKeyboardNotification(_:)),
             name: UIResponder.keyboardWillHideNotification,
-            object: nil
+            object: nil,
         )
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleKeyboardNotification(_:)),
             name: UIResponder.keyboardDidHideNotification,
-            object: nil
+            object: nil,
         )
         observingKeyboardNotifications = true
     }
@@ -988,7 +1045,7 @@ extension AttachmentApprovalViewController: AttachmentTextToolbarDelegate {
     @objc
     private func handleKeyboardNotification(_ notification: Notification) {
         guard
-            let currentPageViewController = currentPageViewController,
+            let currentPageViewController,
             let userInfo = notification.userInfo,
             let endFrame = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
 
@@ -1015,7 +1072,7 @@ extension AttachmentApprovalViewController: AttachmentTextToolbarDelegate {
                 options: animationCurve.asAnimationOptions,
                 animations: {
                     currentPageViewController.keyboardHeight = keyboardHeight
-                }
+                },
             )
         } else {
             currentPageViewController.keyboardHeight = keyboardHeight
@@ -1029,7 +1086,7 @@ extension AttachmentApprovalViewController {
 
     private static let mediaQualityLocalizedString = OWSLocalizedString(
         "ATTACHMENT_APPROVAL_MEDIA_QUALITY_TITLE",
-        comment: "Title for the attachment approval media quality sheet"
+        comment: "Title for the attachment approval media quality sheet",
     )
 
     @objc
@@ -1040,16 +1097,9 @@ extension AttachmentApprovalViewController {
         actionSheet.overrideUserInterfaceStyle = .dark
         actionSheet.isCancelable = true
 
-        let tsAccountManager = DependenciesBridge.shared.tsAccountManager
-        let localPhoneNumber = tsAccountManager.localIdentifiersWithMaybeSneakyTransaction?.phoneNumber
-        let standardQualityLevel = ImageQualityLevel.remoteDefault(localPhoneNumber: localPhoneNumber)
-
-        let selectionControl = MediaQualitySelectionControl(
-            standardQualityLevel: standardQualityLevel,
-            currentQualityLevel: outputQualityLevel
-        )
+        let selectionControl = MediaQualitySelectionControl(currentQuality: outputImageQuality)
         selectionControl.callback = { [weak self, weak actionSheet] qualityLevel in
-            self?.outputQualityLevel = qualityLevel
+            self?.outputImageQuality = qualityLevel
             self?.updateBottomToolView(animated: false)
 
             if UIAccessibility.isVoiceOverRunning {
@@ -1075,7 +1125,7 @@ extension AttachmentApprovalViewController {
 
         let margin = OWSTableViewController2.defaultHOuterMargin
         let bottomMargin = view.safeAreaInsets.bottom > 0 ? 0 : margin
-        let headerStack = UIStackView(arrangedSubviews: [ selectionControl, titleLabelContainer ])
+        let headerStack = UIStackView(arrangedSubviews: [selectionControl, titleLabelContainer])
         headerStack.layoutMargins = UIEdgeInsets(top: margin, leading: margin, bottom: bottomMargin, trailing: margin)
         headerStack.isLayoutMarginsRelativeArrangement = true
         headerStack.spacing = 16
@@ -1091,34 +1141,32 @@ extension AttachmentApprovalViewController {
         private let buttonQualityStandard: MediaQualityButton
 
         private let buttonQualityHigh = MediaQualityButton(
-            title: ImageQualityLevel.high.localizedString,
+            title: ImageQuality.high.localizedString,
             subtitle: OWSLocalizedString(
                 "ATTACHMENT_APPROVAL_MEDIA_QUALITY_HIGH_OPTION_SUBTITLE",
-                comment: "Subtitle for the 'high' option for media quality."
-            )
+                comment: "Subtitle for the 'high' option for media quality.",
+            ),
         )
 
-        private let standardQualityLevel: ImageQualityLevel
-        private(set) var qualityLevel: ImageQualityLevel
+        private(set) var imageQuality: ImageQuality
 
-        var callback: ((ImageQualityLevel) -> Void)?
+        var callback: ((ImageQuality) -> Void)?
 
-        init(standardQualityLevel: ImageQualityLevel, currentQualityLevel: ImageQualityLevel) {
-            self.standardQualityLevel = standardQualityLevel
-            self.qualityLevel = currentQualityLevel
+        init(currentQuality: ImageQuality) {
+            self.imageQuality = currentQuality
 
             self.buttonQualityStandard = MediaQualityButton(
-                title: standardQualityLevel.localizedString,
+                title: ImageQuality.standard.localizedString,
                 subtitle: OWSLocalizedString(
                     "ATTACHMENT_APPROVAL_MEDIA_QUALITY_STANDARD_OPTION_SUBTITLE",
-                    comment: "Subtitle for the 'standard' option for media quality."
-                )
+                    comment: "Subtitle for the 'standard' option for media quality.",
+                ),
             )
 
             super.init(frame: .zero)
 
             buttonQualityStandard.block = { [weak self] in
-                self?.didSelectQualityLevel(standardQualityLevel)
+                self?.didSelectQualityLevel(.standard)
             }
             addSubview(buttonQualityStandard)
             buttonQualityStandard.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .trailing)
@@ -1139,15 +1187,15 @@ extension AttachmentApprovalViewController {
             fatalError("init(coder:) has not been implemented")
         }
 
-        private func didSelectQualityLevel(_ qualityLevel: ImageQualityLevel) {
-            self.qualityLevel = qualityLevel
+        private func didSelectQualityLevel(_ imageQuality: ImageQuality) {
+            self.imageQuality = imageQuality
             updateButtonAppearance()
-            callback?(qualityLevel)
+            callback?(imageQuality)
         }
 
         private func updateButtonAppearance() {
-            buttonQualityStandard.isSelected = qualityLevel == standardQualityLevel
-            buttonQualityHigh.isSelected = qualityLevel == .high
+            buttonQualityStandard.isSelected = imageQuality == .standard
+            buttonQualityHigh.isSelected = imageQuality == .high
         }
 
         private class MediaQualityButton: OWSButton {
@@ -1180,7 +1228,7 @@ extension AttachmentApprovalViewController {
                 topLabel.text = title
                 bottomLabel.text = subtitle
 
-                let stackView = UIStackView(arrangedSubviews: [ topLabel, bottomLabel ])
+                let stackView = UIStackView(arrangedSubviews: [topLabel, bottomLabel])
                 stackView.alignment = .center
                 stackView.axis = .vertical
                 stackView.spacing = 2
@@ -1228,8 +1276,8 @@ extension AttachmentApprovalViewController {
 
         override var accessibilityValue: String? {
             get {
-                let selectedButton = qualityLevel == .high ? buttonQualityHigh : buttonQualityStandard
-                return [ selectedButton.topLabel, selectedButton.bottomLabel ].compactMap { $0.text }.joined(separator: ",")
+                let selectedButton = imageQuality == .high ? buttonQualityHigh : buttonQualityStandard
+                return [selectedButton.topLabel, selectedButton.bottomLabel].compactMap { $0.text }.joined(separator: ",")
             }
             set { super.accessibilityValue = newValue }
         }
@@ -1240,20 +1288,20 @@ extension AttachmentApprovalViewController {
         }
 
         override func accessibilityActivate() -> Bool {
-            callback?(qualityLevel)
+            callback?(imageQuality)
             return true
         }
 
         override func accessibilityIncrement() {
-            if qualityLevel == standardQualityLevel {
-                qualityLevel = .high
+            if imageQuality == .standard {
+                imageQuality = .high
                 updateButtonAppearance()
             }
         }
 
         override func accessibilityDecrement() {
-            if qualityLevel == .high {
-                qualityLevel = standardQualityLevel
+            if imageQuality == .high {
+                imageQuality = .standard
                 updateButtonAppearance()
             }
         }
@@ -1295,8 +1343,10 @@ extension AttachmentApprovalViewController: BodyRangesTextViewDelegate {
 
 extension AttachmentApprovalViewController: AttachmentPrepViewControllerDelegate {
 
-    func attachmentPrepViewControllerDidRequestUpdateControlsVisibility(_ viewController: AttachmentPrepViewController,
-                                                                        completion: ((Bool) -> Void)? = nil) {
+    func attachmentPrepViewControllerDidRequestUpdateControlsVisibility(
+        _ viewController: AttachmentPrepViewController,
+        completion: ((Bool) -> Void)? = nil,
+    ) {
         updateControlsVisibility(animated: true, completion: completion)
     }
 }
@@ -1304,26 +1354,32 @@ extension AttachmentApprovalViewController: AttachmentPrepViewControllerDelegate
 // MARK: GalleryRail
 
 extension AttachmentApprovalItem: GalleryRailItem {
-
     public func buildRailItemView() -> UIView {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
         imageView.image = getThumbnailImage()
         return imageView
     }
+
+    public func isEqualToGalleryRailItem(_ other: (any GalleryRailItem)?) -> Bool {
+        return self.isIdenticalTo(other as? Self)
+    }
 }
 
-extension AddMoreRailItem: GalleryRailItem {
-
+class AddMoreRailItem: GalleryRailItem {
     func buildRailItemView() -> UIView {
         let button = RoundMediaButton(
             image: UIImage(imageLiteralResourceName: "plus-square-28"),
-            backgroundStyle: .blur
+            backgroundStyle: .blur,
         )
         button.isUserInteractionEnabled = false
         button.layoutMargins = .zero
         button.ows_contentEdgeInsets = .zero
         return button
+    }
+
+    func isEqualToGalleryRailItem(_ other: (any GalleryRailItem)?) -> Bool {
+        return other is Self
     }
 }
 
@@ -1355,13 +1411,15 @@ extension AttachmentApprovalViewController: GalleryRailViewDelegate {
             return
         }
 
-        guard let currentItem = currentItem,
-              let currentIndex = attachmentApprovalItems.firstIndex(of: currentItem) else {
+        guard
+            let currentItem,
+            let currentIndex = attachmentApprovalItems.firstIndex(where: { $0.isIdenticalTo(currentItem) })
+        else {
             owsFailDebug("currentIndex was unexpectedly nil")
             return
         }
 
-        guard let targetIndex = attachmentApprovalItems.firstIndex(of: targetItem) else {
+        guard let targetIndex = attachmentApprovalItems.firstIndex(where: { $0.isIdenticalTo(targetItem) }) else {
             owsFailDebug("targetIndex was unexpectedly nil")
             return
         }
@@ -1411,18 +1469,12 @@ private extension SaveableAsset {
         self = .image(image)
     }
 
-    private init(attachment: SignalAttachment) throws {
-        if attachment.dataSource.isValidImage {
-            guard let imageUrl = attachment.dataSource.dataUrl else {
-                throw OWSAssertionError("imageUrl was unexpectedly nil")
-            }
-
+    private init(attachment: PreviewableAttachment) throws {
+        if attachment.isImage {
+            let imageUrl = attachment.rawValue.dataSource.fileUrl
             self = .imageUrl(imageUrl)
-        } else if attachment.dataSource.isValidVideo {
-            guard let videoUrl = attachment.dataSource.dataUrl else {
-                throw OWSAssertionError("videoUrl was unexpectedly nil")
-            }
-
+        } else if attachment.isVideo {
+            let videoUrl = attachment.rawValue.dataSource.fileUrl
             self = .videoUrl(videoUrl)
         } else {
             throw OWSAssertionError("unsaveable media")

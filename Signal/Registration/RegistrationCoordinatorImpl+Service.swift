@@ -23,20 +23,20 @@ extension RegistrationCoordinatorImpl {
         ) async -> SVR2AuthCheckResponse {
             let request = RegistrationRequestFactory.svr2AuthCredentialCheckRequest(
                 e164: e164,
-                credentials: candidateCredentials
+                credentials: candidateCredentials,
             )
             return await makeRequest(
                 { try await signalService.urlSessionForMainSignalService().performRequest(request) },
                 handler: self.handleSVR2AuthCheckResponse(statusCode:retryAfterHeader:bodyData:),
                 fallbackError: .genericError,
-                networkFailureError: .networkError
+                networkFailureError: .networkError,
             )
         }
 
         private static func handleSVR2AuthCheckResponse(
             statusCode: Int,
-            retryAfterHeader: String?,
-            bodyData: Data?
+            retryAfterHeader: TimeInterval?,
+            bodyData: Data?,
         ) -> SVR2AuthCheckResponse {
             let statusCode = RegistrationServiceResponses.SVR2AuthCheckResponseCodes(rawValue: statusCode)
             switch statusCode {
@@ -76,7 +76,7 @@ extension RegistrationCoordinatorImpl {
                 accountAttributes: accountAttributes,
                 skipDeviceTransfer: skipDeviceTransfer,
                 apnRegistrationId: apnRegistrationId,
-                prekeyBundles: prekeyBundles
+                prekeyBundles: prekeyBundles,
             )
             return await makeRequest(
                 { try await signalService.urlSessionForMainSignalService().performRequest(request) },
@@ -85,19 +85,19 @@ extension RegistrationCoordinatorImpl {
                         authPassword: authPassword,
                         statusCode: $0,
                         retryAfterHeader: $1,
-                        bodyData: $2
+                        bodyData: $2,
                     )
                 },
                 fallbackError: .genericError,
-                networkFailureError: .networkError
+                networkFailureError: .networkError,
             )
         }
 
         private static func handleCreateAccountResponse(
             authPassword: String,
             statusCode: Int,
-            retryAfterHeader: String?,
-            bodyData: Data?
+            retryAfterHeader: TimeInterval?,
+            bodyData: Data?,
         ) -> AccountResponse {
             let statusCode = RegistrationServiceResponses.AccountCreationResponseCodes(rawValue: statusCode)
             switch statusCode {
@@ -115,7 +115,7 @@ extension RegistrationCoordinatorImpl {
                     pni: response.pni,
                     e164: response.e164,
                     hasPreviouslyUsedSVR: response.hasPreviouslyUsedSVR,
-                    authPassword: authPassword
+                    authPassword: authPassword,
                 ))
 
             case .deviceTransferPossible:
@@ -130,27 +130,19 @@ extension RegistrationCoordinatorImpl {
                     Logger.warn("Got empty create account response")
                     return .genericError
                 }
-                guard let response = try? JSONDecoder().decode(
-                    RegistrationServiceResponses.RegistrationLockFailureResponse.self,
-                    from: bodyData
-                ) else {
+                guard
+                    let response = try? JSONDecoder().decode(
+                        RegistrationServiceResponses.RegistrationLockFailureResponse.self,
+                        from: bodyData,
+                    )
+                else {
                     Logger.warn("Unable to parse ReglockFailure from response")
                     return .genericError
                 }
                 return .reglockFailure(response)
 
             case .retry:
-                let retryAfter: TimeInterval
-                if
-                    let retryAfterHeader,
-                    let retryAfterTime = TimeInterval(retryAfterHeader)
-                {
-                    retryAfter = retryAfterTime
-                } else {
-                    Logger.warn("Missing retry-after header from server; falling back to default.")
-                    retryAfter = Constants.defaultRetryTime
-                }
-                return .retryAfter(retryAfter)
+                return .retryAfter(retryAfterHeader)
 
             case .unauthorized:
                 Logger.warn("Got unauthorized response for create account")
@@ -181,7 +173,7 @@ extension RegistrationCoordinatorImpl {
                 verificationMethod: method,
                 e164: e164,
                 reglockToken: reglockToken,
-                pniChangeNumberParameters: pniChangeNumberParameters
+                pniChangeNumberParameters: pniChangeNumberParameters,
             )
             return await makeRequest(
                 { try await networkManager.asyncRequest(request) },
@@ -189,15 +181,15 @@ extension RegistrationCoordinatorImpl {
                     return self.handleChangeNumberResponse(authPassword: authPassword, statusCode: $0, retryAfterHeader: $1, bodyData: $2)
                 },
                 fallbackError: .genericError,
-                networkFailureError: .networkError
+                networkFailureError: .networkError,
             )
         }
 
         private static func handleChangeNumberResponse(
             authPassword: String,
             statusCode: Int,
-            retryAfterHeader: String?,
-            bodyData: Data?
+            retryAfterHeader: TimeInterval?,
+            bodyData: Data?,
         ) -> AccountResponse {
             let statusCode = RegistrationServiceResponses.ChangeNumberResponseCodes(rawValue: statusCode)
             switch statusCode {
@@ -215,7 +207,7 @@ extension RegistrationCoordinatorImpl {
                     pni: response.pni,
                     e164: response.e164,
                     hasPreviouslyUsedSVR: response.hasPreviouslyUsedSVR,
-                    authPassword: authPassword
+                    authPassword: authPassword,
                 ))
 
             case .reglockFailed:
@@ -223,27 +215,19 @@ extension RegistrationCoordinatorImpl {
                     Logger.warn("Got empty create account response")
                     return .genericError
                 }
-                guard let response = try? JSONDecoder().decode(
-                    RegistrationServiceResponses.RegistrationLockFailureResponse.self,
-                    from: bodyData
-                ) else {
+                guard
+                    let response = try? JSONDecoder().decode(
+                        RegistrationServiceResponses.RegistrationLockFailureResponse.self,
+                        from: bodyData,
+                    )
+                else {
                     Logger.warn("Unable to parse ReglockFailure from response")
                     return .genericError
                 }
                 return .reglockFailure(response)
 
             case .retry:
-                let retryAfter: TimeInterval
-                if
-                    let retryAfterHeader,
-                    let retryAfterTime = TimeInterval(retryAfterHeader)
-                {
-                    retryAfter = retryAfterTime
-                } else {
-                    Logger.warn("Missing retry-after header from server; falling back to default.")
-                    retryAfter = Constants.defaultRetryTime
-                }
-                return .retryAfter(retryAfter)
+                return .retryAfter(retryAfterHeader)
 
             case .unauthorized, .regRecoveryPasswordRejected:
                 return .rejectedVerificationMethod
@@ -266,7 +250,7 @@ extension RegistrationCoordinatorImpl {
             }
         }
 
-        public static func makeEnableReglockRequest(
+        static func makeEnableReglockRequest(
             reglockToken: String,
             auth: ChatServiceAuth,
             networkManager: any NetworkManagerProtocol,
@@ -281,7 +265,7 @@ extension RegistrationCoordinatorImpl {
             }
         }
 
-        public static func makeUpdateAccountAttributesRequest(
+        static func makeUpdateAccountAttributesRequest(
             _ attributes: AccountAttributes,
             auth: ChatServiceAuth,
             networkManager: any NetworkManagerProtocol,
@@ -292,7 +276,7 @@ extension RegistrationCoordinatorImpl {
             ) {
                 let request = RegistrationRequestFactory.updatePrimaryDeviceAccountAttributesRequest(
                     attributes,
-                    auth: auth
+                    auth: auth,
                 )
                 let response = try await networkManager.asyncRequest(request)
                 guard response.responseStatusCode >= 200, response.responseStatusCode < 300 else {
@@ -309,7 +293,7 @@ extension RegistrationCoordinatorImpl {
             case genericError
         }
 
-        public static func makeWhoAmIRequest(
+        static func makeWhoAmIRequest(
             auth: ChatServiceAuth,
             networkManager: any NetworkManagerProtocol,
         ) async -> WhoAmIResponse {
@@ -340,34 +324,28 @@ extension RegistrationCoordinatorImpl {
 
         private static func makeRequest<ResponseType>(
             _ makeRequest: () async throws -> HTTPResponse,
-            handler: (_ statusCode: Int, _ retryAfterHeader: String?, _ bodyData: Data?) -> ResponseType,
+            handler: (_ statusCode: Int, _ retryAfterHeader: TimeInterval?, _ bodyData: Data?) -> ResponseType,
             fallbackError: ResponseType,
-            networkFailureError: ResponseType
+            networkFailureError: ResponseType,
         ) async -> ResponseType {
             do {
                 let response = try await makeRequest()
                 return handler(
                     response.responseStatusCode,
-                    response.headers[Constants.retryAfterHeader],
-                    response.responseBodyData
+                    response.headers.retryAfterTimeInterval,
+                    response.responseBodyData,
                 )
             } catch where error.isNetworkFailureOrTimeout {
                 return networkFailureError
             } catch let error as OWSHTTPError {
                 return handler(
                     error.responseStatusCode,
-                    error.responseHeaders?[Constants.retryAfterHeader],
-                    error.httpResponseData
+                    error.responseHeaders?.retryAfterTimeInterval,
+                    error.httpResponseData,
                 )
             } catch {
                 return fallbackError
             }
-        }
-
-        enum Constants {
-            static let defaultRetryTime: TimeInterval = 3
-
-            static let retryAfterHeader = "retry-after"
         }
     }
 }

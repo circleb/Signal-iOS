@@ -49,7 +49,7 @@ public protocol TSAccountManager {
     func setRegistrationId(
         _ newRegistrationId: UInt32,
         for identity: OWSIdentity,
-        tx: DBWriteTransaction
+        tx: DBWriteTransaction,
     )
     func getRegistrationId(for identity: OWSIdentity, tx: DBReadTransaction) -> UInt32?
     func clearRegistrationIds(tx: DBWriteTransaction)
@@ -111,6 +111,20 @@ public enum LocalDeviceId: CustomStringConvertible {
 }
 
 extension TSAccountManager {
+    public func registeredStateWithMaybeSneakyTransaction() throws(NotRegisteredError) -> RegisteredState {
+        return try RegisteredState(
+            registrationState: self.registrationStateWithMaybeSneakyTransaction,
+            localIdentifiers: self.localIdentifiersWithMaybeSneakyTransaction,
+        )
+    }
+
+    public func registeredState(tx: DBReadTransaction) throws(NotRegisteredError) -> RegisteredState {
+        return try RegisteredState(
+            registrationState: self.registrationState(tx: tx),
+            localIdentifiers: self.localIdentifiers(tx: tx),
+        )
+    }
+
     public func localIdentifiersWithMaybeSneakyTransaction(authedAccount: AuthedAccount) throws -> LocalIdentifiers {
         switch authedAccount.info {
         case .explicit(let info):
@@ -154,7 +168,7 @@ public protocol LocalIdentifiersSetter {
         pni: Pni,
         deviceId: DeviceId,
         serverAuthToken: String,
-        tx: DBWriteTransaction
+        tx: DBWriteTransaction,
     )
 
     /// Change local identifiers after a change number operation.
@@ -164,7 +178,7 @@ public protocol LocalIdentifiersSetter {
         newE164: E164,
         aci: Aci,
         pni: Pni,
-        tx: DBWriteTransaction
+        tx: DBWriteTransaction,
     )
 
     /// Returns true if successful. Not successful iff the old value is the same as new value (no-op).
@@ -181,7 +195,7 @@ public protocol LocalIdentifiersSetter {
         localAci: Aci,
         discoverability: PhoneNumberDiscoverability?,
         wasPrimaryDevice: Bool,
-        tx: DBWriteTransaction
+        tx: DBWriteTransaction,
     )
 
     /// Returns true if value changed, false otherwise.

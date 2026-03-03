@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import UserNotifications
 import SignalServiceKit
+import UserNotifications
 
 // The lifecycle of the NSE looks something like the following:
 //  1)  App receives notification
@@ -83,7 +83,7 @@ class NotificationService: UNNotificationServiceExtension {
 
     override func didReceive(
         _ request: UNNotificationRequest,
-        withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void
+        withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void,
     ) {
         let logger = NSELogger()
         _ = Self.nseDidStart()
@@ -118,7 +118,7 @@ class NotificationService: UNNotificationServiceExtension {
                 let content = UNMutableNotificationContent()
                 let notificationFormat = OWSLocalizedString(
                     "NOTIFICATION_BODY_PHONE_LOCKED_FORMAT",
-                    comment: "Lock screen notification text presented after user powers on their device without unlocking. Embeds {{device model}} (either 'iPad' or 'iPhone')"
+                    comment: "Lock screen notification text presented after user powers on their device without unlocking. Embeds {{device model}} (either 'iPad' or 'iPhone')",
                 )
                 content.body = String(format: notificationFormat, UIDevice.current.localizedModel)
                 return content
@@ -139,7 +139,7 @@ class NotificationService: UNNotificationServiceExtension {
         // Re-set up the local identifiers to ensure they're propagated throughout the system.
         switch finalContinuation.setUpLocalIdentifiers(
             willResumeInProgressRegistration: false,
-            canInitiateRegistration: false
+            canInitiateRegistration: false,
         ) {
         case .corruptRegistrationState:
             Logger.warn("Ignoring request to process notifications when the user isn't registered.")
@@ -179,8 +179,8 @@ class NotificationService: UNNotificationServiceExtension {
             try await Preconditions([
                 NotificationPrecondition(
                     notificationName: .isSignalProxyReadyDidChange,
-                    isSatisfied: { SignalProxy.isEnabledAndReady }
-                )
+                    isSatisfied: { SignalProxy.isEnabledAndReady },
+                ),
             ]).waitUntilSatisfied()
         }
     }
@@ -192,16 +192,26 @@ class NotificationService: UNNotificationServiceExtension {
             return UNMutableNotificationContent()
         }
 
+        let cron = DependenciesBridge.shared.cron
+        let cronCtx = CronContext(
+            chatConnectionManager: DependenciesBridge.shared.chatConnectionManager,
+            tsAccountManager: DependenciesBridge.shared.tsAccountManager,
+        )
+
         do {
             try await startProxyIfEnabled()
             defer { SignalProxy.stopRelayServer() }
 
             let backgroundMessageFetcher = DependenciesBridge.shared.backgroundMessageFetcherFactory.buildFetcher()
 
+            await backgroundMessageFetcher.start()
+            // Start Cron after we request a socket.
+            async let cronResult: Void = cron.runOnce(ctx: cronCtx)
             let fetchResult = await Result(catching: {
-                await backgroundMessageFetcher.start()
                 try await backgroundMessageFetcher.waitForFetchingProcessingAndSideEffects()
             })
+            // Wait for Cron to finish executing before we release the socket.
+            await cronResult
             await backgroundMessageFetcher.stopAndWaitBeforeSuspending()
             try fetchResult.get()
         } catch is CancellationError {

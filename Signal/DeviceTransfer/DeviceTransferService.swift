@@ -17,6 +17,14 @@ protocol DeviceTransferServiceObserver: AnyObject {
     func deviceTransferServiceDidRequestAppRelaunch()
 }
 
+protocol DeviceTransferServiceProtocol: AnyObject {
+    func startAcceptingTransfersFromOldDevices(mode: DeviceTransferService.TransferMode) throws -> URL
+    func addObserver(_ observer: DeviceTransferServiceObserver)
+    func removeObserver(_ observer: DeviceTransferServiceObserver)
+    func stopAcceptingTransfersFromOldDevices()
+    func cancelTransferFromOldDevice()
+}
+
 ///
 /// The following service is used to facilitate users in transferring their account from
 /// an old device (OD) to a new device (ND) using MultipeerConnectivity. The general steps
@@ -67,7 +75,7 @@ protocol DeviceTransferServiceObserver: AnyObject {
 ///          iv. Move all the received files into place, set the new database key, etc.
 ///          v. Hot-swap the new database into place and present the conversation list
 ///
-class DeviceTransferService: NSObject {
+class DeviceTransferService: NSObject, DeviceTransferServiceProtocol {
 
     static let appSharedDataDirectory = URL(fileURLWithPath: OWSFileSystem.appSharedDataDirectoryPath())
     static let pendingTransferDirectory = URL(fileURLWithPath: "transfer", isDirectory: true, relativeTo: appSharedDataDirectory)
@@ -99,7 +107,7 @@ class DeviceTransferService: NSObject {
     private lazy var newDeviceServiceBrowser: MCNearbyServiceBrowser = {
         let browser = MCNearbyServiceBrowser(
             peer: peerId,
-            serviceType: DeviceTransferService.newDeviceServiceIdentifier
+            serviceType: DeviceTransferService.newDeviceServiceIdentifier,
         )
         browser.delegate = self
         return browser
@@ -107,8 +115,9 @@ class DeviceTransferService: NSObject {
 
     private lazy var newDeviceServiceAdvertiser: MCNearbyServiceAdvertiser = {
         let advertiser = MCNearbyServiceAdvertiser(
-            peer: peerId, discoveryInfo: nil,
-            serviceType: DeviceTransferService.newDeviceServiceIdentifier
+            peer: peerId,
+            discoveryInfo: nil,
+            serviceType: DeviceTransferService.newDeviceServiceIdentifier,
         )
         advertiser.delegate = self
         return advertiser
@@ -133,7 +142,7 @@ class DeviceTransferService: NSObject {
             self,
             selector: #selector(didEnterBackground),
             name: .OWSApplicationDidEnterBackground,
-            object: nil
+            object: nil,
         )
     }
 
@@ -198,7 +207,7 @@ class DeviceTransferService: NSObject {
                 DependenciesBridge.shared.db.write { tx in
                     DependenciesBridge.shared.registrationStateChangeManager.setIsTransferComplete(
                         sendStateUpdateNotification: true,
-                        tx: tx
+                        tx: tx,
                     )
                 }
             }
@@ -225,7 +234,7 @@ class DeviceTransferService: NSObject {
             newDeviceCertificateHash: certificateHash,
             manifest: manifest,
             transferredFileIds: [],
-            progress: progress
+            progress: progress,
         )
 
         newDeviceServiceBrowser.invitePeer(peerId, to: session, withContext: nil, timeout: 30)
@@ -293,7 +302,7 @@ class DeviceTransferService: NSObject {
             DependenciesBridge.shared.db.write { tx in
                 DependenciesBridge.shared.registrationStateChangeManager.setIsTransferComplete(
                     sendStateUpdateNotification: notifyRegState,
-                    tx: tx
+                    tx: tx,
                 )
             }
         }
@@ -401,7 +410,7 @@ class DeviceTransferService: NSObject {
     private static let walCopyFilename = "wal_copy_for_transfer"
 
     private static func urlForCopy(
-        databaseFile: DeviceTransferProtoFile
+        databaseFile: DeviceTransferProtoFile,
     ) throws -> URL {
         let newFileName: String
         let newFileExtension: String
@@ -419,11 +428,11 @@ class DeviceTransferService: NSObject {
     }
 
     private static func makeLocalCopy(
-        databaseFile: DeviceTransferProtoFile
+        databaseFile: DeviceTransferProtoFile,
     ) throws -> DeviceTransferProtoFile {
         let url = URL(
             fileURLWithPath: databaseFile.relativePath,
-            relativeTo: DeviceTransferService.appSharedDataDirectory
+            relativeTo: DeviceTransferService.appSharedDataDirectory,
         )
 
         if !OWSFileSystem.fileOrFolderExists(url: url) {
@@ -450,7 +459,7 @@ class DeviceTransferService: NSObject {
     func sendDoneMessage(to peerId: MCPeerID) throws {
         Logger.info("Sending done message")
 
-        guard let session = session else {
+        guard let session else {
             throw OWSAssertionError("attempted to send done message without an available session")
         }
 
@@ -461,7 +470,7 @@ class DeviceTransferService: NSObject {
     func sendBackgroundAppMessage(to peerId: MCPeerID) throws {
         Logger.info("Sending backgrounded message")
 
-        guard let session = session else {
+        guard let session else {
             throw OWSAssertionError("attempted to send backgrounded message without an available session")
         }
 
@@ -481,17 +490,19 @@ class DeviceTransferService: NSObject {
 
         stopThroughputCalculation()
 
-        guard let progress: Progress = {
-            switch transferState {
-            case .incoming(_, _, _, _, let progress):
-                return progress
-            case .outgoing(_, _, _, _, let progress):
-                return progress
-            case .idle:
-                owsFailDebug("Can't start throughput calculation while idle")
-                return nil
-            }
-        }() else {
+        guard
+            let progress: Progress = {
+                switch transferState {
+                case .incoming(_, _, _, _, let progress):
+                    return progress
+                case .outgoing(_, _, _, _, let progress):
+                    return progress
+                case .idle:
+                    owsFailDebug("Can't start throughput calculation while idle")
+                    return nil
+                }
+            }()
+        else {
             return owsFailDebug("Can't start throughput calculations without progress")
         }
 
@@ -582,3 +593,21 @@ class DeviceTransferService: NSObject {
         lastWholeNumberProgress = 0
     }
 }
+
+#if TESTABLE_BUILD
+
+class DeviceTransferServiceMock: DeviceTransferServiceProtocol {
+    func startAcceptingTransfersFromOldDevices(mode: HCP.DeviceTransferService.TransferMode) throws -> URL {
+        return URL(string: "https://example.com")!
+    }
+
+    func addObserver(_ observer: any DeviceTransferServiceObserver) { }
+
+    func removeObserver(_ observer: any DeviceTransferServiceObserver) { }
+
+    func stopAcceptingTransfersFromOldDevices() { }
+
+    func cancelTransferFromOldDevice() { }
+}
+
+#endif

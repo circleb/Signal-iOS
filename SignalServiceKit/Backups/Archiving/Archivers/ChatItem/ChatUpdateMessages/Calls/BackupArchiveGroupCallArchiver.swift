@@ -17,7 +17,7 @@ final class BackupArchiveGroupCallArchiver {
     init(
         callRecordStore: CallRecordStore,
         groupCallRecordManager: GroupCallRecordManager,
-        interactionStore: BackupArchiveInteractionStore
+        interactionStore: BackupArchiveInteractionStore,
     ) {
         self.callRecordStore = callRecordStore
         self.groupCallRecordManager = groupCallRecordManager
@@ -27,11 +27,11 @@ final class BackupArchiveGroupCallArchiver {
     func archiveGroupCall(
         _ groupCallInteraction: OWSGroupCallMessage,
         threadInfo: BackupArchive.ChatArchivingContext.CachedThreadInfo,
-        context: BackupArchive.ChatArchivingContext
+        context: BackupArchive.ChatArchivingContext,
     ) -> ArchiveChatUpdateMessageResult {
         let associatedCallRecord: CallRecord? = callRecordStore.fetch(
             interactionRowId: groupCallInteraction.sqliteRowId!,
-            tx: context.tx
+            tx: context.tx,
         )
 
         let groupCallState: BackupProto_GroupCall.State
@@ -51,7 +51,7 @@ final class BackupArchiveGroupCallArchiver {
             case .individual, .callLink:
                 return .messageFailure([.archiveFrameError(
                     .groupCallRecordHadInvalidCallStatus,
-                    BackupArchive.InteractionUniqueId(interaction: groupCallInteraction)
+                    BackupArchive.InteractionUniqueId(interaction: groupCallInteraction),
                 )])
             }
         } else {
@@ -91,7 +91,7 @@ final class BackupArchiveGroupCallArchiver {
                 \.callEndedTimestamp,
                 on: &groupCallUpdate,
                 \.endedCallTimestamp,
-                allowZero: false
+                allowZero: false,
             )
         } else {
             /// This property is non-optional, but we only track it for calls
@@ -132,7 +132,8 @@ final class BackupArchiveGroupCallArchiver {
             chatItemType: .updateMessage(chatUpdateMessage),
             isSmsPreviouslyRestoredFromBackup: false,
             threadInfo: threadInfo,
-            context: context.recipientContext
+            pinMessageDetails: nil,
+            context: context.recipientContext,
         ).bubbleUp(Details.self, partialErrors: &partialErrors) {
         case .continue(let details):
             if partialErrors.isEmpty {
@@ -149,7 +150,7 @@ final class BackupArchiveGroupCallArchiver {
         _ groupCall: BackupProto_GroupCall,
         chatItem: BackupProto_ChatItem,
         chatThread: BackupArchive.ChatThread,
-        context: BackupArchive.ChatItemRestoringContext
+        context: BackupArchive.ChatItemRestoringContext,
     ) -> RestoreChatUpdateMessageResult {
         let groupThread: TSGroupThread
         switch chatThread.threadType {
@@ -158,7 +159,7 @@ final class BackupArchiveGroupCallArchiver {
         case .contact:
             return .messageFailure([.restoreFrameError(
                 .invalidProtoData(.groupCallNotInGroupThread),
-                chatItem.id
+                chatItem.id,
             )])
         }
 
@@ -166,7 +167,7 @@ final class BackupArchiveGroupCallArchiver {
         if groupCall.hasStartedCallRecipientID {
             switch context.recipientContext.getAci(
                 recipientId: BackupArchive.RecipientId(value: groupCall.startedCallRecipientID),
-                forChatItemId: chatItem.id
+                forChatItemId: chatItem.id,
             ) {
             case .found(let aci): startedCallAci = aci
             case .missing(let restoreFrameError): return .messageFailure([restoreFrameError])
@@ -179,7 +180,7 @@ final class BackupArchiveGroupCallArchiver {
             joinedMemberAcis: [],
             creatorAci: startedCallAci.map { AciObjC($0) },
             thread: groupThread,
-            sentAtTimestamp: chatItem.dateSent
+            sentAtTimestamp: chatItem.dateSent,
         )
         groupCallInteraction.wasRead = groupCall.read
 
@@ -190,7 +191,7 @@ final class BackupArchiveGroupCallArchiver {
                 chatId: chatItem.typedChatId,
                 startedCallAci: startedCallAci,
                 wasRead: groupCall.read,
-                context: context
+                context: context,
             )
         } catch let error {
             return .messageFailure([.restoreFrameError(.databaseInsertionFailed(error), chatItem.id)])
@@ -234,7 +235,7 @@ final class BackupArchiveGroupCallArchiver {
             if groupCall.hasRingerRecipientID {
                 switch context.recipientContext.getAci(
                     recipientId: BackupArchive.RecipientId(value: groupCall.ringerRecipientID),
-                    forChatItemId: chatItem.id
+                    forChatItemId: chatItem.id,
                 ) {
                 case .found(let aci): groupCallRingerAci = aci
                 case .missing(let restoreFrameError): return .messageFailure([restoreFrameError])
@@ -255,13 +256,13 @@ final class BackupArchiveGroupCallArchiver {
                     groupCallRingerAci: groupCallRingerAci,
                     callEventTimestamp: groupCall.startedCallTimestamp,
                     shouldSendSyncMessage: false,
-                    tx: context.tx
+                    tx: context.tx,
                 )
                 if groupCall.hasEndedCallTimestamp {
                     try callRecordStore.updateCallEndedTimestamp(
                         callRecord: callRecord,
                         callEndedTimestamp: groupCall.endedCallTimestamp,
-                        tx: context.tx
+                        tx: context.tx,
                     )
                 }
                 if groupCall.read {
@@ -276,35 +277,6 @@ final class BackupArchiveGroupCallArchiver {
     }
 }
 
-// MARK: -
-
-private extension BackupArchive.RecipientArchivingContext {
-    enum RecipientIdResult {
-        case found(BackupArchive.RecipientId)
-        case missing(BackupArchive.ArchiveFrameError<BackupArchive.InteractionUniqueId>)
-    }
-
-    func getRecipientId(
-        aci: Aci,
-        forInteraction interaction: TSInteraction,
-        file: StaticString = #file,
-        function: StaticString = #function,
-        line: UInt = #line
-    ) -> RecipientIdResult {
-        let contactAddress = BackupArchive.ContactAddress(aci: aci)
-
-        if let recipientId = self[.contact(contactAddress)] {
-            return .found(recipientId)
-        }
-
-        return .missing(.archiveFrameError(
-            .referencedRecipientIdMissing(.contact(contactAddress)),
-            BackupArchive.InteractionUniqueId(interaction: interaction),
-            file: file, function: function, line: line
-        ))
-    }
-}
-
 private extension BackupArchive.RecipientRestoringContext {
     enum RecipientIdResult {
         case found(Aci)
@@ -313,12 +285,12 @@ private extension BackupArchive.RecipientRestoringContext {
 
     func getAci(
         recipientId: BackupArchive.RecipientId,
-        forChatItemId chatItemId: BackupArchive.ChatItemId
+        forChatItemId chatItemId: BackupArchive.ChatItemId,
     ) -> RecipientIdResult {
         guard let recipientAddress: Address = self[recipientId] else {
             return .missing(.restoreFrameError(
                 .invalidProtoData(.recipientIdNotFound(recipientId)),
-                chatItemId
+                chatItemId,
             ))
         }
 
@@ -331,7 +303,7 @@ private extension BackupArchive.RecipientRestoringContext {
         case .group, .distributionList, .releaseNotesChannel, .callLink:
             return .missing(.restoreFrameError(
                 .invalidProtoData(.groupCallRecipientIdNotAnAci(recipientId)),
-                chatItemId
+                chatItemId,
             ))
         }
     }

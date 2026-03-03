@@ -12,14 +12,14 @@ public enum BackupNonce {
     /// An imprecise upper bound on the byte length of the MetadataHeader we prepend to
     /// the backup file, plus the length of the file signature and varint length we put before it.
     /// Before we download the full backup file, we fetch the first N bytes so we can
-    /// pull out the header to talk to SVR🐝 before proceeding. This is how many bytes
+    /// pull out the header to talk to SVRB before proceeding. This is how many bytes
     /// we initially fetch. If this fails, we fetch more. It is therefore most performant
     /// if this value is a reasonably tight overestimate of the length of the header, even if that
     /// length is variable.
     static let metadataHeaderByteLengthUpperBound: UInt16 =
         UInt16(magicFileSignature.count)
-        + varintLengthUpperBound
-        + metadataHeaderLengthUpperBound
+            + varintLengthUpperBound
+            + metadataHeaderLengthUpperBound
 
     /// SBACKUP\x01
     static let magicFileSignature = Data([83, 66, 65, 67, 75, 85, 80, 01])
@@ -32,7 +32,7 @@ public enum BackupNonce {
     ///
     /// This data can be (and is) exposed to the server, as it is in plaintext at the front
     /// of the backup file we upload to CDN.
-    public struct MetadataHeader: Codable {
+    public struct MetadataHeader {
         public let data: Data
 
         public init(data: Data) {
@@ -47,30 +47,12 @@ public enum BackupNonce {
     /// Backup N and read it back later when we create Backup {N+1} so that
     /// when we upload the next nonce to SVRB is it Nonce {N+1} and can be used
     /// to decrypt the prior backup, in case the next backup's upload fails.
-    public struct NextSecretMetadata: Codable {
+    public struct NextSecretMetadata {
         public let data: Data
 
         public init(data: Data) {
             self.data = data
         }
-    }
-}
-
-extension Svr🐝.StoreBackupResponse {
-
-    var headerMetadata: BackupNonce.MetadataHeader {
-        return BackupNonce.MetadataHeader(data: self.metadata)
-    }
-
-    var nextSecretMetadata: BackupNonce.NextSecretMetadata {
-        return BackupNonce.NextSecretMetadata(data: self.nextBackupSecretData)
-    }
-}
-
-extension Svr🐝.RestoreBackupResponse {
-
-    var nextSecretMetadata: BackupNonce.NextSecretMetadata {
-        return BackupNonce.NextSecretMetadata(data: self.nextBackupSecretData)
     }
 }
 
@@ -105,7 +87,7 @@ extension BackupNonce.MetadataHeader {
         // Read the varint length of the header metadata.
         let (headerLength, varintLength) = ChunkedInputStreamTransform.decodeVariableLengthInteger(
             buffer: rawData,
-            start: fileSignatureLength
+            start: fileSignatureLength,
         )
         guard
             headerLength > 0,
@@ -150,7 +132,7 @@ public class BackupNonceMetadataStore {
     /// a different backup key (e.g. an AEP rotation happened between then and now).
     public func getLastForwardSecrecyToken(
         for backupKey: MessageRootBackupKey,
-        tx: DBReadTransaction
+        tx: DBReadTransaction,
     ) throws -> BackupForwardSecrecyToken? {
         var sha = SHA256()
         sha.update(data: backupKey.serialize())
@@ -172,7 +154,7 @@ public class BackupNonceMetadataStore {
     public func setLastForwardSecrecyToken(
         _ token: BackupForwardSecrecyToken,
         for backupKey: MessageRootBackupKey,
-        tx: DBWriteTransaction
+        tx: DBWriteTransaction,
     ) {
         var sha = SHA256()
         sha.update(data: backupKey.serialize())
@@ -187,7 +169,7 @@ public class BackupNonceMetadataStore {
     /// a different backup key (e.g. an AEP rotation happened between then and now).
     public func getNextSecretMetadata(
         for backupKey: MessageRootBackupKey,
-        tx: DBReadTransaction
+        tx: DBReadTransaction,
     ) -> BackupNonce.NextSecretMetadata? {
         var sha = SHA256()
         sha.update(data: backupKey.serialize())
@@ -206,14 +188,14 @@ public class BackupNonceMetadataStore {
     ///  StoreBackupResponse as this NextSecretMetadata.
     /// 2. As an initialization step the very first time we create a backup, since there was no prior backup to pull
     ///  the "next" metadata from.
-    /// 3. After restoring a backup on a new device, with the nextSecretMetadata we got from the SVR🐝 response,
+    /// 3. After restoring a backup on a new device, with the nextSecretMetadata we got from the SVRB response,
     /// to continue the chain on this device when it makes a backup for the first time.
     ///
     /// - parameter backupKey: The message backup key used to encrypt the just-created/restored backup.
     public func setNextSecretMetadata(
         _ metadata: BackupNonce.NextSecretMetadata,
         for backupKey: MessageRootBackupKey,
-        tx: DBWriteTransaction
+        tx: DBWriteTransaction,
     ) {
         var sha = SHA256()
         sha.update(data: backupKey.serialize())

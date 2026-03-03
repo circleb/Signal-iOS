@@ -32,7 +32,7 @@ class NSEEnvironment {
             debugLogger.enableFileLogging(appContext: appContext, canLaunchInBackground: true)
             debugLogger.enableTTYLoggingIfNeeded()
             DebugLogger.registerLibsignal()
-            DebugLogger.registerRingRTC()
+            DebugLogger.registerRingRTC(appContext: appContext)
             didStartAppSetup = true
         }
 
@@ -50,7 +50,7 @@ class NSEEnvironment {
         let databaseStorage = try SDSDatabaseStorage(
             appReadiness: appReadiness,
             databaseFileUrl: SDSDatabaseStorage.grdbDatabaseFileUrl,
-            keychainStorage: keychainStorage
+            keychainStorage: keychainStorage,
         )
         databaseStorage.grdbStorage.setUpDatabasePathKVO()
 
@@ -70,7 +70,6 @@ class NSEEnvironment {
                 callMessageHandler: NSECallMessageHandler(),
                 currentCallProvider: CurrentCallNoOpProvider(),
                 notificationPresenter: NotificationPresenterImpl(),
-                incrementalMessageTSAttachmentMigratorFactory: NoOpIncrementalMessageTSAttachmentMigratorFactory(),
             )
             .migrateDatabaseData()
 
@@ -87,6 +86,9 @@ class NSEEnvironment {
         // Note that this does much more than set a flag; it will also run all deferred blocks.
         appReadiness.setAppIsReady()
 
-        AppVersionImpl.shared.nseLaunchDidComplete()
+        let appVersion = AppVersionImpl.shared
+        appVersion.dumpToLog()
+        appVersion.updateFirstVersionIfNeeded()
+        appVersion.nseLaunchDidComplete()
     }
 }

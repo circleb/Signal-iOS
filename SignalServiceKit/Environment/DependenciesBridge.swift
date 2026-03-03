@@ -32,13 +32,14 @@ public class DependenciesBridge {
 
         return _shared
     }
+
     private static var _shared: DependenciesBridge?
 
-    #if TESTABLE_BUILD
+#if TESTABLE_BUILD
     static var hasShared: Bool {
         return _shared != nil
     }
-    #endif
+#endif
 
     static func setShared(_ dependenciesBridge: DependenciesBridge?, isRunningTests: Bool) {
         owsPrecondition((_shared == nil && dependenciesBridge != nil) || isRunningTests)
@@ -79,12 +80,12 @@ public class DependenciesBridge {
     public let backupKeyService: BackupKeyService
     public let backupListMediaManager: BackupListMediaManager
     public let backupListMediaStore: BackupListMediaStore
-    public let backupRefreshManager: BackupRefreshManager
-    public let backupRequestManager: BackupRequestManager
     public let backupPlanManager: BackupPlanManager
+    public let backupRequestManager: BackupRequestManager
     public let backupSubscriptionManager: BackupSubscriptionManager
     public let backupTestFlightEntitlementManager: BackupTestFlightEntitlementManager
     public let badgeCountFetcher: BadgeCountFetcher
+    let blockedRecipientStore: BlockedRecipientStore
     public let callLinkStore: any CallLinkRecordStore
     public let callRecordDeleteManager: any CallRecordDeleteManager
     public let callRecordMissedCallManager: CallRecordMissedCallManager
@@ -94,10 +95,11 @@ public class DependenciesBridge {
     public let chatColorSettingStore: ChatColorSettingStore
     public let chatConnectionManager: ChatConnectionManager
     public let contactShareManager: ContactShareManager
+    public let cron: Cron
     public let currentCallProvider: any CurrentCallProvider
     public let databaseChangeObserver: DatabaseChangeObserver
     public let db: any DB
-    public let deletedCallRecordCleanupManager: DeletedCallRecordCleanupManager
+    public let deletedCallRecordExpirationJob: DeletedCallRecordExpirationJob
     let deletedCallRecordStore: DeletedCallRecordStore
     let deleteForMeIncomingSyncMessageManager: DeleteForMeIncomingSyncMessageManager
     public let deleteForMeOutgoingSyncMessageManager: DeleteForMeOutgoingSyncMessageManager
@@ -106,6 +108,7 @@ public class DependenciesBridge {
     public let deviceStore: OWSDeviceStore
     public let deviceSleepManager: (any DeviceSleepManager)?
     public let disappearingMessagesConfigurationStore: DisappearingMessagesConfigurationStore
+    public let disappearingMessagesExpirationJob: DisappearingMessagesExpirationJob
     public let donationReceiptCredentialResultStore: DonationReceiptCredentialResultStore
     public let editManager: EditManager
     public let editMessageStore: EditMessageStore
@@ -122,7 +125,6 @@ public class DependenciesBridge {
     let incomingCallEventSyncMessageManager: IncomingCallEventSyncMessageManager
     let incomingCallLogEventSyncMessageManager: IncomingCallLogEventSyncMessageManager
     public let incomingPniChangeNumberProcessor: IncomingPniChangeNumberProcessor
-    public let incrementalMessageTSAttachmentMigrator: IncrementalMessageTSAttachmentMigrator
     public let individualCallRecordManager: IndividualCallRecordManager
     public let interactionDeleteManager: InteractionDeleteManager
     public let interactionStore: InteractionStore
@@ -143,6 +145,7 @@ public class DependenciesBridge {
     public let phoneNumberDiscoverabilityManager: PhoneNumberDiscoverabilityManager
     public let phoneNumberVisibilityFetcher: any PhoneNumberVisibilityFetcher
     public let pinnedMessageManager: PinnedMessageManager
+    public let pinnedMessageExpirationJob: PinnedMessageExpirationJob
     public let pinnedThreadManager: PinnedThreadManager
     public let pinnedThreadStore: PinnedThreadStore
     public let pollMessageManager: PollMessageManager
@@ -164,6 +167,7 @@ public class DependenciesBridge {
     public let svr: SecureValueRecovery
     public let svrCredentialStorage: SVRAuthCredentialStorage
     public let storageServiceRecordIkmMigrator: StorageServiceRecordIkmMigrator
+    public let storyMessageExpirationJob: StoryMessageExpirationJob
     public let storyRecipientManager: StoryRecipientManager
     public let storyRecipientStore: StoryRecipientStore
     public let subscriptionConfigManager: SubscriptionConfigManager
@@ -217,12 +221,12 @@ public class DependenciesBridge {
         backupKeyService: BackupKeyService,
         backupListMediaManager: BackupListMediaManager,
         backupListMediaStore: BackupListMediaStore,
-        backupRefreshManager: BackupRefreshManager,
         backupRequestManager: BackupRequestManager,
         backupPlanManager: BackupPlanManager,
         backupSubscriptionManager: BackupSubscriptionManager,
         backupTestFlightEntitlementManager: BackupTestFlightEntitlementManager,
         badgeCountFetcher: BadgeCountFetcher,
+        blockedRecipientStore: BlockedRecipientStore,
         callLinkStore: any CallLinkRecordStore,
         callRecordDeleteManager: CallRecordDeleteManager,
         callRecordMissedCallManager: CallRecordMissedCallManager,
@@ -232,10 +236,11 @@ public class DependenciesBridge {
         chatColorSettingStore: ChatColorSettingStore,
         chatConnectionManager: ChatConnectionManager,
         contactShareManager: ContactShareManager,
+        cron: Cron,
         currentCallProvider: any CurrentCallProvider,
         databaseChangeObserver: DatabaseChangeObserver,
         db: any DB,
-        deletedCallRecordCleanupManager: DeletedCallRecordCleanupManager,
+        deletedCallRecordExpirationJob: DeletedCallRecordExpirationJob,
         deletedCallRecordStore: DeletedCallRecordStore,
         deleteForMeIncomingSyncMessageManager: DeleteForMeIncomingSyncMessageManager,
         deleteForMeOutgoingSyncMessageManager: DeleteForMeOutgoingSyncMessageManager,
@@ -244,6 +249,7 @@ public class DependenciesBridge {
         deviceSleepManager: (any DeviceSleepManager)?,
         deviceStore: OWSDeviceStore,
         disappearingMessagesConfigurationStore: DisappearingMessagesConfigurationStore,
+        disappearingMessagesExpirationJob: DisappearingMessagesExpirationJob,
         donationReceiptCredentialResultStore: DonationReceiptCredentialResultStore,
         editManager: EditManager,
         editMessageStore: EditMessageStore,
@@ -260,7 +266,6 @@ public class DependenciesBridge {
         incomingCallEventSyncMessageManager: IncomingCallEventSyncMessageManager,
         incomingCallLogEventSyncMessageManager: IncomingCallLogEventSyncMessageManager,
         incomingPniChangeNumberProcessor: IncomingPniChangeNumberProcessor,
-        incrementalMessageTSAttachmentMigrator: IncrementalMessageTSAttachmentMigrator,
         individualCallRecordManager: IndividualCallRecordManager,
         interactionDeleteManager: InteractionDeleteManager,
         interactionStore: InteractionStore,
@@ -281,6 +286,7 @@ public class DependenciesBridge {
         phoneNumberDiscoverabilityManager: PhoneNumberDiscoverabilityManager,
         phoneNumberVisibilityFetcher: any PhoneNumberVisibilityFetcher,
         pinnedMessageManager: PinnedMessageManager,
+        pinnedMessageExpirationJob: PinnedMessageExpirationJob,
         pinnedThreadManager: PinnedThreadManager,
         pinnedThreadStore: PinnedThreadStore,
         pollMessageManager: PollMessageManager,
@@ -300,6 +306,7 @@ public class DependenciesBridge {
         sentMessageTranscriptReceiver: SentMessageTranscriptReceiver,
         signalProtocolStoreManager: SignalProtocolStoreManager,
         storageServiceRecordIkmMigrator: StorageServiceRecordIkmMigrator,
+        storyMessageExpirationJob: StoryMessageExpirationJob,
         storyRecipientManager: StoryRecipientManager,
         storyRecipientStore: StoryRecipientStore,
         subscriptionConfigManager: SubscriptionConfigManager,
@@ -318,7 +325,7 @@ public class DependenciesBridge {
         usernameLookupManager: UsernameLookupManager,
         usernameValidationManager: UsernameValidationManager,
         wallpaperImageStore: WallpaperImageStore,
-        wallpaperStore: WallpaperStore
+        wallpaperStore: WallpaperStore,
     ) {
         self.accountAttributesUpdater = accountAttributesUpdater
         self.accountEntropyPoolManager = accountEntropyPoolManager
@@ -354,12 +361,12 @@ public class DependenciesBridge {
         self.backupKeyService = backupKeyService
         self.backupListMediaManager = backupListMediaManager
         self.backupListMediaStore = backupListMediaStore
-        self.backupRefreshManager = backupRefreshManager
         self.backupRequestManager = backupRequestManager
         self.backupPlanManager = backupPlanManager
         self.backupSubscriptionManager = backupSubscriptionManager
         self.backupTestFlightEntitlementManager = backupTestFlightEntitlementManager
         self.badgeCountFetcher = badgeCountFetcher
+        self.blockedRecipientStore = blockedRecipientStore
         self.callLinkStore = callLinkStore
         self.callRecordDeleteManager = callRecordDeleteManager
         self.callRecordMissedCallManager = callRecordMissedCallManager
@@ -369,10 +376,11 @@ public class DependenciesBridge {
         self.chatColorSettingStore = chatColorSettingStore
         self.chatConnectionManager = chatConnectionManager
         self.contactShareManager = contactShareManager
+        self.cron = cron
         self.currentCallProvider = currentCallProvider
         self.databaseChangeObserver = databaseChangeObserver
         self.db = db
-        self.deletedCallRecordCleanupManager = deletedCallRecordCleanupManager
+        self.deletedCallRecordExpirationJob = deletedCallRecordExpirationJob
         self.deletedCallRecordStore = deletedCallRecordStore
         self.deleteForMeIncomingSyncMessageManager = deleteForMeIncomingSyncMessageManager
         self.deleteForMeOutgoingSyncMessageManager = deleteForMeOutgoingSyncMessageManager
@@ -381,6 +389,7 @@ public class DependenciesBridge {
         self.deviceSleepManager = deviceSleepManager
         self.deviceStore = deviceStore
         self.disappearingMessagesConfigurationStore = disappearingMessagesConfigurationStore
+        self.disappearingMessagesExpirationJob = disappearingMessagesExpirationJob
         self.donationReceiptCredentialResultStore = donationReceiptCredentialResultStore
         self.editManager = editManager
         self.editMessageStore = editMessageStore
@@ -397,7 +406,6 @@ public class DependenciesBridge {
         self.incomingCallEventSyncMessageManager = incomingCallEventSyncMessageManager
         self.incomingCallLogEventSyncMessageManager = incomingCallLogEventSyncMessageManager
         self.incomingPniChangeNumberProcessor = incomingPniChangeNumberProcessor
-        self.incrementalMessageTSAttachmentMigrator = incrementalMessageTSAttachmentMigrator
         self.individualCallRecordManager = individualCallRecordManager
         self.interactionDeleteManager = interactionDeleteManager
         self.interactionStore = interactionStore
@@ -418,6 +426,7 @@ public class DependenciesBridge {
         self.phoneNumberDiscoverabilityManager = phoneNumberDiscoverabilityManager
         self.phoneNumberVisibilityFetcher = phoneNumberVisibilityFetcher
         self.pinnedMessageManager = pinnedMessageManager
+        self.pinnedMessageExpirationJob = pinnedMessageExpirationJob
         self.pinnedThreadManager = pinnedThreadManager
         self.pinnedThreadStore = pinnedThreadStore
         self.pollMessageManager = pollMessageManager
@@ -437,6 +446,7 @@ public class DependenciesBridge {
         self.sentMessageTranscriptReceiver = sentMessageTranscriptReceiver
         self.signalProtocolStoreManager = signalProtocolStoreManager
         self.storageServiceRecordIkmMigrator = storageServiceRecordIkmMigrator
+        self.storyMessageExpirationJob = storyMessageExpirationJob
         self.storyRecipientManager = storyRecipientManager
         self.storyRecipientStore = storyRecipientStore
         self.subscriptionConfigManager = subscriptionConfigManager

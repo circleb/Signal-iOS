@@ -14,7 +14,7 @@ public class NotificationActionHandler {
     @MainActor
     class func handleNotificationResponse(
         _ response: UNNotificationResponse,
-        appReadiness: AppReadinessSetter
+        appReadiness: AppReadinessSetter,
     ) async throws {
         owsAssertDebug(appReadiness.isAppReady)
 
@@ -167,7 +167,8 @@ public class NotificationActionHandler {
         let optionalDraftModel: DraftQuotedReplyModel? = SSKEnvironment.shared.databaseStorageRef.read { transaction in
             if
                 let incomingMessage = notificationMessage.interaction as? TSIncomingMessage,
-                let draftQuotedReplyModel = DependenciesBridge.shared.quotedReplyManager.buildDraftQuotedReply(originalMessage: incomingMessage, tx: transaction) {
+                let draftQuotedReplyModel = DependenciesBridge.shared.quotedReplyManager.buildDraftQuotedReply(originalMessage: incomingMessage, tx: transaction)
+            {
                 return draftQuotedReplyModel
             }
             return nil
@@ -209,10 +210,10 @@ public class NotificationActionHandler {
                         additionalRecipients: [],
                         explicitRecipients: [],
                         skippedRecipients: [],
-                        transaction: transaction
+                        transaction: transaction,
                     ),
                     body: messageBody,
-                    quotedReplyDraft: draftModelForSending
+                    quotedReplyDraft: draftModelForSending,
                 )
                 let preparedMessage = try unpreparedMessage.prepare(tx: transaction)
                 return ThreadUtil.enqueueMessagePromise(message: preparedMessage, transaction: transaction)
@@ -252,7 +253,7 @@ public class NotificationActionHandler {
         // it animate in from the homescreen.
         SignalApp.shared.presentConversationAndScrollToFirstUnreadMessage(
             threadUniqueId: uniqueId,
-            animated: UIApplication.shared.applicationState == .active
+            animated: UIApplication.shared.applicationState == .active,
         )
     }
 
@@ -293,7 +294,7 @@ public class NotificationActionHandler {
             // Fresh state when coming in from a notification; no need to share.
             spoilerState: SpoilerRenderState(),
             loadMessage: storyMessage,
-            action: .presentReplies
+            action: .presentReplies,
         )
         frontmostViewController.present(vc, animated: true)
     }
@@ -314,7 +315,7 @@ public class NotificationActionHandler {
                     emoji: "👍",
                     isRemoving: false,
                     isHighPriority: false,
-                    tx: transaction
+                    tx: transaction,
                 )
             }.awaitableWithUncooperativeCancellationHandling()
         } catch {
@@ -438,13 +439,13 @@ public class NotificationActionHandler {
         }
         let messageId = userInfo.messageId
 
-        return try SSKEnvironment.shared.databaseStorageRef.read { (transaction) throws -> NotificationMessage in
+        return try SSKEnvironment.shared.databaseStorageRef.read { transaction throws -> NotificationMessage in
             guard let thread = TSThread.anyFetch(uniqueId: threadId, transaction: transaction) else {
                 throw OWSAssertionError("unable to find thread with id: \(threadId)")
             }
 
             let interaction: TSInteraction?
-            if let messageId = messageId {
+            if let messageId {
                 interaction = TSInteraction.anyFetch(uniqueId: messageId, transaction: transaction)
             } else {
                 interaction = nil
@@ -468,7 +469,7 @@ public class NotificationActionHandler {
                 interaction: interaction,
                 storyMessage: storyMessage,
                 isGroupStoryReply: (interaction as? TSMessage)?.isGroupStoryReply == true,
-                hasPendingMessageRequest: hasPendingMessageRequest
+                hasPendingMessageRequest: hasPendingMessageRequest,
             )
         }
     }
@@ -482,7 +483,7 @@ public class NotificationActionHandler {
                 beforeSortId: interaction.sortId,
                 thread: notificationMessage.thread,
                 hasPendingMessageRequest: notificationMessage.hasPendingMessageRequest,
-                completion: { continuation.resume() }
+                completion: { continuation.resume() },
             )
         }
     }

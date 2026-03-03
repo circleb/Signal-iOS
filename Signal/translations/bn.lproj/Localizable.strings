@@ -217,6 +217,15 @@
 /* Error indicating that the app could not launch because the database could not be loaded. */
 "APP_LAUNCH_FAILURE_COULD_NOT_LOAD_DATABASE" = "ডাটাবেস লোড করা যায়নি";
 
+/* Message for an action sheet explaining that Signal can't launch because the database is corrupted. */
+"APP_LAUNCH_FAILURE_DATABASE_CORRUPTED_MESSAGE" = "ডেটাবেজ নষ্ট হয়ে যাওয়ায় Signal চালু হচ্ছে না। আপনার অ্যাকাউন্ট বা মেসেজের নিরাপত্তার উপর কোনো প্রভাব পরেনি।";
+
+/* Title for an action sheet explaining that Signal can't launch because the database is corrupted. */
+"APP_LAUNCH_FAILURE_DATABASE_CORRUPTED_TITLE" = "ডেটাবেজ নষ্ট হয়ে গেছে";
+
+/* Action in an action sheet offering to attempt recovery of a corrupted database. */
+"APP_LAUNCH_FAILURE_DATABASE_RECOVERY_ACTION_TITLE" = "মেরামত করুন";
+
 /* Error indicating that the app could not launch without reverting unknown database migrations. */
 "APP_LAUNCH_FAILURE_INVALID_DATABASE_VERSION_MESSAGE" = "অনুগ্রহ করে Signal এর সর্বশেষ সংস্করণে আপগ্রেড করুন।";
 
@@ -679,6 +688,9 @@
 /* Message for an action sheet explaining that performing a backup failed with a network error. */
 "BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NETWORK_ERROR" = "আপনার ব্যাকআপ তৈরি করার সময় কিছু একটা সমস্যা হয়েছে। আপনার ইন্টারনেট সংযোগ ঠিক আছে কিনা দেখুন এবং আবার চেষ্টা করুন।";
 
+/* Message for an action sheet explaining that you must be registered to make a Backup. */
+"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NOT_REGISTERED" = "ব্যাকআপ তৈরি করতে আপনাকে অবশ্যই নিবন্ধিত হতে হবে।";
+
 /* Description for a progress bar tracking the optimizing of Backup media. */
 "BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION_OPTIMIZING_MEDIA" = "মিডিয়া অপ্টিমাইজ করা হচ্ছে...";
 
@@ -689,7 +701,7 @@
 "BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION_PROCESSING_MEDIA" = "মিডিয়া প্রক্রিয়া করা হচ্ছে...";
 
 /* Message describing to the user that the last backup failed. */
-"BACKUP_SETTINGS_BACKUP_FAILED_MESSAGE" = "আপনার শেষ ব্যাকআপ সম্পন্ন করা যায়নি। আপনার ফোন Wi-Fi-এর সাথে সংযুক্ত আছে কিনা দেখুন এবং আবার চেষ্টা করতে \"এখনই ব্যাকআপ নিন\"-এ ট্যাপ করুন";
+"BACKUP_SETTINGS_BACKUP_FAILED_MESSAGE" = "আপনার সর্বশেষ ব্যাকআপ সম্পন্ন করা যায়নি। আবার চেষ্টা করতে \"এখনই ব্যাকআপ নিন\"-এ ট্যাপ করুন।";
 
 /* Title for a button allowing users to upgrade from a free to paid backup plan. */
 "BACKUP_SETTINGS_BACKUP_PLAN_FREE_ACTION_BUTTON_TITLE" = "আপগ্রেড করুন";
@@ -1359,6 +1371,78 @@
 
 /* notification body */
 "CALL_MISSED_BECAUSE_OF_IDENTITY_CHANGE_NOTIFICATION_BODY" = "☎️ মিস করা কল, কারণ কলারের নিরাপত্তা নাম্বার পরিবর্তিত হয়েছে।";
+
+/* Footer text explaining custom issue descriptions in the call quality survey */
+"CALL_QUALITY_SURVEY_CUSTOM_ISSUE_FOOTER" = "সমস্যাটির সাথে প্রাসঙ্গিক যেকোনো বিবরণ অন্তর্ভুক্ত করুন। আপনি এখানে যা কিছু শেয়ার করবেন তা গোপন রাখা হবে এবং শুধুমাত্র Signal-এ কল উন্নত করতে সাহায্য করার জন্য ব্যবহার করা হবে।";
+
+/* Placeholder text for the custom issue entry in the call quality survey */
+"CALL_QUALITY_SURVEY_CUSTOM_ISSUE_PLACEHOLDER" = "আপনার সমস্যাটি বর্ণনা করুন";
+
+/* Footer text explaining what debug logs contain in the call quality survey */
+"CALL_QUALITY_SURVEY_DEBUG_LOG_FOOTER" = "ডিবাগ লগগুলোতে অ্যাপ সংক্রান্ত অল্প কিছু তথ্য থাকে এবং আপনার কোনো মেসেজের কন্টেন্ট প্রকাশ করে না।";
+
+/* Header text explaining the purpose of sharing debug logs in the call quality survey */
+"CALL_QUALITY_SURVEY_DEBUG_LOG_HEADER" = "আপনার ডায়াগনস্টিকসের তথ্য আমাদের পাঠালে আমাদের পক্ষে কলের মান উন্নত করা সম্ভব।";
+
+/* Title for the debug log sharing screen in the call quality survey */
+"CALL_QUALITY_SURVEY_DEBUG_LOG_TITLE" = "আমাদের উন্নতি করতে সাহায্য করুন";
+
+/* Label for the toggle to share debug log in the call quality survey */
+"CALL_QUALITY_SURVEY_DEBUG_LOG_TOGGLE" = "ডিবাগ লগ শেয়ার করুন";
+
+/* Button label for indicating the call did not have issues in the call quality survey */
+"CALL_QUALITY_SURVEY_GREAT_BUTTON" = "দারুণ";
+
+/* Button label for indicating the call had issues in the call quality survey */
+"CALL_QUALITY_SURVEY_HAD_ISSUES_BUTTON" = "সমস্যা ছিলো";
+
+/* Label for audio issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_AUDIO" = "অডিওর সমস্যা";
+
+/* Label for audio dropout issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_AUDIO_DROP" = "অডিও বাদ পড়েছে";
+
+/* Label for local echo issue option in call quality survey, indicating the user heard an echo */
+"CALL_QUALITY_SURVEY_ISSUE_AUDIO_LOCAL_ECHO" = "আমি প্রতিধ্বনি শুনতে পেয়েছি";
+
+/* Label for remote echo issue option in call quality survey, indicating other participants heard an echo */
+"CALL_QUALITY_SURVEY_ISSUE_AUDIO_REMOTE_ECHO" = "অন্যরা প্রতিধ্বনি শুনতে পেয়েছেন";
+
+/* Label for audio stuttering issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_AUDIO_STUTTERING" = "অডিও থেমে থেমে আসছে";
+
+/* Label for call dropped issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_CALL_DROPPED" = "কল ড্রপ হয়েছে";
+
+/* Label for custom issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_OTHER" = "অন্য কিছু";
+
+/* Label for video issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_VIDEO" = "ভিডিওর সমস্যা";
+
+/* Label for poor video quality issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_VIDEO_LOW_QUALITY" = "ভিডিওর মান বেশ খারাপ";
+
+/* Label for low resolution video issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_VIDEO_LOW_RESOLUTION" = "কম রেজোলিউশন";
+
+/* Label for camera not working issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_VIDEO_NO_CAMERA" = "ক্যামেরা কাজ করেনি";
+
+/* Header text on the call quality survey issues screen */
+"CALL_QUALITY_SURVEY_ISSUES_HEADER" = "প্রযোজ্য সবগুলো বেছে নিন";
+
+/* Title for the sheet in the call quality survey where issues with the call can be selected */
+"CALL_QUALITY_SURVEY_ISSUES_SHEET_TITLE" = "আপনার কী সমস্যা হয়েছিলো?";
+
+/* Header text explaining the purpose of the call quality survey */
+"CALL_QUALITY_SURVEY_RATING_HEADER" = "এটি আমাদের Signal-এ কল উন্নত করতে সাহায্য করে। ব্যক্তিগতভাবে শনাক্ত করা সম্ভব এমন কোনো তথ্য সংরক্ষণ করা হবে না।";
+
+/* Title for the initial rating screen in the call quality survey */
+"CALL_QUALITY_SURVEY_RATING_TITLE" = "আপনার কলটি কেমন ছিলো?";
+
+/* Button text to submit the call quality survey */
+"CALL_QUALITY_SURVEY_SUBMIT_BUTTON" = "সাবমিট";
 
 /* Label on button for raising hand in call. */
 "CALL_RAISE_HAND_BUTTON_LABEL" = "হাত তুলুন";
@@ -2134,6 +2218,9 @@
 /* Footer for the 'attributes access' section in conversation settings view. */
 "CONVERSATION_SETTINGS_ATTRIBUTES_ACCESS_SECTION_FOOTER" = "কারা গ্রুপের নাম, ফটো, বিবরণ ও মেসেজ অদৃশ্য হওয়ার টাইমার সম্পাদনা করতে পারবেন তা বেছে নিন।";
 
+/* Footer for the 'attributes access' section in conversation settings view with pinned messages added. */
+"CONVERSATION_SETTINGS_ATTRIBUTES_ACCESS_SECTION_FOOTER_V2" = "গ্রুপের নাম, ছবি, বিবরণ, অদৃশ্য হতে যাওয়া মেসেজের টাইমার ও পিনকৃত মেসেজ কে এডিট করতে পারবেন তা বেছে নিন।";
+
 /* Footer string for a contact's badges in conversation settings */
 "CONVERSATION_SETTINGS_BADGES_FOOTER" = "সিগন্যাল সমর্থন করে আপনার প্রোফাইলের জন্য ব্যাজ পান। আরও জানতে একটি ব্যাজ এ চাপুন।";
 
@@ -2389,23 +2476,11 @@
 /* Tooltip highlighting the custom chat color controls. */
 "CUSTOM_CHAT_COLOR_SETTINGS_TOOLTIP" = "গ্রেডিয়েন্টের দিক পরিবর্তন করতে টেনে আনুন";
 
-/* Button to run the database integrity check */
-"DATABASE_INTEGRITY_CHECK_ACTION_RUN" = "চালান";
-
-/* Message for alert before running a database integrity check */
-"DATABASE_INTEGRITY_CHECK_MESSAGE" = "আপনার সমস্যা সমাধান করতে এটি আমাদের সাহায্য করবে এবং এটি সম্পন্ন হতে কয়েক মিনিট সময় লাগতে পারে৷ এই চেক চলাকালীন আপনি Signal বন্ধ রাখতে পারেন, তবে আপনার লগ জমা দিতে অনুগ্রহ করে পুনরায় ফিরে আসুন।";
-
-/* Button to skip database integrity check step */
-"DATABASE_INTEGRITY_CHECK_SKIP" = "এড়িয়ে যান";
-
-/* Title for alert before running a database integrity check */
-"DATABASE_INTEGRITY_CHECK_TITLE" = "ডেটাবেজ ডায়গনিস্টিক চালাবেন?";
-
 /* In some cases, the user's message history can become corrupted, and a recovery interface is shown. The user has not been hacked and may be confused by this interface, so keep that in mind. This is the description on the first screen of this interface, which gives them some information and asks them to continue. */
 "DATABASE_RECOVERY_AWAITING_USER_CONFIRMATION_DESCRIPTION" = "আপনার কিছু ম্যাসেজের ইতিহাস সম্ভবত নষ্ট হয়ে গেছে। আপনার অ্যাকাউন্ট বা ম্যাসেজের নিরাপত্তার উপর কোন প্রভাব পরেনি। আপনার ডেটা পুনরুদ্ধার করতে \"এগিয়ে যান\" ট্যাপ করুন।";
 
-/* In some cases, the user's message history can become corrupted, and a recovery interface is shown. The user has not been hacked and may be confused by this interface, so try to avoid using terms like \"database\" or \"corrupted\"—terms like \"message history\" are better. This is the title on the first screen of this interface, which gives them some information and asks them to continue. */
-"DATABASE_RECOVERY_AWAITING_USER_CONFIRMATION_TITLE" = "ডেটা পুনরুদ্ধার করতে সমস্যা হচ্ছে";
+/* In some cases, the user's message history can become corrupted, and a recovery interface is shown. This is the title on the first screen of this interface, which gives them some information and asks them to continue. */
+"DATABASE_RECOVERY_AWAITING_USER_CONFIRMATION_TITLE" = "মেরামত করুন";
 
 /* On the database recovery screen, if the user's device storage is nearly full, Signal will not be able to recover the database. A warning screen, which can be bypassed if the user wishes, will be shown. This is the text on the button to bypass the warning. */
 "DATABASE_RECOVERY_MORE_STORAGE_SPACE_NEEDED_CONTINUE_ANYWAY" = "যেভাবেই হোক এগিয়ে যান";
@@ -2617,23 +2692,14 @@
 /* The explanation for the device transfer 'choice' view when linking a device */
 "DEVICE_TRANSFER_CHOICE_LINKED_EXPLANATION" = "আপনার মেসেজের ইতিহাস ও অ্যাকাউন্টের ডেটা কীভাবে ট্রান্সফার করতে চান তা বেছে নিন";
 
-/* The body for the device transfer 'choice' view 'register' option */
-"DEVICE_TRANSFER_CHOICE_REGISTER_BODY" = "আপনার অ্যাকাউন্ট এবং মেসেজ স্থানান্তর না করেই চালিয়ে যান";
-
 /* The body for the device transfer 'choice' view 'register' option when linking a device when message syncing is available */
 "DEVICE_TRANSFER_CHOICE_REGISTER_LINKED_BODY_LINK_AND_SYNC" = "আপনার ফোন থেকে মেসেজ ও সাম্প্রতিক মিডিয়া ট্রান্সফার করার সুযোগ থাকবে";
 
 /* The title for the device transfer 'choice' view 'register' option when linking a device */
 "DEVICE_TRANSFER_CHOICE_REGISTER_LINKED_TITLE" = "নতুন ডিভাইস হিসাবে যোগ করুন";
 
-/* The title for the device transfer 'choice' view 'register' option */
-"DEVICE_TRANSFER_CHOICE_REGISTER_TITLE" = "স্থানান্তর না করেই রেজিস্টার করুন";
-
 /* The title for the device transfer 'choice' view */
 "DEVICE_TRANSFER_CHOICE_TITLE" = "অ্যাকাউন্ট এবং মেসেজ স্থানান্তর করুন";
-
-/* The body for the device transfer 'choice' view 'transfer' option */
-"DEVICE_TRANSFER_CHOICE_TRANSFER_BODY" = "আপনার পুরোনো iOS ডিভাইস থেকে আপনার অ্যাকাউন্ট এবং ম্যাসেজের ইতিহাস স্থানান্তর করুন";
 
 /* The body for the device transfer 'choice' view 'transfer' option when linking a device */
 "DEVICE_TRANSFER_CHOICE_TRANSFER_LINKED_BODY" = "আপনার পুরোনো iOS ডিভাইস থেকে আপনার অ্যাকাউন্ট এবং ম্যাসেজের ইতিহাস স্থানান্তর করুন";
@@ -2641,26 +2707,11 @@
 /* The title for the device transfer 'choice' view 'transfer' option when linking a device */
 "DEVICE_TRANSFER_CHOICE_TRANSFER_LINKED_TITLE" = "অন্য iPad থেকে স্থানান্তর করুন";
 
-/* The title for the device transfer 'choice' view 'transfer' option */
-"DEVICE_TRANSFER_CHOICE_TRANSFER_TITLE" = "iOS ডিভাইস থেকে স্থানান্তর করুন";
-
-/* Button shown to contract a QR code and exit the fullscreen view. */
-"DEVICE_TRANSFER_CONTRACT_QR_CODE_BUTTON" = "ছোট করে দেখুন";
-
 /* An error indicating that the other device closed signal mid-transfer and it could not complete */
 "DEVICE_TRANSFER_ERROR_BACKGROUNDED" = "ট্রান্সফারটি সফল হয়নি। নিশ্চিত করুন যে উভয় ডিভাইসেই Signal খোলা আছে এবং আবার চেষ্টা করুন।";
 
-/* An error indicating that we were unable to verify the identity of the new device to complete the transfer */
-"DEVICE_TRANSFER_ERROR_CERTIFICATE_MISMATCH" = "আপনার নতুন ডিভাইস যাচাই করা যায়নি, অনুগ্রহ করে আবার চেষ্টা করুন";
-
 /* An error indicating that something went wrong with the transfer and it could not complete */
 "DEVICE_TRANSFER_ERROR_GENERIC" = "ট্রান্সফারটি সফল হয়নি। নিশ্চিত করুন যে আপনার ডিভাইসগুলো একে অপরের কাছাকাছি আছে এবং আবার চেষ্টা করুন।";
-
-/* An error indicating the user must scan this code with a linked device to transfer. */
-"DEVICE_TRANSFER_ERROR_MODE_MISMATCH_LINKED" = "সংযুক্ত ডিভাইস হিসাবে এই iPad সেট-আপ করতে, আপনাকে অবশ্যই আপনার পুরোনো iPad স্ক্যান করতে হবে";
-
-/* An error indicating the user must scan this code with a primary device to transfer. */
-"DEVICE_TRANSFER_ERROR_MODE_MISMATCH_PRIMARY" = "আপনার অ্যাকাউন্টটি স্থানান্তর করতে, আপনাকে অবশ্যই আপনার iPhone দিয়ে স্ক্যান করতে হবে";
 
 /* An error indicating that the user does not have enough free space on their device to complete the transfer */
 "DEVICE_TRANSFER_ERROR_NOT_ENOUGH_SPACE" = "স্থানান্তর সম্পূর্ণ করার জন্য পর্যাপ্ত ফাঁকা জায়গা নেই";
@@ -2668,41 +2719,11 @@
 /* An error indicating the user must update their device before trying to transfer. */
 "DEVICE_TRANSFER_ERROR_UNSUPPORTED_VERSION" = "Signal-এর সর্বশেষতম সংস্করণে আপডেট করুন এবং আবার চেষ্টা করুন";
 
-/* Button shown to expand a QR code and view it fullscreen. */
-"DEVICE_TRANSFER_EXPAND_QR_CODE_BUTTON" = "বড় করে দেখুন";
-
-/* The explanation on the action sheet prompting the user if they want to transfer their device. */
-"DEVICE_TRANSFER_PROMPT_EXPLANATION" = "আপনার Signal অ্যাকাউন্টটি একটি নতুন iOS ডিভাইসে স্থানান্তর করুন। আপনার নতুন ডিভাইসটি যে কাছাকাছি এবং চালু আছে তা নিশ্চিত করুন।";
-
-/* The title on the acttion sheet prompting the user if they want to transfer their device. */
-"DEVICE_TRANSFER_PROMPT_TITLE" = "অ্যাকাউন্ট স্থানান্তর করুন";
-
-/* The explanation for the device transfer qr code view */
-"DEVICE_TRANSFER_QRCODE_EXPLANATION" = "আপনার পুরানো ডিভাইসটি কাছাকাছি আনুন, নিশ্চিত করুন যে এতে Wi-Fi ও Bluetooth সচল আছে এবং এর মাধ্যমে এই QR কোডটি স্ক্যান করুন।";
-
-/* The second explanation for the device transfer qr code view */
-"DEVICE_TRANSFER_QRCODE_EXPLANATION2" = "আপনার অন্য iOS ডিভাইসের ফ্রেমে এই QR কোডটি বসান।";
-
-/* A prompt to provide further explanation if the user is not seeing the transfer on both devices. */
-"DEVICE_TRANSFER_QRCODE_NOT_SEEING" = "আপনার পুরোনো ডিভাইসে প্রম্পট দেখছেন না?";
-
-/* The title for the device transfer qr code view */
-"DEVICE_TRANSFER_QRCODE_TITLE" = "QR কোড স্ক্যান করুন";
-
 /* The explanation on the view that shows receiving progress */
 "DEVICE_TRANSFER_RECEIVING_EXPLANATION" = "উভয় ডিভাইসই একে অপরের কাছে রাখুন। কোনও ডিভাইস বন্ধ করবেন না এবং Signal খোলা রাখবেন। স্থানান্তরগুলি এক প্রান্ত থেকে অপর প্রান্ত পর্যন্ত এনক্রিপ্ট করা হয়।";
 
 /* The title on the view that shows receiving progress */
 "DEVICE_TRANSFER_RECEIVING_TITLE" = "ডেটা গ্রহণ করা হচ্ছে";
-
-/* Text indicating that we are connecting to the scanned device */
-"DEVICE_TRANSFER_SCANNING_CONNECTING" = "সংযুক্ত হচ্ছে…";
-
-/* The explanation for the action sheet asking the user to scan the QR code to transfer */
-"DEVICE_TRANSFER_SCANNING_EXPLANATION" = "বৃত্তের মধ্যে QR কোডটি বসান";
-
-/* The title for the action sheet asking the user to scan the QR code to transfer */
-"DEVICE_TRANSFER_SCANNING_TITLE" = "আপনার নতুন ডিভাইসটিকে ক্যামেরার দিকে ধরে রাখুন";
 
 /* Status message on new device when cancelling transfer. */
 "DEVICE_TRANSFER_STATUS_NEW_DEVICE_CANCELLING" = "পুরোনো iPhone-এর সাথে সংযোগ বাতিল করা হচ্ছে…";
@@ -2714,7 +2735,7 @@
 "DEVICE_TRANSFER_STATUS_NEW_DEVICE_CONNECTING_MESSAGE" = "আপনার পুরোনো ডিভাইসটি কাছে আনুন এবং নিশ্চিত করুন যে Wi-Fi ও Bluetooth চালু আছে।";
 
 /* Status message on new device when transfer is starting. */
-"DEVICE_TRANSFER_STATUS_NEW_DEVICE_STARTING" = "পুরোনো iPhone-এর সাথে সংযোগের জন্য অপেক্ষা করা হচ্ছে…";
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_STARTING" = "পুরনো ডিভাইসে সংযোগের জন্য অপেক্ষা করা হচ্ছে…";
 
 /* Description in the progress view displayed after failure of device transfer. */
 "DEVICE_TRANSFER_STATUS_NEW_DEVICE_TRANSFER_FAILED_BODY" = "নতুন ডিভাইসে ট্রান্সফার করা যায়নি। আপনার পুরোনো ডিভাইসটি কাছে আনুন এবং আবার চেষ্টা করুন।";
@@ -2738,13 +2759,10 @@
 "DEVICE_TRANSFER_STATUS_OLD_DEVICE_CONNECTING_MESSAGE" = "আপনার নতুন ডিভাইসটি কাছে আনুন এবং নিশ্চিত করুন যে Wi-Fi ও Bluetooth চালু আছে।";
 
 /* Status message on old device when transfer is starting. */
-"DEVICE_TRANSFER_STATUS_OLD_DEVICE_STARTING" = "নতুন iPhone-এর সাথে সংযোগের জন্য অপেক্ষা করা হচ্ছে…";
+"DEVICE_TRANSFER_STATUS_OLD_DEVICE_STARTING" = "নতুন ডিভাইসে সংযোগের জন্য অপেক্ষা করা হচ্ছে…";
 
-/* The explanation on the action sheet that shows transfer progress */
-"DEVICE_TRANSFER_TRANSFERRING_EXPLANATION" = "উভয় ডিভাইস একে অপরের কাছে রাখুন। কোনও ডিভাইস বন্ধ করবেন না এবং Signal খোলা রাখবেন।";
-
-/* The title on the action sheet that shows transfer progress */
-"DEVICE_TRANSFER_TRANSFERRING_TITLE" = "ডেটা স্থানান্তর করা হচ্ছে";
+/* Action asking user to try again after transfer failure. */
+"DEVICE_TRANSFER_TRY_AGAIN_ACTION" = "আবার চেষ্টা করুন";
 
 /* table cell label in conversation settings */
 "DISAPPEARING_MESSAGES" = "অদৃশ্য বার্তা";
@@ -3192,6 +3210,9 @@
 
 /* Label for the currency picker button in donation views */
 "DONATIONS_CURRENCY_PICKER_LABEL" = "মুদ্রা";
+
+/* Label for a button that says 'Don't show again'. */
+"DONT_SHOW_AGAIN_BUTTON_TITLE" = "পুনরায় দেখবেন না";
 
 /* Message for Double Tap to Edit sheet show on first interaction */
 "DOUBLE_TAP_TO_EDIT_ALERT_MESSAGE" = "আপনার মেসেজ এডিট করতে দ্রুত দু'বার ট্যাপ করুন। আপনি আপনার মেসেজ পাঠানোর পরের 24 ঘন্টার মধ্যে এডিট করতে পারবেন।";
@@ -3856,6 +3877,12 @@
 /* Message indicating that 'announcement-only' mode was enabled by a remote user. Embeds {{ user who enabled 'announcement-only' mode }}. */
 "GROUP_IS_ANNOUNCEMENT_ONLY_ENABLED_BY_REMOTE_USER_FORMAT" = "কেবলমাত্র অ্যাডমিনদের মেসেজ পাঠানোর অনুমতি দিতে %1$@ গ্রুপের সেটিংস পরিবর্তন করেছেন।";
 
+/* Message text for the 'group invite link' action sheet. */
+"GROUP_LINK_ACTION_SHEET_JOIN_MESSAGE" = "এই গ্রুপে যোগ দিয়ে আপনার নাম ও ছবি এই গ্ৰুপের সদস্যদের সাথে শেয়ার করবেন?";
+
+/* Message text for the 'group invite link' action sheet, if the user will be requesting to join. */
+"GROUP_LINK_ACTION_SHEET_JOIN_MESSAGE_W_REQUEST" = "আপনি যখন যোগ দেওয়ার জন্য অনুরোধ পাঠাবেন, তখন আপনার নাম ও ছবি এই গ্রুপের সদস্যদের সাথে শেয়ার করা হবে। একজন অ্যাডমিনকে আপনার অনুরোধ অনুমোদন করতে হবে।";
+
 /* Subtitle indicating that the local user has been blocked from joining the group */
 "GROUP_LINK_ACTION_SHEET_VIEW_BLOCKED_FROM_JOINING_SUBTITLE" = "আপনি এই লিংকের মাধ্যমে গ্ৰুপে যোগ দিতে পারবেন না, কারণ একজন অ্যাডমিন আপনাকে সরিয়ে দিয়েছেন। গ্রুপে আবারো যুক্ত হতে একজন অ্যাডমিনের সাথে যোগাযোগ করুন।";
 
@@ -3874,14 +3901,8 @@
 /* Label indicating that the group info is being loaded in the 'group invite link' action sheet. */
 "GROUP_LINK_ACTION_SHEET_VIEW_LOADING_TITLE" = "লোড হচ্ছে…";
 
-/* Message text for the 'group invite link' action sheet. */
-"GROUP_LINK_ACTION_SHEET_VIEW_MESSAGE" = "আপনি কি এই গ্রুপে যোগ দিতে এবং এর সদস্যদের সাথে নিজের নাম এবং ফটো শেয়ার করতে চান?";
-
 /* Label for the 'request to join' button in the 'group invite link' action sheet. */
 "GROUP_LINK_ACTION_SHEET_VIEW_REQUEST_TO_JOIN_BUTTON" = "যোগদানের জন্য অনুরোধ করুন";
-
-/* Message text for the 'group invite link' action sheet, if the user will be requesting to join. */
-"GROUP_LINK_ACTION_SHEET_VIEW_REQUEST_TO_JOIN_MESSAGE" = "আপনি এই গ্রুপে যোগদানের আগে এই গ্রুপের একজন এডমিন অবশ্যই আপনার অনুরোধটি অনুমোদন করতে হবে। আপনি যখন যোগদানের জন্য অনুরোধ করবেন তখন আপনার নাম এবং ফটো এর সদস্যদের সাথে শেয়ার করা হবে।";
 
 /* Error message the attempt to request to join the group failed due to network connectivity. */
 "GROUP_LINK_COULD_NOT_REQUEST_TO_JOIN_GROUP_DUE_TO_NETWORK_ERROR_MESSAGE" = "অনুগ্রহ করে আপনি অনলাইনে আছেন কিনা তা পরীক্ষা করে আবার চেষ্টা করুন।";
@@ -4839,24 +4860,6 @@
 
 /* Shown to users while the app is loading, asking them not to close the app. */
 "LOADING_VIEW_CONTROLLER_DONT_CLOSE_APP" = "সিগন্যাল বন্ধ করবেন না।";
-
-/* Body for local network permission action sheet */
-"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_BODY" = "আপনার Signal অ্যাকাউন্ট স্থানান্তর করতে, আপনাকে উভয় ডিভাইসে স্থানীয় নেটওয়ার্ক অ্যাক্সেস সক্ষম করতে হবে।";
-
-/* A button asking the user if they need further help getting their transfer working. */
-"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_NEED_HELP" = "সাহায্য দরকার?";
-
-/* First step for local network permission action sheet */
-"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_STEP_ONE" = "প্রতিটি ডিভাইসে, সেটিংস খুলুন";
-
-/* Third step for local network permission action sheet */
-"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_STEP_THREE" = "“স্থানীয় নেটওয়ার্ক” চালু করুন";
-
-/* Second step for local network permission action sheet */
-"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_STEP_TWO" = "Signal-এ নেভিগেট করুন";
-
-/* Title for local network permission action sheet */
-"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_TITLE" = "স্থানীয় নেটওয়ার্ক অ্যাক্সেস চালু করুন";
 
 /* A string indicating that the user can search for a location */
 "LOCATION_PICKER_SEARCH_PLACEHOLDER" = "নাম বা ঠিকানা অনুসন্ধান করুন";
@@ -6404,9 +6407,6 @@
 "PHOTO_CAPTURE_GENERIC_ERROR" = "চিত্র ধারন করতে অক্ষম।";
 
 /* alert title */
-"PHOTO_CAPTURE_UNABLE_TO_CAPTURE_IMAGE" = "চিত্র ধারন করতে অক্ষম।";
-
-/* alert title */
 "PHOTO_CAPTURE_UNABLE_TO_INITIALIZE_CAMERA" = "ক্যামেরা কনফিগার করতে ব্যর্থ।";
 
 /* Button label for opening the chat on a sheet presented from photo capture view indicating that a username QR code was found. */
@@ -6417,9 +6417,6 @@
 
 /* Title for sheet presented from photo capture view indicating that a username QR code was found. Embeds {{username}}. */
 "PHOTO_CAPTURE_USERNAME_QR_CODE_FOUND_TITLE_FORMAT" = "%1$@ পাওয়া গেছে";
-
-/* alert title, generic error preventing user from capturing a video that is too long */
-"PHOTO_CAPTURE_VIDEO_SIZE_ERROR" = "ভিডিওর আকার অনেক বড়।";
 
 /* Pressing this button pins a thread */
 "PIN_ACTION" = "পিন";
@@ -6565,8 +6562,80 @@
 /* An explanation that you have already pinned the maximum number of conversations. */
 "PINNED_CONVERSATION_LIMIT" = "আপনি কেবলমাত্র 4টি পর্যন্ত চ্যাট পিন করতে পারবেন।";
 
+/* Accessibility label prefix for banner showing a pinned message */
+"PINNED_MESSAGE_BANNER_AX_LABEL" = "পিনকৃত মেসেজ:";
+
+/* Shown when another user pins a message. Embeds {{ another user }}. */
+"PINNED_MESSAGE_CHAT_EVENT_OTHER" = "%1$@ একটি মেসেজ পিন করেছেন";
+
+/* Shown when the local user pins a message. */
+"PINNED_MESSAGE_CHAT_EVENT_SELF" = "আপনি একটি মেসেজ পিন করেছেন";
+
+/* Accessibility label for pin message button */
+"PINNED_MESSAGE_MENU_ACCESSIBILITY_LABEL" = "পিনকৃত মেসেজ মেনু";
+
+/* Label for button to pin a message */
+"PINNED_MESSAGE_PIN_ACTION_TITLE" = "পিন";
+
+/* Message for an action sheet confirming the user wants to replace oldest pinned message. */
+"PINNED_MESSAGE_REPLACE_OLDEST_BODY" = "মেসেজ পিন করা হলে তা সবচেয়ে পুরনো মেসেজটিকে প্রতিস্থাপন করবে।";
+
+/* Option in pinned message action sheet to replace oldest pin. */
+"PINNED_MESSAGE_REPLACE_OLDEST_BUTTON" = "প্রতিস্থাপন করুন";
+
+/* Title for an action sheet confirming the user wants to replace oldest pinned message. */
+"PINNED_MESSAGE_REPLACE_OLDEST_TITLE" = "সবচেয়ে পুরনো পিনটি বদলাবেন?";
+
+/* Body for error sheet shown if the pinned message failed to send */
+"PINNED_MESSAGE_SEND_ERROR_SHEET_BODY" = "আপনার নেটওয়ার্ক সংযোগ ঠিক আছে কি না দেখুন এবং আবার চেষ্টা করুন।";
+
+/* Title for error sheet shown if the pinned message failed to send */
+"PINNED_MESSAGE_SEND_ERROR_SHEET_TITLE" = "মেসেজ পিন করা যায়নি";
+
+/* Text to show on a toast when someone unpins a message */
+"PINNED_MESSAGE_TOAST" = "মেসেজটি আনপিন করা হয়েছে";
+
+/* Label for button to unpin a message */
+"PINNED_MESSAGE_UNPIN_ACTION_TITLE" = "আনপিন করুন";
+
+/* Option in pinned message action sheet to pin for 24 hours. */
+"PINNED_MESSAGES_24_HOURS" = "24 ঘন্টা";
+
+/* Option in pinned message action sheet to pin for 30 days. */
+"PINNED_MESSAGES_30_DAYS" = "৩০ দিন";
+
+/* Option in pinned message action sheet to pin for 7 days. */
+"PINNED_MESSAGES_7_DAYS" = "৭ দিন";
+
+/* Title for Pinned Messages detail view */
+"PINNED_MESSAGES_DETAILS_TITLE" = "পিনকৃত মেসেজ";
+
+/* Title for an action sheet to indicate how long to keep the pin active */
+"PINNED_MESSAGES_EXPIRY_SHEET_TITLE" = "...এর জন্য পিন করে রাখুন";
+
+/* Option in pinned message action sheet to pin with no expiry. */
+"PINNED_MESSAGES_FOREVER" = "চিরতরে";
+
+/* Action menu item to go to a message in the conversation view */
+"PINNED_MESSAGES_GO_TO_MESSAGE" = "মেসেজ-এ যান";
+
+/* Action menu item to see all pinned messages */
+"PINNED_MESSAGES_SEE_ALL_MESSAGES" = "সব মেসেজ দেখুন";
+
+/* Action menu item to unpin a message */
+"PINNED_MESSAGES_UNPIN" = "আনপিন করুন";
+
+/* Title for a button to unpin all pinned messages. */
+"PINNED_MESSAGES_UNPIN_ALL" = "সব আনপিন করুন";
+
 /* The title for pinned conversation section on the conversation list */
 "PINNED_SECTION_TITLE" = "পিন করা";
+
+/* Body for a sheet warning users they are pinning a disappearing message. */
+"PINNING_DISAPPEARING_MESSAGE_WARNING_BODY" = "টাইমারের মেয়াদ শেষ হয়ে গেলে এবং চ্যাট থেকে মেসেজ সরিয়ে ফেলা হলে, অদৃশ্য হতে যাওয়া মেসেজ আনপিন করা হবে।";
+
+/* Title for a sheet warning users they are pinning a disappearing message. */
+"PINNING_DISAPPEARING_MESSAGE_WARNING_TITLE" = "অদৃশ্য হতে যাওয়া মেসেজ পিন করা হচ্ছে";
 
 /* Action text for PIN megaphone when user doesn't have a PIN */
 "PINS_MEGAPHONE_ACTION" = "পিন তৈরি করুন";
@@ -6584,10 +6653,10 @@
 "PLAY_BUTTON_ACCESSABILITY_LABEL" = "মিডিয়া চালান";
 
 /* Accessibility label for poll message. Embeds {{ poll question }}. */
-"POLL_ACCESSIBILITY_LABEL" = "Poll: %1$@.";
+"POLL_ACCESSIBILITY_LABEL" = "জরিপ: %1$@।";
 
 /* Accessibility label for a vote option that is not selected by the user. */
-"POLL_ACCESSIBILITY_LABEL_OPTION_PENDING" = "pending";
+"POLL_ACCESSIBILITY_LABEL_OPTION_PENDING" = "স্থগিত";
 
 /* Title for a toggle allowing multiple votes for a poll. */
 "POLL_ALLOW_MULTIPLE_LABEL" = "একাধিক ভোটের অনুমতি দিন";
@@ -6865,6 +6934,15 @@
 /* Title of alert shown when push tokens sync job succeeds. */
 "PUSH_REGISTER_SUCCESS" = "পুশ বিজ্ঞপ্তিগুলির জন্য সাফল্যের সাথে পুনরায় নিবন্ধিত হয়েছে।";
 
+/* Body for sheet with info about scanning a Quick Restore QR code */
+"QUICK_RESTORE_URL_OPENED_ACTION_SHEET_EXTERNAL_URL_ACTION_BODY" = "আপনি যে ডিভাইসে ট্রান্সফার করতে চান তার QR কোড স্ক্যান করতে এই ডিভাইসটি ব্যবহার করুন";
+
+/* Title for sheet with info about scanning a Quick Restore QR code */
+"QUICK_RESTORE_URL_OPENED_ACTION_SHEET_EXTERNAL_URL_ACTION_TITLE" = "QR কোড স্ক্যান করুন";
+
+/* Message for an action sheet telling users how to use quick restore, when trying to open an external quick restore URL. */
+"QUICK_RESTORE_URL_OPENED_ACTION_SHEET_EXTERNAL_URL_MESSAGE" = "এই অ্যাকাউন্টটি একটি নতুন ডিভাইসে ট্রান্সফার করতে, \"চালিয়ে যান\"-এ ট্যাপ করুন এবং Signal ক্যামেরা দিয়ে QR কোডটি স্ক্যান করুন। নিশ্চিত করুন যে আপনি কেবল Signal থেকে সরাসরি আসা QR কোডগুলো স্ক্যান করছেন।";
+
 /* Accessibility label stating the author of the message to which you are replying. Embeds: {{ the author of the message to which you are replying }}. */
 "QUOTED_REPLY_ACCESSIBILITY_LABEL_FORMAT" = "%1$@-কে উত্তর দেওয়া হচ্ছে।";
 
@@ -7099,12 +7177,6 @@
 /* Label for the country code field */
 "REGISTRATION_DEFAULT_COUNTRY_NAME" = "দেশ কোড";
 
-/* If a user is installing Signal on a new phone, they may be asked whether they want to transfer their account from their old device. This is a description on the screen that asks them this question. */
-"REGISTRATION_DEVICE_TRANSFER_CHOICE_EXPLANATION" = "আপনি যদি চালিয়ে যান তবে একই ফোন নম্বর দিয়ে বর্তমানে অন্যান্য ডিভাইসে রেজিস্ট্রেশন করা Signal অকার্যকর হবে।";
-
-/* If a user is installing Signal on a new phone, they may be asked whether they want to transfer their account from their old device. This is the title on the screen that asks them this question. */
-"REGISTRATION_DEVICE_TRANSFER_CHOICE_TITLE" = "অ্যাকাউন্ট এবং ম্যাসেজ ট্রান্সফার করুন";
-
 /* Description for the screen that allows users to enter their recovery key. */
 "REGISTRATION_ENTER_BACKUP_KEY_DESCRIPTION" = "আপনার পুনরুদ্ধার 'কি' একটি 64-ক্যারেক্টারের কোড যা আপনার অ্যাকাউন্ট ও ডেটা পুনর্বহাল করার সময় প্রয়োজন হবে।";
 
@@ -7223,7 +7295,7 @@
 "REGISTRATION_SCAN_QR_CODE_FAILED_TITLE" = "পুনর্বহাল সফল হয়নি";
 
 /* Title for screen containing QR code that users scan with their old phone when they want to transfer/restore their message history to a new device. */
-"REGISTRATION_SCAN_QR_CODE_TITLE" = "আপনার পুরানো ফোন দিয়ে এই কোডটি স্ক্যান করুন";
+"REGISTRATION_SCAN_QR_CODE_TITLE" = "আপনার পুরনো ডিভাইস দিয়ে এই কোডটি স্ক্যান করুন";
 
 /* Tutorial text describing the first step to scanning the restore/transfer QR code with your old phone: opening Signal */
 "REGISTRATION_SCAN_QR_CODE_TUTORIAL_OPEN_SIGNAL" = "আপনার পুরানো ডিভাইসে Signal খুলুন";
@@ -7505,7 +7577,7 @@
 "SCREEN_LOCK_UNLOCK_SIGNAL" = "Signal আনলক করুন";
 
 /* Placeholder text indicating the user can search for contacts by name, username, or phone number. */
-"SEARCH_BY_NAME_OR_USERNAME_OR_NUMBER_PLACEHOLDER_TEXT" = "নাম, ব্যবহারকারীর নাম বা নম্বর";
+"SEARCH_BY_NAME_OR_USERNAME_OR_NUMBER_PLACEHOLDER_TEXT" = "নাম, ইউজারনেম বা নম্বর";
 
 /* Placeholder text indicating the user can search for contacts by name or phone number. */
 "SEARCH_BYNAMEORNUMBER_PLACEHOLDER_TEXT" = "নাম বা নাম্বার দ্বারা অনুসন্ধান করুন";
@@ -8743,6 +8815,12 @@
 /* The name for the sticker category 'Featured' */
 "STICKER_CATEGORY_FEATURED_NAME" = "ফিচারকৃত";
 
+/* Subtitle of the helper text displayed when Recent stickers are empty. */
+"STICKER_CATEGORY_RECENTS_EMPTY_SUBTITLE" = "একটি স্টিকার পাঠান এবং এটি এখানে প্রদর্শিত হবে";
+
+/* Title of the helper text displayed when Recent stickers are empty. */
+"STICKER_CATEGORY_RECENTS_EMPTY_TITLE" = "কোনো সাম্প্রতিক স্টিকার নেই";
+
 /* The name for the sticker category 'Recents' */
 "STICKER_CATEGORY_RECENTS_NAME" = "সাম্প্রতিক";
 
@@ -8898,21 +8976,6 @@
 
 /* Context menu action to share the selected story */
 "STORIES_SHARE_STORY_ACTION" = "শেয়ার করুন";
-
-/* Section title shown when sending to non-story conversations but failing to send the file to stories. */
-"STORIES_SHARESHEET_PARTIAL_SEND_REMAINING_SECTION_TITLE" = "একে পাঠানো হয়েছে";
-
-/* Section title shown when failing to send an incompatible file to stories, but still sending to non-story conversations. */
-"STORIES_SHARESHEET_PARTIAL_SEND_STORIES_SECTION_TITLE" = "পাঠানো হয়নি";
-
-/* Title shown when failing to send an incompatible file to stories, but still sending to non-story conversations. */
-"STORIES_SHARESHEET_PARTIAL_SEND_TITLE" = "আংশিকভাবে পাঠানো হয়েছে";
-
-/* Subtitle shown when failing to send an incompatible file to stories via the sharesheet. */
-"STORIES_SHARESHEET_UNABLE_TO_SEND_SEND_SUBTITLE" = "নির্বাচিত ফাইলের ধরণ সমর্থিত নয়।";
-
-/* Title shown when failing to send an incompatible file to stories via the sharesheet. */
-"STORIES_SHARESHEET_UNABLE_TO_SEND_SEND_TITLE" = "পাঠানো সম্ভব হয়নি";
 
 /* Title for the stories view. */
 "STORIES_TITLE" = "স্টোরি";
@@ -9205,35 +9268,23 @@
 /* Option in selected text edit menu to make text bold */
 "TEXT_MENU_BOLD" = "বোল্ড";
 
-/* Option in selected text edit menu to clear all text formatting in the selected text range */
-"TEXT_MENU_CLEAR_FORMATTING" = "ফরম্যাটিং পরিষ্কার করুন";
-
 /* Option in selected text edit menu to view text formatting options */
 "TEXT_MENU_FORMAT" = "ফরম্যাট";
 
 /* Option in selected text edit menu to make text italic */
 "TEXT_MENU_ITALIC" = "ইটালিক";
 
-/* Option in selected text edit menu to look up word definitions */
-"TEXT_MENU_LOOK_UP" = "খুঁজুন";
-
 /* Option in selected text edit menu to make text monospace */
 "TEXT_MENU_MONOSPACE" = "মনোস্পেস";
 
-/* Option in selected text edit menu to replace text with suggestions */
-"TEXT_MENU_REPLACE" = "প্রতিস্থাপন করুন";
-
-/* Option in selected text edit menu to share selected text */
-"TEXT_MENU_SHARE" = "শেয়ার করুন";
+/* Option in selected text edit menu to remove all text formatting in the selected text range */
+"TEXT_MENU_REMOVE_FORMATTING" = "ফর্ম্যাটিং মুছে ফেলুন";
 
 /* Option in selected text edit menu to make text spoiler */
 "TEXT_MENU_SPOILER" = "স্পয়লার";
 
 /* Option in selected text edit menu to make text strikethrough */
 "TEXT_MENU_STRIKETHROUGH" = "স্ট্রাইকথ্রু";
-
-/* Option in selected text edit menu to translate the word */
-"TEXT_MENU_TRANSLATE" = "অনুবাদ করুন";
 
 /* text indicating the message was remotely deleted */
 "THIS_MESSAGE_WAS_DELETED" = "এই বার্তাটি মুছে ফেলা হয়েছে।";

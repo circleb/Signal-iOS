@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import SignalUI
 import SignalServiceKit
+import SignalUI
 
 @MainActor
 class ChatListFYISheetCoordinator {
@@ -46,7 +46,6 @@ class ChatListFYISheetCoordinator {
     }
 
     private let backupExportJobRunner: BackupExportJobRunner
-    private let backupFailureStateManager: BackupFailureStateManager
     private let backupSubscriptionIssueStore: BackupSubscriptionIssueStore
     private let donationReceiptCredentialResultStore: DonationReceiptCredentialResultStore
     private let donationSubscriptionManager: DonationSubscriptionManager.Type
@@ -56,7 +55,6 @@ class ChatListFYISheetCoordinator {
 
     init(
         backupExportJobRunner: BackupExportJobRunner,
-        backupFailureStateManager: BackupFailureStateManager,
         backupSubscriptionIssueStore: BackupSubscriptionIssueStore,
         donationReceiptCredentialResultStore: DonationReceiptCredentialResultStore,
         donationSubscriptionManager: DonationSubscriptionManager.Type,
@@ -65,7 +63,6 @@ class ChatListFYISheetCoordinator {
         profileManager: ProfileManager,
     ) {
         self.backupExportJobRunner = backupExportJobRunner
-        self.backupFailureStateManager = backupFailureStateManager
         self.backupSubscriptionIssueStore = backupSubscriptionIssueStore
         self.donationReceiptCredentialResultStore = donationReceiptCredentialResultStore
         self.donationSubscriptionManager = donationSubscriptionManager
@@ -133,7 +130,7 @@ class ChatListFYISheetCoordinator {
     /// silently.
     private func shouldShowBadgeThanksSheet(
         successMode: DonationReceiptCredentialResultStore.Mode,
-        tx: DBReadTransaction
+        tx: DBReadTransaction,
     ) -> FYISheet? {
         guard
             let redemptionSuccess = donationReceiptCredentialResultStore
@@ -157,7 +154,7 @@ class ChatListFYISheetCoordinator {
     /// redundant errors here.
     private func shouldShowBadgeIssueSheet(
         errorMode: DonationReceiptCredentialResultStore.Mode,
-        tx: DBReadTransaction
+        tx: DBReadTransaction,
     ) -> FYISheet? {
         guard
             let redemptionError = donationReceiptCredentialResultStore
@@ -173,11 +170,11 @@ class ChatListFYISheetCoordinator {
             // Not a terminal error – no reason to show a sheet.
             return nil
         case
-                .paymentFailed,
-                .localValidationFailed,
-                .serverValidationFailed,
-                .paymentNotFound,
-                .paymentIntentRedeemed:
+            .paymentFailed,
+            .localValidationFailed,
+            .serverValidationFailed,
+            .paymentNotFound,
+            .paymentIntentRedeemed:
             break
         }
 
@@ -233,7 +230,7 @@ class ChatListFYISheetCoordinator {
     ) async {
         let badgeThanksSheetPresenter: BadgeThanksSheetPresenter = .fromGlobals(
             redemptionSuccess: badgeThanks.redemptionSuccess,
-            successMode: badgeThanks.successMode
+            successMode: badgeThanks.successMode,
         )
 
         await badgeThanksSheetPresenter.presentAndRecordBadgeThanks(fromViewController: chatListViewController)
@@ -267,19 +264,19 @@ class ChatListFYISheetCoordinator {
             switch errorMode {
             case .oneTimeBoost, .recurringSubscriptionInitiation:
                 return .bankPaymentFailed(
-                    chargeFailureCode: chargeFailureCodeIfPaymentFailed
+                    chargeFailureCode: chargeFailureCodeIfPaymentFailed,
                 )
             case .recurringSubscriptionRenewal:
                 return .subscriptionExpiredBecauseOfChargeFailure(
                     chargeFailureCode: chargeFailureCodeIfPaymentFailed,
-                    paymentMethod: paymentMethod
+                    paymentMethod: paymentMethod,
                 )
             }
         }()
 
         let badgeIssueSheet = BadgeIssueSheet(
             badge: badge,
-            mode: badgeIssueSheetMode
+            mode: badgeIssueSheetMode,
         )
         badgeIssueSheet.delegate = chatListViewController
 
@@ -288,7 +285,7 @@ class ChatListFYISheetCoordinator {
         await db.awaitableWrite { tx in
             donationReceiptCredentialResultStore.setHasPresentedError(
                 errorMode: errorMode,
-                tx: tx
+                tx: tx,
             )
         }
     }
@@ -321,7 +318,7 @@ class ChatListFYISheetCoordinator {
 
             let badgeIssueSheet = BadgeIssueSheet(
                 badge: boostBadge,
-                mode: .boostExpired(hasCurrentSubscription: probablyHasCurrentSubscription)
+                mode: .boostExpired(hasCurrentSubscription: probablyHasCurrentSubscription),
             )
             badgeIssueSheet.delegate = chatListViewController
 
@@ -390,7 +387,7 @@ class ChatListFYISheetCoordinator {
 
     private func _present(
         backupSubscriptionExpired: FYISheet.BackupSubscriptionExpired,
-        from chatListViewController: ChatListViewController
+        from chatListViewController: ChatListViewController,
     ) async {
         let logger = PrefixedLogger(prefix: "[Backups]")
         logger.info("Showing BackupSubscriptionExpired FYI sheet.")
@@ -427,7 +424,7 @@ class ChatListFYISheetCoordinator {
         let sheet = BackupSubscriptionFailedToRenewHeroSheet(
             onManageSubscription: {
                 SignalApp.shared.showAppSettings(mode: .backups)
-            }
+            },
         )
         chatListViewController.present(sheet, animated: true) { [self] in
             db.write { tx in

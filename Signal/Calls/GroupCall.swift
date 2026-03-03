@@ -20,7 +20,7 @@ protocol GroupCallObserver: AnyObject {
     func groupCallPeekChanged(_ call: GroupCall)
 
     @MainActor
-    func groupCallEnded(_ call: GroupCall, reason: GroupCallEndReason)
+    func groupCallEnded(_ call: GroupCall, reason: CallEndReason)
     func groupCallReceivedReactions(_ call: GroupCall, reactions: [SignalRingRTC.Reaction])
     func groupCallReceivedRaisedHands(_ call: GroupCall, raisedHands: [DemuxId])
 
@@ -33,7 +33,7 @@ extension GroupCallObserver {
     func groupCallLocalDeviceStateChanged(_ call: GroupCall) {}
     func groupCallRemoteDeviceStatesChanged(_ call: GroupCall) {}
     func groupCallPeekChanged(_ call: GroupCall) {}
-    func groupCallEnded(_ call: GroupCall, reason: GroupCallEndReason) {}
+    func groupCallEnded(_ call: GroupCall, reason: CallEndReason) {}
     func groupCallReceivedReactions(_ call: GroupCall, reactions: [SignalRingRTC.Reaction]) {}
     func groupCallReceivedRaisedHands(_ call: GroupCall, raisedHands: [DemuxId]) {}
     func handleUntrustedIdentityError(_ call: GroupCall) {}
@@ -61,10 +61,10 @@ class GroupCall: SignalRingRTC.GroupCallDelegate {
     init(
         audioDescription: String,
         ringRtcCall: SignalRingRTC.GroupCall,
-        videoCaptureController: VideoCaptureController
+        videoCaptureController: VideoCaptureController,
     ) {
         self.commonState = CommonCallState(
-            audioActivity: AudioActivity(audioDescription: audioDescription, behavior: .call)
+            audioActivity: AudioActivity(audioDescription: audioDescription, behavior: .call),
         )
         self.ringRtcCall = ringRtcCall
         self.videoCaptureController = videoCaptureController
@@ -85,13 +85,13 @@ class GroupCall: SignalRingRTC.GroupCallDelegate {
     }
 
     func shouldMuteAutomatically() -> Bool {
-        return (
+        return
             ringRtcCall.localDeviceState.joinState == .notJoined
-            && (ringRtcCall.peekInfo?.deviceCountExcludingPendingDevices ?? 0) >= Constants.autoMuteThreshold
-        )
+                && (ringRtcCall.peekInfo?.deviceCountExcludingPendingDevices ?? 0) >= Constants.autoMuteThreshold
+
     }
 
-    public var isJustMe: Bool {
+    var isJustMe: Bool {
         switch ringRtcCall.localDeviceState.joinState {
         case .notJoined, .joining, .pending:
             return true
@@ -213,9 +213,10 @@ class GroupCall: SignalRingRTC.GroupCallDelegate {
     }
 
     @MainActor
-    func groupCall(onEnded groupCall: SignalRingRTC.GroupCall, reason: GroupCallEndReason) {
+    func groupCall(onEnded groupCall: SignalRingRTC.GroupCall, reason: CallEndReason, summary: CallSummary) {
         self.hasInvokedConnectMethod = false
 
+        // TODO: Handle the call summary.
         observers.elements.forEach { $0.groupCallEnded(self, reason: reason) }
     }
 

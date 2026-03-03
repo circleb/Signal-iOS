@@ -3,9 +3,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import XCTest
 import AuthenticationServices
-@testable import HCP
+import XCTest
+@testable import Signal
 
 final class ASWebAuthenticationSessionUtilTest: XCTestCase {
     func testSuccess() {

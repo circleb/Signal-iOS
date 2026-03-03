@@ -6,6 +6,7 @@
 import CoreServices
 import Foundation
 import SignalServiceKit
+import SignalUI
 import UniformTypeIdentifiers
 
 protocol VoiceMessageSendableDraft {
@@ -20,16 +21,16 @@ extension VoiceMessageSendableDraft {
         return String(
             format: "signal-%@.%@",
             dateString,
-            VoiceMessageConstants.fileExtension
+            VoiceMessageConstants.fileExtension,
         )
     }
 
-    func prepareAttachment() throws -> SignalAttachment {
+    func prepareAttachment() throws -> PreviewableAttachment {
         let attachmentUrl = try prepareForSending()
 
-        let dataSource = try DataSourcePath(fileUrl: attachmentUrl, shouldDeleteOnDeallocation: true)
+        let dataSource = DataSourcePath(fileUrl: attachmentUrl, ownership: .owned)
         dataSource.sourceFilename = userVisibleFilename(currentDate: Date())
 
-        return try SignalAttachment.voiceMessageAttachment(dataSource: dataSource, dataUTI: UTType.mpeg4Audio.identifier)
+        return try PreviewableAttachment.voiceMessageAttachment(dataSource: dataSource, dataUTI: UTType.mpeg4Audio.identifier)
     }
 }

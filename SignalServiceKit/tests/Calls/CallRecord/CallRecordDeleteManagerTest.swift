@@ -12,7 +12,7 @@ final class CallRecordDeleteManagerTest: XCTestCase {
     private var mockCallRecordStore: MockCallRecordStore!
     private var mockOutgoingCallEventSyncMessageManager: MockOutgoingCallEventSyncMessageManager!
     private var mockDB: InMemoryDB!
-    private var mockDeletedCallRecordCleanupManager: MockDeletedCallRecordCleanupManager!
+    private var mockDeletedCallRecordExpirationJob: DeletedCallRecordExpirationJob!
     private var mockDeletedCallRecordStore: MockDeletedCallRecordStore!
     private var mockThreadStore: MockThreadStore!
 
@@ -26,16 +26,23 @@ final class CallRecordDeleteManagerTest: XCTestCase {
             mock.expectedCallEvent = .callDeleted
             return mock
         }()
-        mockDeletedCallRecordCleanupManager = MockDeletedCallRecordCleanupManager()
         mockDeletedCallRecordStore = MockDeletedCallRecordStore()
         mockThreadStore = MockThreadStore()
+
+        // We never call .start() on this job, so this is a no-op instance.
+        mockDeletedCallRecordExpirationJob = DeletedCallRecordExpirationJob(
+            callLinkStore: MockCallLinkRecordStore(),
+            dateProvider: { Date() },
+            db: mockDB,
+            deletedCallRecordStore: mockDeletedCallRecordStore,
+        )
 
         deleteManager = CallRecordDeleteManagerImpl(
             callRecordStore: mockCallRecordStore,
             outgoingCallEventSyncMessageManager: mockOutgoingCallEventSyncMessageManager,
-            deletedCallRecordCleanupManager: mockDeletedCallRecordCleanupManager,
+            deletedCallRecordExpirationJob: mockDeletedCallRecordExpirationJob,
             deletedCallRecordStore: mockDeletedCallRecordStore,
-            threadStore: mockThreadStore
+            threadStore: mockThreadStore,
         )
     }
 
@@ -68,7 +75,7 @@ final class CallRecordDeleteManagerTest: XCTestCase {
     private func insertCallRecord(
         interaction: TSInteraction,
         thread: TSThread,
-        isGroup: Bool
+        isGroup: Bool,
     ) -> CallRecord {
         return mockDB.write { tx in
             let callRecord = CallRecord(
@@ -78,7 +85,7 @@ final class CallRecordDeleteManagerTest: XCTestCase {
                 callType: isGroup ? .groupCall : .audioCall,
                 callDirection: .incoming,
                 callStatus: isGroup ? .group(.generic) : .individual(.accepted),
-                callBeganTimestamp: .maxRandom
+                callBeganTimestamp: .maxRandom,
             )
 
             mockCallRecordStore.insert(callRecord: callRecord, tx: tx)
@@ -105,7 +112,7 @@ final class CallRecordDeleteManagerTest: XCTestCase {
             deleteManager.deleteCallRecords(
                 [individualCallRecord1],
                 sendSyncMessageOnDelete: false,
-                tx: tx
+                tx: tx,
             )
             XCTAssertEqual(mockCallRecordStore.callRecords.count, 3)
             XCTAssertEqual(mockOutgoingCallEventSyncMessageManager.syncMessageSendCount, 0)
@@ -114,7 +121,7 @@ final class CallRecordDeleteManagerTest: XCTestCase {
             deleteManager.deleteCallRecords(
                 [individualCallRecord2],
                 sendSyncMessageOnDelete: true,
-                tx: tx
+                tx: tx,
             )
             XCTAssertEqual(mockCallRecordStore.callRecords.count, 2)
             XCTAssertEqual(mockOutgoingCallEventSyncMessageManager.syncMessageSendCount, 1)
@@ -123,7 +130,7 @@ final class CallRecordDeleteManagerTest: XCTestCase {
             deleteManager.deleteCallRecords(
                 [groupCallRecord1],
                 sendSyncMessageOnDelete: false,
-                tx: tx
+                tx: tx,
             )
             XCTAssertEqual(mockCallRecordStore.callRecords.count, 1)
             XCTAssertEqual(mockOutgoingCallEventSyncMessageManager.syncMessageSendCount, 1)
@@ -132,7 +139,7 @@ final class CallRecordDeleteManagerTest: XCTestCase {
             deleteManager.deleteCallRecords(
                 [groupCallRecord2],
                 sendSyncMessageOnDelete: true,
-                tx: tx
+                tx: tx,
             )
             XCTAssertEqual(mockCallRecordStore.callRecords.count, 0)
             XCTAssertEqual(mockOutgoingCallEventSyncMessageManager.syncMessageSendCount, 2)

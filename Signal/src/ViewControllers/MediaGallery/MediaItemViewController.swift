@@ -4,9 +4,9 @@
 //
 
 import CoreMedia
+import SDWebImage
 import SignalServiceKit
 import SignalUI
-import SDWebImage
 
 protocol MediaItemViewControllerDelegate: AnyObject {
     func mediaItemViewControllerDidTapMedia(_ viewController: MediaItemViewController)
@@ -64,25 +64,32 @@ class MediaItemViewController: OWSViewController, VideoPlaybackStatusProvider {
             return
         }
 
-        let buttonPlayVideo = OWSButton { [weak self] in
-            self?.playVideo()
+        var buttonConfiguration: UIButton.Configuration
+        if #available(iOS 26, *) {
+            buttonConfiguration = .glass()
+            buttonConfiguration.baseForegroundColor = .Signal.label
+        } else {
+            buttonConfiguration = .borderedProminent()
+            buttonConfiguration.baseForegroundColor = .black
+            buttonConfiguration.baseBackgroundColor = UIColor(white: 1, alpha: 0.75)
         }
-        view.addSubview(buttonPlayVideo)
-        buttonPlayVideo.autoSetDimensions(to: .square(.scaleFromIPhone5(70)))
-        buttonPlayVideo.autoCenterInSuperview()
-        self.buttonPlayVideo = buttonPlayVideo
+        buttonConfiguration.cornerStyle = .capsule
+        buttonConfiguration.image = UIImage(named: "play-fill-48")
+        buttonConfiguration.contentInsets = .init(margin: 22) // 92 pt button size
 
-        let playVideoCircleView = OWSLayerView.circleView()
-        playVideoCircleView.isUserInteractionEnabled = false
-        playVideoCircleView.backgroundColor = UIColor(white: 1, alpha: 0.75)
-        buttonPlayVideo.addSubview(playVideoCircleView)
-        playVideoCircleView.autoPinEdgesToSuperviewEdges()
-
-        let playVideoIconView = UIImageView.withTemplateImageName("play-fill-32", tintColor: .black)
-        playVideoIconView.isUserInteractionEnabled = false
-        buttonPlayVideo.addSubview(playVideoIconView)
-        playVideoIconView.autoSetDimensions(to: .square(.scaleFromIPhone5(30)))
-        playVideoIconView.autoCenterInSuperview()
+        let button = UIButton(
+            configuration: buttonConfiguration,
+            primaryAction: UIAction { [weak self] _ in
+                self?.playVideo()
+            },
+        )
+        button.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(button)
+        NSLayoutConstraint.activate([
+            button.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            button.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+        ])
+        self.buttonPlayVideo = button
     }
 
     // MARK: - Media Views
@@ -208,7 +215,7 @@ class MediaItemViewController: OWSViewController, VideoPlaybackStatusProvider {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
-        if isVideo && shouldAutoPlayVideo && !hasAutoPlayedVideo {
+        if isVideo, shouldAutoPlayVideo, !hasAutoPlayedVideo {
             playVideo()
             hasAutoPlayedVideo = true
         }
@@ -223,7 +230,7 @@ class MediaItemViewController: OWSViewController, VideoPlaybackStatusProvider {
                 try DependenciesBridge.shared.attachmentStore.markViewedFullscreen(
                     attachment: attachment,
                     timestamp: timestamp,
-                    tx: tx
+                    tx: tx,
                 )
             }
         }
@@ -233,7 +240,7 @@ class MediaItemViewController: OWSViewController, VideoPlaybackStatusProvider {
         super.viewDidLayoutSubviews()
 
         scrollView.updateZoomScaleForLayout()
-   }
+    }
 
     // MARK: - Helpers
 

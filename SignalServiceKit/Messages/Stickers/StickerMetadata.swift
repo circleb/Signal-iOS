@@ -11,7 +11,7 @@ public enum StickerType {
     case gif
 
     public static func stickerType(forContentType contentType: String?) -> StickerType {
-        if let contentType = contentType {
+        if let contentType {
             switch contentType {
             case MimeType.imageWebp.rawValue:
                 return .webp
@@ -109,7 +109,7 @@ public class DecryptedStickerMetadata: StickerMetadata {
         stickerInfo: StickerInfo,
         stickerType: StickerType,
         stickerDataUrl: URL,
-        emojiString: String?
+        emojiString: String?,
     ) {
         self.stickerInfo = stickerInfo
         self.stickerType = stickerType
@@ -125,7 +125,7 @@ public class DecryptedStickerMetadata: StickerMetadata {
         return try Data(contentsOf: stickerDataUrl)
     }
 
-    public static func == (lhs: DecryptedStickerMetadata, rhs: DecryptedStickerMetadata) -> Bool {
+    public static func ==(lhs: DecryptedStickerMetadata, rhs: DecryptedStickerMetadata) -> Bool {
         return lhs.stickerInfo.asKey() == rhs.stickerInfo.asKey()
     }
 
@@ -150,7 +150,7 @@ public class EncryptedStickerMetadata: StickerMetadata {
         emojiString: String?,
         encryptedStickerDataUrl: URL,
         encryptionKey: Data,
-        plaintextLength: UInt32
+        plaintextLength: UInt32,
     ) {
         self.stickerInfo = stickerInfo
         self.stickerType = stickerType
@@ -171,34 +171,15 @@ public class EncryptedStickerMetadata: StickerMetadata {
             metadata: DecryptionMetadata(
                 key: AttachmentKey(combinedKey: encryptionKey),
                 plaintextLength: UInt64(safeCast: plaintextLength),
-            )
+            ),
         )
     }
 
-    public static func == (lhs: EncryptedStickerMetadata, rhs: EncryptedStickerMetadata) -> Bool {
+    public static func ==(lhs: EncryptedStickerMetadata, rhs: EncryptedStickerMetadata) -> Bool {
         return lhs.stickerInfo.asKey() == rhs.stickerInfo.asKey()
     }
 
     public func hash(into hasher: inout Hasher) {
         hasher.combine(stickerInfo.asKey().hashValue)
-    }
-}
-
-extension EncryptedStickerMetadata {
-
-    public static func from(
-        attachment: AttachmentStream,
-        stickerInfo: StickerInfo,
-        stickerType: StickerType,
-        emojiString: String?
-    ) -> EncryptedStickerMetadata {
-        return .init(
-            stickerInfo: stickerInfo,
-            stickerType: stickerType,
-            emojiString: emojiString,
-            encryptedStickerDataUrl: attachment.fileURL,
-            encryptionKey: attachment.attachment.encryptionKey,
-            plaintextLength: attachment.info.unencryptedByteCount
-        )
     }
 }

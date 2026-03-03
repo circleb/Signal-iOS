@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import UIKit
 import SignalServiceKit
+import UIKit
 
 enum ContextualActionBuilder {
     typealias Handler = (_ completion: @escaping (_ success: Bool) -> Void) -> Void
@@ -14,13 +14,13 @@ enum ContextualActionBuilder {
         color: UIColor,
         image: String,
         title: String,
-        handler: @escaping () -> Void
+        handler: @escaping () -> Void,
     ) -> UIContextualAction {
         Self.makeContextualAction(
             style: style,
             color: color,
             image: image,
-            title: title
+            title: title,
         ) { completion in
             handler()
             completion(true)
@@ -32,7 +32,7 @@ enum ContextualActionBuilder {
         color: UIColor,
         image: String,
         title: String,
-        handler: @escaping Handler
+        handler: @escaping Handler,
     ) -> UIContextualAction {
         let baseImage = UIImage(named: image) ?? UIImage(systemName: image)
 
@@ -42,7 +42,7 @@ enum ContextualActionBuilder {
         if #available(iOS 26, *), BuildFlags.iOS26SDKIsAvailable {
             let action = UIContextualAction(
                 style: style,
-                title: title
+                title: title,
             ) { _, _, completion in
                 handler(completion)
             }
@@ -52,7 +52,7 @@ enum ContextualActionBuilder {
         } else {
             let action = UIContextualAction(
                 style: style,
-                title: nil
+                title: nil,
             ) { _, _, completion in
                 handler(completion)
             }
@@ -64,7 +64,7 @@ enum ContextualActionBuilder {
                 color: .ows_white,
                 maxTitleWidth: 68,
                 minimumScaleFactor: CGFloat(8) / CGFloat(13),
-                spacing: 4
+                spacing: 4,
             )?.withRenderingMode(.alwaysTemplate)
 
             return action

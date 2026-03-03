@@ -72,7 +72,6 @@ public struct BackupSettingsStore {
         static let shouldOptimizeLocalStorage = "shouldOptimizeLocalStorage"
         static let lastRecoveryKeyReminderDate = "lastBackupKeyReminderDate"
         static let haveSetBackupID = "haveSetBackupID"
-        static let lastBackupRefreshDate = "lastBackupRefreshDate"
         static let lastBackupEnabledDetails = "lastBackupEnabledDetails"
 
         static let backgroundBackupErrorCount = "backgroundBackupErrorCount"
@@ -81,10 +80,12 @@ public struct BackupSettingsStore {
 
     private let kvStore: KeyValueStore
     private let errorStateStore: KeyValueStore
+    private let refreshBackupStore: CronStore
 
     public init() {
         kvStore = KeyValueStore(collection: "BackupSettingsStore")
         errorStateStore = KeyValueStore(collection: "BackupSettingsErrorStateStore")
+        refreshBackupStore = CronStore(uniqueKey: .refreshBackup)
     }
 
     // MARK: -
@@ -140,12 +141,12 @@ public struct BackupSettingsStore {
     }
 
     public func lastBackupEnabledDetails(
-        tx: DBReadTransaction
+        tx: DBReadTransaction,
     ) -> LastBackupEnabledDetails? {
         do {
             return try kvStore.getCodableValue(
                 forKey: Keys.lastBackupEnabledDetails,
-                transaction: tx
+                transaction: tx,
             )
         } catch {
             owsFailDebug("Failed to get LastBackupEnabledDetails \(error)")
@@ -156,16 +157,16 @@ public struct BackupSettingsStore {
     public func setLastBackupEnabledDetails(
         backupsEnabledTime: Date,
         notificationDelay: TimeInterval,
-        tx: DBWriteTransaction
+        tx: DBWriteTransaction,
     ) {
         do {
             try kvStore.setCodable(
                 LastBackupEnabledDetails(
                     enabledTime: backupsEnabledTime,
-                    notificationDelay: notificationDelay
+                    notificationDelay: notificationDelay,
                 ),
                 key: Keys.lastBackupEnabledDetails,
-                transaction: tx
+                transaction: tx,
             )
         } catch {
             owsFailDebug("Failed to set LastBackupEnabledDetails")
@@ -175,7 +176,7 @@ public struct BackupSettingsStore {
     public func clearLastBackupEnabledDetails(tx: DBWriteTransaction) {
         kvStore.removeValue(
             forKey: Keys.lastBackupEnabledDetails,
-            transaction: tx
+            transaction: tx,
         )
     }
 
@@ -234,7 +235,7 @@ public struct BackupSettingsStore {
             setFirstBackupDate(date, tx: tx)
         }
 
-        setLastBackupRefreshDate(date, tx: tx)
+        refreshBackupStore.setMostRecentDate(Date(), jitter: 0, tx: tx)
 
         // We did a backup, so clear all error state.
         errorStateStore.removeAll(transaction: tx)
@@ -248,7 +249,7 @@ public struct BackupSettingsStore {
         kvStore.removeValue(forKey: Keys.lastBackupDate, transaction: tx)
         kvStore.removeValue(forKey: Keys.lastBackupFileSizeBytes, transaction: tx)
         kvStore.removeValue(forKey: Keys.lastBackupSizeBytes, transaction: tx)
-        setLastBackupRefreshDate(nil, tx: tx)
+        refreshBackupStore.setMostRecentDate(.distantPast, jitter: 0, tx: tx)
 
         tx.addSyncCompletion {
             NotificationCenter.default.postOnMainThread(name: .lastBackupDetailsDidChange, object: nil)
@@ -419,23 +420,9 @@ public struct BackupSettingsStore {
     public func setHaveSetBackupID(haveSetBackupID: Bool, tx: DBWriteTransaction) {
         kvStore.setBool(haveSetBackupID, key: Keys.haveSetBackupID, transaction: tx)
     }
-
-    // MARK: -
-
-    public func lastBackupRefreshDate(tx: DBReadTransaction) -> Date? {
-        return kvStore.getDate(Keys.lastBackupRefreshDate, transaction: tx)
-    }
-
-    public func setLastBackupRefreshDate(_ lastBackupRefreshDate: Date?, tx: DBWriteTransaction) {
-        if let lastBackupRefreshDate {
-            kvStore.setDate(lastBackupRefreshDate, key: Keys.lastBackupRefreshDate, transaction: tx)
-        } else {
-            kvStore.removeValue(forKey: Keys.lastBackupRefreshDate, transaction: tx)
-        }
-    }
 }
 
-fileprivate extension BackupPlan {
+private extension BackupPlan {
     var asStorageServiceBackupTier: UInt64? {
         switch self {
         case .disabled, .disabling:

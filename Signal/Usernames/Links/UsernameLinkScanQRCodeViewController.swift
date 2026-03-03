@@ -35,7 +35,7 @@ class UsernameLinkScanQRCodeViewController: OWSViewController, OWSNavigationChil
     private lazy var scanViewController = {
         let scanViewController = QRCodeScanViewController(
             appearance: .framed,
-            showUploadPhotoButton: true
+            showUploadPhotoButton: true,
         )
 
         scanViewController.delegate = self
@@ -51,7 +51,7 @@ class UsernameLinkScanQRCodeViewController: OWSViewController, OWSNavigationChil
         label.lineBreakMode = .byWordWrapping
         label.text = OWSLocalizedString(
             "USERNAME_LINK_SCAN_QR_CODE_INSTRUCTIONS_LABEL",
-            comment: "Text providing instructions on how to use the username link QR code scanning."
+            comment: "Text providing instructions on how to use the username link QR code scanning.",
         )
 
         // Always use dark theme since it sits over the scan mask.
@@ -64,7 +64,7 @@ class UsernameLinkScanQRCodeViewController: OWSViewController, OWSNavigationChil
 
     var navbarBackgroundColorOverride: UIColor? {
         return OWSTableViewController2.tableBackgroundColor(
-            isUsingPresentedStyle: true
+            isUsingPresentedStyle: true,
         )
     }
 
@@ -115,7 +115,7 @@ extension UsernameLinkScanQRCodeViewController: QRCodeScanDelegate {
 
     func qrCodeScanViewScanned(
         qrCodeData: Data?,
-        qrCodeString: String?
+        qrCodeString: String?,
     ) -> QRCodeScanOutcome {
         guard let qrCodeString else {
             UsernameLogger.shared.error("Unexpectedly missing QR code string!")
@@ -127,7 +127,7 @@ extension UsernameLinkScanQRCodeViewController: QRCodeScanDelegate {
             let scannedUsernameLink = Usernames.UsernameLink(usernameLinkUrl: scannedUrl)
         else {
             UsernameLogger.shared.error(
-                "Failed to create username link from scanned QR code!"
+                "Failed to create username link from scanned QR code!",
             )
             return .continueScanning
         }
@@ -142,7 +142,7 @@ extension UsernameLinkScanQRCodeViewController: QRCodeScanDelegate {
     }
 
     func qrCodeScanViewDismiss(
-        _ qrCodeScanViewController: QRCodeScanViewController
+        _ qrCodeScanViewController: QRCodeScanViewController,
     ) {
         dismiss(animated: true)
     }
@@ -171,20 +171,21 @@ extension UsernameLinkScanQRCodeViewController: PHPickerViewControllerDelegate {
             }()
 
             do {
-                let typedItemProvider = try TypedItemProvider.make(for: selectedItem.itemProvider)
-                let attachment = try await typedItemProvider.buildAttachment()
+                let attachment = try await TypedItemProvider.buildVisualMediaAttachment(forItemProvider: selectedItem.itemProvider)
                 guard
-                    let image = attachment.image(),
+                    let image = attachment.rawValue.image(),
                     let ciImage = CIImage(image: image)
                 else {
                     throw QRCodeImagePickerError.noAttachmentImage
                 }
 
-                guard let qrCodeDetector = CIDetector(
-                    ofType: CIDetectorTypeQRCode,
-                    context: nil,
-                    options: [CIDetectorAccuracy: CIDetectorAccuracyHigh]
-                ) else {
+                guard
+                    let qrCodeDetector = CIDetector(
+                        ofType: CIDetectorTypeQRCode,
+                        context: nil,
+                        options: [CIDetectorAccuracy: CIDetectorAccuracyHigh],
+                    )
+                else {
                     throw QRCodeImagePickerError.ciDetectorError
                 }
 
@@ -202,14 +203,14 @@ extension UsernameLinkScanQRCodeViewController: PHPickerViewControllerDelegate {
 
                 _ = self.qrCodeScanViewScanned(
                     qrCodeData: nil,
-                    qrCodeString: qrCodeMessageString
+                    qrCodeString: qrCodeMessageString,
                 )
             } catch {
                 UsernameLogger.shared.error("Error building attachment for QC code scan: \(error)")
                 _ = await dismiss
                 OWSActionSheets.showErrorAlert(
                     message: CommonStrings.somethingWentWrongError,
-                    fromViewController: self
+                    fromViewController: self,
                 )
             }
         }

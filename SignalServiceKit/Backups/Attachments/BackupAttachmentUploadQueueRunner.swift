@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import LibSignalClient
 
 public protocol BackupAttachmentUploadQueueRunner {
 
@@ -59,7 +60,7 @@ class BackupAttachmentUploadQueueRunnerImpl: BackupAttachmentUploadQueueRunner {
         orphanedBackupAttachmentStore: OrphanedBackupAttachmentStore,
         progress: BackupAttachmentUploadProgress,
         statusManager: BackupAttachmentUploadQueueStatusManager,
-        tsAccountManager: TSAccountManager
+        tsAccountManager: TSAccountManager,
     ) {
         self.accountKeyStore = accountKeyStore
         self.attachmentStore = attachmentStore
@@ -93,7 +94,7 @@ class BackupAttachmentUploadQueueRunnerImpl: BackupAttachmentUploadQueueRunner {
                 orphanedBackupAttachmentStore: orphanedBackupAttachmentStore,
                 progress: progress,
                 statusManager: statusManager,
-                tsAccountManager: tsAccountManager
+                tsAccountManager: tsAccountManager,
             )
             return TaskQueueLoader(
                 maxConcurrentTasks: {
@@ -104,7 +105,7 @@ class BackupAttachmentUploadQueueRunnerImpl: BackupAttachmentUploadQueueRunner {
                 }(),
                 dateProvider: dateProvider,
                 db: db,
-                runner: taskRunner
+                runner: taskRunner,
             )
         }
 
@@ -114,7 +115,7 @@ class BackupAttachmentUploadQueueRunnerImpl: BackupAttachmentUploadQueueRunner {
 
     // MARK: -
 
-    public func backUpAllAttachments(mode: BackupAttachmentUploadQueueMode) async throws {
+    func backUpAllAttachments(mode: BackupAttachmentUploadQueueMode) async throws {
         let taskQueue: TaskQueueLoader<TaskRunner>
         let logString: String
         switch mode {
@@ -131,7 +132,7 @@ class BackupAttachmentUploadQueueRunnerImpl: BackupAttachmentUploadQueueRunner {
                 self.tsAccountManager.registrationState(tx: tx).isRegisteredPrimaryDevice,
                 self.tsAccountManager.localIdentifiers(tx: tx)?.aci,
                 backupSettingsStore.backupPlan(tx: tx),
-                accountKeyStore.getMediaRootBackupKey(tx: tx)
+                accountKeyStore.getMediaRootBackupKey(tx: tx),
             )
         }
 
@@ -161,7 +162,7 @@ class BackupAttachmentUploadQueueRunnerImpl: BackupAttachmentUploadQueueRunner {
                 for: backupKey,
                 localAci: localAci,
                 auth: .implicit(),
-                forceRefreshUnlessCachedPaidCredential: true
+                forceRefreshUnlessCachedPaidCredential: true,
             )
         } catch let error as BackupAuthCredentialFetchError {
             switch error {
@@ -189,7 +190,7 @@ class BackupAttachmentUploadQueueRunnerImpl: BackupAttachmentUploadQueueRunner {
         case .running:
             logger.info("Running \(logString) Backup uploads.")
             let backgroundTask = OWSBackgroundTask(
-                label: #function + logString
+                label: #function + logString,
             ) { [weak taskQueue] status in
                 switch status {
                 case .expired:
@@ -276,7 +277,7 @@ class BackupAttachmentUploadQueueRunnerImpl: BackupAttachmentUploadQueueRunner {
             orphanedBackupAttachmentStore: OrphanedBackupAttachmentStore,
             progress: BackupAttachmentUploadProgress,
             statusManager: BackupAttachmentUploadQueueStatusManager,
-            tsAccountManager: TSAccountManager
+            tsAccountManager: TSAccountManager,
         ) {
             self.accountKeyStore = accountKeyStore
             self.attachmentStore = attachmentStore
@@ -299,7 +300,7 @@ class BackupAttachmentUploadQueueRunnerImpl: BackupAttachmentUploadQueueRunner {
             self.mode = mode
             self.store = TaskStore(
                 mode: mode,
-                backupAttachmentUploadStore: backupAttachmentUploadStore
+                backupAttachmentUploadStore: backupAttachmentUploadStore,
             )
         }
 
@@ -382,23 +383,23 @@ class BackupAttachmentUploadQueueRunnerImpl: BackupAttachmentUploadQueueRunner {
                         let mediaId = try backupKey.mediaEncryptionMetadata(
                             mediaName: mediaName,
                             // Doesn't matter what we use, we just want the mediaId
-                            type: .outerLayerFullsizeOrThumbnail
+                            type: .outerLayerFullsizeOrThumbnail,
                         ).mediaId
                         try orphanedBackupAttachmentStore.removeFullsize(
                             mediaName: mediaName,
                             fullsizeMediaId: mediaId,
-                            tx: tx
+                            tx: tx,
                         )
                     } else {
                         let mediaId = try backupKey.mediaEncryptionMetadata(
                             mediaName: AttachmentBackupThumbnail.thumbnailMediaName(fullsizeMediaName: mediaName),
                             // Doesn't matter what we use, we just want the mediaId
-                            type: .outerLayerFullsizeOrThumbnail
+                            type: .outerLayerFullsizeOrThumbnail,
                         ).mediaId
                         try orphanedBackupAttachmentStore.removeThumbnail(
                             fullsizeMediaName: mediaName,
                             thumbnailMediaId: mediaId,
-                            tx: tx
+                            tx: tx,
                         )
                     }
                 }
@@ -415,17 +416,18 @@ class BackupAttachmentUploadQueueRunnerImpl: BackupAttachmentUploadQueueRunner {
                 break
             }
 
-            let (localAci, isRegisteredPrimaryDevice) = db.read { tx in
-                return (
-                    self.tsAccountManager.localIdentifiers(tx: tx)?.aci,
-                    self.tsAccountManager.registrationState(tx: tx).isRegisteredPrimaryDevice,
-                )
+            let localAci: Aci
+            let isPrimary: Bool
+            do throws(NotRegisteredError) {
+                let registeredState = try self.tsAccountManager.registeredStateWithMaybeSneakyTransaction()
+                localAci = registeredState.localIdentifiers.aci
+                isPrimary = registeredState.isPrimary
+            } catch {
+                try? await loader.stop(reason: error)
+                return .retryableError(error)
             }
-            guard
-                isRegisteredPrimaryDevice,
-                let localAci
-            else {
-                let error = OWSAssertionError("Not registered!")
+            guard isPrimary else {
+                let error = OWSAssertionError("not primary")
                 try? await loader.stop(reason: error)
                 return .retryableError(error)
             }
@@ -441,7 +443,7 @@ class BackupAttachmentUploadQueueRunnerImpl: BackupAttachmentUploadQueueRunner {
                     // was a free tier credential. (Though the paid state and credential
                     // can change _after_ this queue has already started running, so we
                     // do need to handle that case).
-                    forceRefreshUnlessCachedPaidCredential: false
+                    forceRefreshUnlessCachedPaidCredential: false,
                 )
             } catch let error {
                 try? await loader.stop(reason: error)
@@ -461,7 +463,7 @@ class BackupAttachmentUploadQueueRunnerImpl: BackupAttachmentUploadQueueRunner {
             let progressSink: OWSProgressSink?
             if record.record.isFullsize {
                 progressSink = await progress.willBeginUploadingFullsizeAttachment(
-                    uploadRecord: record.record
+                    uploadRecord: record.record,
                 )
             } else {
                 progressSink = nil
@@ -473,13 +475,13 @@ class BackupAttachmentUploadQueueRunnerImpl: BackupAttachmentUploadQueueRunner {
                         attachment,
                         fullsize: record.record.isFullsize,
                         currentUploadEra: currentUploadEra,
-                        tx: tx
+                        tx: tx,
                     )
                 })
             else {
                 if record.record.isFullsize {
                     await progress.didFinishUploadOfFullsizeAttachment(
-                        uploadRecord: record.record
+                        uploadRecord: record.record,
                     )
                 }
                 // Not eligible anymore, count as success.
@@ -494,7 +496,7 @@ class BackupAttachmentUploadQueueRunnerImpl: BackupAttachmentUploadQueueRunner {
                         localAci: localAci,
                         backupKey: backupKey,
                         auth: backupAuth,
-                        progress: progressSink
+                        progress: progressSink,
                     )
                 } else {
                     try await attachmentUploadManager.uploadMediaTierThumbnailAttachment(
@@ -502,7 +504,7 @@ class BackupAttachmentUploadQueueRunnerImpl: BackupAttachmentUploadQueueRunner {
                         uploadEra: currentUploadEra,
                         localAci: localAci,
                         backupKey: backupKey,
-                        auth: backupAuth
+                        auth: backupAuth,
                     )
                 }
             } catch let error {
@@ -528,7 +530,7 @@ class BackupAttachmentUploadQueueRunnerImpl: BackupAttachmentUploadQueueRunner {
                         for: backupKey,
                         localAci: localAci,
                         auth: .implicit(),
-                        forceRefreshUnlessCachedPaidCredential: true
+                        forceRefreshUnlessCachedPaidCredential: true,
                     )
                     switch credential?.backupLevel {
                     case .free, nil:
@@ -587,7 +589,7 @@ class BackupAttachmentUploadQueueRunnerImpl: BackupAttachmentUploadQueueRunner {
                             // issue.
                             return .retryableError(NetworkRetryError())
                         case .noWifiReachability, .notRegisteredAndReady, .hasConsumedMediaTierCapacity,
-                                .lowBattery, .lowPowerMode, .appBackgrounded, .empty, .suspended:
+                             .lowBattery, .lowPowerMode, .appBackgrounded, .empty, .suspended:
                             // These other states may be overriding reachability;
                             // just allow the queue itself to retry and once the
                             // other states are resolved reachability will kick in,
@@ -609,7 +611,7 @@ class BackupAttachmentUploadQueueRunnerImpl: BackupAttachmentUploadQueueRunner {
                             logger.error("Missing attachment file; skipping and proceeding")
                             if record.record.isFullsize {
                                 await progress.didFinishUploadOfFullsizeAttachment(
-                                    uploadRecord: record.record
+                                    uploadRecord: record.record,
                                 )
                             }
                             return .success
@@ -648,7 +650,7 @@ class BackupAttachmentUploadQueueRunnerImpl: BackupAttachmentUploadQueueRunner {
                         logger.error("Failed to upload thumbnail; proceeding")
                         if record.record.isFullsize {
                             await progress.didFinishUploadOfFullsizeAttachment(
-                                uploadRecord: record.record
+                                uploadRecord: record.record,
                             )
                         }
                         return .success
@@ -658,7 +660,7 @@ class BackupAttachmentUploadQueueRunnerImpl: BackupAttachmentUploadQueueRunner {
 
             if record.record.isFullsize {
                 await progress.didFinishUploadOfFullsizeAttachment(
-                    uploadRecord: record.record
+                    uploadRecord: record.record,
                 )
             }
 
@@ -672,6 +674,7 @@ class BackupAttachmentUploadQueueRunnerImpl: BackupAttachmentUploadQueueRunner {
         private struct RateLimitedRetryError: Error {
             let retryAfter: TimeInterval?
         }
+
         private struct NetworkRetryError: Error {}
         private struct OutOfCapacityError: Error {}
 
@@ -738,7 +741,7 @@ class BackupAttachmentUploadQueueRunnerImpl: BackupAttachmentUploadQueueRunner {
 
         init(
             mode: BackupAttachmentUploadQueueMode,
-            backupAttachmentUploadStore: BackupAttachmentUploadStore
+            backupAttachmentUploadStore: BackupAttachmentUploadStore,
         ) {
             self.mode = mode
             self.backupAttachmentUploadStore = backupAttachmentUploadStore
@@ -762,7 +765,7 @@ class BackupAttachmentUploadQueueRunnerImpl: BackupAttachmentUploadQueueRunner {
             try backupAttachmentUploadStore.markUploadDone(
                 for: record.record.attachmentRowId,
                 fullsize: record.record.isFullsize,
-                tx: tx
+                tx: tx,
             )
         }
     }

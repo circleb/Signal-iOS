@@ -8,6 +8,7 @@ import Foundation
 public enum RegistrationStep: Equatable {
 
     // MARK: - Opening Steps
+
     case registrationSplash
     case ssoRegistrationSplash
     case changeNumberSplash
@@ -31,12 +32,6 @@ public enum RegistrationStep: Equatable {
 
     /// If registering via session, the step to enter the verification code.
     case verificationCodeEntry(RegistrationVerificationState)
-
-    /// When registering, the server can inform the client that a device-to-device
-    /// transfer is possible. If so, the user must either do the transfer, or explicitly
-    /// elect not to. This step presents those options to the user.
-    /// Only happens if registering on a new device without local data.
-    case transferSelection
 
     /// For the first time we enter the pin. This can be
     /// for first account setup, creating a pin, or if
@@ -91,7 +86,7 @@ public enum RegistrationStep: Equatable {
     /// Prompt the user to confirm restoring from backup
     case confirmRestoreFromBackup(RegistrationRestoreFromBackupConfirmationState)
 
-    case deviceTransfer(RegistrationTransferStatusState)
+    case deviceTransfer(DeviceTransferCoordinator)
 
     /// If the account has not set whether its phone number should be
     /// discoverable, this step happens after registration is complete.
@@ -159,7 +154,6 @@ public enum RegistrationStep: Equatable {
         case .scanQuickRegistrationQrCode: return "scanQuickRegistrationQrCode"
         case .phoneNumberEntry: return "phoneNumberEntry"
         case .verificationCodeEntry: return "verificationCodeEntry"
-        case .transferSelection: return "transferSelection"
         case .deviceTransfer: return "deviceTransfer"
         case .pinEntry: return "pinEntry"
         case .pinAttemptsExhaustedWithoutReglock: return "pinAttemptsExhaustedWithoutReglock"

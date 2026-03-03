@@ -27,7 +27,7 @@ class SettingsHeaderButton: UIView {
             stackView.leadingAnchor.constraint(equalTo: leadingAnchor),
             stackView.trailingAnchor.constraint(equalTo: trailingAnchor),
             stackView.topAnchor.constraint(equalTo: topAnchor),
-            stackView.bottomAnchor.constraint(equalTo: bottomAnchor)
+            stackView.bottomAnchor.constraint(equalTo: bottomAnchor),
         ])
 
         // Button
@@ -48,12 +48,15 @@ class SettingsHeaderButton: UIView {
             ])
         }
 
-        // Text
-        titleLabel.text = title
-        titleLabel.textColor = .Signal.label
-        titleLabel.textAlignment = .center
-        titleLabel.font = .dynamicTypeFootnoteClamped
-        titleLabel.setContentHuggingHigh()
+        titleLabel.attributedText = title.styled(
+            with: .color(UIColor.Signal.label),
+            .alignment(.center),
+            .font(.dynamicTypeFootnoteClamped),
+            // Since this usually one word and is space-constrained,
+            // try to hyphenate when line wrapping.
+            .hyphenationFactor(1),
+        )
+        titleLabel.numberOfLines = 0
 
         // Action
         if let actionHandler {

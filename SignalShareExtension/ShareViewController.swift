@@ -53,7 +53,7 @@ public class ShareViewController: OWSNavigationController, ShareViewDelegate, SA
         self.initialLoadViewController = initialLoadViewController
     }
 
-    public override func viewDidAppear(_ animated: Bool) {
+    override public func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
         if let initialLoadViewController = self.initialLoadViewController.take() {
@@ -74,7 +74,7 @@ public class ShareViewController: OWSNavigationController, ShareViewDelegate, SA
             databaseStorage = try SDSDatabaseStorage(
                 appReadiness: appReadiness,
                 databaseFileUrl: SDSDatabaseStorage.grdbDatabaseFileUrl,
-                keychainStorage: keychainStorage
+                keychainStorage: keychainStorage,
             )
         } catch {
             self.showNotRegisteredView()
@@ -98,20 +98,19 @@ public class ShareViewController: OWSNavigationController, ShareViewDelegate, SA
                 callMessageHandler: NoopCallMessageHandler(),
                 currentCallProvider: CurrentCallNoOpProvider(),
                 notificationPresenter: NoopNotificationPresenterImpl(),
-                incrementalMessageTSAttachmentMigratorFactory: NoOpIncrementalMessageTSAttachmentMigratorFactory(),
             )
 
         // Configure the rest of the globals before preparing the database.
         SUIEnvironment.shared.setUp(
             appReadiness: appReadiness,
-            authCredentialManager: databaseContinuation.authCredentialManager
+            authCredentialManager: databaseContinuation.authCredentialManager,
         )
 
         let finalContinuation = await databaseContinuation.migrateDatabaseData()
         finalContinuation.runLaunchTasksIfNeededAndReloadCaches()
         switch finalContinuation.setUpLocalIdentifiers(
             willResumeInProgressRegistration: false,
-            canInitiateRegistration: false
+            canInitiateRegistration: false,
         ) {
         case .corruptRegistrationState:
             self.showNotRegisteredView()
@@ -155,7 +154,7 @@ public class ShareViewController: OWSNavigationController, ShareViewDelegate, SA
         let conversationPicker: SharingThreadPickerViewController
         conversationPicker = SharingThreadPickerViewController(
             areAttachmentStoriesCompatPrecheck: typedItemProviders.allSatisfy { $0.isStoriesCompatible },
-            shareViewDelegate: self
+            shareViewDelegate: self,
         )
 
         let preSelectedThread = self.fetchPreSelectedThread()
@@ -185,7 +184,7 @@ public class ShareViewController: OWSNavigationController, ShareViewDelegate, SA
             loadViewControllerForProgress = initialLoadViewController
         }
 
-        let attachments: [SignalAttachment]
+        let typedItems: [TypedItem]
         do {
             // If buildAndValidateAttachments takes longer than 200ms, we want to show
             // the new load view. If it takes less than 200ms, we'll exit out of this
@@ -201,17 +200,17 @@ public class ShareViewController: OWSNavigationController, ShareViewDelegate, SA
                 try Task.checkCancellation()
                 self.setViewControllers([loadViewControllerToDisplay], animated: false)
             }()
-            attachments = try await buildAndValidateAttachments(
+            typedItems = try await buildAndValidateAttachments(
                 for: typedItemProviders,
-                setProgress: { loadViewControllerForProgress?.progress = $0 }
+                setProgress: { loadViewControllerForProgress?.progress = $0 },
             )
         } catch {
             self.presentAttachmentError(error)
             return
         }
 
-        Logger.info("Setting picker attachments: \(attachments)")
-        conversationPicker.attachments = attachments
+        Logger.info("Setting picker attachments: \(typedItems.count)")
+        conversationPicker.typedItems = typedItems
 
         if let preSelectedThread {
             let approvalViewController = try conversationPicker.buildApprovalViewController(for: preSelectedThread)
@@ -228,7 +227,7 @@ public class ShareViewController: OWSNavigationController, ShareViewDelegate, SA
             self,
             selector: #selector(applicationDidEnterBackground),
             name: .OWSApplicationDidEnterBackground,
-            object: nil
+            object: nil,
         )
 
         Logger.info("completed.")
@@ -260,7 +259,10 @@ public class ShareViewController: OWSNavigationController, ShareViewDelegate, SA
         let localAci = DependenciesBridge.shared.tsAccountManager.localIdentifiersWithMaybeSneakyTransaction?.aci
         Logger.info("localAci: \(localAci?.logString ?? "<none>")")
 
-        AppVersionImpl.shared.saeLaunchDidComplete()
+        let appVersion = AppVersionImpl.shared
+        appVersion.dumpToLog()
+        appVersion.updateFirstVersionIfNeeded()
+        appVersion.saeLaunchDidComplete()
 
         Logger.info("")
     }
@@ -270,10 +272,14 @@ public class ShareViewController: OWSNavigationController, ShareViewDelegate, SA
     private func showNotRegisteredView() {
         AssertIsOnMainThread()
 
-        let failureTitle = OWSLocalizedString("SHARE_EXTENSION_NOT_REGISTERED_TITLE",
-                                             comment: "Title indicating that the share extension cannot be used until the user has registered in the main app.")
-        let failureMessage = OWSLocalizedString("SHARE_EXTENSION_NOT_REGISTERED_MESSAGE",
-                                               comment: "Message indicating that the share extension cannot be used until the user has registered in the main app.")
+        let failureTitle = OWSLocalizedString(
+            "SHARE_EXTENSION_NOT_REGISTERED_TITLE",
+            comment: "Title indicating that the share extension cannot be used until the user has registered in the main app.",
+        )
+        let failureMessage = OWSLocalizedString(
+            "SHARE_EXTENSION_NOT_REGISTERED_MESSAGE",
+            comment: "Message indicating that the share extension cannot be used until the user has registered in the main app.",
+        )
         showErrorView(title: failureTitle, message: failureMessage)
     }
 
@@ -376,8 +382,8 @@ public class ShareViewController: OWSNavigationController, ShareViewDelegate, SA
 
     private func buildAndValidateAttachments(
         for typedItemProviders: [TypedItemProvider],
-        setProgress: @MainActor (Progress) -> Void
-    ) async throws -> [SignalAttachment] {
+        setProgress: @MainActor (Progress) -> Void,
+    ) async throws -> [TypedItem] {
         let progress = Progress(totalUnitCount: Int64(typedItemProviders.count))
 
         let itemsAndProgresses = typedItemProviders.map {
@@ -388,15 +394,15 @@ public class ShareViewController: OWSNavigationController, ShareViewDelegate, SA
 
         setProgress(progress)
 
-        let attachments = try await self.buildAttachments(for: itemsAndProgresses)
+        let typedItems = try await self.buildAttachments(for: itemsAndProgresses)
         try Task.checkCancellation()
 
         // Make sure the user is not trying to share more than our attachment limit.
-        guard attachments.filter({ !$0.isConvertibleToTextMessage }).count <= SignalAttachment.maxAttachmentsAllowed else {
+        guard typedItems.count <= SignalAttachment.maxAttachmentsAllowed else {
             throw ShareViewControllerError.tooManyAttachments
         }
 
-        return attachments
+        return typedItems
     }
 
     private func presentAttachmentError(_ error: any Error) {
@@ -404,27 +410,27 @@ public class ShareViewController: OWSNavigationController, ShareViewDelegate, SA
         case ShareViewControllerError.tooManyAttachments:
             let format = OWSLocalizedString(
                 "IMAGE_PICKER_CAN_SELECT_NO_MORE_TOAST_FORMAT",
-                comment: "Momentarily shown to the user when attempting to select more images than is allowed. Embeds {{max number of items}} that can be shared."
+                comment: "Momentarily shown to the user when attempting to select more images than is allowed. Embeds {{max number of items}} that can be shared.",
             )
 
             let alertTitle = String(format: format, OWSFormat.formatInt(SignalAttachment.maxAttachmentsAllowed))
 
             OWSActionSheets.showActionSheet(
                 title: alertTitle,
-                buttonTitle: CommonStrings.cancelButton
+                buttonTitle: CommonStrings.cancelButton,
             ) { _ in
                 self.shareViewWasCancelled()
             }
         default:
             let alertTitle = OWSLocalizedString(
                 "SHARE_EXTENSION_UNABLE_TO_BUILD_ATTACHMENT_ALERT_TITLE",
-                comment: "Shown when trying to share content to a Signal user for the share extension. Followed by failure details."
+                comment: "Shown when trying to share content to a Signal user for the share extension. Followed by failure details.",
             )
 
             OWSActionSheets.showActionSheet(
                 title: alertTitle,
                 message: error.userErrorDescription,
-                buttonTitle: CommonStrings.cancelButton
+                buttonTitle: CommonStrings.cancelButton,
             ) { _ in
                 self.shareViewWasCancelled()
             }
@@ -443,9 +449,11 @@ public class ShareViewController: OWSNavigationController, ShareViewDelegate, SA
         // Handle safari sharing images and PDFs as two separate items one with the object to share and the other as the URL of the data.
         for extensionItem in extensionItems {
             for attachment in extensionItem.attachments ?? [] {
-                if attachment.hasItemConformingToTypeIdentifier(UTType.data.identifier)
+                if
+                    attachment.hasItemConformingToTypeIdentifier(UTType.data.identifier)
                     || attachment.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier)
-                    || attachment.hasItemConformingToTypeIdentifier("com.apple.pkpass") {
+                    || attachment.hasItemConformingToTypeIdentifier("com.apple.pkpass")
+                {
                     return extensionItem
                 }
             }
@@ -453,16 +461,16 @@ public class ShareViewController: OWSNavigationController, ShareViewDelegate, SA
         throw ShareViewControllerError.noConformingInputItem
     }
 
-    nonisolated private func buildAttachments(for itemsAndProgresses: [(TypedItemProvider, Progress)]) async throws -> [SignalAttachment] {
+    private nonisolated func buildAttachments(for itemsAndProgresses: [(TypedItemProvider, Progress)]) async throws -> [TypedItem] {
         // FIXME: does not use a task group because SignalAttachment likes to load things into RAM and resize them; doing this in parallel can exhaust available RAM
-        var result: [SignalAttachment] = []
+        var result: [TypedItem] = []
         for (typedItemProvider, progress) in itemsAndProgresses {
             result.append(try await typedItemProvider.buildAttachment(progress: progress))
         }
         return result
     }
 
-    public override func viewDidDisappear(_ animated: Bool) {
+    override public func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
 
         // If we're disappearing because we presented something else (e.g., image
