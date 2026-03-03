@@ -24,7 +24,7 @@ extension ProvisioningCoordinatorImpl {
             accountAttributes: AccountAttributes,
             apnRegistrationId: RegistrationRequestFactory.ApnRegistrationId?,
             prekeyBundles: RegistrationPreKeyUploadBundles,
-            signalService: OWSSignalServiceProtocol
+            signalService: OWSSignalServiceProtocol,
         ) async -> VerifySecondaryDeviceResponse {
             let request = ProvisioningRequestFactory.verifySecondaryDeviceRequest(
                 verificationCode: verificationCode,
@@ -32,15 +32,14 @@ extension ProvisioningCoordinatorImpl {
                 authPassword: authPassword,
                 attributes: accountAttributes,
                 apnRegistrationId: apnRegistrationId,
-                prekeyBundles: prekeyBundles
+                prekeyBundles: prekeyBundles,
             )
 
             do {
                 let response = try await signalService.urlSessionForMainSignalService().performRequest(request)
                 return handleVerifySecondaryDeviceResponse(
                     statusCode: response.responseStatusCode,
-                    retryAfterHeader: response.headers[Constants.retryAfterHeader],
-                    bodyData: response.responseBodyData
+                    bodyData: response.responseBodyData,
                 )
             } catch {
                 if error.isNetworkFailureOrTimeout {
@@ -51,16 +50,14 @@ extension ProvisioningCoordinatorImpl {
                 }
                 return handleVerifySecondaryDeviceResponse(
                     statusCode: error.responseStatusCode,
-                    retryAfterHeader: error.responseHeaders?[Constants.retryAfterHeader],
-                    bodyData: error.httpResponseData
+                    bodyData: error.httpResponseData,
                 )
             }
         }
 
         private static func handleVerifySecondaryDeviceResponse(
             statusCode: Int,
-            retryAfterHeader: String?,
-            bodyData: Data?
+            bodyData: Data?,
         ) -> VerifySecondaryDeviceResponse {
             let statusCode = ProvisioningServiceResponses.VerifySecondaryDeviceResponseCodes(rawValue: statusCode)
             switch statusCode {
@@ -68,10 +65,12 @@ extension ProvisioningCoordinatorImpl {
                 guard let bodyData else {
                     return .genericError(OWSAssertionError("Got empty verify secondary device response"))
                 }
-                guard let response = try? JSONDecoder().decode(
-                    ProvisioningServiceResponses.VerifySecondaryDeviceResponse.self,
-                    from: bodyData
-                ) else {
+                guard
+                    let response = try? JSONDecoder().decode(
+                        ProvisioningServiceResponses.VerifySecondaryDeviceResponse.self,
+                        from: bodyData,
+                    )
+                else {
                     return .genericError(OWSAssertionError("Unable to parse verify secondary device response from response"))
                 }
 
@@ -91,23 +90,17 @@ extension ProvisioningCoordinatorImpl {
             capabilities: AccountAttributes.Capabilities,
             auth: ChatServiceAuth,
             networkManager: any NetworkManagerProtocol,
-            tsAccountManager: TSAccountManager
+            tsAccountManager: TSAccountManager,
         ) async throws {
             let request = AccountAttributesRequestFactory(
-                tsAccountManager: tsAccountManager
+                tsAccountManager: tsAccountManager,
             ).updateLinkedDeviceCapabilitiesRequest(
                 capabilities,
-                auth: auth
+                auth: auth,
             )
 
             // Don't care what the response is.
             _ = try await networkManager.asyncRequest(request)
-        }
-
-        enum Constants {
-            static let defaultRetryTime: TimeInterval = 3
-
-            static let retryAfterHeader = "retry-after"
         }
     }
 }

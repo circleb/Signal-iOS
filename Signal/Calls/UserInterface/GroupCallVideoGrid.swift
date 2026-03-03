@@ -63,7 +63,7 @@ extension GroupCallVideoGrid: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(
             withReuseIdentifier: GroupCallVideoGridCell.reuseIdentifier,
-            for: indexPath
+            for: indexPath,
         ) as! GroupCallVideoGridCell
 
         guard let remoteDevice = gridRemoteDeviceStates[safe: indexPath.row] else {
@@ -88,7 +88,7 @@ extension GroupCallVideoGrid: GroupCallObserver {
         reloadData()
     }
 
-    func groupCallEnded(_ call: GroupCall, reason: GroupCallEndReason) {
+    func groupCallEnded(_ call: GroupCall, reason: CallEndReason) {
         AssertIsOnMainThread()
         reloadData()
     }

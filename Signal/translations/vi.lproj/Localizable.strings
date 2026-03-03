@@ -217,6 +217,15 @@
 /* Error indicating that the app could not launch because the database could not be loaded. */
 "APP_LAUNCH_FAILURE_COULD_NOT_LOAD_DATABASE" = "Không thể tải cơ sở dữ liệu";
 
+/* Message for an action sheet explaining that Signal can't launch because the database is corrupted. */
+"APP_LAUNCH_FAILURE_DATABASE_CORRUPTED_MESSAGE" = "Signal không thể chạy vì cơ sở dữ liệu bị hỏng. Tính bảo mật hay tin nhắn của bạn không bị ảnh hưởng.";
+
+/* Title for an action sheet explaining that Signal can't launch because the database is corrupted. */
+"APP_LAUNCH_FAILURE_DATABASE_CORRUPTED_TITLE" = "Cơ sở dữ liệu bị hỏng";
+
+/* Action in an action sheet offering to attempt recovery of a corrupted database. */
+"APP_LAUNCH_FAILURE_DATABASE_RECOVERY_ACTION_TITLE" = "Sửa";
+
 /* Error indicating that the app could not launch without reverting unknown database migrations. */
 "APP_LAUNCH_FAILURE_INVALID_DATABASE_VERSION_MESSAGE" = "Vui lòng cập nhật phiên bản mới nhất của Signal.";
 
@@ -679,6 +688,9 @@
 /* Message for an action sheet explaining that performing a backup failed with a network error. */
 "BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NETWORK_ERROR" = "Đã xảy ra lỗi khi tạo bản sao lưu. Kiểm tra kết nối internet của bạn và thử lại.";
 
+/* Message for an action sheet explaining that you must be registered to make a Backup. */
+"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NOT_REGISTERED" = "Bạn phải đăng ký để tạo bản sao lưu.";
+
 /* Description for a progress bar tracking the optimizing of Backup media. */
 "BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION_OPTIMIZING_MEDIA" = "Đang tối ưu hóa tập tin đa phương tiện…";
 
@@ -689,7 +701,7 @@
 "BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION_PROCESSING_MEDIA" = "Đang xử lý tập tin đa phương tiện…";
 
 /* Message describing to the user that the last backup failed. */
-"BACKUP_SETTINGS_BACKUP_FAILED_MESSAGE" = "Quá trình sao lưu gần nhất của bạn không thể hoàn tất. Đảm bảo thiết bị của bạn đã kết nối Wi-Fi và nhấn \"Sao lưu ngay\" để thử lại";
+"BACKUP_SETTINGS_BACKUP_FAILED_MESSAGE" = "Quá trình sao lưu gần nhất của bạn không thể hoàn tất. Nhấn \"Sao lưu ngay\" để thử lại.";
 
 /* Title for a button allowing users to upgrade from a free to paid backup plan. */
 "BACKUP_SETTINGS_BACKUP_PLAN_FREE_ACTION_BUTTON_TITLE" = "Nâng cấp";
@@ -1359,6 +1371,78 @@
 
 /* notification body */
 "CALL_MISSED_BECAUSE_OF_IDENTITY_CHANGE_NOTIFICATION_BODY" = "☎️ Đã lỡ cuộc gọi vì mã số an toàn của người gọi đã thay đổi.";
+
+/* Footer text explaining custom issue descriptions in the call quality survey */
+"CALL_QUALITY_SURVEY_CUSTOM_ISSUE_FOOTER" = "Vui lòng cung cấp mọi thông tin liên quan đến vấn đề. Mọi thông tin bạn chia sẻ ở đây sẽ được bảo mật và chỉ được sử dụng để tăng chất lượng cuộc gọi Signal.";
+
+/* Placeholder text for the custom issue entry in the call quality survey */
+"CALL_QUALITY_SURVEY_CUSTOM_ISSUE_PLACEHOLDER" = "Mô tả vấn đề của bạn";
+
+/* Footer text explaining what debug logs contain in the call quality survey */
+"CALL_QUALITY_SURVEY_DEBUG_LOG_FOOTER" = "Nhật ký gỡ lỗi chứa thông tin ứng dụng cấp thấp và không tiết lộ bất kỳ nội dung tin nhắn nào của bạn.";
+
+/* Header text explaining the purpose of sharing debug logs in the call quality survey */
+"CALL_QUALITY_SURVEY_DEBUG_LOG_HEADER" = "Thông tin chẩn đoán bạn gửi có thể giúp chúng tôi cải thiện chất lượng cuộc gọi.";
+
+/* Title for the debug log sharing screen in the call quality survey */
+"CALL_QUALITY_SURVEY_DEBUG_LOG_TITLE" = "Giúp chúng tôi cải thiện";
+
+/* Label for the toggle to share debug log in the call quality survey */
+"CALL_QUALITY_SURVEY_DEBUG_LOG_TOGGLE" = "Chia sẻ nhật ký gỡ lỗi";
+
+/* Button label for indicating the call did not have issues in the call quality survey */
+"CALL_QUALITY_SURVEY_GREAT_BUTTON" = "Tuyệt vời";
+
+/* Button label for indicating the call had issues in the call quality survey */
+"CALL_QUALITY_SURVEY_HAD_ISSUES_BUTTON" = "Gặp vấn đề";
+
+/* Label for audio issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_AUDIO" = "Vấn đề âm thanh";
+
+/* Label for audio dropout issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_AUDIO_DROP" = "Âm thanh bị cắt";
+
+/* Label for local echo issue option in call quality survey, indicating the user heard an echo */
+"CALL_QUALITY_SURVEY_ISSUE_AUDIO_LOCAL_ECHO" = "Tôi nghe tiếng vọng";
+
+/* Label for remote echo issue option in call quality survey, indicating other participants heard an echo */
+"CALL_QUALITY_SURVEY_ISSUE_AUDIO_REMOTE_ECHO" = "Mọi người nghe tiếng vọng";
+
+/* Label for audio stuttering issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_AUDIO_STUTTERING" = "Lặp âm thanh";
+
+/* Label for call dropped issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_CALL_DROPPED" = "Cuộc gọi bị ngắt";
+
+/* Label for custom issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_OTHER" = "Khác";
+
+/* Label for video issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_VIDEO" = "Vấn đề về video";
+
+/* Label for poor video quality issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_VIDEO_LOW_QUALITY" = "Chất lượng video kém";
+
+/* Label for low resolution video issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_VIDEO_LOW_RESOLUTION" = "Độ phân giải thấp";
+
+/* Label for camera not working issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_VIDEO_NO_CAMERA" = "Camera không hoạt động";
+
+/* Header text on the call quality survey issues screen */
+"CALL_QUALITY_SURVEY_ISSUES_HEADER" = "Chọn tất cả lựa chọn phù hợp";
+
+/* Title for the sheet in the call quality survey where issues with the call can be selected */
+"CALL_QUALITY_SURVEY_ISSUES_SHEET_TITLE" = "Bạn đã gặp vấn đề gì?";
+
+/* Header text explaining the purpose of the call quality survey */
+"CALL_QUALITY_SURVEY_RATING_HEADER" = "Điều này giúp chúng tôi cải thiện chất lượng cuộc gọi Signal. Chúng tôi sẽ không lưu thông tin thông tin nhận dạng cá nhân.";
+
+/* Title for the initial rating screen in the call quality survey */
+"CALL_QUALITY_SURVEY_RATING_TITLE" = "Cuộc gọi của bạn thế nào?";
+
+/* Button text to submit the call quality survey */
+"CALL_QUALITY_SURVEY_SUBMIT_BUTTON" = "Gửi";
 
 /* Label on button for raising hand in call. */
 "CALL_RAISE_HAND_BUTTON_LABEL" = "Giơ Tay";
@@ -2134,6 +2218,9 @@
 /* Footer for the 'attributes access' section in conversation settings view. */
 "CONVERSATION_SETTINGS_ATTRIBUTES_ACCESS_SECTION_FOOTER" = "Chọn ai có thể chỉnh sửa tên nhóm, ảnh, miêu tả, và đồng hồ biến mất tin nhắn.";
 
+/* Footer for the 'attributes access' section in conversation settings view with pinned messages added. */
+"CONVERSATION_SETTINGS_ATTRIBUTES_ACCESS_SECTION_FOOTER_V2" = "Chọn ai có thể chỉnh sửa tên nhóm, ảnh, miêu tả, và đồng hồ đếm tin nhắn tự xóa và tin nhắn ghim.";
+
 /* Footer string for a contact's badges in conversation settings */
 "CONVERSATION_SETTINGS_BADGES_FOOTER" = "Hãy thu thập nhiều huy hiệu đính trên hồ sơ của bạn bằng cách hổ trở cho Signal. Bấm vào \"huy hiệu\" để biết thêm chi tiết.";
 
@@ -2389,23 +2476,11 @@
 /* Tooltip highlighting the custom chat color controls. */
 "CUSTOM_CHAT_COLOR_SETTINGS_TOOLTIP" = "Kéo để thay đổi chiều hướng của nhiệt độ màu";
 
-/* Button to run the database integrity check */
-"DATABASE_INTEGRITY_CHECK_ACTION_RUN" = "Chạy";
-
-/* Message for alert before running a database integrity check */
-"DATABASE_INTEGRITY_CHECK_MESSAGE" = "Việc này sẽ giúp chúng tôi giải quyết vấn đề của bạn, có thể mất vài phút để hoàn thành. Bạn có thể đóng Signal trong giai đoạn chạy kiểm tra này, nhưng vui lòng quay lại ứng dụng để gửi kết quả kiểm tra.";
-
-/* Button to skip database integrity check step */
-"DATABASE_INTEGRITY_CHECK_SKIP" = "Bỏ qua";
-
-/* Title for alert before running a database integrity check */
-"DATABASE_INTEGRITY_CHECK_TITLE" = "Bạn muốn chạy kiểm tra cơ sở dữ liệu?";
-
 /* In some cases, the user's message history can become corrupted, and a recovery interface is shown. The user has not been hacked and may be confused by this interface, so keep that in mind. This is the description on the first screen of this interface, which gives them some information and asks them to continue. */
 "DATABASE_RECOVERY_AWAITING_USER_CONFIRMATION_DESCRIPTION" = "Một phần lịch sử tin nhắn của bạn có thể đã bị hỏng. Tính bảo mật hay tin nhắn của bạn không bị ảnh hưởng. Nhấn \"Tiếp tục\" để khôi phục dữ liệu.";
 
-/* In some cases, the user's message history can become corrupted, and a recovery interface is shown. The user has not been hacked and may be confused by this interface, so try to avoid using terms like \"database\" or \"corrupted\"—terms like \"message history\" are better. This is the title on the first screen of this interface, which gives them some information and asks them to continue. */
-"DATABASE_RECOVERY_AWAITING_USER_CONFIRMATION_TITLE" = "Sự cố Truy xuất Dữ liệu";
+/* In some cases, the user's message history can become corrupted, and a recovery interface is shown. This is the title on the first screen of this interface, which gives them some information and asks them to continue. */
+"DATABASE_RECOVERY_AWAITING_USER_CONFIRMATION_TITLE" = "Sửa";
 
 /* On the database recovery screen, if the user's device storage is nearly full, Signal will not be able to recover the database. A warning screen, which can be bypassed if the user wishes, will be shown. This is the text on the button to bypass the warning. */
 "DATABASE_RECOVERY_MORE_STORAGE_SPACE_NEEDED_CONTINUE_ANYWAY" = "Tiếp tục";
@@ -2617,23 +2692,14 @@
 /* The explanation for the device transfer 'choice' view when linking a device */
 "DEVICE_TRANSFER_CHOICE_LINKED_EXPLANATION" = "Chọn cách bạn muốn chuyển lịch sử tin nhắn và dữ liệu tài khoản của mình";
 
-/* The body for the device transfer 'choice' view 'register' option */
-"DEVICE_TRANSFER_CHOICE_REGISTER_BODY" = "Tiếp tục mà không chuyển tài khoản và tin nhắn";
-
 /* The body for the device transfer 'choice' view 'register' option when linking a device when message syncing is available */
 "DEVICE_TRANSFER_CHOICE_REGISTER_LINKED_BODY_LINK_AND_SYNC" = "Bạn sẽ có thể chọn chuyển tin nhắn và đa phương tiện gần đây từ điện thoại của mình";
 
 /* The title for the device transfer 'choice' view 'register' option when linking a device */
 "DEVICE_TRANSFER_CHOICE_REGISTER_LINKED_TITLE" = "Thêm thành Thiết bị Mới";
 
-/* The title for the device transfer 'choice' view 'register' option */
-"DEVICE_TRANSFER_CHOICE_REGISTER_TITLE" = "Đăng ký và không Chuyển";
-
 /* The title for the device transfer 'choice' view */
 "DEVICE_TRANSFER_CHOICE_TITLE" = "Chuyển Tài khoản & Tin nhắn";
-
-/* The body for the device transfer 'choice' view 'transfer' option */
-"DEVICE_TRANSFER_CHOICE_TRANSFER_BODY" = "Chuyển tài khoản và lịch sử trò chuyện từ thiết bị iOS cũ của bạn";
 
 /* The body for the device transfer 'choice' view 'transfer' option when linking a device */
 "DEVICE_TRANSFER_CHOICE_TRANSFER_LINKED_BODY" = "Chuyển tài khoản và lịch sử trò chuyện từ thiết bị iOS cũ của bạn";
@@ -2641,26 +2707,11 @@
 /* The title for the device transfer 'choice' view 'transfer' option when linking a device */
 "DEVICE_TRANSFER_CHOICE_TRANSFER_LINKED_TITLE" = "Chuyển từ iPad khác";
 
-/* The title for the device transfer 'choice' view 'transfer' option */
-"DEVICE_TRANSFER_CHOICE_TRANSFER_TITLE" = "Chuyển từ thiết bị iOS";
-
-/* Button shown to contract a QR code and exit the fullscreen view. */
-"DEVICE_TRANSFER_CONTRACT_QR_CODE_BUTTON" = "Xem cỡ nhỏ hơn";
-
 /* An error indicating that the other device closed signal mid-transfer and it could not complete */
 "DEVICE_TRANSFER_ERROR_BACKGROUNDED" = "Quá trình chuyển không thể hoàn tất. Hãy đảm bảo cả hai thiết bị đều có Signal đang hoạt động và thử lại.";
 
-/* An error indicating that we were unable to verify the identity of the new device to complete the transfer */
-"DEVICE_TRANSFER_ERROR_CERTIFICATE_MISMATCH" = "Không thể xác minh thiết bị mới, hãy thử lại";
-
 /* An error indicating that something went wrong with the transfer and it could not complete */
 "DEVICE_TRANSFER_ERROR_GENERIC" = "Quá trình chuyển không thể hoàn tất. Hãy đảm bảo các thiết bị của bạn đang ở gần nhau và thử lại.";
-
-/* An error indicating the user must scan this code with a linked device to transfer. */
-"DEVICE_TRANSFER_ERROR_MODE_MISMATCH_LINKED" = "Để cài đặt iPad này thành thiết bị được liên kết, bạn phải quét mã bằng iPad cũ";
-
-/* An error indicating the user must scan this code with a primary device to transfer. */
-"DEVICE_TRANSFER_ERROR_MODE_MISMATCH_PRIMARY" = "Để chuyển tài khoản của mình, bạn phải quét mã bằng iPhone";
 
 /* An error indicating that the user does not have enough free space on their device to complete the transfer */
 "DEVICE_TRANSFER_ERROR_NOT_ENOUGH_SPACE" = "Không đủ dung lượng để hoàn tất quá trình chuyển";
@@ -2668,41 +2719,11 @@
 /* An error indicating the user must update their device before trying to transfer. */
 "DEVICE_TRANSFER_ERROR_UNSUPPORTED_VERSION" = "Cập nhật phiên bản mới nhất của Signal và thử lại";
 
-/* Button shown to expand a QR code and view it fullscreen. */
-"DEVICE_TRANSFER_EXPAND_QR_CODE_BUTTON" = "Xem cỡ lớn hơn";
-
-/* The explanation on the action sheet prompting the user if they want to transfer their device. */
-"DEVICE_TRANSFER_PROMPT_EXPLANATION" = "Chuyển tài khoản Signal của bạn sang thiết bị iOS mới. Đảm bảo rằng thiết bị mới của bạn đang ở gần đó và đã bật nguồn.";
-
-/* The title on the acttion sheet prompting the user if they want to transfer their device. */
-"DEVICE_TRANSFER_PROMPT_TITLE" = "Chuyển Tài khoản";
-
-/* The explanation for the device transfer qr code view */
-"DEVICE_TRANSFER_QRCODE_EXPLANATION" = "Đặt thiết bị cũ của bạn ở gần, đảm bảo Wi-Fi và Bluetooth trên thiết bị này đã được bật, rồi dùng thiết bị này quét mã QR.";
-
-/* The second explanation for the device transfer qr code view */
-"DEVICE_TRANSFER_QRCODE_EXPLANATION2" = "Đặt mã QR này vào khung trên thiết bị iOS khác của bạn.";
-
-/* A prompt to provide further explanation if the user is not seeing the transfer on both devices. */
-"DEVICE_TRANSFER_QRCODE_NOT_SEEING" = "Không thấy thông báo trên thiết bị cũ của bạn?";
-
-/* The title for the device transfer qr code view */
-"DEVICE_TRANSFER_QRCODE_TITLE" = "Quét Mã QR";
-
 /* The explanation on the view that shows receiving progress */
 "DEVICE_TRANSFER_RECEIVING_EXPLANATION" = "Để cả hai thiết bị gần nhau. Đừng tắt nguồn thiết bị nào và để mở ứng dụng Signal. Quá trình chuyển dữ liệu được bảo mật hai chiều.";
 
 /* The title on the view that shows receiving progress */
 "DEVICE_TRANSFER_RECEIVING_TITLE" = "Đang nhận dữ liệu";
-
-/* Text indicating that we are connecting to the scanned device */
-"DEVICE_TRANSFER_SCANNING_CONNECTING" = "Đang kết nối…";
-
-/* The explanation for the action sheet asking the user to scan the QR code to transfer */
-"DEVICE_TRANSFER_SCANNING_EXPLANATION" = "Đặt mã QR trong vòng tròn";
-
-/* The title for the action sheet asking the user to scan the QR code to transfer */
-"DEVICE_TRANSFER_SCANNING_TITLE" = "Nâng Thiết bị Mới của bạn ngang với camera";
 
 /* Status message on new device when cancelling transfer. */
 "DEVICE_TRANSFER_STATUS_NEW_DEVICE_CANCELLING" = "Đang hủy kết nối đến iPhone mới…";
@@ -2714,7 +2735,7 @@
 "DEVICE_TRANSFER_STATUS_NEW_DEVICE_CONNECTING_MESSAGE" = "Đặt thiết bị cũ của bạn ở gần và đảm bảo Wi-Fi và Bluetooth trên thiết bị này đã được bật.";
 
 /* Status message on new device when transfer is starting. */
-"DEVICE_TRANSFER_STATUS_NEW_DEVICE_STARTING" = "Đang chờ để kết nối đến iPhone cũ…";
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_STARTING" = "Đang chờ để kết nối đến thiết bị cũ…";
 
 /* Description in the progress view displayed after failure of device transfer. */
 "DEVICE_TRANSFER_STATUS_NEW_DEVICE_TRANSFER_FAILED_BODY" = "Chuyển đến thiết bị mới không thành công. Đặt thiết bị cũ của bạn ở gần và vui lòng thử lại.";
@@ -2738,13 +2759,10 @@
 "DEVICE_TRANSFER_STATUS_OLD_DEVICE_CONNECTING_MESSAGE" = "Đặt thiết bị mới của bạn ở gần và đảm bảo Wi-Fi và Bluetooth trên thiết bị này đã được bật.";
 
 /* Status message on old device when transfer is starting. */
-"DEVICE_TRANSFER_STATUS_OLD_DEVICE_STARTING" = "Đang chờ để kết nối đến iPhone…";
+"DEVICE_TRANSFER_STATUS_OLD_DEVICE_STARTING" = "Đang chờ để kết nối đến thiết bị mới…";
 
-/* The explanation on the action sheet that shows transfer progress */
-"DEVICE_TRANSFER_TRANSFERRING_EXPLANATION" = "Để cả hai thiết bị gần nhau. Đừng tắt nguồn thiết bị nào và để mở ứng dụng Signal.";
-
-/* The title on the action sheet that shows transfer progress */
-"DEVICE_TRANSFER_TRANSFERRING_TITLE" = "Đang chuyển dữ liệu";
+/* Action asking user to try again after transfer failure. */
+"DEVICE_TRANSFER_TRY_AGAIN_ACTION" = "Hãy thử lại";
 
 /* table cell label in conversation settings */
 "DISAPPEARING_MESSAGES" = "Tin nhắn tự hủy";
@@ -3192,6 +3210,9 @@
 
 /* Label for the currency picker button in donation views */
 "DONATIONS_CURRENCY_PICKER_LABEL" = "Tiền tệ";
+
+/* Label for a button that says 'Don't show again'. */
+"DONT_SHOW_AGAIN_BUTTON_TITLE" = "Không hiển thị lại";
 
 /* Message for Double Tap to Edit sheet show on first interaction */
 "DOUBLE_TAP_TO_EDIT_ALERT_MESSAGE" = "Nhấn nhanh hai lần vào tin nhắn của bạn để sửa. Bạn có thể sửa tin nhắn của mình trong tối đa 24 giờ sau khi tin nhắn được gửi đi.";
@@ -3856,6 +3877,12 @@
 /* Message indicating that 'announcement-only' mode was enabled by a remote user. Embeds {{ user who enabled 'announcement-only' mode }}. */
 "GROUP_IS_ANNOUNCEMENT_ONLY_ENABLED_BY_REMOTE_USER_FORMAT" = "%1$@đã thay đổi cài đặt nhóm để cho phép quản trị viên được gửi tin nhắn.";
 
+/* Message text for the 'group invite link' action sheet. */
+"GROUP_LINK_ACTION_SHEET_JOIN_MESSAGE" = "Tham gia nhóm này và công khai tên và ảnh đại diện với các thành viên trong nhóm?";
+
+/* Message text for the 'group invite link' action sheet, if the user will be requesting to join. */
+"GROUP_LINK_ACTION_SHEET_JOIN_MESSAGE_W_REQUEST" = "Khi bạn yêu cầu tham gia, tên và ảnh của bạn sẽ được chia sẻ với các thành viên của nhóm này. Quản trị viên phải chấp thuận yêu cầu của bạn.";
+
 /* Subtitle indicating that the local user has been blocked from joining the group */
 "GROUP_LINK_ACTION_SHEET_VIEW_BLOCKED_FROM_JOINING_SUBTITLE" = "Bạn không thể tham gia nhóm này qua đường dẫn nhóm vì một quản trị viên đã xóa bạn khỏi nhóm. Liên hệ với một quản trị viên để được thêm vào lại nhóm.";
 
@@ -3874,14 +3901,8 @@
 /* Label indicating that the group info is being loaded in the 'group invite link' action sheet. */
 "GROUP_LINK_ACTION_SHEET_VIEW_LOADING_TITLE" = "Đang tải…";
 
-/* Message text for the 'group invite link' action sheet. */
-"GROUP_LINK_ACTION_SHEET_VIEW_MESSAGE" = "Bạn có muốn tham gia nhóm này và công khai tên và ảnh đại diện với các thành viên trong nhóm?";
-
 /* Label for the 'request to join' button in the 'group invite link' action sheet. */
 "GROUP_LINK_ACTION_SHEET_VIEW_REQUEST_TO_JOIN_BUTTON" = "Yêu cầu để Tham gia";
-
-/* Message text for the 'group invite link' action sheet, if the user will be requesting to join. */
-"GROUP_LINK_ACTION_SHEET_VIEW_REQUEST_TO_JOIN_MESSAGE" = "Cần một quản trị viên chấp nhận yêu cầu trước khi bạn tham gia nhóm này. Khi bạn yêu cầu tham gia, tên và ảnh đại diện của bạn sẽ được công khai với các thành viên nhóm.";
 
 /* Error message the attempt to request to join the group failed due to network connectivity. */
 "GROUP_LINK_COULD_NOT_REQUEST_TO_JOIN_GROUP_DUE_TO_NETWORK_ERROR_MESSAGE" = "Vui lòng kiểm tra kết nối mạng và thử lại.";
@@ -4839,24 +4860,6 @@
 
 /* Shown to users while the app is loading, asking them not to close the app. */
 "LOADING_VIEW_CONTROLLER_DONT_CLOSE_APP" = "Không đóng Signal.";
-
-/* Body for local network permission action sheet */
-"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_BODY" = "Để chuyển tài khoản Signal của bạn, bạn cần bật truy cập mạng cục bộ trên cả hai thiết bị.";
-
-/* A button asking the user if they need further help getting their transfer working. */
-"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_NEED_HELP" = "Cần Hỗ trợ?";
-
-/* First step for local network permission action sheet */
-"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_STEP_ONE" = "Trên mỗi thiết bị, mở Cài đặt";
-
-/* Third step for local network permission action sheet */
-"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_STEP_THREE" = "Bật \"Mạng Cục bộ\"";
-
-/* Second step for local network permission action sheet */
-"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_STEP_TWO" = "Tìm đến Signal";
-
-/* Title for local network permission action sheet */
-"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_TITLE" = "Bật Truy cập Mạng Cục bộ";
 
 /* A string indicating that the user can search for a location */
 "LOCATION_PICKER_SEARCH_PLACEHOLDER" = "Tìm theo tên hoặc địa chỉ";
@@ -6404,9 +6407,6 @@
 "PHOTO_CAPTURE_GENERIC_ERROR" = "Không chụp được ảnh.";
 
 /* alert title */
-"PHOTO_CAPTURE_UNABLE_TO_CAPTURE_IMAGE" = "Không chụp được ảnh.";
-
-/* alert title */
 "PHOTO_CAPTURE_UNABLE_TO_INITIALIZE_CAMERA" = "Không thể thiết lập camera.";
 
 /* Button label for opening the chat on a sheet presented from photo capture view indicating that a username QR code was found. */
@@ -6417,9 +6417,6 @@
 
 /* Title for sheet presented from photo capture view indicating that a username QR code was found. Embeds {{username}}. */
 "PHOTO_CAPTURE_USERNAME_QR_CODE_FOUND_TITLE_FORMAT" = "Đã tìm thấy %1$@";
-
-/* alert title, generic error preventing user from capturing a video that is too long */
-"PHOTO_CAPTURE_VIDEO_SIZE_ERROR" = "Video quá dài.";
 
 /* Pressing this button pins a thread */
 "PIN_ACTION" = "Ghim";
@@ -6565,8 +6562,80 @@
 /* An explanation that you have already pinned the maximum number of conversations. */
 "PINNED_CONVERSATION_LIMIT" = "Bạn chỉ có thể ghim tối đa 4 cuộc trò chuyện.";
 
+/* Accessibility label prefix for banner showing a pinned message */
+"PINNED_MESSAGE_BANNER_AX_LABEL" = "Tin nhắn đã ghim:";
+
+/* Shown when another user pins a message. Embeds {{ another user }}. */
+"PINNED_MESSAGE_CHAT_EVENT_OTHER" = "%1$@ đã ghim một tin nhắn";
+
+/* Shown when the local user pins a message. */
+"PINNED_MESSAGE_CHAT_EVENT_SELF" = "Bạn đã ghim một tin nhắn";
+
+/* Accessibility label for pin message button */
+"PINNED_MESSAGE_MENU_ACCESSIBILITY_LABEL" = "Menu tin nhắn đã ghim";
+
+/* Label for button to pin a message */
+"PINNED_MESSAGE_PIN_ACTION_TITLE" = "Ghim";
+
+/* Message for an action sheet confirming the user wants to replace oldest pinned message. */
+"PINNED_MESSAGE_REPLACE_OLDEST_BODY" = "Thao tác ghim tin nhắn mới sẽ thay thế tin nhắn được ghim cũ nhất.";
+
+/* Option in pinned message action sheet to replace oldest pin. */
+"PINNED_MESSAGE_REPLACE_OLDEST_BUTTON" = "Thay thế";
+
+/* Title for an action sheet confirming the user wants to replace oldest pinned message. */
+"PINNED_MESSAGE_REPLACE_OLDEST_TITLE" = "Thay thế ghim cũ nhất?";
+
+/* Body for error sheet shown if the pinned message failed to send */
+"PINNED_MESSAGE_SEND_ERROR_SHEET_BODY" = "Kiểm tra kết nối của bạn và thử lại.";
+
+/* Title for error sheet shown if the pinned message failed to send */
+"PINNED_MESSAGE_SEND_ERROR_SHEET_TITLE" = "Không thể ghim tin nhắn";
+
+/* Text to show on a toast when someone unpins a message */
+"PINNED_MESSAGE_TOAST" = "Đã bỏ ghim tin nhắn";
+
+/* Label for button to unpin a message */
+"PINNED_MESSAGE_UNPIN_ACTION_TITLE" = "Bỏ ghim";
+
+/* Option in pinned message action sheet to pin for 24 hours. */
+"PINNED_MESSAGES_24_HOURS" = "24 giờ";
+
+/* Option in pinned message action sheet to pin for 30 days. */
+"PINNED_MESSAGES_30_DAYS" = "30 ngày";
+
+/* Option in pinned message action sheet to pin for 7 days. */
+"PINNED_MESSAGES_7_DAYS" = "7 ngày";
+
+/* Title for Pinned Messages detail view */
+"PINNED_MESSAGES_DETAILS_TITLE" = "Tin nhắn đã ghim";
+
+/* Title for an action sheet to indicate how long to keep the pin active */
+"PINNED_MESSAGES_EXPIRY_SHEET_TITLE" = "Tiếp tục ghim trong…";
+
+/* Option in pinned message action sheet to pin with no expiry. */
+"PINNED_MESSAGES_FOREVER" = "Vĩnh viễn";
+
+/* Action menu item to go to a message in the conversation view */
+"PINNED_MESSAGES_GO_TO_MESSAGE" = "Đến Tin nhắn";
+
+/* Action menu item to see all pinned messages */
+"PINNED_MESSAGES_SEE_ALL_MESSAGES" = "Xem tất cả tin nhắn";
+
+/* Action menu item to unpin a message */
+"PINNED_MESSAGES_UNPIN" = "Bỏ ghim";
+
+/* Title for a button to unpin all pinned messages. */
+"PINNED_MESSAGES_UNPIN_ALL" = "Bỏ ghim tất cả";
+
 /* The title for pinned conversation section on the conversation list */
 "PINNED_SECTION_TITLE" = "Đã ghim";
+
+/* Body for a sheet warning users they are pinning a disappearing message. */
+"PINNING_DISAPPEARING_MESSAGE_WARNING_BODY" = "Tin nhắn tự xóa sẽ được bỏ ghim khi đồng hồ hết giờ và tin nhắn bị xóa khỏi cuộc trò chuyện.";
+
+/* Title for a sheet warning users they are pinning a disappearing message. */
+"PINNING_DISAPPEARING_MESSAGE_WARNING_TITLE" = "Ghim tin nhắn tự xóa";
 
 /* Action text for PIN megaphone when user doesn't have a PIN */
 "PINS_MEGAPHONE_ACTION" = "Tạo mã PIN";
@@ -6584,10 +6653,10 @@
 "PLAY_BUTTON_ACCESSABILITY_LABEL" = "Phát Tập tin đa phương tiện";
 
 /* Accessibility label for poll message. Embeds {{ poll question }}. */
-"POLL_ACCESSIBILITY_LABEL" = "Poll: %1$@.";
+"POLL_ACCESSIBILITY_LABEL" = "Hỏi ý kiến: %1$@.";
 
 /* Accessibility label for a vote option that is not selected by the user. */
-"POLL_ACCESSIBILITY_LABEL_OPTION_PENDING" = "pending";
+"POLL_ACCESSIBILITY_LABEL_OPTION_PENDING" = "Đang chờ";
 
 /* Title for a toggle allowing multiple votes for a poll. */
 "POLL_ALLOW_MULTIPLE_LABEL" = "Nhiều bình chọn";
@@ -6865,6 +6934,15 @@
 /* Title of alert shown when push tokens sync job succeeds. */
 "PUSH_REGISTER_SUCCESS" = "Đăng ký nhận thông báo đẩy thành công.";
 
+/* Body for sheet with info about scanning a Quick Restore QR code */
+"QUICK_RESTORE_URL_OPENED_ACTION_SHEET_EXTERNAL_URL_ACTION_BODY" = "Sử dụng thiết bị này để quét mã QR trên thiết bị bạn muốn chuyển đến";
+
+/* Title for sheet with info about scanning a Quick Restore QR code */
+"QUICK_RESTORE_URL_OPENED_ACTION_SHEET_EXTERNAL_URL_ACTION_TITLE" = "Quét Mã QR";
+
+/* Message for an action sheet telling users how to use quick restore, when trying to open an external quick restore URL. */
+"QUICK_RESTORE_URL_OPENED_ACTION_SHEET_EXTERNAL_URL_MESSAGE" = "Để chuyển tài khoản này đến thiết bị mới, hãy nhấn \"Tiếp tục\" và quét mã QR bằng camera của Signal. Đảm bảo bạn chỉ quét mã QR có nguồn gốc trực tiếp từ Signal.";
+
 /* Accessibility label stating the author of the message to which you are replying. Embeds: {{ the author of the message to which you are replying }}. */
 "QUOTED_REPLY_ACCESSIBILITY_LABEL_FORMAT" = "Đang trả lời %1$@.";
 
@@ -7099,12 +7177,6 @@
 /* Label for the country code field */
 "REGISTRATION_DEFAULT_COUNTRY_NAME" = "Mã quốc gia";
 
-/* If a user is installing Signal on a new phone, they may be asked whether they want to transfer their account from their old device. This is a description on the screen that asks them this question. */
-"REGISTRATION_DEVICE_TRANSFER_CHOICE_EXPLANATION" = "Thao tác này sẽ vô hiệu hoá Signal trên các thiết bị khác đã được đăng ký với số điện thoại này.";
-
-/* If a user is installing Signal on a new phone, they may be asked whether they want to transfer their account from their old device. This is the title on the screen that asks them this question. */
-"REGISTRATION_DEVICE_TRANSFER_CHOICE_TITLE" = "Chuyển Tài Khoản & Tin Nhắn";
-
 /* Description for the screen that allows users to enter their recovery key. */
 "REGISTRATION_ENTER_BACKUP_KEY_DESCRIPTION" = "Yêu cầu có mã khóa khôi phục có 64 ký tự của bạn để khôi phục tài khoản và dữ liệu.";
 
@@ -7223,7 +7295,7 @@
 "REGISTRATION_SCAN_QR_CODE_FAILED_TITLE" = "Khôi phục không thành công";
 
 /* Title for screen containing QR code that users scan with their old phone when they want to transfer/restore their message history to a new device. */
-"REGISTRATION_SCAN_QR_CODE_TITLE" = "Quét mã với điện thoại của bạn";
+"REGISTRATION_SCAN_QR_CODE_TITLE" = "Quét mã với thiết bị của bạn";
 
 /* Tutorial text describing the first step to scanning the restore/transfer QR code with your old phone: opening Signal */
 "REGISTRATION_SCAN_QR_CODE_TUTORIAL_OPEN_SIGNAL" = "Mở Signal trên thiết bị cũ của bạn";
@@ -7505,7 +7577,7 @@
 "SCREEN_LOCK_UNLOCK_SIGNAL" = "Mở khóa Signal";
 
 /* Placeholder text indicating the user can search for contacts by name, username, or phone number. */
-"SEARCH_BY_NAME_OR_USERNAME_OR_NUMBER_PLACEHOLDER_TEXT" = "Tên, tên người dùng hoặc số điện thoại";
+"SEARCH_BY_NAME_OR_USERNAME_OR_NUMBER_PLACEHOLDER_TEXT" = "Tên, tên người dùng hoặc sđt";
 
 /* Placeholder text indicating the user can search for contacts by name or phone number. */
 "SEARCH_BYNAMEORNUMBER_PLACEHOLDER_TEXT" = "Tìm kiếm theo tên hoặc số điện thoại";
@@ -8743,6 +8815,12 @@
 /* The name for the sticker category 'Featured' */
 "STICKER_CATEGORY_FEATURED_NAME" = "Nổi bật";
 
+/* Subtitle of the helper text displayed when Recent stickers are empty. */
+"STICKER_CATEGORY_RECENTS_EMPTY_SUBTITLE" = "Nhãn dán bạn gửi sẽ xuất hiện ở đây";
+
+/* Title of the helper text displayed when Recent stickers are empty. */
+"STICKER_CATEGORY_RECENTS_EMPTY_TITLE" = "Không có nhãn dán gần đây";
+
 /* The name for the sticker category 'Recents' */
 "STICKER_CATEGORY_RECENTS_NAME" = "Gần đây";
 
@@ -8898,21 +8976,6 @@
 
 /* Context menu action to share the selected story */
 "STORIES_SHARE_STORY_ACTION" = "Chia sẻ";
-
-/* Section title shown when sending to non-story conversations but failing to send the file to stories. */
-"STORIES_SHARESHEET_PARTIAL_SEND_REMAINING_SECTION_TITLE" = "Gửi từ";
-
-/* Section title shown when failing to send an incompatible file to stories, but still sending to non-story conversations. */
-"STORIES_SHARESHEET_PARTIAL_SEND_STORIES_SECTION_TITLE" = "Không được gửi đến";
-
-/* Title shown when failing to send an incompatible file to stories, but still sending to non-story conversations. */
-"STORIES_SHARESHEET_PARTIAL_SEND_TITLE" = "Đã gửi một phần";
-
-/* Subtitle shown when failing to send an incompatible file to stories via the sharesheet. */
-"STORIES_SHARESHEET_UNABLE_TO_SEND_SEND_SUBTITLE" = "Định dạng của tập tin được chọn không được hỗ trợ.";
-
-/* Title shown when failing to send an incompatible file to stories via the sharesheet. */
-"STORIES_SHARESHEET_UNABLE_TO_SEND_SEND_TITLE" = "Không thể gửi";
 
 /* Title for the stories view. */
 "STORIES_TITLE" = "Các Story";
@@ -9205,35 +9268,23 @@
 /* Option in selected text edit menu to make text bold */
 "TEXT_MENU_BOLD" = "Đậm";
 
-/* Option in selected text edit menu to clear all text formatting in the selected text range */
-"TEXT_MENU_CLEAR_FORMATTING" = "Xóa định dạng";
-
 /* Option in selected text edit menu to view text formatting options */
 "TEXT_MENU_FORMAT" = "Định dạng";
 
 /* Option in selected text edit menu to make text italic */
 "TEXT_MENU_ITALIC" = "Nghiêng";
 
-/* Option in selected text edit menu to look up word definitions */
-"TEXT_MENU_LOOK_UP" = "Tra cứu";
-
 /* Option in selected text edit menu to make text monospace */
 "TEXT_MENU_MONOSPACE" = "Đơn cách";
 
-/* Option in selected text edit menu to replace text with suggestions */
-"TEXT_MENU_REPLACE" = "Thay thế";
-
-/* Option in selected text edit menu to share selected text */
-"TEXT_MENU_SHARE" = "Chia sẻ";
+/* Option in selected text edit menu to remove all text formatting in the selected text range */
+"TEXT_MENU_REMOVE_FORMATTING" = "Xóa định dạng";
 
 /* Option in selected text edit menu to make text spoiler */
 "TEXT_MENU_SPOILER" = "Spoiler";
 
 /* Option in selected text edit menu to make text strikethrough */
 "TEXT_MENU_STRIKETHROUGH" = "Có gạch ngang";
-
-/* Option in selected text edit menu to translate the word */
-"TEXT_MENU_TRANSLATE" = "Dịch";
 
 /* text indicating the message was remotely deleted */
 "THIS_MESSAGE_WAS_DELETED" = "Tin nhắn này đã bị xóa.";

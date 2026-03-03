@@ -42,14 +42,14 @@ public class MessageSenderJobQueue {
         message: PreparedOutgoingMessage,
         limitToCurrentProcessLifetime: Bool = false,
         isHighPriority: Bool = false,
-        transaction: DBWriteTransaction
+        transaction: DBWriteTransaction,
     ) {
         self.add(
             message: message,
             exclusiveToCurrentProcessIdentifier: limitToCurrentProcessLifetime,
             isHighPriority: isHighPriority,
             future: nil,
-            transaction: transaction
+            transaction: transaction,
         )
     }
 
@@ -58,7 +58,7 @@ public class MessageSenderJobQueue {
         message: PreparedOutgoingMessage,
         limitToCurrentProcessLifetime: Bool = false,
         isHighPriority: Bool = false,
-        transaction: DBWriteTransaction
+        transaction: DBWriteTransaction,
     ) -> Promise<Void> {
         return Promise { future in
             self.add(
@@ -66,7 +66,7 @@ public class MessageSenderJobQueue {
                 exclusiveToCurrentProcessIdentifier: limitToCurrentProcessLifetime,
                 isHighPriority: isHighPriority,
                 future: future,
-                transaction: transaction
+                transaction: transaction,
             )
         }
     }
@@ -76,7 +76,7 @@ public class MessageSenderJobQueue {
         exclusiveToCurrentProcessIdentifier: Bool,
         isHighPriority: Bool,
         future: Future<Void>?,
-        transaction: DBWriteTransaction
+        transaction: DBWriteTransaction,
     ) {
         // Mark as sending now so the UI updates immediately.
         message.updateAllUnsentRecipientsAsSending(tx: transaction)
@@ -247,7 +247,7 @@ public class MessageSenderJobQueue {
 
     private func didMarkAsReady(oldJobRecord: MessageSenderJobRecord, transaction: DBWriteTransaction) {
         // TODO: Remove this method and status swapping logic entirely.
-        let uniqueId: String
+        let uniqueId: String?
         switch oldJobRecord.messageType {
         case .persisted(let messageId, _):
             uniqueId = messageId
@@ -256,11 +256,14 @@ public class MessageSenderJobQueue {
         case .transient, .none:
             return
         }
+        guard let uniqueId else {
+            return
+        }
 
         TSOutgoingMessage
             .anyFetch(
                 uniqueId: uniqueId,
-                transaction: transaction
+                transaction: transaction,
             )
             .flatMap { $0 as? TSOutgoingMessage }?
             .updateAllUnsentRecipientsAsSending(transaction: transaction)
@@ -318,7 +321,7 @@ public class MessageSenderJobQueue {
         let operation = QueuedOperationState(
             job: job,
             message: message,
-            future: future
+            future: future,
         )
 
         let queueKey = QueueKey(threadId: job.record.threadId, priority: sendPriority)
@@ -360,7 +363,7 @@ public class MessageSenderJobQueue {
             NotificationCenter.default.addObserver(
                 forName: SSKReachability.owsReachabilityDidChange,
                 object: nil,
-                queue: nil
+                queue: nil,
             ) { _ in
                 if SSKEnvironment.shared.reachabilityManagerRef.isReachable {
                     becameReachableBlock()
@@ -477,13 +480,22 @@ public class MessageSenderJobQueue {
         }
     }
 
+    /// Use max-retries as a stand-in for a timeout for messages we want sent or cancelled in less than 24 hours.
+    /// Eventually this will be replaced with support for actual timeouts.
+    private func getMaxRetriesForMessageType(message: PreparedOutgoingMessage) -> Int {
+        if message.isPinChange {
+            return 2
+        }
+        return 110
+    }
+
     /// Runs a job to send a particular message.
     ///
     /// This methods returns after the operation has reached a terminal result
     /// but before that result has been processed.
     private func _runOperation(_ operation: ActiveOperationState) async throws {
         var attemptCount = Int(operation.job.record.failureCount)
-        let maxRetries = 110
+        let maxRetries = getMaxRetriesForMessageType(message: operation.message)
         while true {
             assert(!Task.isCancelled, "Cancellation isn't supported.")
             operation.clearExternalRetryTriggers()
@@ -576,7 +588,7 @@ public class MessageSenderJobQueue {
             Logger.warn("Resending \(operation.message.description) after \(String(format: "%.1f", retryDelay))s\(httpBlurb)")
             try? await withCooperativeTimeout(
                 seconds: retryDelay,
-                operation: { try await operation.waitForAnyExternalRetryTrigger(fromExternalRetryTriggers: externalRetryTriggers) }
+                operation: { try await operation.waitForAnyExternalRetryTrigger(fromExternalRetryTriggers: externalRetryTriggers) },
             )
         }
     }

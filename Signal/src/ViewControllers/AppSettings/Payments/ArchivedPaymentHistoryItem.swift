@@ -21,7 +21,7 @@ public struct ArchivedPaymentHistoryItem: PaymentsHistoryItem {
         archivedPayment: ArchivedPayment,
         address: SignalServiceAddress?,
         displayName: String,
-        interaction: TSInteraction
+        interaction: TSInteraction,
     ) {
         self.archivedPayment = archivedPayment
         self.displayName = displayName
@@ -40,7 +40,7 @@ public struct ArchivedPaymentHistoryItem: PaymentsHistoryItem {
     }
 
     public var isOutgoing: Bool {
-       !isIncoming
+        !isIncoming
     }
 
     public var isUnidentified: Bool {
@@ -61,16 +61,19 @@ public struct ArchivedPaymentHistoryItem: PaymentsHistoryItem {
 
     public var paymentAmount: TSPaymentAmount? {
         return SUIEnvironment.shared.paymentsImplRef.unmaskReceiptAmount(
-            data: archivedPayment.receipt
+            data: archivedPayment.receipt,
         )?.tsPaymentAmount
     }
 
     public var formattedFeeAmount: String? {
-        guard let fee = paymentInfo.fee else { return nil }
+        guard
+            let archivedFee = paymentInfo.fee,
+            let fee = PaymentsFormat.formatFromArchive(amount: archivedFee)
+        else { return nil }
         return PaymentsFormat.format(
             amountString: fee,
             withCurrencyCode: true,
-            withSpace: true
+            withSpace: true,
         )
     }
 
@@ -103,22 +106,28 @@ public struct ArchivedPaymentHistoryItem: PaymentsHistoryItem {
     }
 
     public var attributedPaymentAmount: NSAttributedString? {
-        guard let amount = paymentInfo.amount else { return nil }
+        guard
+            let archivedAmount = paymentInfo.amount,
+            let amount = PaymentsFormat.formatFromArchive(amount: archivedAmount)
+        else { return nil }
         let formattedAmount = PaymentsFormat.format(
             amountString: amount,
             withCurrencyCode: false,
             withSpace: false,
-            isIncoming: isIncoming
+            isIncoming: isIncoming,
         )
         return PaymentsFormat.attributedFormat(mobileCoinString: formattedAmount, withSpace: false)
     }
 
     public var formattedPaymentAmount: String? {
-        guard let amount = paymentInfo.amount else { return nil }
+        guard
+            let archivedAmount = paymentInfo.amount,
+            let amount = PaymentsFormat.formatFromArchive(amount: archivedAmount)
+        else { return nil }
         return PaymentsFormat.format(
             amountString: amount,
             withCurrencyCode: true,
-            withSpace: true
+            withSpace: true,
         )
     }
 

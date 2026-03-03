@@ -217,6 +217,15 @@
 /* Error indicating that the app could not launch because the database could not be loaded. */
 "APP_LAUNCH_FAILURE_COULD_NOT_LOAD_DATABASE" = "載入唔到資料庫";
 
+/* Message for an action sheet explaining that Signal can't launch because the database is corrupted. */
+"APP_LAUNCH_FAILURE_DATABASE_CORRUPTED_MESSAGE" = "Signal 郁唔到，因為資料庫損壞咗。你嘅帳戶或者訊息嘅安全性冇受到影響。";
+
+/* Title for an action sheet explaining that Signal can't launch because the database is corrupted. */
+"APP_LAUNCH_FAILURE_DATABASE_CORRUPTED_TITLE" = "資料庫損壞";
+
+/* Action in an action sheet offering to attempt recovery of a corrupted database. */
+"APP_LAUNCH_FAILURE_DATABASE_RECOVERY_ACTION_TITLE" = "修理";
+
 /* Error indicating that the app could not launch without reverting unknown database migrations. */
 "APP_LAUNCH_FAILURE_INVALID_DATABASE_VERSION_MESSAGE" = "請更新至最新版本嘅 Signal。";
 
@@ -679,6 +688,9 @@
 /* Message for an action sheet explaining that performing a backup failed with a network error. */
 "BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NETWORK_ERROR" = "建立備份嗰陣出現咗問題。請檢查你嘅網絡連線，然後再試多次。";
 
+/* Message for an action sheet explaining that you must be registered to make a Backup. */
+"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NOT_REGISTERED" = "你一定要登記咗先可以建立備份。";
+
 /* Description for a progress bar tracking the optimizing of Backup media. */
 "BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION_OPTIMIZING_MEDIA" = "優化緊媒體……";
 
@@ -689,7 +701,7 @@
 "BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION_PROCESSING_MEDIA" = "處理緊媒體……";
 
 /* Message describing to the user that the last backup failed. */
-"BACKUP_SETTINGS_BACKUP_FAILED_MESSAGE" = "你上次嘅備份尚未完成。請確保你部手機已經連咗 Wi-Fi，然後㩒「即刻備份」再試";
+"BACKUP_SETTINGS_BACKUP_FAILED_MESSAGE" = "你上次嘅備份仲未完成。㩒一下「即刻備份」再試。";
 
 /* Title for a button allowing users to upgrade from a free to paid backup plan. */
 "BACKUP_SETTINGS_BACKUP_PLAN_FREE_ACTION_BUTTON_TITLE" = "升級";
@@ -1359,6 +1371,78 @@
 
 /* notification body */
 "CALL_MISSED_BECAUSE_OF_IDENTITY_CHANGE_NOTIFICATION_BODY" = "☎️ 未接聽通話，因為來電者嘅安全碼已經郁動過。";
+
+/* Footer text explaining custom issue descriptions in the call quality survey */
+"CALL_QUALITY_SURVEY_CUSTOM_ISSUE_FOOTER" = "請提供任何同問題有關嘅詳細資料。你喺度分享嘅所有內容都會保密，同埋只會用喺協助改善 Signal 嘅通話。";
+
+/* Placeholder text for the custom issue entry in the call quality survey */
+"CALL_QUALITY_SURVEY_CUSTOM_ISSUE_PLACEHOLDER" = "講下你遇到嘅問題";
+
+/* Footer text explaining what debug logs contain in the call quality survey */
+"CALL_QUALITY_SURVEY_DEBUG_LOG_FOOTER" = "除錯記錄只包括 APP 嘅基本資訊，唔會顯示任何訊息內容。";
+
+/* Header text explaining the purpose of sharing debug logs in the call quality survey */
+"CALL_QUALITY_SURVEY_DEBUG_LOG_HEADER" = "將診斷資訊傳送俾我哋，可以幫我哋改善通話品質。";
+
+/* Title for the debug log sharing screen in the call quality survey */
+"CALL_QUALITY_SURVEY_DEBUG_LOG_TITLE" = "幫我哋改進";
+
+/* Label for the toggle to share debug log in the call quality survey */
+"CALL_QUALITY_SURVEY_DEBUG_LOG_TOGGLE" = "分享除錯記錄";
+
+/* Button label for indicating the call did not have issues in the call quality survey */
+"CALL_QUALITY_SURVEY_GREAT_BUTTON" = "無得頂";
+
+/* Button label for indicating the call had issues in the call quality survey */
+"CALL_QUALITY_SURVEY_HAD_ISSUES_BUTTON" = "有問題";
+
+/* Label for audio issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_AUDIO" = "語音訊息問題";
+
+/* Label for audio dropout issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_AUDIO_DROP" = "語音斷咗或者無聲";
+
+/* Label for local echo issue option in call quality survey, indicating the user heard an echo */
+"CALL_QUALITY_SURVEY_ISSUE_AUDIO_LOCAL_ECHO" = "我聽到回音";
+
+/* Label for remote echo issue option in call quality survey, indicating other participants heard an echo */
+"CALL_QUALITY_SURVEY_ISSUE_AUDIO_REMOTE_ECHO" = "其他人聽到回音";
+
+/* Label for audio stuttering issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_AUDIO_STUTTERING" = "語音窒下窒下";
+
+/* Label for call dropped issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_CALL_DROPPED" = "通話中斷";
+
+/* Label for custom issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_OTHER" = "其他";
+
+/* Label for video issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_VIDEO" = "影像問題";
+
+/* Label for poor video quality issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_VIDEO_LOW_QUALITY" = "影像畫質唔掂";
+
+/* Label for low resolution video issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_VIDEO_LOW_RESOLUTION" = "解析度低";
+
+/* Label for camera not working issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_VIDEO_NO_CAMERA" = "相機鏡頭失靈";
+
+/* Header text on the call quality survey issues screen */
+"CALL_QUALITY_SURVEY_ISSUES_HEADER" = "請揀選所有啱用嘅選項";
+
+/* Title for the sheet in the call quality survey where issues with the call can be selected */
+"CALL_QUALITY_SURVEY_ISSUES_SHEET_TITLE" = "你遇到咩問題？";
+
+/* Header text explaining the purpose of the call quality survey */
+"CALL_QUALITY_SURVEY_RATING_HEADER" = "你嘅回應可以幫到我哋改善 Signal 嘅通話。我哋唔會儲存個人識別資料。";
+
+/* Title for the initial rating screen in the call quality survey */
+"CALL_QUALITY_SURVEY_RATING_TITLE" = "通話順利嗎？";
+
+/* Button text to submit the call quality survey */
+"CALL_QUALITY_SURVEY_SUBMIT_BUTTON" = "提交";
 
 /* Label on button for raising hand in call. */
 "CALL_RAISE_HAND_BUTTON_LABEL" = "舉手";
@@ -2134,6 +2218,9 @@
 /* Footer for the 'attributes access' section in conversation settings view. */
 "CONVERSATION_SETTINGS_ATTRIBUTES_ACCESS_SECTION_FOOTER" = "揀選邊個可以改到個谷嘅名、相、描述同埋過眼雲煙訊息倒數限期。";
 
+/* Footer for the 'attributes access' section in conversation settings view with pinned messages added. */
+"CONVERSATION_SETTINGS_ATTRIBUTES_ACCESS_SECTION_FOOTER_V2" = "揀選邊個可以編輯個谷名、相、描述、自動銷毀訊息計時器同埋置頂訊息。";
+
 /* Footer string for a contact's badges in conversation settings */
 "CONVERSATION_SETTINGS_BADGES_FOOTER" = "擔當 Signal 後援，為您嘅個人資料添一枚襟章。撳一下啲襟章知多啲。";
 
@@ -2389,23 +2476,11 @@
 /* Tooltip highlighting the custom chat color controls. */
 "CUSTOM_CHAT_COLOR_SETTINGS_TOOLTIP" = "拖拉去改變漸層嘅方向";
 
-/* Button to run the database integrity check */
-"DATABASE_INTEGRITY_CHECK_ACTION_RUN" = "執行";
-
-/* Message for alert before running a database integrity check */
-"DATABASE_INTEGRITY_CHECK_MESSAGE" = "呢個檢查可以幫我哋解決你嘅問題，可能需要幾分鐘時間完成。你可以喺檢查進行期間閂咗 Signal，但請你稍後返嚟提交你嘅記錄。";
-
-/* Button to skip database integrity check step */
-"DATABASE_INTEGRITY_CHECK_SKIP" = "跳過";
-
-/* Title for alert before running a database integrity check */
-"DATABASE_INTEGRITY_CHECK_TITLE" = "係咪要執行資料庫診斷呀？";
-
 /* In some cases, the user's message history can become corrupted, and a recovery interface is shown. The user has not been hacked and may be confused by this interface, so keep that in mind. This is the description on the first screen of this interface, which gives them some information and asks them to continue. */
 "DATABASE_RECOVERY_AWAITING_USER_CONFIRMATION_DESCRIPTION" = "部分訊息紀錄可能已經損毀。你嘅帳戶或者訊息嘅安全性冇受到影響。㩒一下「繼續」嚟恢復你嘅資料。";
 
-/* In some cases, the user's message history can become corrupted, and a recovery interface is shown. The user has not been hacked and may be confused by this interface, so try to avoid using terms like \"database\" or \"corrupted\"—terms like \"message history\" are better. This is the title on the first screen of this interface, which gives them some information and asks them to continue. */
-"DATABASE_RECOVERY_AWAITING_USER_CONFIRMATION_TITLE" = "提取資料嗰陣出現問題";
+/* In some cases, the user's message history can become corrupted, and a recovery interface is shown. This is the title on the first screen of this interface, which gives them some information and asks them to continue. */
+"DATABASE_RECOVERY_AWAITING_USER_CONFIRMATION_TITLE" = "修理";
 
 /* On the database recovery screen, if the user's device storage is nearly full, Signal will not be able to recover the database. A warning screen, which can be bypassed if the user wishes, will be shown. This is the text on the button to bypass the warning. */
 "DATABASE_RECOVERY_MORE_STORAGE_SPACE_NEEDED_CONTINUE_ANYWAY" = "仍要繼續";
@@ -2617,23 +2692,14 @@
 /* The explanation for the device transfer 'choice' view when linking a device */
 "DEVICE_TRANSFER_CHOICE_LINKED_EXPLANATION" = "選擇轉移訊息紀錄同埋帳戶資料嘅方式";
 
-/* The body for the device transfer 'choice' view 'register' option */
-"DEVICE_TRANSFER_CHOICE_REGISTER_BODY" = "唔轉移您嘅帳戶同埋訊息就繼續";
-
 /* The body for the device transfer 'choice' view 'register' option when linking a device when message syncing is available */
 "DEVICE_TRANSFER_CHOICE_REGISTER_LINKED_BODY_LINK_AND_SYNC" = "你可以選擇由手機轉移訊息同最近嘅媒體";
 
 /* The title for the device transfer 'choice' view 'register' option when linking a device */
 "DEVICE_TRANSFER_CHOICE_REGISTER_LINKED_TITLE" = "加做新嘅機";
 
-/* The title for the device transfer 'choice' view 'register' option */
-"DEVICE_TRANSFER_CHOICE_REGISTER_TITLE" = "唔轉移淨註冊";
-
 /* The title for the device transfer 'choice' view */
 "DEVICE_TRANSFER_CHOICE_TITLE" = "轉移帳戶同埋訊息";
-
-/* The body for the device transfer 'choice' view 'transfer' option */
-"DEVICE_TRANSFER_CHOICE_TRANSFER_BODY" = "由您部舊嘅 iOS 機度轉移您嘅帳戶同埋訊息紀錄過嚟";
 
 /* The body for the device transfer 'choice' view 'transfer' option when linking a device */
 "DEVICE_TRANSFER_CHOICE_TRANSFER_LINKED_BODY" = "由你部 iOS 舊機度轉移帳戶同訊息紀錄";
@@ -2641,26 +2707,11 @@
 /* The title for the device transfer 'choice' view 'transfer' option when linking a device */
 "DEVICE_TRANSFER_CHOICE_TRANSFER_LINKED_TITLE" = "由另一部 iPad 轉移過嚟";
 
-/* The title for the device transfer 'choice' view 'transfer' option */
-"DEVICE_TRANSFER_CHOICE_TRANSFER_TITLE" = "由 iOS 機搬過嚟";
-
-/* Button shown to contract a QR code and exit the fullscreen view. */
-"DEVICE_TRANSFER_CONTRACT_QR_CODE_BUTTON" = "縮細啲";
-
 /* An error indicating that the other device closed signal mid-transfer and it could not complete */
 "DEVICE_TRANSFER_ERROR_BACKGROUNDED" = "轉移未能完成。請確保兩部機都開咗 Signal，然後再試多次。";
 
-/* An error indicating that we were unable to verify the identity of the new device to complete the transfer */
-"DEVICE_TRANSFER_ERROR_CERTIFICATE_MISMATCH" = "驗證唔到您部新機，請再試一次";
-
 /* An error indicating that something went wrong with the transfer and it could not complete */
 "DEVICE_TRANSFER_ERROR_GENERIC" = "轉移未能完成。請確保兩部機擺得夠近，然後再試多次。";
-
-/* An error indicating the user must scan this code with a linked device to transfer. */
-"DEVICE_TRANSFER_ERROR_MODE_MISMATCH_LINKED" = "若要將呢部 iPad 設定為連結咗嘅機，您就要用您部舊嘅 iPad 嚟掃描";
-
-/* An error indicating the user must scan this code with a primary device to transfer. */
-"DEVICE_TRANSFER_ERROR_MODE_MISMATCH_PRIMARY" = "若要轉移您嘅帳戶，您就要用您部 iPhone 嚟掃描";
 
 /* An error indicating that the user does not have enough free space on their device to complete the transfer */
 "DEVICE_TRANSFER_ERROR_NOT_ENOUGH_SPACE" = "空間不足，完成唔到轉移";
@@ -2668,41 +2719,11 @@
 /* An error indicating the user must update their device before trying to transfer. */
 "DEVICE_TRANSFER_ERROR_UNSUPPORTED_VERSION" = "請更新到最新版本嘅 Signal，然後再試一次";
 
-/* Button shown to expand a QR code and view it fullscreen. */
-"DEVICE_TRANSFER_EXPAND_QR_CODE_BUTTON" = "放大啲";
-
-/* The explanation on the action sheet prompting the user if they want to transfer their device. */
-"DEVICE_TRANSFER_PROMPT_EXPLANATION" = "將您嘅 Signal 帳戶轉移去一部新嘅 iOS 機度。請確定您部新機喺左近，並且開咗機。";
-
-/* The title on the acttion sheet prompting the user if they want to transfer their device. */
-"DEVICE_TRANSFER_PROMPT_TITLE" = "轉移帳戶";
-
-/* The explanation for the device transfer qr code view */
-"DEVICE_TRANSFER_QRCODE_EXPLANATION" = "將部舊機擺喺附近，確保部機開咗 Wi-Fi 同藍牙，然後用佢掃描呢個二維碼。";
-
-/* The second explanation for the device transfer qr code view */
-"DEVICE_TRANSFER_QRCODE_EXPLANATION2" = "拎起你另一部機，將個框框瞄準，嚟掃描呢個二維碼。";
-
-/* A prompt to provide further explanation if the user is not seeing the transfer on both devices. */
-"DEVICE_TRANSFER_QRCODE_NOT_SEEING" = "喺您部舊機度見唔到提示？";
-
-/* The title for the device transfer qr code view */
-"DEVICE_TRANSFER_QRCODE_TITLE" = "掃描二維碼";
-
 /* The explanation on the view that shows receiving progress */
 "DEVICE_TRANSFER_RECEIVING_EXPLANATION" = "將兩部機保持靠近。唔好熄機，並且開住 Signal。轉移係經端對端加密。";
 
 /* The title on the view that shows receiving progress */
 "DEVICE_TRANSFER_RECEIVING_TITLE" = "接收緊資料";
-
-/* Text indicating that we are connecting to the scanned device */
-"DEVICE_TRANSFER_SCANNING_CONNECTING" = "連緊線…";
-
-/* The explanation for the action sheet asking the user to scan the QR code to transfer */
-"DEVICE_TRANSFER_SCANNING_EXPLANATION" = "將個二維碼對準喺個圈入面";
-
-/* The title for the action sheet asking the user to scan the QR code to transfer */
-"DEVICE_TRANSFER_SCANNING_TITLE" = "將您部新機靠近鏡頭";
 
 /* Status message on new device when cancelling transfer. */
 "DEVICE_TRANSFER_STATUS_NEW_DEVICE_CANCELLING" = "取消緊同舊 iPhone 嘅連結……";
@@ -2714,7 +2735,7 @@
 "DEVICE_TRANSFER_STATUS_NEW_DEVICE_CONNECTING_MESSAGE" = "將部舊機擺喺附近，確保部機開咗 Wi-Fi 同藍牙。";
 
 /* Status message on new device when transfer is starting. */
-"DEVICE_TRANSFER_STATUS_NEW_DEVICE_STARTING" = "等緊連結去舊 iPhone……";
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_STARTING" = "等緊連結去舊裝置……";
 
 /* Description in the progress view displayed after failure of device transfer. */
 "DEVICE_TRANSFER_STATUS_NEW_DEVICE_TRANSFER_FAILED_BODY" = "轉移唔到去新機。將部舊機擺喺附近，然後請你再試多次。";
@@ -2738,13 +2759,10 @@
 "DEVICE_TRANSFER_STATUS_OLD_DEVICE_CONNECTING_MESSAGE" = "將部新機擺喺附近，確保部機開咗 Wi-Fi 同藍牙。";
 
 /* Status message on old device when transfer is starting. */
-"DEVICE_TRANSFER_STATUS_OLD_DEVICE_STARTING" = "等緊連結去新 iPhone……";
+"DEVICE_TRANSFER_STATUS_OLD_DEVICE_STARTING" = "等緊連結去新裝置……";
 
-/* The explanation on the action sheet that shows transfer progress */
-"DEVICE_TRANSFER_TRANSFERRING_EXPLANATION" = "將兩部機保持靠近。唔好熄機，並且開住 Signal。";
-
-/* The title on the action sheet that shows transfer progress */
-"DEVICE_TRANSFER_TRANSFERRING_TITLE" = "轉移緊資料";
+/* Action asking user to try again after transfer failure. */
+"DEVICE_TRANSFER_TRY_AGAIN_ACTION" = "再試一次";
 
 /* table cell label in conversation settings */
 "DISAPPEARING_MESSAGES" = "過眼雲煙訊息";
@@ -3192,6 +3210,9 @@
 
 /* Label for the currency picker button in donation views */
 "DONATIONS_CURRENCY_PICKER_LABEL" = "貨幣";
+
+/* Label for a button that says 'Don't show again'. */
+"DONT_SHOW_AGAIN_BUTTON_TITLE" = "唔使再彈出嚟提我喇";
 
 /* Message for Double Tap to Edit sheet show on first interaction */
 "DOUBLE_TAP_TO_EDIT_ALERT_MESSAGE" = "快㩒訊息兩下就可以編輯。你可以喺訊息送出之後 24 個鐘之內編輯。";
@@ -3856,6 +3877,12 @@
 /* Message indicating that 'announcement-only' mode was enabled by a remote user. Embeds {{ user who enabled 'announcement-only' mode }}. */
 "GROUP_IS_ANNOUNCEMENT_ONLY_ENABLED_BY_REMOTE_USER_FORMAT" = "%1$@ 已改咗個谷嘅設定，淨係俾話事人傳送訊息。";
 
+/* Message text for the 'group invite link' action sheet. */
+"GROUP_LINK_ACTION_SHEET_JOIN_MESSAGE" = "係咪要加入呢個群組，同埋同群組成員分享你嘅名同相呀？";
+
+/* Message text for the 'group invite link' action sheet, if the user will be requesting to join. */
+"GROUP_LINK_ACTION_SHEET_JOIN_MESSAGE_W_REQUEST" = "當你請求加入嗰陣，你個名同相就會分享俾呢個群組嘅成員。你嘅請求一定要經管理員批准。";
+
 /* Subtitle indicating that the local user has been blocked from joining the group */
 "GROUP_LINK_ACTION_SHEET_VIEW_BLOCKED_FROM_JOINING_SUBTITLE" = "你唔可以用群組連結加入呢個群組，因為管理員已經剷走咗你。請聯絡管理員叫佢加返你入群組。";
 
@@ -3874,14 +3901,8 @@
 /* Label indicating that the group info is being loaded in the 'group invite link' action sheet. */
 "GROUP_LINK_ACTION_SHEET_VIEW_LOADING_TITLE" = "載入緊…";
 
-/* Message text for the 'group invite link' action sheet. */
-"GROUP_LINK_ACTION_SHEET_VIEW_MESSAGE" = "係咪要加入呢個谷，並且向所有成員分享您嘅名同埋相？";
-
 /* Label for the 'request to join' button in the 'group invite link' action sheet. */
 "GROUP_LINK_ACTION_SHEET_VIEW_REQUEST_TO_JOIN_BUTTON" = "請求加入";
-
-/* Message text for the 'group invite link' action sheet, if the user will be requesting to join. */
-"GROUP_LINK_ACTION_SHEET_VIEW_REQUEST_TO_JOIN_MESSAGE" = "群組管理員要先批准咗你嘅請求，先可以俾你加入群組。當你要求加入嘅時候，系統會將你嘅名同埋相分享俾群組成員。";
 
 /* Error message the attempt to request to join the group failed due to network connectivity. */
 "GROUP_LINK_COULD_NOT_REQUEST_TO_JOIN_GROUP_DUE_TO_NETWORK_ERROR_MESSAGE" = "請檢查您係咪上到網，然後再試一次。";
@@ -4839,24 +4860,6 @@
 
 /* Shown to users while the app is loading, asking them not to close the app. */
 "LOADING_VIEW_CONTROLLER_DONT_CLOSE_APP" = "唔好閂 Signal。";
-
-/* Body for local network permission action sheet */
-"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_BODY" = "若要轉移您嘅 Signal 帳戶，兩部機上面都需要您啟用區域網絡存取。";
-
-/* A button asking the user if they need further help getting their transfer working. */
-"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_NEED_HELP" = "需要幫手？";
-
-/* First step for local network permission action sheet */
-"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_STEP_ONE" = "喺每部機上面，各自開啟「設定」";
-
-/* Third step for local network permission action sheet */
-"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_STEP_THREE" = "開啟「區域網絡」";
-
-/* Second step for local network permission action sheet */
-"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_STEP_TWO" = "碌落去 Signal 嗰行";
-
-/* Title for local network permission action sheet */
-"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_TITLE" = "開啟「區域網絡存取」";
 
 /* A string indicating that the user can search for a location */
 "LOCATION_PICKER_SEARCH_PLACEHOLDER" = "查名或者地址";
@@ -6404,9 +6407,6 @@
 "PHOTO_CAPTURE_GENERIC_ERROR" = "攝取唔到幅相。";
 
 /* alert title */
-"PHOTO_CAPTURE_UNABLE_TO_CAPTURE_IMAGE" = "攝取唔到幅相。";
-
-/* alert title */
 "PHOTO_CAPTURE_UNABLE_TO_INITIALIZE_CAMERA" = "設置唔到相機。";
 
 /* Button label for opening the chat on a sheet presented from photo capture view indicating that a username QR code was found. */
@@ -6417,9 +6417,6 @@
 
 /* Title for sheet presented from photo capture view indicating that a username QR code was found. Embeds {{username}}. */
 "PHOTO_CAPTURE_USERNAME_QR_CODE_FOUND_TITLE_FORMAT" = "搵到 %1$@";
-
-/* alert title, generic error preventing user from capturing a video that is too long */
-"PHOTO_CAPTURE_VIDEO_SIZE_ERROR" = "影片太長。";
 
 /* Pressing this button pins a thread */
 "PIN_ACTION" = "置頂";
@@ -6565,8 +6562,80 @@
 /* An explanation that you have already pinned the maximum number of conversations. */
 "PINNED_CONVERSATION_LIMIT" = "你最多只可以將 4 個聊天置頂。";
 
+/* Accessibility label prefix for banner showing a pinned message */
+"PINNED_MESSAGE_BANNER_AX_LABEL" = "置頂嘅訊息：";
+
+/* Shown when another user pins a message. Embeds {{ another user }}. */
+"PINNED_MESSAGE_CHAT_EVENT_OTHER" = "%1$@已經將訊息置頂";
+
+/* Shown when the local user pins a message. */
+"PINNED_MESSAGE_CHAT_EVENT_SELF" = "你已經將訊息置頂";
+
+/* Accessibility label for pin message button */
+"PINNED_MESSAGE_MENU_ACCESSIBILITY_LABEL" = "置頂訊息選單";
+
+/* Label for button to pin a message */
+"PINNED_MESSAGE_PIN_ACTION_TITLE" = "置頂";
+
+/* Message for an action sheet confirming the user wants to replace oldest pinned message. */
+"PINNED_MESSAGE_REPLACE_OLDEST_BODY" = "想置頂嘅訊息會取代最舊嘅訊息。";
+
+/* Option in pinned message action sheet to replace oldest pin. */
+"PINNED_MESSAGE_REPLACE_OLDEST_BUTTON" = "取代";
+
+/* Title for an action sheet confirming the user wants to replace oldest pinned message. */
+"PINNED_MESSAGE_REPLACE_OLDEST_TITLE" = "係咪取代最舊嘅置頂訊息？";
+
+/* Body for error sheet shown if the pinned message failed to send */
+"PINNED_MESSAGE_SEND_ERROR_SHEET_BODY" = "請檢查你嘅連線，然後再試多次。";
+
+/* Title for error sheet shown if the pinned message failed to send */
+"PINNED_MESSAGE_SEND_ERROR_SHEET_TITLE" = "訊息置頂唔到";
+
+/* Text to show on a toast when someone unpins a message */
+"PINNED_MESSAGE_TOAST" = "訊息已經取消置頂";
+
+/* Label for button to unpin a message */
+"PINNED_MESSAGE_UNPIN_ACTION_TITLE" = "唔使置頂";
+
+/* Option in pinned message action sheet to pin for 24 hours. */
+"PINNED_MESSAGES_24_HOURS" = "24 個鐘";
+
+/* Option in pinned message action sheet to pin for 30 days. */
+"PINNED_MESSAGES_30_DAYS" = "30 日";
+
+/* Option in pinned message action sheet to pin for 7 days. */
+"PINNED_MESSAGES_7_DAYS" = "7 日";
+
+/* Title for Pinned Messages detail view */
+"PINNED_MESSAGES_DETAILS_TITLE" = "置頂嘅訊息";
+
+/* Title for an action sheet to indicate how long to keep the pin active */
+"PINNED_MESSAGES_EXPIRY_SHEET_TITLE" = "置頂有效期……";
+
+/* Option in pinned message action sheet to pin with no expiry. */
+"PINNED_MESSAGES_FOREVER" = "永久";
+
+/* Action menu item to go to a message in the conversation view */
+"PINNED_MESSAGES_GO_TO_MESSAGE" = "跳去「訊息」";
+
+/* Action menu item to see all pinned messages */
+"PINNED_MESSAGES_SEE_ALL_MESSAGES" = "睇晒全部訊息";
+
+/* Action menu item to unpin a message */
+"PINNED_MESSAGES_UNPIN" = "唔使置頂";
+
+/* Title for a button to unpin all pinned messages. */
+"PINNED_MESSAGES_UNPIN_ALL" = "全部取消置頂";
+
 /* The title for pinned conversation section on the conversation list */
 "PINNED_SECTION_TITLE" = "置頂";
+
+/* Body for a sheet warning users they are pinning a disappearing message. */
+"PINNING_DISAPPEARING_MESSAGE_WARNING_BODY" = "當過眼雲煙訊息喺倒數完同埋喺聊天度剔走嗰陣，系統會將訊息取消置頂。";
+
+/* Title for a sheet warning users they are pinning a disappearing message. */
+"PINNING_DISAPPEARING_MESSAGE_WARNING_TITLE" = "將過眼雲煙訊息置頂";
 
 /* Action text for PIN megaphone when user doesn't have a PIN */
 "PINS_MEGAPHONE_ACTION" = "建立 PIN 碼";
@@ -6584,10 +6653,10 @@
 "PLAY_BUTTON_ACCESSABILITY_LABEL" = "播放多媒體";
 
 /* Accessibility label for poll message. Embeds {{ poll question }}. */
-"POLL_ACCESSIBILITY_LABEL" = "Poll: %1$@.";
+"POLL_ACCESSIBILITY_LABEL" = "投票：%1$@。";
 
 /* Accessibility label for a vote option that is not selected by the user. */
-"POLL_ACCESSIBILITY_LABEL_OPTION_PENDING" = "pending";
+"POLL_ACCESSIBILITY_LABEL_OPTION_PENDING" = "等緊處理";
 
 /* Title for a toggle allowing multiple votes for a poll. */
 "POLL_ALLOW_MULTIPLE_LABEL" = "欽准投多幾票";
@@ -6865,6 +6934,15 @@
 /* Title of alert shown when push tokens sync job succeeds. */
 "PUSH_REGISTER_SUCCESS" = "已經成功重新註冊推送通知。";
 
+/* Body for sheet with info about scanning a Quick Restore QR code */
+"QUICK_RESTORE_URL_OPENED_ACTION_SHEET_EXTERNAL_URL_ACTION_BODY" = "用呢部機掃描你想轉移去嗰部機上面嘅二維碼";
+
+/* Title for sheet with info about scanning a Quick Restore QR code */
+"QUICK_RESTORE_URL_OPENED_ACTION_SHEET_EXTERNAL_URL_ACTION_TITLE" = "掃描二維碼";
+
+/* Message for an action sheet telling users how to use quick restore, when trying to open an external quick restore URL. */
+"QUICK_RESTORE_URL_OPENED_ACTION_SHEET_EXTERNAL_URL_MESSAGE" = "要將呢個帳戶轉移去新裝置，請你㩒一下「繼續」，然後用 Signal 相機掃描二維碼。請確保你掃瞄嘅二維碼係直接喺 Signal 開嘅。";
+
 /* Accessibility label stating the author of the message to which you are replying. Embeds: {{ the author of the message to which you are replying }}. */
 "QUOTED_REPLY_ACCESSIBILITY_LABEL_FORMAT" = "回覆 %1$@。";
 
@@ -7099,12 +7177,6 @@
 /* Label for the country code field */
 "REGISTRATION_DEFAULT_COUNTRY_NAME" = "國碼";
 
-/* If a user is installing Signal on a new phone, they may be asked whether they want to transfer their account from their old device. This is a description on the screen that asks them this question. */
-"REGISTRATION_DEVICE_TRANSFER_CHOICE_EXPLANATION" = "如果繼續，將會喺其他用緊同一個電話冧把註冊嘅裝置上停用 Signal。";
-
-/* If a user is installing Signal on a new phone, they may be asked whether they want to transfer their account from their old device. This is the title on the screen that asks them this question. */
-"REGISTRATION_DEVICE_TRANSFER_CHOICE_TITLE" = "轉移帳戶同埋訊息";
-
 /* Description for the screen that allows users to enter their recovery key. */
 "REGISTRATION_ENTER_BACKUP_KEY_DESCRIPTION" = "你嘅恢復金鑰係一組 64 個字元嘅代碼，用嚟恢復帳戶同資料。";
 
@@ -7223,7 +7295,7 @@
 "REGISTRATION_SCAN_QR_CODE_FAILED_TITLE" = "還原唔到";
 
 /* Title for screen containing QR code that users scan with their old phone when they want to transfer/restore their message history to a new device. */
-"REGISTRATION_SCAN_QR_CODE_TITLE" = "用你部舊手機掃描呢個二維碼";
+"REGISTRATION_SCAN_QR_CODE_TITLE" = "用你部舊裝置掃描呢個二維碼";
 
 /* Tutorial text describing the first step to scanning the restore/transfer QR code with your old phone: opening Signal */
 "REGISTRATION_SCAN_QR_CODE_TUTORIAL_OPEN_SIGNAL" = "喺你部舊機度打開 Signal";
@@ -7505,7 +7577,7 @@
 "SCREEN_LOCK_UNLOCK_SIGNAL" = "解鎖 Signal";
 
 /* Placeholder text indicating the user can search for contacts by name, username, or phone number. */
-"SEARCH_BY_NAME_OR_USERNAME_OR_NUMBER_PLACEHOLDER_TEXT" = "名稱、用戶名稱或號碼";
+"SEARCH_BY_NAME_OR_USERNAME_OR_NUMBER_PLACEHOLDER_TEXT" = "名稱、用戶名稱或電話冧巴";
 
 /* Placeholder text indicating the user can search for contacts by name or phone number. */
 "SEARCH_BYNAMEORNUMBER_PLACEHOLDER_TEXT" = "搜尋姓名或號碼";
@@ -8743,6 +8815,12 @@
 /* The name for the sticker category 'Featured' */
 "STICKER_CATEGORY_FEATURED_NAME" = "精選";
 
+/* Subtitle of the helper text displayed when Recent stickers are empty. */
+"STICKER_CATEGORY_RECENTS_EMPTY_SUBTITLE" = "發張貼圖，貼圖就會喺呢度顯示";
+
+/* Title of the helper text displayed when Recent stickers are empty. */
+"STICKER_CATEGORY_RECENTS_EMPTY_TITLE" = "冇最近嘅貼圖";
+
 /* The name for the sticker category 'Recents' */
 "STICKER_CATEGORY_RECENTS_NAME" = "最近用過";
 
@@ -8898,21 +8976,6 @@
 
 /* Context menu action to share the selected story */
 "STORIES_SHARE_STORY_ACTION" = "分享";
-
-/* Section title shown when sending to non-story conversations but failing to send the file to stories. */
-"STORIES_SHARESHEET_PARTIAL_SEND_REMAINING_SECTION_TITLE" = "傳咗畀";
-
-/* Section title shown when failing to send an incompatible file to stories, but still sending to non-story conversations. */
-"STORIES_SHARESHEET_PARTIAL_SEND_STORIES_SECTION_TITLE" = "未發送俾";
-
-/* Title shown when failing to send an incompatible file to stories, but still sending to non-story conversations. */
-"STORIES_SHARESHEET_PARTIAL_SEND_TITLE" = "已部分傳送";
-
-/* Subtitle shown when failing to send an incompatible file to stories via the sharesheet. */
-"STORIES_SHARESHEET_UNABLE_TO_SEND_SEND_SUBTITLE" = "系統唔支援呢個檔案類型。";
-
-/* Title shown when failing to send an incompatible file to stories via the sharesheet. */
-"STORIES_SHARESHEET_UNABLE_TO_SEND_SEND_TITLE" = "發送失敗";
 
 /* Title for the stories view. */
 "STORIES_TITLE" = "榕樹台";
@@ -9205,35 +9268,23 @@
 /* Option in selected text edit menu to make text bold */
 "TEXT_MENU_BOLD" = "粗體";
 
-/* Option in selected text edit menu to clear all text formatting in the selected text range */
-"TEXT_MENU_CLEAR_FORMATTING" = "清除格式";
-
 /* Option in selected text edit menu to view text formatting options */
 "TEXT_MENU_FORMAT" = "格式化";
 
 /* Option in selected text edit menu to make text italic */
 "TEXT_MENU_ITALIC" = "斜體";
 
-/* Option in selected text edit menu to look up word definitions */
-"TEXT_MENU_LOOK_UP" = "搜尋";
-
 /* Option in selected text edit menu to make text monospace */
 "TEXT_MENU_MONOSPACE" = "等寬";
 
-/* Option in selected text edit menu to replace text with suggestions */
-"TEXT_MENU_REPLACE" = "取代";
-
-/* Option in selected text edit menu to share selected text */
-"TEXT_MENU_SHARE" = "分享";
+/* Option in selected text edit menu to remove all text formatting in the selected text range */
+"TEXT_MENU_REMOVE_FORMATTING" = "移除格式";
 
 /* Option in selected text edit menu to make text spoiler */
 "TEXT_MENU_SPOILER" = "劇透文字";
 
 /* Option in selected text edit menu to make text strikethrough */
 "TEXT_MENU_STRIKETHROUGH" = "刪除線";
-
-/* Option in selected text edit menu to translate the word */
-"TEXT_MENU_TRANSLATE" = "翻譯";
 
 /* text indicating the message was remotely deleted */
 "THIS_MESSAGE_WAS_DELETED" = "呢個訊息已被刪除。";

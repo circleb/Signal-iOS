@@ -85,7 +85,7 @@ class IdentityKeyMismatchManagerImpl: IdentityKeyMismatchManager {
         kvStore.setBool(
             true,
             key: Constants.hasRecordedSuspectedIssueKey,
-            transaction: tx
+            transaction: tx,
         )
     }
 
@@ -114,7 +114,7 @@ class IdentityKeyMismatchManagerImpl: IdentityKeyMismatchManager {
             return self.kvStore.getBool(
                 Constants.hasRecordedSuspectedIssueKey,
                 defaultValue: false,
-                transaction: tx
+                transaction: tx,
             )
         }
         guard hasSuspectedIssue else {
@@ -151,13 +151,9 @@ class IdentityKeyMismatchManagerImpl: IdentityKeyMismatchManager {
         let localIdentifier: ServiceId
         do {
             let loadLocalIdentifiers = { [db, tsAccountManager] () throws -> LocalIdentifiers in
-                let localIdentifiers = db.read { tx in
-                    return tsAccountManager.localIdentifiers(tx: tx)
+                return try db.read { tx in
+                    return try tsAccountManager.registeredState(tx: tx).localIdentifiers
                 }
-                guard let localIdentifiers else {
-                    throw OWSGenericError("not registered")
-                }
-                return localIdentifiers
             }
 
             switch identity {
@@ -182,7 +178,7 @@ class IdentityKeyMismatchManagerImpl: IdentityKeyMismatchManager {
     private func clearPniMessageDecryptionError(tx: DBWriteTransaction) {
         kvStore.removeValue(
             forKey: Constants.hasRecordedSuspectedIssueKey,
-            transaction: tx
+            transaction: tx,
         )
     }
 }
@@ -208,11 +204,11 @@ protocol _IdentityKeyMismatchManagerImpl_MessageProcessor_Shim {
 class _IdentityKeyMismatchManagerImpl_MessageProcessor_Wrapper: _IdentityKeyMismatchManagerImpl_MessageProcessor_Shim {
     private let messageProcessor: MessageProcessor
 
-    public init(_ messageProcessor: MessageProcessor) {
+    init(_ messageProcessor: MessageProcessor) {
         self.messageProcessor = messageProcessor
     }
 
-    public func waitForFetchingAndProcessing() async throws(CancellationError) {
+    func waitForFetchingAndProcessing() async throws(CancellationError) {
         try await messageProcessor.waitForFetchingAndProcessing()
     }
 }

@@ -16,7 +16,8 @@ extension BackupArchive {
         public enum ErrorType {
             /// Message types for which edit history is unexpected.
             public enum UnexpectedRevisionsMessageType {
-                case contactMessgae
+                case remoteDeletedMessage
+                case contactMessage
                 case stickerMessage
                 case updateMessage
                 case paymentNotification
@@ -223,8 +224,10 @@ extension BackupArchive {
             /// An ad hoc call has an invalid start timestamp.
             case invalidAdHocCallTimestamp
 
-            /// A message unexpectedly had edit history.
-            case unexpectedRevisionsOnMessage(UnexpectedRevisionsMessageType)
+            /// A message of an unexpected type had edit history.
+            case revisionsPresentOnUnexpectedMessage(UnexpectedRevisionsMessageType)
+            /// A message's edit history contained an unexpected type.
+            case revisionWasUnexpectedMessage(UnexpectedRevisionsMessageType)
 
             /// A poll terminate message was missing a question
             case pollEndMissingQuestion
@@ -255,6 +258,9 @@ extension BackupArchive {
 
             /// Author Aci for end poll message was invalid
             case endPollUpdateInvalidAuthorAci
+
+            /// A pin message chat update was missing all persistable data
+            case pinMessageChatUpdateMissingPersistableData
         }
 
         private let type: ErrorType
@@ -273,7 +279,7 @@ extension BackupArchive {
             _ id: AppIdType,
             file: StaticString = #file,
             function: StaticString = #function,
-            line: UInt = #line
+            line: UInt = #line,
         ) -> ArchiveFrameError {
             return ArchiveFrameError(type: type, id: id, file: file, function: function, line: line)
         }
@@ -304,82 +310,84 @@ extension BackupArchive {
                 // Collapse them by the raw error itself.
                 return "\(rawError)"
             case
-                    .referencedRecipientIdMissing,
-                    .referencedThreadIdMissing,
-                    .referencedCustomChatColorMissing,
-                    .contactThreadMissingAddress:
+                .referencedRecipientIdMissing,
+                .referencedThreadIdMissing,
+                .referencedCustomChatColorMissing,
+                .contactThreadMissingAddress:
                 // Collapse these by the id they refer to, which is in the "type".
                 return idLogString
             case .incomingMessageFromSelf, .nonSelfAuthorInNoteToSelf, .messageFromOtherRecipientInContactThread:
                 // Collapse these all together.
                 return id.typeLogString
             case
-                    .fileIOError,
-                    .groupMasterKeyError,
-                    .themedCustomChatColor,
-                    .unableToFetchRecipientIdentity,
-                    .distributionListMissingDistributionId,
-                    .unableToFetchDistributionListRecipients,
-                    .distributionListHasDefaultViewMode,
-                    .customDistributionListBlocklistViewMode,
-                    .distributionListMissingDeletionTimestamp,
-                    .distributionListInvalidTimestamp,
-                    .invalidInteractionDatabaseRow,
-                    .invalidIncomingMessageAuthor,
-                    .invalidOutgoingMessageRecipient,
-                    .invalidQuoteAuthor,
-                    .quoteTypeNormalMissingTextAndAttachments,
-                    .linkPreviewMissingUrl,
-                    .linkPreviewUrlNotInBody,
-                    .stickerMessageMissingStickerAttachment,
-                    .storyReplyAuthorMissingAci,
-                    .storyReplyEmptyContents,
-                    .storyReplyInGroupThread,
-                    .invalidReactionAddress,
-                    .invalidReactionTimestamp,
-                    .emptyGroupUpdate,
-                    .missingLocalProfile,
-                    .missingLocalProfileKey,
-                    .missingRequiredGroupMemberParams,
-                    .groupCallRecordHadInvalidCallStatus,
-                    .verificationStateUpdateInteractionMissingAuthor,
-                    .phoneNumberChangeInteractionMissingAuthor,
-                    .identityKeyChangeInteractionMissingAuthor,
-                    .decryptionErrorInteractionMissingAuthor,
-                    .paymentActivationRequestInteractionMissingAuthor,
-                    .paymentsActivatedInteractionMissingAuthor,
-                    .foundComplexChatUpdateTypeWhenExpectingSimple,
-                    .verificationStateChangeNotExpectedSDSRecordType,
-                    .unknownProtocolVersionNotExpectedSDSRecordType,
-                    .simpleChatUpdateMessageNotInContactThread,
-                    .paymentInfoFetchFailed,
-                    .missingPaymentInformation,
-                    .disappearingMessageConfigUpdateNotExpectedSDSRecordType,
-                    .disappearingMessageConfigUpdateMissingAuthor,
-                    .profileChangeUpdateMissingAuthor,
-                    .profileChangeUpdateMissingNames,
-                    .threadMergeUpdateMissingAuthor,
-                    .sessionSwitchoverUpdateMissingAuthor,
-                    .learnedProfileUpdateMissingPreviousName,
-                    .learnedProfileUpdateInvalidE164,
-                    .learnedProfileUpdateMissingAuthor,
-                    .editHistoryFailedToFetch,
-                    .unableToReadStoryContextAssociatedData,
-                    .unviewedViewOnceMessageMissingAttachment,
-                    .unviewedViewOnceMessageTooManyAttachments,
-                    .adHocCallDoesNotHaveCallLinkAsConversationId,
-                    .invalidAdHocCallTimestamp,
-                    .unexpectedRevisionsOnMessage,
-                    .pollMissing,
-                    .pollOptionIdMissing,
-                    .invalidPollRecordDatabaseRow,
-                    .invalidPollOptionRecordDatabaseRow,
-                    .invalidPollVoteRecordDatabaseRow,
-                    .pollMessageMissingQuestionBody,
-                    .pollVoteAuthorSignalRecipientIdMissing,
-                    .endPollUpdateInvalidAuthorAci,
-                    .pollEndMissingQuestion,
-                    .pollEndMissingPersistableData:
+                .fileIOError,
+                .groupMasterKeyError,
+                .themedCustomChatColor,
+                .unableToFetchRecipientIdentity,
+                .distributionListMissingDistributionId,
+                .unableToFetchDistributionListRecipients,
+                .distributionListHasDefaultViewMode,
+                .customDistributionListBlocklistViewMode,
+                .distributionListMissingDeletionTimestamp,
+                .distributionListInvalidTimestamp,
+                .invalidInteractionDatabaseRow,
+                .invalidIncomingMessageAuthor,
+                .invalidOutgoingMessageRecipient,
+                .invalidQuoteAuthor,
+                .quoteTypeNormalMissingTextAndAttachments,
+                .linkPreviewMissingUrl,
+                .linkPreviewUrlNotInBody,
+                .stickerMessageMissingStickerAttachment,
+                .storyReplyAuthorMissingAci,
+                .storyReplyEmptyContents,
+                .storyReplyInGroupThread,
+                .invalidReactionAddress,
+                .invalidReactionTimestamp,
+                .emptyGroupUpdate,
+                .missingLocalProfile,
+                .missingLocalProfileKey,
+                .missingRequiredGroupMemberParams,
+                .groupCallRecordHadInvalidCallStatus,
+                .verificationStateUpdateInteractionMissingAuthor,
+                .phoneNumberChangeInteractionMissingAuthor,
+                .identityKeyChangeInteractionMissingAuthor,
+                .decryptionErrorInteractionMissingAuthor,
+                .paymentActivationRequestInteractionMissingAuthor,
+                .paymentsActivatedInteractionMissingAuthor,
+                .foundComplexChatUpdateTypeWhenExpectingSimple,
+                .verificationStateChangeNotExpectedSDSRecordType,
+                .unknownProtocolVersionNotExpectedSDSRecordType,
+                .simpleChatUpdateMessageNotInContactThread,
+                .paymentInfoFetchFailed,
+                .missingPaymentInformation,
+                .disappearingMessageConfigUpdateNotExpectedSDSRecordType,
+                .disappearingMessageConfigUpdateMissingAuthor,
+                .profileChangeUpdateMissingAuthor,
+                .profileChangeUpdateMissingNames,
+                .threadMergeUpdateMissingAuthor,
+                .sessionSwitchoverUpdateMissingAuthor,
+                .learnedProfileUpdateMissingPreviousName,
+                .learnedProfileUpdateInvalidE164,
+                .learnedProfileUpdateMissingAuthor,
+                .editHistoryFailedToFetch,
+                .unableToReadStoryContextAssociatedData,
+                .unviewedViewOnceMessageMissingAttachment,
+                .unviewedViewOnceMessageTooManyAttachments,
+                .adHocCallDoesNotHaveCallLinkAsConversationId,
+                .invalidAdHocCallTimestamp,
+                .revisionsPresentOnUnexpectedMessage,
+                .revisionWasUnexpectedMessage,
+                .pollMissing,
+                .pollOptionIdMissing,
+                .invalidPollRecordDatabaseRow,
+                .invalidPollOptionRecordDatabaseRow,
+                .invalidPollVoteRecordDatabaseRow,
+                .pollMessageMissingQuestionBody,
+                .pollVoteAuthorSignalRecipientIdMissing,
+                .endPollUpdateInvalidAuthorAci,
+                .pollEndMissingQuestion,
+                .pollEndMissingPersistableData,
+                .pinMessageChatUpdateMissingPersistableData:
                 // Log any others as we see them.
                 return nil
             }
@@ -388,71 +396,73 @@ extension BackupArchive {
         public var logLevel: BackupArchive.LogLevel {
             switch type {
             case
-                    .protoSerializationError,
-                    .referencedRecipientIdMissing,
-                    .referencedThreadIdMissing,
-                    .referencedCustomChatColorMissing,
-                    .unableToFetchRecipientIdentity,
-                    .fileIOError,
-                    .groupMasterKeyError,
-                    .themedCustomChatColor,
-                    .distributionListMissingDistributionId,
-                    .unableToFetchDistributionListRecipients,
-                    .distributionListHasDefaultViewMode,
-                    .customDistributionListBlocklistViewMode,
-                    .distributionListMissingDeletionTimestamp,
-                    .distributionListInvalidTimestamp,
-                    .invalidIncomingMessageAuthor,
-                    .invalidOutgoingMessageRecipient,
-                    .invalidQuoteAuthor,
-                    .linkPreviewMissingUrl,
-                    .storyReplyAuthorMissingAci,
-                    .storyReplyEmptyContents,
-                    .storyReplyInGroupThread,
-                    .invalidReactionAddress,
-                    .invalidReactionTimestamp,
-                    .emptyGroupUpdate,
-                    .missingLocalProfile,
-                    .missingLocalProfileKey,
-                    .missingRequiredGroupMemberParams,
-                    .groupCallRecordHadInvalidCallStatus,
-                    .verificationStateUpdateInteractionMissingAuthor,
-                    .phoneNumberChangeInteractionMissingAuthor,
-                    .identityKeyChangeInteractionMissingAuthor,
-                    .decryptionErrorInteractionMissingAuthor,
-                    .paymentActivationRequestInteractionMissingAuthor,
-                    .paymentsActivatedInteractionMissingAuthor,
-                    .foundComplexChatUpdateTypeWhenExpectingSimple,
-                    .verificationStateChangeNotExpectedSDSRecordType,
-                    .unknownProtocolVersionNotExpectedSDSRecordType,
-                    .simpleChatUpdateMessageNotInContactThread,
-                    .paymentInfoFetchFailed,
-                    .missingPaymentInformation,
-                    .disappearingMessageConfigUpdateNotExpectedSDSRecordType,
-                    .disappearingMessageConfigUpdateMissingAuthor,
-                    .profileChangeUpdateMissingAuthor,
-                    .threadMergeUpdateMissingAuthor,
-                    .sessionSwitchoverUpdateMissingAuthor,
-                    .learnedProfileUpdateMissingPreviousName,
-                    .learnedProfileUpdateInvalidE164,
-                    .learnedProfileUpdateMissingAuthor,
-                    .editHistoryFailedToFetch,
-                    .unableToReadStoryContextAssociatedData,
-                    .unviewedViewOnceMessageMissingAttachment,
-                    .unviewedViewOnceMessageTooManyAttachments,
-                    .adHocCallDoesNotHaveCallLinkAsConversationId,
-                    .invalidAdHocCallTimestamp,
-                    .unexpectedRevisionsOnMessage,
-                    .pollMissing,
-                    .pollOptionIdMissing,
-                    .invalidPollRecordDatabaseRow,
-                    .invalidPollOptionRecordDatabaseRow,
-                    .invalidPollVoteRecordDatabaseRow,
-                    .pollMessageMissingQuestionBody,
-                    .pollVoteAuthorSignalRecipientIdMissing,
-                    .endPollUpdateInvalidAuthorAci,
-                    .pollEndMissingQuestion,
-                    .pollEndMissingPersistableData:
+                .protoSerializationError,
+                .referencedRecipientIdMissing,
+                .referencedThreadIdMissing,
+                .referencedCustomChatColorMissing,
+                .unableToFetchRecipientIdentity,
+                .fileIOError,
+                .groupMasterKeyError,
+                .themedCustomChatColor,
+                .distributionListMissingDistributionId,
+                .unableToFetchDistributionListRecipients,
+                .distributionListHasDefaultViewMode,
+                .customDistributionListBlocklistViewMode,
+                .distributionListMissingDeletionTimestamp,
+                .distributionListInvalidTimestamp,
+                .invalidIncomingMessageAuthor,
+                .invalidOutgoingMessageRecipient,
+                .invalidQuoteAuthor,
+                .linkPreviewMissingUrl,
+                .storyReplyAuthorMissingAci,
+                .storyReplyEmptyContents,
+                .storyReplyInGroupThread,
+                .invalidReactionAddress,
+                .invalidReactionTimestamp,
+                .emptyGroupUpdate,
+                .missingLocalProfile,
+                .missingLocalProfileKey,
+                .missingRequiredGroupMemberParams,
+                .groupCallRecordHadInvalidCallStatus,
+                .verificationStateUpdateInteractionMissingAuthor,
+                .phoneNumberChangeInteractionMissingAuthor,
+                .identityKeyChangeInteractionMissingAuthor,
+                .decryptionErrorInteractionMissingAuthor,
+                .paymentActivationRequestInteractionMissingAuthor,
+                .paymentsActivatedInteractionMissingAuthor,
+                .foundComplexChatUpdateTypeWhenExpectingSimple,
+                .verificationStateChangeNotExpectedSDSRecordType,
+                .unknownProtocolVersionNotExpectedSDSRecordType,
+                .simpleChatUpdateMessageNotInContactThread,
+                .paymentInfoFetchFailed,
+                .missingPaymentInformation,
+                .disappearingMessageConfigUpdateNotExpectedSDSRecordType,
+                .disappearingMessageConfigUpdateMissingAuthor,
+                .profileChangeUpdateMissingAuthor,
+                .threadMergeUpdateMissingAuthor,
+                .sessionSwitchoverUpdateMissingAuthor,
+                .learnedProfileUpdateMissingPreviousName,
+                .learnedProfileUpdateInvalidE164,
+                .learnedProfileUpdateMissingAuthor,
+                .editHistoryFailedToFetch,
+                .unableToReadStoryContextAssociatedData,
+                .unviewedViewOnceMessageMissingAttachment,
+                .unviewedViewOnceMessageTooManyAttachments,
+                .adHocCallDoesNotHaveCallLinkAsConversationId,
+                .invalidAdHocCallTimestamp,
+                .revisionsPresentOnUnexpectedMessage,
+                .revisionWasUnexpectedMessage,
+                .pollMissing,
+                .pollOptionIdMissing,
+                .invalidPollRecordDatabaseRow,
+                .invalidPollOptionRecordDatabaseRow,
+                .invalidPollVoteRecordDatabaseRow,
+                .pollMessageMissingQuestionBody,
+                .pollVoteAuthorSignalRecipientIdMissing,
+                .endPollUpdateInvalidAuthorAci,
+                .pollEndMissingQuestion,
+                .pollEndMissingPersistableData,
+                .pinMessageChatUpdateMissingPersistableData:
                 return .error
             case .invalidInteractionDatabaseRow:
                 // We've seen real world databases with interaction rows that
@@ -535,9 +545,6 @@ extension BackupArchive {
             /// Error iterating over all ad hoc calls for backup purposes.
             case adHocCallIteratorError(RawError)
 
-            case blockedRecipientFetchError(RawError)
-            case blockedGroupFetchError(RawError)
-
             case oversizedTextCacheFetchError(RawError)
 
             /// These should never happen; it means some invariant in the backup code
@@ -560,7 +567,7 @@ extension BackupArchive {
             _ type: ErrorType,
             _ file: StaticString = #file,
             _ function: StaticString = #function,
-            _ line: UInt = #line
+            _ line: UInt = #line,
         ) -> FatalArchivingError {
             return FatalArchivingError(type: type, file: file, function: function, line: line)
         }
@@ -834,6 +841,15 @@ extension BackupArchive {
 
                 /// We expect all authors to have an associated latest vote count, but there wasn't
                 case noPollVoteCountForAuthor
+
+                /// The pin message author had an invalid non-contact Address
+                case pinMessageAuthorNotContact
+
+                /// There were more pinned messages than allowed
+                case invalidNumberOfPinnedMessages
+
+                /// A timestamp to help identify a target message overflowed a local type
+                case sentTimestampOverflowedLocalType
             }
 
             /// The proto contained invalid or self-contradictory data, e.g an invalid ACI.
@@ -853,12 +869,8 @@ extension BackupArchive {
 
             case databaseInsertionFailed(RawError)
 
-            case failedToEnqueueAttachmentDownload(RawError)
-
             /// We failed to properly create the attachment in the DB after restoring
             case failedToCreateAttachment
-
-            case failedToSetBackupPlan(RawError)
 
             /// These should never happen; it means some invariant we could not
             /// enforce with the type system was broken. Nothing was wrong with
@@ -891,7 +903,7 @@ extension BackupArchive {
             _ id: ProtoIdType,
             file: StaticString = #file,
             function: StaticString = #function,
-            line: UInt = #line
+            line: UInt = #line,
         ) -> RestoreFrameError {
             return RestoreFrameError(type: type, id: id, file: file, function: function, line: line)
         }
@@ -913,91 +925,94 @@ extension BackupArchive {
             case .invalidProtoData(let invalidProtoDataError):
                 switch invalidProtoDataError {
                 case
-                        .missingBackupInfoHeader,
-                        .unsupportedBackupInfoVersion,
-                        .invalidMediaRootBackupKey,
-                        .accountDataNotFound,
-                        .recipientIdNotFound,
-                        .chatIdNotFound,
-                        .invalidBackupTier:
+                    .missingBackupInfoHeader,
+                    .unsupportedBackupInfoVersion,
+                    .invalidMediaRootBackupKey,
+                    .accountDataNotFound,
+                    .recipientIdNotFound,
+                    .chatIdNotFound,
+                    .invalidBackupTier:
                     // Collapse these by the id they refer to, which is in the "type".
                     return typeLogString
                 case .customChatColorNotFound(let id):
                     return id.idLogString
                 case
-                        .invalidAci,
-                        .invalidPni,
-                        .invalidServiceId,
-                        .invalidE164,
-                        .invalidProfileKey,
-                        .invalidContactIdentityKey,
-                        .invalidDistributionListMember,
-                        .contactWithoutIdentifiers,
-                        .otherContactWithLocalIdentifiers,
-                        .chatItemInvalidDateSent,
-                        .chatStyleGradientSingleOrNoColors,
-                        .directionlessChatItemNotUpdateMessage,
-                        .incomingMessageNotFromAciOrE164,
-                        .outgoingNonContactMessageRecipient,
-                        .reactionNotFromAciOrE164,
-                        .emptyStandardMessage,
-                        .directStoryReplyMessageEmpty,
-                        .directStoryReplyMessageEmptyWithLongText,
-                        .directStoryReplyFromNonAci,
-                        .directStoryReplyInGroupThread,
-                        .standardMessageWayTooOversizedBody,
-                        .longTextStandardMessageWithOversizeBody,
-                        .longTextStandardMessageMissingBody,
-                        .quotedMessageEmptyContent,
-                        .quotedMessageOversizeText,
-                        .linkPreviewEmptyUrl,
-                        .linkPreviewUrlNotInBody,
-                        .contactMessageMissingContactAttachment,
-                        .contactAttachmentPhoneNumberMissingValue,
-                        .contactAttachmentEmailMissingValue,
-                        .contactAttachmentEmptyAddress,
-                        .invalidGV2MasterKey,
-                        .missingGV2GroupSnapshot,
-                        .invitedGV2MemberMissingMemberDetails,
-                        .failedToBuildGV2GroupModel,
-                        .groupUpdateMessageInNonGroupChat,
-                        .emptyGroupUpdates,
-                        .sequenceOfRequestsAndCancelsWithLocalAci,
-                        .invalidLocalProfileKey,
-                        .invalidLocalUsernameLink,
-                        .individualCallNotInContactThread,
-                        .groupCallNotInGroupThread,
-                        .groupCallRecipientIdNotAnAci,
-                        .invalidDistributionListId,
-                        .customDistributionListPrivacyModeAllOrAllExcept,
-                        .invalidDistributionListDeletionTimestamp,
-                        .distributionListUsedAsChatRecipient,
-                        .verificationStateChangeNotFromContact,
-                        .phoneNumberChangeNotFromContact,
-                        .endSessionNotFromContact,
-                        .decryptionErrorNotFromContact,
-                        .paymentsActivationRequestNotFromAci,
-                        .paymentsActivatedNotFromAci,
-                        .paymentNotificationInGroup,
-                        .unsupportedProtocolVersionNotFromContact,
-                        .expirationTimerUpdateNotInContactThread,
-                        .expirationTimerOverflowedLocalType,
-                        .profileChangeUpdateNotFromContact,
-                        .threadMergeUpdateNotFromContact,
-                        .sessionSwitchoverUpdateNotFromContact,
-                        .learnedProfileUpdateNotFromContact,
-                        .revisionOfIncomingMessageMissingIncomingDetails,
-                        .revisionOfOutgoingMessageMissingOutgoingDetails,
-                        .invalidAttachmentClientUUID,
-                        .callLinkInvalidRootKey,
-                        .callLinkUsedAsChatRecipient,
-                        .recipientOfAdHocCallWasNotCallLink,
-                        .pollTerminateNotFromGroupChat,
-                        .pollTerminateAuthorNotContact,
-                        .pollQuestionEmpty,
-                        .pollVoteAuthorNotContact,
-                        .pollVoteCountRepeated,
-                        .noPollVoteCountForAuthor:
+                    .invalidAci,
+                    .invalidPni,
+                    .invalidServiceId,
+                    .invalidE164,
+                    .invalidProfileKey,
+                    .invalidContactIdentityKey,
+                    .invalidDistributionListMember,
+                    .contactWithoutIdentifiers,
+                    .otherContactWithLocalIdentifiers,
+                    .chatItemInvalidDateSent,
+                    .chatStyleGradientSingleOrNoColors,
+                    .directionlessChatItemNotUpdateMessage,
+                    .incomingMessageNotFromAciOrE164,
+                    .outgoingNonContactMessageRecipient,
+                    .reactionNotFromAciOrE164,
+                    .emptyStandardMessage,
+                    .directStoryReplyMessageEmpty,
+                    .directStoryReplyMessageEmptyWithLongText,
+                    .directStoryReplyFromNonAci,
+                    .directStoryReplyInGroupThread,
+                    .standardMessageWayTooOversizedBody,
+                    .longTextStandardMessageWithOversizeBody,
+                    .longTextStandardMessageMissingBody,
+                    .quotedMessageEmptyContent,
+                    .quotedMessageOversizeText,
+                    .linkPreviewEmptyUrl,
+                    .linkPreviewUrlNotInBody,
+                    .contactMessageMissingContactAttachment,
+                    .contactAttachmentPhoneNumberMissingValue,
+                    .contactAttachmentEmailMissingValue,
+                    .contactAttachmentEmptyAddress,
+                    .invalidGV2MasterKey,
+                    .missingGV2GroupSnapshot,
+                    .invitedGV2MemberMissingMemberDetails,
+                    .failedToBuildGV2GroupModel,
+                    .groupUpdateMessageInNonGroupChat,
+                    .emptyGroupUpdates,
+                    .sequenceOfRequestsAndCancelsWithLocalAci,
+                    .invalidLocalProfileKey,
+                    .invalidLocalUsernameLink,
+                    .individualCallNotInContactThread,
+                    .groupCallNotInGroupThread,
+                    .groupCallRecipientIdNotAnAci,
+                    .invalidDistributionListId,
+                    .customDistributionListPrivacyModeAllOrAllExcept,
+                    .invalidDistributionListDeletionTimestamp,
+                    .distributionListUsedAsChatRecipient,
+                    .verificationStateChangeNotFromContact,
+                    .phoneNumberChangeNotFromContact,
+                    .endSessionNotFromContact,
+                    .decryptionErrorNotFromContact,
+                    .paymentsActivationRequestNotFromAci,
+                    .paymentsActivatedNotFromAci,
+                    .paymentNotificationInGroup,
+                    .unsupportedProtocolVersionNotFromContact,
+                    .expirationTimerUpdateNotInContactThread,
+                    .expirationTimerOverflowedLocalType,
+                    .profileChangeUpdateNotFromContact,
+                    .threadMergeUpdateNotFromContact,
+                    .sessionSwitchoverUpdateNotFromContact,
+                    .learnedProfileUpdateNotFromContact,
+                    .revisionOfIncomingMessageMissingIncomingDetails,
+                    .revisionOfOutgoingMessageMissingOutgoingDetails,
+                    .invalidAttachmentClientUUID,
+                    .callLinkInvalidRootKey,
+                    .callLinkUsedAsChatRecipient,
+                    .recipientOfAdHocCallWasNotCallLink,
+                    .pollTerminateNotFromGroupChat,
+                    .pollTerminateAuthorNotContact,
+                    .pollQuestionEmpty,
+                    .pollVoteAuthorNotContact,
+                    .pollVoteCountRepeated,
+                    .noPollVoteCountForAuthor,
+                    .pinMessageAuthorNotContact,
+                    .invalidNumberOfPinnedMessages,
+                    .sentTimestampOverflowedLocalType:
                     // Collapse all others by the id of the containing frame.
                     return idLogString
                 }
@@ -1011,17 +1026,16 @@ extension BackupArchive {
                 // Collapse these by the relevant class.
                 return "\(modelClass)"
             case
-                .databaseInsertionFailed(let rawError),
-                .failedToEnqueueAttachmentDownload(let rawError):
+                .databaseInsertionFailed(let rawError):
                 // We don't want to re-log every instance of this we see if they repeat.
                 // Collapse them by the raw error itself.
                 return "\(rawError)"
-            case .failedToSetBackupPlan, .developerError:
+            case .developerError:
                 // Log each of these as we see them.
                 return nil
             case .pollCreateFailedToInsertInDatabase,
-                    .pollVoteFailedToInsertInDatabase,
-                    .pollTerminateFailedToInsertInDatabase:
+                 .pollVoteFailedToInsertInDatabase,
+                 .pollTerminateFailedToInsertInDatabase:
                 return typeLogString
             }
         }
@@ -1031,85 +1045,88 @@ extension BackupArchive {
             case .invalidProtoData(let invalidProtoDataError):
                 switch invalidProtoDataError {
                 case
-                        .missingBackupInfoHeader,
-                        .unsupportedBackupInfoVersion,
-                        .invalidMediaRootBackupKey,
-                        .accountDataNotFound,
-                        .recipientIdNotFound,
-                        .chatIdNotFound,
-                        .invalidAci,
-                        .invalidPni,
-                        .invalidServiceId,
-                        .invalidE164,
-                        .invalidProfileKey,
-                        .invalidContactIdentityKey,
-                        .invalidDistributionListMember,
-                        .invalidBackupTier,
-                        .contactWithoutIdentifiers,
-                        .otherContactWithLocalIdentifiers,
-                        .chatItemInvalidDateSent,
-                        .chatStyleGradientSingleOrNoColors,
-                        .customChatColorNotFound,
-                        .directionlessChatItemNotUpdateMessage,
-                        .incomingMessageNotFromAciOrE164,
-                        .outgoingNonContactMessageRecipient,
-                        .reactionNotFromAciOrE164,
-                        .emptyStandardMessage,
-                        .directStoryReplyMessageEmpty,
-                        .directStoryReplyMessageEmptyWithLongText,
-                        .directStoryReplyFromNonAci,
-                        .directStoryReplyInGroupThread,
-                        .standardMessageWayTooOversizedBody,
-                        .longTextStandardMessageWithOversizeBody,
-                        .longTextStandardMessageMissingBody,
-                        .quotedMessageOversizeText,
-                        .linkPreviewEmptyUrl,
-                        .contactMessageMissingContactAttachment,
-                        .contactAttachmentPhoneNumberMissingValue,
-                        .contactAttachmentEmailMissingValue,
-                        .contactAttachmentEmptyAddress,
-                        .invalidGV2MasterKey,
-                        .missingGV2GroupSnapshot,
-                        .invitedGV2MemberMissingMemberDetails,
-                        .failedToBuildGV2GroupModel,
-                        .groupUpdateMessageInNonGroupChat,
-                        .emptyGroupUpdates,
-                        .sequenceOfRequestsAndCancelsWithLocalAci,
-                        .invalidLocalProfileKey,
-                        .invalidLocalUsernameLink,
-                        .individualCallNotInContactThread,
-                        .groupCallNotInGroupThread,
-                        .groupCallRecipientIdNotAnAci,
-                        .invalidDistributionListId,
-                        .customDistributionListPrivacyModeAllOrAllExcept,
-                        .invalidDistributionListDeletionTimestamp,
-                        .distributionListUsedAsChatRecipient,
-                        .verificationStateChangeNotFromContact,
-                        .phoneNumberChangeNotFromContact,
-                        .endSessionNotFromContact,
-                        .decryptionErrorNotFromContact,
-                        .paymentsActivationRequestNotFromAci,
-                        .paymentsActivatedNotFromAci,
-                        .paymentNotificationInGroup,
-                        .unsupportedProtocolVersionNotFromContact,
-                        .expirationTimerUpdateNotInContactThread,
-                        .expirationTimerOverflowedLocalType,
-                        .profileChangeUpdateNotFromContact,
-                        .threadMergeUpdateNotFromContact,
-                        .sessionSwitchoverUpdateNotFromContact,
-                        .learnedProfileUpdateNotFromContact,
-                        .revisionOfIncomingMessageMissingIncomingDetails,
-                        .revisionOfOutgoingMessageMissingOutgoingDetails,
-                        .invalidAttachmentClientUUID,
-                        .callLinkInvalidRootKey,
-                        .callLinkUsedAsChatRecipient,
-                        .recipientOfAdHocCallWasNotCallLink,
-                        .pollTerminateNotFromGroupChat,
-                        .pollTerminateAuthorNotContact,
-                        .pollQuestionEmpty,
-                        .pollVoteAuthorNotContact,
-                        .pollVoteCountRepeated,
-                        .noPollVoteCountForAuthor:
+                    .missingBackupInfoHeader,
+                    .unsupportedBackupInfoVersion,
+                    .invalidMediaRootBackupKey,
+                    .accountDataNotFound,
+                    .recipientIdNotFound,
+                    .chatIdNotFound,
+                    .invalidAci,
+                    .invalidPni,
+                    .invalidServiceId,
+                    .invalidE164,
+                    .invalidProfileKey,
+                    .invalidContactIdentityKey,
+                    .invalidDistributionListMember,
+                    .invalidBackupTier,
+                    .contactWithoutIdentifiers,
+                    .otherContactWithLocalIdentifiers,
+                    .chatItemInvalidDateSent,
+                    .chatStyleGradientSingleOrNoColors,
+                    .customChatColorNotFound,
+                    .directionlessChatItemNotUpdateMessage,
+                    .incomingMessageNotFromAciOrE164,
+                    .outgoingNonContactMessageRecipient,
+                    .reactionNotFromAciOrE164,
+                    .emptyStandardMessage,
+                    .directStoryReplyMessageEmpty,
+                    .directStoryReplyMessageEmptyWithLongText,
+                    .directStoryReplyFromNonAci,
+                    .directStoryReplyInGroupThread,
+                    .standardMessageWayTooOversizedBody,
+                    .longTextStandardMessageWithOversizeBody,
+                    .longTextStandardMessageMissingBody,
+                    .quotedMessageOversizeText,
+                    .linkPreviewEmptyUrl,
+                    .contactMessageMissingContactAttachment,
+                    .contactAttachmentPhoneNumberMissingValue,
+                    .contactAttachmentEmailMissingValue,
+                    .contactAttachmentEmptyAddress,
+                    .invalidGV2MasterKey,
+                    .missingGV2GroupSnapshot,
+                    .invitedGV2MemberMissingMemberDetails,
+                    .failedToBuildGV2GroupModel,
+                    .groupUpdateMessageInNonGroupChat,
+                    .emptyGroupUpdates,
+                    .sequenceOfRequestsAndCancelsWithLocalAci,
+                    .invalidLocalProfileKey,
+                    .invalidLocalUsernameLink,
+                    .individualCallNotInContactThread,
+                    .groupCallNotInGroupThread,
+                    .groupCallRecipientIdNotAnAci,
+                    .invalidDistributionListId,
+                    .customDistributionListPrivacyModeAllOrAllExcept,
+                    .invalidDistributionListDeletionTimestamp,
+                    .distributionListUsedAsChatRecipient,
+                    .verificationStateChangeNotFromContact,
+                    .phoneNumberChangeNotFromContact,
+                    .endSessionNotFromContact,
+                    .decryptionErrorNotFromContact,
+                    .paymentsActivationRequestNotFromAci,
+                    .paymentsActivatedNotFromAci,
+                    .paymentNotificationInGroup,
+                    .unsupportedProtocolVersionNotFromContact,
+                    .expirationTimerUpdateNotInContactThread,
+                    .expirationTimerOverflowedLocalType,
+                    .profileChangeUpdateNotFromContact,
+                    .threadMergeUpdateNotFromContact,
+                    .sessionSwitchoverUpdateNotFromContact,
+                    .learnedProfileUpdateNotFromContact,
+                    .revisionOfIncomingMessageMissingIncomingDetails,
+                    .revisionOfOutgoingMessageMissingOutgoingDetails,
+                    .invalidAttachmentClientUUID,
+                    .callLinkInvalidRootKey,
+                    .callLinkUsedAsChatRecipient,
+                    .recipientOfAdHocCallWasNotCallLink,
+                    .pollTerminateNotFromGroupChat,
+                    .pollTerminateAuthorNotContact,
+                    .pollQuestionEmpty,
+                    .pollVoteAuthorNotContact,
+                    .pollVoteCountRepeated,
+                    .noPollVoteCountForAuthor,
+                    .pinMessageAuthorNotContact,
+                    .invalidNumberOfPinnedMessages,
+                    .sentTimestampOverflowedLocalType:
                     return .error
                 case .quotedMessageEmptyContent:
                     // It was historically possible to end up with a quote that
@@ -1125,18 +1142,16 @@ extension BackupArchive {
                     return .warning
                 }
             case
-                    .referencedChatThreadNotFound,
-                    .referencedGroupThreadNotFound,
-                    .failedToCreateAttachment,
-                    .referencedCustomChatColorNotFound,
-                    .databaseModelMissingRowId,
-                    .databaseInsertionFailed,
-                    .failedToSetBackupPlan,
-                    .failedToEnqueueAttachmentDownload,
-                    .developerError,
-                    .pollCreateFailedToInsertInDatabase,
-                    .pollVoteFailedToInsertInDatabase,
-                    .pollTerminateFailedToInsertInDatabase:
+                .referencedChatThreadNotFound,
+                .referencedGroupThreadNotFound,
+                .failedToCreateAttachment,
+                .referencedCustomChatColorNotFound,
+                .databaseModelMissingRowId,
+                .databaseInsertionFailed,
+                .developerError,
+                .pollCreateFailedToInsertInDatabase,
+                .pollVoteFailedToInsertInDatabase,
+                .pollTerminateFailedToInsertInDatabase:
                 return .error
             }
         }
@@ -1157,7 +1172,7 @@ extension BackupArchive {
 }
 
 extension BackupArchive {
-    internal protocol LoggableError {
+    protocol LoggableError {
         var typeLogString: String { get }
         var idLogString: String { get }
         var callsiteLogString: String { get }
@@ -1172,7 +1187,7 @@ extension BackupArchive {
         var logLevel: BackupArchive.LogLevel { get }
     }
 
-    internal struct LoggableErrorAndProto {
+    struct LoggableErrorAndProto {
         let error: any BackupArchive.LoggableError
         let wasFrameDropped: Bool
         /// Nil for archiving, if we fail to even parse the proto on restore,
@@ -1182,7 +1197,7 @@ extension BackupArchive {
         init(
             error: any BackupArchive.LoggableError,
             wasFrameDropped: Bool,
-            protoFrame: SwiftProtobuf.Message? = nil
+            protoFrame: SwiftProtobuf.Message? = nil,
         ) {
             self.error = error
             self.wasFrameDropped = wasFrameDropped
@@ -1193,11 +1208,11 @@ extension BackupArchive {
                         data: JSONSerialization.data(
                             withJSONObject: JSONSerialization.jsonObject(
                                 with: protoFrame.jsonUTF8Data(),
-                                options: .mutableContainers
+                                options: .mutableContainers,
                             ),
-                            options: .prettyPrinted
+                            options: .prettyPrinted,
                         ),
-                        encoding: .utf8
+                        encoding: .utf8,
                     )
                 } catch let jsonError {
                     self.protoJson = "Unable to json encode proto: \(jsonError)"
@@ -1208,7 +1223,7 @@ extension BackupArchive {
         }
     }
 
-    internal static func collapse(_ errors: [LoggableErrorAndProto]) -> [CollapsedErrorLog] {
+    static func collapse(_ errors: [LoggableErrorAndProto]) -> [CollapsedErrorLog] {
         var collapsedLogs = OrderedDictionary<String, CollapsedErrorLog>()
         for error in errors {
             let collapseKey = error.error.collapseKey ?? UUID().uuidString
@@ -1260,13 +1275,13 @@ extension BackupArchive {
             }
         }
 
-        internal func log() {
+        func log() {
             let logString =
-                (typeLogString) + " "
-                + "Dropped frame(s)? \(wasFrameDropped). "
-                + "Repeated \(errorCount) times. "
-                + "from: \(idLogStrings) "
-                + "example callsite: \(exampleCallsiteString)"
+                typeLogString + " "
+                    + "Dropped frame(s)? \(wasFrameDropped). "
+                    + "Repeated \(errorCount) times. "
+                    + "from: \(idLogStrings) "
+                    + "example callsite: \(exampleCallsiteString)"
             switch logLevel {
             case .warning:
                 logger.warn(logString)

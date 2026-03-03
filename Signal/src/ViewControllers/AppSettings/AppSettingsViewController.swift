@@ -35,6 +35,8 @@ class AppSettingsViewController: OWSTableViewController2 {
         navigationItem.rightBarButtonItem = .doneButton(dismissingFrom: self)
 
         defaultSeparatorInsetLeading = Self.cellHInnerMargin + 24 + OWSTableItem.iconSpacing
+
+        updateHasExpiredGiftBadge()
         updateTableContents()
 
         let tsAccountManager = DependenciesBridge.shared.tsAccountManager
@@ -49,17 +51,29 @@ class AppSettingsViewController: OWSTableViewController2 {
             self,
             selector: #selector(localProfileDidChange),
             name: UserProfileNotifications.localProfileDidChange,
-            object: nil
+            object: nil,
         )
 
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(localNumberDidChange),
             name: .localNumberDidChange,
-            object: nil
+            object: nil,
         )
 
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(subscriptionStateDidChange),
+            name: DonationReceiptCredentialRedemptionJob.didSucceedNotification,
+            object: nil,
+        )
 
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(hasExpiredGiftBadgeDidChange),
+            name: .hasExpiredGiftBadgeDidChangeNotification,
+            object: nil,
+        )
     }
 
     private func updateLocalUserProfile(tx: DBReadTransaction) {
@@ -83,7 +97,29 @@ class AppSettingsViewController: OWSTableViewController2 {
         updateTableContents()
     }
 
+    @objc
+    private func subscriptionStateDidChange() {
+        AssertIsOnMainThread()
 
+        updateTableContents()
+    }
+
+    private var hasExpiredGiftBadge: Bool = false
+
+    private func updateHasExpiredGiftBadge() {
+        self.hasExpiredGiftBadge = DonationSettingsViewController.shouldShowExpiredGiftBadgeSheetWithSneakyTransaction()
+    }
+
+    @objc
+    private func hasExpiredGiftBadgeDidChange() {
+        AssertIsOnMainThread()
+
+        let oldValue = self.hasExpiredGiftBadge
+        self.updateHasExpiredGiftBadge()
+        if oldValue != self.hasExpiredGiftBadge {
+            self.updateTableContents()
+        }
+    }
 
     override func themeDidChange() {
         super.themeDidChange()
@@ -96,11 +132,11 @@ class AppSettingsViewController: OWSTableViewController2 {
         let tsAccountManager = DependenciesBridge.shared.tsAccountManager
         let (
             isPrimaryDevice,
-            haveBackupsEverBeenEnabled
+            haveBackupsEverBeenEnabled,
         ): (Bool, Bool) = db.read { tx in
             return (
                 tsAccountManager.registrationState(tx: tx).isPrimaryDevice ?? false,
-                backupSettingsStore.haveBackupsEverBeenEnabled(tx: tx)
+                backupSettingsStore.haveBackupsEverBeenEnabled(tx: tx),
             )
         }
 
@@ -109,18 +145,18 @@ class AppSettingsViewController: OWSTableViewController2 {
         let profileSection = OWSTableSection(items: [
             OWSTableItem(
                 customCellBlock: { [weak self] in
-                    guard let self = self else { return UITableViewCell() }
+                    guard let self else { return UITableViewCell() }
                     return self.profileCell()
                 },
                 actionBlock: { [weak self] in
                     guard let self else { return }
                     let vc = ProfileSettingsViewController(
                         usernameChangeDelegate: self,
-                        usernameLinkScanDelegate: self
+                        usernameLinkScanDelegate: self,
                     )
                     self.navigationController?.pushViewController(vc, animated: true)
-                }
-            )
+                },
+            ),
         ])
         contents.add(profileSection)
 
@@ -131,7 +167,7 @@ class AppSettingsViewController: OWSTableViewController2 {
             actionBlock: { [weak self, appReadiness] in
                 let vc = AccountSettingsViewController(appReadiness: appReadiness)
                 self?.navigationController?.pushViewController(vc, animated: true)
-            }
+            },
         ))
         if isPrimaryDevice {
             section1.add(.disclosureItem(
@@ -140,12 +176,32 @@ class AppSettingsViewController: OWSTableViewController2 {
                 actionBlock: { [weak self] in
                     self?.navigationController?.pushViewController(
                         LinkedDevicesHostingController(),
-                        animated: true
+                        animated: true,
                     )
-                }
+                },
             ))
         }
-
+        section1.add(.init(customCellBlock: { [weak self] in
+            guard let self else { return UITableViewCell() }
+            let accessoryContentView: UIView?
+            if self.hasExpiredGiftBadge {
+                let imageView = UIImageView(image: UIImage(imageLiteralResourceName: "info-fill"))
+                imageView.tintColor = Theme.accentBlueColor
+                imageView.autoSetDimensions(to: CGSize(square: 24))
+                accessoryContentView = imageView
+            } else {
+                accessoryContentView = nil
+            }
+            return OWSTableItem.buildCell(
+                icon: .settingsDonate,
+                itemName: OWSLocalizedString("SETTINGS_DONATE", comment: "Title for the 'donate to signal' link in settings."),
+                accessoryType: .disclosureIndicator,
+                accessoryContentView: accessoryContentView,
+                accessibilityIdentifier: UIView.accessibilityIdentifier(in: self, name: "donate"),
+            )
+        }, actionBlock: { [weak self] in
+            self?.didTapDonate()
+        }))
         contents.add(section1)
 
         let section2 = OWSTableSection()
@@ -155,7 +211,7 @@ class AppSettingsViewController: OWSTableViewController2 {
             actionBlock: { [weak self] in
                 let vc = AppearanceSettingsTableViewController()
                 self?.navigationController?.pushViewController(vc, animated: true)
-            }
+            },
         ))
         section2.add(.disclosureItem(
             icon: .settingsChats,
@@ -163,18 +219,18 @@ class AppSettingsViewController: OWSTableViewController2 {
             actionBlock: { [weak self] in
                 let vc = ChatsSettingsViewController()
                 self?.navigationController?.pushViewController(vc, animated: true)
-            }
+            },
         ))
         section2.add(.disclosureItem(
             icon: .settingsStories,
             withText: OWSLocalizedString(
                 "STORY_SETTINGS_TITLE",
-                comment: "Label for the stories section of the settings view"
+                comment: "Label for the stories section of the settings view",
             ),
             actionBlock: { [weak self] in
                 let vc = StoryPrivacySettingsViewController()
                 self?.navigationController?.pushViewController(vc, animated: true)
-            }
+            },
         ))
         section2.add(.disclosureItem(
             icon: .settingsNotifications,
@@ -182,7 +238,7 @@ class AppSettingsViewController: OWSTableViewController2 {
             actionBlock: { [weak self] in
                 let vc = NotificationSettingsViewController()
                 self?.navigationController?.pushViewController(vc, animated: true)
-            }
+            },
         ))
         section2.add(.disclosureItem(
             icon: .settingsPrivacy,
@@ -190,7 +246,7 @@ class AppSettingsViewController: OWSTableViewController2 {
             actionBlock: { [weak self] in
                 let vc = PrivacySettingsViewController()
                 self?.navigationController?.pushViewController(vc, animated: true)
-            }
+            },
         ))
 
         let shouldShowBackupSettings: Bool = {
@@ -211,7 +267,7 @@ class AppSettingsViewController: OWSTableViewController2 {
                 icon: .backup,
                 withText: OWSLocalizedString(
                     "SETTINGS_BACKUPS",
-                    comment: "Label for the 'backups' section of app settings."
+                    comment: "Label for the 'backups' section of app settings.",
                 ),
                 addBetaLabel: true,
                 actionBlock: { [weak self] in
@@ -222,11 +278,11 @@ class AppSettingsViewController: OWSTableViewController2 {
 
                     navigationController.pushViewController(
                         BackupOnboardingCoordinator().prepareForPresentation(
-                            inNavController: navigationController
+                            inNavController: navigationController,
                         ),
-                        animated: true
+                        animated: true,
                     )
-                }
+                },
             ))
         }
         section2.add(.disclosureItem(
@@ -235,7 +291,7 @@ class AppSettingsViewController: OWSTableViewController2 {
             actionBlock: { [weak self] in
                 let vc = DataSettingsTableViewController()
                 self?.navigationController?.pushViewController(vc, animated: true)
-            }
+            },
         ))
         contents.add(section2)
 
@@ -249,16 +305,20 @@ class AppSettingsViewController: OWSTableViewController2 {
 
                     var subviews = [UIView]()
 
-                    let iconView = OWSTableItem.imageView(forIcon: .settingsPayments,
-                                                          tintColor: nil,
-                                                          iconSize: OWSTableItem.iconSize)
+                    let iconView = OWSTableItem.imageView(
+                        forIcon: .settingsPayments,
+                        tintColor: nil,
+                        iconSize: OWSTableItem.iconSize,
+                    )
                     iconView.setCompressionResistanceHorizontalHigh()
                     subviews.append(iconView)
                     subviews.append(UIView.spacer(withWidth: OWSTableItem.iconSpacing))
 
                     let nameLabel = UILabel()
-                    nameLabel.text = OWSLocalizedString("SETTINGS_PAYMENTS_TITLE",
-                                                       comment: "Label for the 'payments' section of the app settings.")
+                    nameLabel.text = OWSLocalizedString(
+                        "SETTINGS_PAYMENTS_TITLE",
+                        comment: "Label for the 'payments' section of the app settings.",
+                    )
                     nameLabel.textColor = Theme.primaryTextColor
                     nameLabel.font = OWSTableItem.primaryLabelFont
                     nameLabel.adjustsFontForContentSizeCategory = true
@@ -307,7 +367,7 @@ class AppSettingsViewController: OWSTableViewController2 {
                 actionBlock: { [weak self, appReadiness] in
                     let vc = PaymentsSettingsViewController(mode: .inAppSettings, appReadiness: appReadiness)
                     self?.navigationController?.pushViewController(vc, animated: true)
-                }
+                },
             ))
             contents.add(paymentsSection)
         }
@@ -319,9 +379,15 @@ class AppSettingsViewController: OWSTableViewController2 {
             actionBlock: { [weak self] in
                 let vc = HelpViewController()
                 self?.navigationController?.pushViewController(vc, animated: true)
-            }
+            },
         ))
-
+        section3.add(.item(
+            icon: .settingsInvite,
+            name: OWSLocalizedString("SETTINGS_INVITE_TITLE", comment: "Settings table view cell label"),
+            actionBlock: { [weak self] in
+                self?.showInviteFlow()
+            },
+        ))
         contents.add(section3)
 
         if DebugFlags.internalSettings {
@@ -332,7 +398,7 @@ class AppSettingsViewController: OWSTableViewController2 {
                 actionBlock: { [weak self] in
                     let vc = InternalSettingsViewController()
                     self?.navigationController?.pushViewController(vc, animated: true)
-                }
+                },
             ))
             contents.add(internalSection)
         }
@@ -340,7 +406,10 @@ class AppSettingsViewController: OWSTableViewController2 {
         self.contents = contents
     }
 
-
+    private func showInviteFlow() {
+        let inviteFlow = InviteFlow(presentingViewController: self)
+        inviteFlow.present(isAnimated: true, completion: nil)
+    }
 
     private func profileCell() -> UITableViewCell {
         let cell = OWSTableItem.newCell()
@@ -373,7 +442,7 @@ class AppSettingsViewController: OWSTableViewController2 {
     private func profileCellAvatarImageView() -> UIView {
         let avatarImageView = ConversationAvatarView(
             sizeClass: .customDiameter(72),
-            localUserDisplayMode: .asUser
+            localUserDisplayMode: .asUser,
         )
 
         if let localAddress = DependenciesBridge.shared.tsAccountManager.localIdentifiersWithMaybeSneakyTransaction?.aciAddress {
@@ -400,7 +469,7 @@ class AppSettingsViewController: OWSTableViewController2 {
         } else {
             nameLabel.text = OWSLocalizedString(
                 "APP_SETTINGS_EDIT_PROFILE_NAME_PROMPT",
-                comment: "Text prompting user to edit their profile name."
+                comment: "Text prompting user to edit their profile name.",
             )
             nameLabel.textColor = Theme.accentBlueColor
         }
@@ -408,7 +477,7 @@ class AppSettingsViewController: OWSTableViewController2 {
         @discardableResult
         func addSubtitleLabel(
             text: String,
-            textColor: UIColor
+            textColor: UIColor,
         ) -> UIView? {
             guard !text.isEmpty else { return nil }
 
@@ -429,7 +498,7 @@ class AppSettingsViewController: OWSTableViewController2 {
         if let phoneNumber = DependenciesBridge.shared.tsAccountManager.localIdentifiersWithMaybeSneakyTransaction?.phoneNumber {
             addSubtitleLabel(
                 text: PhoneNumber.bestEffortFormatPartialUserSpecifiedTextToLookLikeAPhoneNumber(phoneNumber),
-                textColor: Theme.primaryTextColor
+                textColor: Theme.primaryTextColor,
             )
         } else {
             owsFailDebug("Missing local number")
@@ -440,7 +509,7 @@ class AppSettingsViewController: OWSTableViewController2 {
             case let .available(username, _):
                 addSubtitleLabel(
                     text: username,
-                    textColor: Theme.primaryTextColor
+                    textColor: Theme.primaryTextColor,
                 )
             case .unset, .usernameAndLinkCorrupted, .linkCorrupted:
                 break
@@ -450,7 +519,7 @@ class AppSettingsViewController: OWSTableViewController2 {
         if let bioText = localUserProfile?.bioForDisplay {
             let bioLabel = addSubtitleLabel(
                 text: bioText,
-                textColor: Theme.secondaryTextAndIconColor
+                textColor: Theme.secondaryTextAndIconColor,
             )
             bioLabel?.layoutMargins.top = 8
         }
@@ -486,7 +555,7 @@ class AppSettingsViewController: OWSTableViewController2 {
                 username: localUsername,
                 usernameLink: localUsernameLink,
                 changeDelegate: self,
-                scanDelegate: self
+                scanDelegate: self,
             )
 
             let navController = OWSNavigationController(rootViewController: usernameLinkController)
@@ -507,7 +576,12 @@ class AppSettingsViewController: OWSTableViewController2 {
         return usernameLinkButton
     }
 
-
+    private func didTapDonate() {
+        navigationController?.pushViewController(
+            DonationSettingsViewController(),
+            animated: true,
+        )
+    }
 }
 
 extension AppSettingsViewController: UsernameChangeDelegate {
@@ -525,17 +599,20 @@ extension AppSettingsViewController: UsernameLinkScanDelegate {
         }
 
         presentingViewController.dismiss(animated: true) {
-            SSKEnvironment.shared.databaseStorageRef.read { tx in
-                UsernameQuerier().queryForUsernameLink(
-                    link: usernameLink,
-                    fromViewController: presentingViewController,
-                    tx: tx
-                ) { _, aci in
-                    SignalApp.shared.presentConversationForAddress(
-                        SignalServiceAddress(aci),
-                        animated: true
+            Task {
+                guard
+                    let (_, aci) = await UsernameQuerier().queryForUsernameLink(
+                        link: usernameLink,
+                        fromViewController: presentingViewController,
                     )
+                else {
+                    return
                 }
+
+                SignalApp.shared.presentConversationForAddress(
+                    SignalServiceAddress(aci),
+                    animated: true,
+                )
             }
         }
     }

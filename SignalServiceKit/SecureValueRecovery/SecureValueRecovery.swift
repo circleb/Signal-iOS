@@ -106,13 +106,6 @@ public enum SVR {
             }
         }
     }
-
-    public enum ApplyDerivedKeyResult {
-        case success(Data)
-        case masterKeyMissing
-        //  Error encrypting or decrypting
-        case cryptographyError(Error)
-    }
 }
 
 public protocol SecureValueRecovery {
@@ -148,13 +141,13 @@ public protocol SecureValueRecovery {
     func storeKeys(
         fromKeysSyncMessage syncMessage: SSKProtoSyncMessageKeys,
         authedDevice: AuthedDevice,
-        tx: DBWriteTransaction
+        tx: DBWriteTransaction,
     ) throws(SVR.KeysError)
 
     func storeKeys(
         fromProvisioningMessage provisioningMessage: LinkingProvisioningMessage,
         authedDevice: AuthedDevice,
-        tx: DBWriteTransaction
+        tx: DBWriteTransaction,
     ) throws(SVR.KeysError)
 
     func handleMasterKeyUpdated(

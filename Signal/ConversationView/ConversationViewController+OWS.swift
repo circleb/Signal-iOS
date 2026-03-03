@@ -45,7 +45,7 @@ extension ConversationViewController {
                 self.threadViewModel.associatedData.updateWith(
                     isMarkedUnread: false,
                     updateStorageService: true,
-                    transaction: transaction
+                    transaction: transaction,
                 )
             }
         }
@@ -74,7 +74,7 @@ extension ConversationViewController {
         updateContentInsetsEvent.requestNotify()
     }
 
-    internal func updateContentInsets() {
+    func updateContentInsets() {
         AssertIsOnMainThread()
 
         // Don't update the content insets if an interactive pop is in progress
@@ -153,18 +153,24 @@ extension ConversationViewController {
     public func showUnknownThreadWarningAlert() {
         // TODO: Finalize this copy.
         let message = (thread.isGroupThread
-                        ? OWSLocalizedString("ALERT_UNKNOWN_THREAD_WARNING_GROUP_MESSAGE",
-                                            comment: "Message for UI warning about an unknown group thread.")
-                        : OWSLocalizedString("ALERT_UNKNOWN_THREAD_WARNING_CONTACT_MESSAGE",
-                                            comment: "Message for UI warning about an unknown contact thread."))
+            ? OWSLocalizedString(
+                "ALERT_UNKNOWN_THREAD_WARNING_GROUP_MESSAGE",
+                comment: "Message for UI warning about an unknown group thread.",
+            )
+            : OWSLocalizedString(
+                "ALERT_UNKNOWN_THREAD_WARNING_CONTACT_MESSAGE",
+                comment: "Message for UI warning about an unknown contact thread.",
+            ))
         let actionSheet = ActionSheetController(message: message)
         actionSheet.addAction(ActionSheetAction(
-            title: OWSLocalizedString("ALERT_UNKNOWN_THREAD_WARNING_LEARN_MORE",
-                                     comment: "Label for button to learn more about message requests."),
+            title: OWSLocalizedString(
+                "ALERT_UNKNOWN_THREAD_WARNING_LEARN_MORE",
+                comment: "Label for button to learn more about message requests.",
+            ),
             style: .default,
             handler: { _ in
                 CurrentAppContext().open(URL.Support.profilesAndMessageRequests, completion: nil)
-            }
+            },
         ))
         actionSheet.addAction(OWSActionSheets.cancelAction)
         presentActionSheet(actionSheet)
@@ -196,16 +202,17 @@ extension ConversationViewController {
 
         let actionSheet = ActionSheetController(
             title: alertTitle,
-            message: alertMessage)
+            message: alertMessage,
+        )
         actionSheet.customHeader = headerView
         actionSheet.addAction(OWSActionSheets.okayAction)
         actionSheet.addAction(
             ActionSheetAction(
                 title: CommonStrings.learnMore,
-                style: .default
+                style: .default,
             ) { _ in
                 CurrentAppContext().open(URL.Support.deliveryIssue, completion: nil)
-            }
+            },
         )
         presentActionSheet(actionSheet)
     }
@@ -223,9 +230,11 @@ extension ConversationViewController: ForwardMessageDelegate {
         self.uiMode = .normal
 
         self.dismiss(animated: true) {
-            ForwardMessageViewController.finalizeForward(items: items,
-                                                         recipientThreads: recipientThreads,
-                                                         fromViewController: self)
+            ForwardMessageViewController.finalizeForward(
+                items: items,
+                recipientThreads: recipientThreads,
+                fromViewController: self,
+            )
         }
     }
 
@@ -390,35 +399,26 @@ extension ConversationViewController: MediaPresentationContextProvider {
             mediaView: mediaView,
             presentationFrame: presentationFrame,
             mediaViewShape: mediaViewShape,
-            clippingAreaInsets: collectionView.adjustedContentInset
+            clippingAreaInsets: collectionView.adjustedContentInset,
         )
-    }
-
-    func snapshotOverlayView(in coordinateSpace: UICoordinateSpace) -> (UIView, CGRect)? {
-        return nil
     }
 
     func mediaWillDismiss(toContext: MediaPresentationContext) {
         // To avoid flicker when transition view is animated over the message bubble,
         // we initially hide the overlaying elements and fade them in.
-        let mediaOverlayViews = toContext.mediaOverlayViews
-        for mediaOverlayView in mediaOverlayViews {
-            mediaOverlayView.alpha = 0
-        }
+        toContext.mediaOverlayViews.forEach { $0.alpha = 0 }
     }
 
     func mediaDidDismiss(toContext: MediaPresentationContext) {
         // To avoid flicker when transition view is animated over the message bubble,
         // we initially hide the overlaying elements and fade them in.
         let mediaOverlayViews = toContext.mediaOverlayViews
-        let duration: TimeInterval = kIsDebuggingMediaPresentationAnimations ? 1.5 : 0.2
         UIView.animate(
-            withDuration: duration,
+            withDuration: MediaPresentationContext.animationDuration,
             animations: {
-                for mediaOverlayView in mediaOverlayViews {
-                    mediaOverlayView.alpha = 1
-                }
-            })
+                mediaOverlayViews.forEach { $0.alpha = 1 }
+            },
+        )
     }
 }
 
@@ -433,8 +433,10 @@ public extension ConversationViewController {
         guard groupThread.isGroupV2Thread else {
             return
         }
-        let view = GroupLinkPromotionActionSheet(groupThread: groupThread,
-                                                 conversationViewController: self)
+        let view = GroupLinkPromotionActionSheet(
+            groupThread: groupThread,
+            conversationViewController: self,
+        )
         view.present(fromViewController: self)
     }
 }
@@ -477,13 +479,15 @@ extension ConversationViewController: LongTextViewDelegate {
         }
         if displayableBodyText.canRenderTruncatedTextInline {
             self.setTextExpanded(interactionId: itemViewModel.interaction.uniqueId)
-            self.loadCoordinator.enqueueReload(updatedInteractionIds: [itemViewModel.interaction.uniqueId],
-                                               deletedInteractionIds: [])
+            self.loadCoordinator.enqueueReload(
+                updatedInteractionIds: [itemViewModel.interaction.uniqueId],
+                deletedInteractionIds: [],
+            )
         } else {
             let viewController = LongTextViewController(
                 itemViewModel: itemViewModel,
                 threadViewModel: self.threadViewModel,
-                spoilerState: self.viewState.spoilerState
+                spoilerState: self.viewState.spoilerState,
             )
             viewController.delegate = self
             navigationController?.pushViewController(viewController, animated: true)

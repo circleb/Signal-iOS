@@ -26,6 +26,7 @@ public class RegistrationCoordinatorTest {
     private var experienceManager: RegistrationCoordinatorImpl.TestMocks.ExperienceManager!
     private var accountKeyStore: AccountKeyStore!
     private var localUsernameManagerMock: MockLocalUsernameManager!
+    private var mockIdentityManager: OWSIdentityManager!
     private var mockMessagePipelineSupervisor: RegistrationCoordinatorImpl.TestMocks.MessagePipelineSupervisor!
     private var mockMessageProcessor: RegistrationCoordinatorImpl.TestMocks.MessageProcessor!
     private var mockURLSession: TSRequestOWSURLSessionMock!
@@ -35,6 +36,7 @@ public class RegistrationCoordinatorTest {
     private var preKeyManagerMock: RegistrationCoordinatorImpl.TestMocks.PreKeyManager!
     private var profileManagerMock: RegistrationCoordinatorImpl.TestMocks.ProfileManager!
     private var pushRegistrationManagerMock: RegistrationCoordinatorImpl.TestMocks.PushRegistrationManager!
+    private var quickRestoreManager: QuickRestoreManager!
     private var receiptManagerMock: RegistrationCoordinatorImpl.TestMocks.ReceiptManager!
     private var registrationCoordinatorLoader: RegistrationCoordinatorLoaderImpl!
     private var registrationStateChangeManagerMock: MockRegistrationStateChangeManager!
@@ -54,6 +56,7 @@ public class RegistrationCoordinatorTest {
             recordedSteps.append(step)
         }
     }
+
     private var testRun = RegistrationTestRun()
 
     init() {
@@ -64,7 +67,7 @@ public class RegistrationCoordinatorTest {
         accountKeyStore = AccountKeyStore(backupSettingsStore: BackupSettingsStore())
         let preKeyStore = PreKeyStore()
         changeNumberPniManager = ChangePhoneNumberPniManagerMock(
-            mockKyberStore: KyberPreKeyStoreImpl(for: .pni, dateProvider: dateProvider, preKeyStore: preKeyStore)
+            mockKyberStore: KyberPreKeyStoreImpl(for: .pni, dateProvider: dateProvider, preKeyStore: preKeyStore),
         )
         contactsStore = RegistrationCoordinatorImpl.TestMocks.ContactsStore()
         experienceManager = RegistrationCoordinatorImpl.TestMocks.ExperienceManager()
@@ -95,6 +98,28 @@ public class RegistrationCoordinatorTest {
         usernameApiClientMock = RegistrationCoordinatorImpl.TestMocks.UsernameApiClient()
         usernameLinkManagerMock = MockUsernameLinkManager()
 
+        let recipientDbTable = RecipientDatabaseTable()
+        let recipientFetcher = RecipientFetcher(
+            recipientDatabaseTable: recipientDbTable,
+            searchableNameIndexer: MockSearchableNameIndexer(),
+        )
+        let recipientIdFinder = RecipientIdFinder(
+            recipientDatabaseTable: recipientDbTable,
+            recipientFetcher: recipientFetcher,
+        )
+        mockIdentityManager = MockIdentityManager(recipientIdFinder: recipientIdFinder)
+
+        quickRestoreManager = QuickRestoreManager(
+            accountKeyStore: accountKeyStore,
+            backupNonceStore: BackupNonceMetadataStore(),
+            backupSettingsStore: BackupSettingsStore(),
+            db: db,
+            deviceProvisioningService: DeviceProvisioningServiceImpl(networkManager: networkManagerMock),
+            identityManager: mockIdentityManager,
+            networkManager: networkManagerMock,
+            tsAccountManager: tsAccountManagerMock,
+        )
+
         let mockURLSession = TSRequestOWSURLSessionMock()
         self.mockURLSession = mockURLSession
         let mockSignalService = OWSSignalServiceMock()
@@ -115,7 +140,7 @@ public class RegistrationCoordinatorTest {
             contactsStore: contactsStore,
             dateProvider: { self.dateProvider() },
             db: db,
-            deviceTransferService: RegistrationCoordinatorImpl.TestMocks.DeviceTransferService(),
+            deviceTransferService: DeviceTransferServiceMock(),
             experienceManager: experienceManager,
             identityManager: RegistrationCoordinatorImpl.TestMocks.IdentityManager(),
             localUsernameManager: localUsernameManagerMock,
@@ -127,7 +152,7 @@ public class RegistrationCoordinatorTest {
             preKeyManager: preKeyManagerMock,
             profileManager: profileManagerMock,
             pushRegistrationManager: pushRegistrationManagerMock,
-            quickRestoreManager: RegistrationCoordinatorImpl.TestMocks.QuickRestoreManager(),
+            quickRestoreManager: quickRestoreManager,
             receiptManager: receiptManagerMock,
             registrationBackupErrorPresenter: RegistrationCoordinatorBackupErrorPresenterMock(),
             registrationStateChangeManager: registrationStateChangeManagerMock,
@@ -142,7 +167,7 @@ public class RegistrationCoordinatorTest {
             tsAccountManager: tsAccountManagerMock,
             udManager: RegistrationCoordinatorImpl.TestMocks.UDManager(),
             usernameApiClient: usernameApiClientMock,
-            usernameLinkManager: usernameLinkManagerMock
+            usernameLinkManager: usernameLinkManagerMock,
         )
         registrationCoordinatorLoader = RegistrationCoordinatorLoaderImpl(dependencies: dependencies)
     }
@@ -163,14 +188,14 @@ public class RegistrationCoordinatorTest {
         static var testCases: [(old: Self, new: Self)] {
             return [
                 (.masterKey, .accountEntropyPool),
-                (.accountEntropyPool, .accountEntropyPool)
+                (.accountEntropyPool, .accountEntropyPool),
             ]
         }
     }
 
     static let testModes: [RegistrationMode] = [
         RegistrationMode.registering,
-        RegistrationMode.reRegistering(.init(e164: Stubs.e164, aci: Stubs.aci))
+        RegistrationMode.reRegistering(.init(e164: Stubs.e164, aci: Stubs.aci)),
     ]
 
     typealias TestCase = (mode: RegistrationMode, oldKey: KeyType, newKey: KeyType)
@@ -197,7 +222,7 @@ public class RegistrationCoordinatorTest {
         return db.write {
             return registrationCoordinatorLoader.coordinator(
                 forDesiredMode: testCase.mode,
-                transaction: $0
+                transaction: $0,
             ) as! RegistrationCoordinatorImpl
         }
     }
@@ -348,7 +373,7 @@ public class RegistrationCoordinatorTest {
                 return request.url == expectedRequest.url
             },
             statusCode: 200,
-            bodyData: try JSONEncoder().encode(identityResponse)
+            bodyData: try JSONEncoder().encode(identityResponse),
         ))
 
         func expectedAuthedAccount() -> AuthedAccount {
@@ -357,7 +382,7 @@ public class RegistrationCoordinatorTest {
                 pni: identityResponse.pni,
                 e164: Stubs.e164,
                 deviceId: .primary,
-                authPassword: authPassword
+                authPassword: authPassword,
             )
         }
 
@@ -411,7 +436,7 @@ public class RegistrationCoordinatorTest {
             #expect(chatServiceAuth == .explicit(
                 aci: identityResponse.aci,
                 deviceId: .primary,
-                password: authPassword
+                password: authPassword,
             ))
             return .success(usernameLinkHandle: mockUsernameLink.handle)
         }]
@@ -420,7 +445,7 @@ public class RegistrationCoordinatorTest {
         // we will sync account attributes and then we are finished!
         let expectedAttributesRequest = RegistrationRequestFactory.updatePrimaryDeviceAccountAttributesRequest(
             Stubs.accountAttributes(finalMasterKey),
-            auth: .implicit() // doesn't matter for url matching
+            auth: .implicit(), // doesn't matter for url matching
         )
         networkManagerMock.asyncRequestHandlers.append({ request, _ in
             if request.url == expectedAttributesRequest.url {
@@ -436,7 +461,7 @@ public class RegistrationCoordinatorTest {
         // We haven't set a phone number so it should ask for that.
         #expect(
             await coordinator.nextStep() ==
-                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode)),
         )
 
         // Give it a phone number, which should show the PIN entry step.
@@ -495,7 +520,7 @@ public class RegistrationCoordinatorTest {
                 return request.url == expectedRequest.url
             },
             statusCode: 200,
-            bodyData: try JSONEncoder().encode(identityResponse)
+            bodyData: try JSONEncoder().encode(identityResponse),
         ))
 
         func expectedAuthedAccount() -> AuthedAccount {
@@ -504,7 +529,7 @@ public class RegistrationCoordinatorTest {
                 pni: identityResponse.pni,
                 e164: Stubs.e164,
                 deviceId: .primary,
-                authPassword: authPassword
+                authPassword: authPassword,
             )
         }
 
@@ -548,7 +573,7 @@ public class RegistrationCoordinatorTest {
         // we will sync account attributes and then we are finished!
         let expectedAttributesRequest = RegistrationRequestFactory.updatePrimaryDeviceAccountAttributesRequest(
             Stubs.accountAttributes(finalMasterKey),
-            auth: .implicit() // // doesn't matter for url matching
+            auth: .implicit(), // // doesn't matter for url matching
         )
         networkManagerMock.asyncRequestHandlers.append({ request, _ in
             if request.url == expectedAttributesRequest.url {
@@ -561,7 +586,7 @@ public class RegistrationCoordinatorTest {
         // We haven't set a phone number so it should ask for that.
         #expect(
             await coordinator.nextStep() ==
-                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode)),
         )
 
         // Give it a phone number, which should show the PIN entry step.
@@ -569,7 +594,7 @@ public class RegistrationCoordinatorTest {
         // Now it should ask for the PIN to confirm the user knows it.
         #expect(
             await coordinator.submitE164(Stubs.e164).awaitable() ==
-                .pinEntry(Stubs.pinEntryStateForRegRecoveryPath(mode: mode))
+                .pinEntry(Stubs.pinEntryStateForRegRecoveryPath(mode: mode)),
         )
 
         // Give it the wrong PIN, it should reject and give us the same step again.
@@ -578,8 +603,8 @@ public class RegistrationCoordinatorTest {
                 .pinEntry(Stubs.pinEntryStateForRegRecoveryPath(
                     mode: mode,
                     error: .wrongPin(wrongPin: wrongPinCode),
-                    remainingAttempts: 9
-                ))
+                    remainingAttempts: 9,
+                )),
         )
 
         #expect(await coordinator.submitPINCode(Stubs.pinCode).awaitable() == .done)
@@ -633,7 +658,7 @@ public class RegistrationCoordinatorTest {
         let expectedRecoveryPwRequest = createAccountWithRecoveryPw(masterKey)
         let failResponse = TSRequestOWSURLSessionMock.Response(
             urlSuffix: expectedRecoveryPwRequest.url.absoluteString,
-            statusCode: RegistrationServiceResponses.AccountCreationResponseCodes.unauthorized.rawValue
+            statusCode: RegistrationServiceResponses.AccountCreationResponseCodes.unauthorized.rawValue,
         )
         mockURLSession.addResponse(failResponse)
 
@@ -654,14 +679,14 @@ public class RegistrationCoordinatorTest {
         // We haven't set a phone number so it should ask for that.
         #expect(
             await coordinator.nextStep() ==
-                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode)),
         )
 
         // Give it a phone number, which should show the PIN entry step.
         // Now it should ask for the PIN to confirm the user knows it.
         #expect(
             await coordinator.submitE164(Stubs.e164).awaitable() ==
-                .pinEntry(Stubs.pinEntryStateForRegRecoveryPath(mode: mode))
+                .pinEntry(Stubs.pinEntryStateForRegRecoveryPath(mode: mode)),
         )
 
         // Check we have the master key now, to be safe.
@@ -673,8 +698,8 @@ public class RegistrationCoordinatorTest {
         #expect(
             await coordinator.submitPINCode(Stubs.pinCode).awaitable() ==
                 .verificationCodeEntry(
-                    stubs.verificationCodeEntryState(mode: mode, exitConfigOverride: .noExitAllowed)
-                )
+                    stubs.verificationCodeEntryState(mode: mode, exitConfigOverride: .noExitAllowed),
+                ),
         )
 
         // We want to have kept the master key; we failed the reg recovery pw check
@@ -740,8 +765,8 @@ public class RegistrationCoordinatorTest {
             statusCode: RegistrationServiceResponses.AccountCreationResponseCodes.reglockFailed.rawValue,
             bodyJson: EncodableRegistrationLockFailureResponse(
                 timeRemainingMs: 10,
-                svr2AuthCredential: Stubs.svr2AuthCredential
-            )
+                svr2AuthCredential: Stubs.svr2AuthCredential,
+            ),
         )
         mockURLSession.addResponse(failResponse)
 
@@ -769,14 +794,14 @@ public class RegistrationCoordinatorTest {
         // We haven't set a phone number so it should ask for that.
         #expect(
             await coordinator.nextStep() ==
-                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode)),
         )
 
         // Give it a phone number, which should show the PIN entry step.
         // Now it should ask for the PIN to confirm the user knows it.
         #expect(
             await coordinator.submitE164(Stubs.e164).awaitable() ==
-                .pinEntry(Stubs.pinEntryStateForRegRecoveryPath(mode: mode))
+                .pinEntry(Stubs.pinEntryStateForRegRecoveryPath(mode: mode)),
         )
 
         #expect(svr.hasMasterKey)
@@ -788,8 +813,8 @@ public class RegistrationCoordinatorTest {
         #expect(
             await coordinator.submitPINCode(Stubs.pinCode).awaitable() ==
                 .verificationCodeEntry(
-                    stubs.verificationCodeEntryState(mode: mode, exitConfigOverride: .noExitAllowed)
-                )
+                    stubs.verificationCodeEntryState(mode: mode, exitConfigOverride: .noExitAllowed),
+                ),
         )
 
         #expect(svr.hasMasterKey.negated)
@@ -839,7 +864,7 @@ public class RegistrationCoordinatorTest {
                 self.testRun.addObservedStep(.failedRequest)
                 return true
             },
-            url: expectedRecoveryPwRequest.url
+            url: expectedRecoveryPwRequest.url,
         )
         mockURLSession.addResponse(failResponse)
 
@@ -862,8 +887,8 @@ public class RegistrationCoordinatorTest {
                     return false
                 },
                 statusCode: 200,
-                bodyData: try! JSONEncoder().encode(identityResponse)
-            )
+                bodyData: try! JSONEncoder().encode(identityResponse),
+            ),
         )
 
         func expectedAuthedAccount() -> AuthedAccount {
@@ -872,7 +897,7 @@ public class RegistrationCoordinatorTest {
                 pni: identityResponse.pni,
                 e164: Stubs.e164,
                 deviceId: .primary,
-                authPassword: authPassword
+                authPassword: authPassword,
             )
         }
 
@@ -926,7 +951,7 @@ public class RegistrationCoordinatorTest {
             #expect(chatServiceAuth == .explicit(
                 aci: identityResponse.aci,
                 deviceId: .primary,
-                password: authPassword
+                password: authPassword,
             ))
             return .success(usernameLinkHandle: mockUsernameLink.handle)
         }]
@@ -935,7 +960,7 @@ public class RegistrationCoordinatorTest {
         // we will sync account attributes and then we are finished!
         let expectedAttributesRequest = RegistrationRequestFactory.updatePrimaryDeviceAccountAttributesRequest(
             Stubs.accountAttributes(finalMasterKey),
-            auth: .implicit() // // doesn't matter for url matching
+            auth: .implicit(), // // doesn't matter for url matching
         )
         networkManagerMock.asyncRequestHandlers.append({ request, _ in
             if request.url == expectedAttributesRequest.url {
@@ -948,14 +973,14 @@ public class RegistrationCoordinatorTest {
         // We haven't set a phone number so it should ask for that.
         #expect(
             await coordinator.nextStep() ==
-                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode)),
         )
 
         // Give it a phone number, which should show the PIN entry step.
         // Now it should ask for the PIN to confirm the user knows it.
         #expect(
             await coordinator.submitE164(Stubs.e164).awaitable() ==
-                .pinEntry(Stubs.pinEntryStateForRegRecoveryPath(mode: mode))
+                .pinEntry(Stubs.pinEntryStateForRegRecoveryPath(mode: mode)),
         )
 
         // Give it the pin code, which should make it try and register.
@@ -976,10 +1001,10 @@ public class RegistrationCoordinatorTest {
             // .restoreStorageService,
             .confirmReservedUsername,
             .rotateManifest,
-            .updateAccountAttribute
+            .updateAccountAttribute,
         ]
 
-        if testCase.newKey == .accountEntropyPool && testCase.oldKey != .accountEntropyPool {
+        if testCase.newKey == .accountEntropyPool, testCase.oldKey != .accountEntropyPool {
             expectedSteps.insert(.restoreStorageService, at: 9)
         } else {
             expectedSteps.insert(.restoreStorageService, at: 10)
@@ -1047,8 +1072,8 @@ public class RegistrationCoordinatorTest {
             statusCode: RegistrationServiceResponses.AccountCreationResponseCodes.regRecoveryPasswordRejected.rawValue,
             bodyJson: EncodableRegistrationLockFailureResponse(
                 timeRemainingMs: 10,
-                svr2AuthCredential: Stubs.svr2AuthCredential
-            )
+                svr2AuthCredential: Stubs.svr2AuthCredential,
+            ),
         ))
 
         // Once the first request fails, it should try an start a session.
@@ -1070,7 +1095,7 @@ public class RegistrationCoordinatorTest {
         // Give back an valid session.
         sessionManager.addSubmitCodeResponseMock(.success(stubs.session(
             receivedDate: date,
-            verified: true
+            verified: true,
         )))
 
         // Once the request fails, we should try again with the reglock
@@ -1081,8 +1106,8 @@ public class RegistrationCoordinatorTest {
             statusCode: RegistrationServiceResponses.AccountCreationResponseCodes.reglockFailed.rawValue,
             bodyJson: EncodableRegistrationLockFailureResponse(
                 timeRemainingMs: 10000,
-                svr2AuthCredential: Stubs.svr2AuthCredential
-            )
+                svr2AuthCredential: Stubs.svr2AuthCredential,
+            ),
         ))
 
         #expect(svr.hasMasterKey)
@@ -1095,26 +1120,27 @@ public class RegistrationCoordinatorTest {
         // We haven't set a phone number so it should ask for that.
         #expect(
             await coordinator.nextStep() ==
-                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode)),
         )
 
         // Give it a phone number, which should show the PIN entry step.
         // Now it should ask for the PIN to confirm the user knows it.
         #expect(
             await coordinator.submitE164(Stubs.e164).awaitable() ==
-                .pinEntry(Stubs.pinEntryStateForRegRecoveryPath(mode: mode))
+                .pinEntry(Stubs.pinEntryStateForRegRecoveryPath(mode: mode)),
         )
 
         // Give it the pin code, which should make it try and register.
         _ = await coordinator.submitPINCode(Stubs.pinCode).awaitable()
 
-        #expect(await coordinator.submitVerificationCode(Stubs.pinCode).awaitable() ==
-            .reglockTimeout(
-                RegistrationReglockTimeoutState(
-                    reglockExpirationDate: dateProvider().addingTimeInterval(TimeInterval(10)),
-                    acknowledgeAction: acknowledgeAction
-                )
-            )
+        #expect(
+            await coordinator.submitVerificationCode(Stubs.pinCode).awaitable() ==
+                .reglockTimeout(
+                    RegistrationReglockTimeoutState(
+                        reglockExpirationDate: dateProvider().addingTimeInterval(TimeInterval(10)),
+                        acknowledgeAction: acknowledgeAction,
+                    ),
+                ),
         )
 
         // We want to have wiped our master key; we failed reglock, which means the key itself is wrong.
@@ -1154,14 +1180,14 @@ public class RegistrationCoordinatorTest {
         // Match the main auth credential.
         let expectedSVR2CheckRequest = RegistrationRequestFactory.svr2AuthCredentialCheckRequest(
             e164: Stubs.e164,
-            credentials: svr2CredentialCandidates
+            credentials: svr2CredentialCandidates,
         )
         mockURLSession.addResponse(TSRequestOWSURLSessionMock.Response(
             urlSuffix: expectedSVR2CheckRequest.url.absoluteString,
             statusCode: 200,
             bodyJson: RegistrationServiceResponses.SVR2AuthCheckResponse(matches: [
                 "\(Stubs.svr2AuthCredential.credential.username):\(Stubs.svr2AuthCredential.credential.password)": .match,
-            ])
+            ]),
         ))
 
         // NOTE: We expect to skip opening path steps because
@@ -1205,8 +1231,8 @@ public class RegistrationCoordinatorTest {
             statusCode: RegistrationServiceResponses.AccountCreationResponseCodes.regRecoveryPasswordRejected.rawValue,
             bodyJson: EncodableRegistrationLockFailureResponse(
                 timeRemainingMs: 10,
-                svr2AuthCredential: Stubs.svr2AuthCredential
-            )
+                svr2AuthCredential: Stubs.svr2AuthCredential,
+            ),
         ))
 
         // Once the request fails, we should try again with the reglock
@@ -1223,7 +1249,7 @@ public class RegistrationCoordinatorTest {
                 return request.url == expectedRecoveryPwRequest2.url
             },
             statusCode: 200,
-            bodyJson: accountIdentityResponse
+            bodyJson: accountIdentityResponse,
         ))
 
         func expectedAuthedAccount() -> AuthedAccount {
@@ -1232,7 +1258,7 @@ public class RegistrationCoordinatorTest {
                 pni: accountIdentityResponse.pni,
                 e164: Stubs.e164,
                 deviceId: .primary,
-                authPassword: authPassword
+                authPassword: authPassword,
             )
         }
 
@@ -1259,7 +1285,7 @@ public class RegistrationCoordinatorTest {
             #expect(masterKey.rawData == finalMasterKey.rawData)
             #expect(authMethod == .svrAuth(
                 Stubs.svr2AuthCredential,
-                backup: .chatServerAuth(expectedAuthedAccount())
+                backup: .chatServerAuth(expectedAuthedAccount()),
             ))
             self.svr.hasMasterKey = true
             return .value(masterKey)
@@ -1285,7 +1311,7 @@ public class RegistrationCoordinatorTest {
             #expect(chatServiceAuth == .explicit(
                 aci: accountIdentityResponse.aci,
                 deviceId: .primary,
-                password: authPassword
+                password: authPassword,
             ))
             return .success(usernameLinkHandle: mockUsernameLink.handle)
         }]
@@ -1296,7 +1322,7 @@ public class RegistrationCoordinatorTest {
         // we will sync account attributes and then we are finished!
         let expectedAttributesRequest = RegistrationRequestFactory.updatePrimaryDeviceAccountAttributesRequest(
             Stubs.accountAttributes(finalMasterKey),
-            auth: .implicit() // doesn't matter for url matching
+            auth: .implicit(), // doesn't matter for url matching
         )
         networkManagerMock.asyncRequestHandlers.append({ request, _ in
             if request.url == expectedAttributesRequest.url {
@@ -1308,14 +1334,14 @@ public class RegistrationCoordinatorTest {
         // We haven't set a phone number so it should ask for that.
         #expect(
             await coordinator.nextStep() ==
-                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode)),
         )
 
         // Give it a phone number, which should show the PIN entry step.
         // Now it should ask for the PIN to confirm the user knows it.
         #expect(
             await coordinator.submitE164(Stubs.e164).awaitable() ==
-                .pinEntry(Stubs.pinEntryStateForRegRecoveryPath(mode: mode))
+                .pinEntry(Stubs.pinEntryStateForRegRecoveryPath(mode: mode)),
         )
 
         #expect(svrAuthCredentialStore.svr2Dict[Stubs.svr2AuthCredential.credential.username] != nil)
@@ -1365,14 +1391,14 @@ public class RegistrationCoordinatorTest {
         // Match the main auth credential.
         let expectedSVR2CheckRequest = RegistrationRequestFactory.svr2AuthCredentialCheckRequest(
             e164: Stubs.e164,
-            credentials: svr2CredentialCandidates
+            credentials: svr2CredentialCandidates,
         )
         mockURLSession.addResponse(TSRequestOWSURLSessionMock.Response(
             urlSuffix: expectedSVR2CheckRequest.url.absoluteString,
             statusCode: 200,
             bodyJson: RegistrationServiceResponses.SVR2AuthCheckResponse(matches: [
                 "\(Stubs.svr2AuthCredential.credential.username):\(Stubs.svr2AuthCredential.credential.password)": .match,
-            ])
+            ]),
         ))
 
         // NOTE: We expect to skip opening path steps because
@@ -1411,8 +1437,8 @@ public class RegistrationCoordinatorTest {
             statusCode: RegistrationServiceResponses.AccountCreationResponseCodes.regRecoveryPasswordRejected.rawValue,
             bodyJson: EncodableRegistrationLockFailureResponse(
                 timeRemainingMs: 10000,
-                svr2AuthCredential: Stubs.svr2AuthCredential
-            )
+                svr2AuthCredential: Stubs.svr2AuthCredential,
+            ),
         )
         mockURLSession.addResponse(failResponse)
         mockURLSession.addResponse(failResponse)
@@ -1437,8 +1463,8 @@ public class RegistrationCoordinatorTest {
             statusCode: RegistrationServiceResponses.AccountCreationResponseCodes.reglockFailed.rawValue,
             bodyJson: EncodableRegistrationLockFailureResponse(
                 timeRemainingMs: 10000,
-                svr2AuthCredential: Stubs.svr2AuthCredential
-            )
+                svr2AuthCredential: Stubs.svr2AuthCredential,
+            ),
         ))
 
         // Give back a verified session.
@@ -1452,14 +1478,14 @@ public class RegistrationCoordinatorTest {
         // We haven't set a phone number so it should ask for that.
         #expect(
             await coordinator.nextStep() ==
-                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode)),
         )
 
         // Give it a phone number, which should show the PIN entry step.
         // Now it should ask for the PIN to confirm the user knows it.
         #expect(
             await coordinator.submitE164(Stubs.e164).awaitable() ==
-                .pinEntry(Stubs.pinEntryStateForRegRecoveryPath(mode: mode))
+                .pinEntry(Stubs.pinEntryStateForRegRecoveryPath(mode: mode)),
         )
 
         // Give it the pin code, which should make it try and register.
@@ -1469,20 +1495,21 @@ public class RegistrationCoordinatorTest {
                     stubs.verificationCodeEntryState(
                         mode: mode,
                         // TODO: [Refactor]: Is 'noExitAllowed' the correct value to expect here?
-                        exitConfigOverride: .noExitAllowed
-                    ))
+                        exitConfigOverride: .noExitAllowed,
+                    )),
         )
 
         #expect(svr.hasMasterKey)
 
         // Submit verification code
-        #expect(await coordinator.submitVerificationCode(Stubs.verificationCode).awaitable() ==
-            .reglockTimeout(
-                RegistrationReglockTimeoutState(
-                    reglockExpirationDate: dateProvider().addingTimeInterval(TimeInterval(10)),
-                    acknowledgeAction: acknowledgeAction
-                )
-            )
+        #expect(
+            await coordinator.submitVerificationCode(Stubs.verificationCode).awaitable() ==
+                .reglockTimeout(
+                    RegistrationReglockTimeoutState(
+                        reglockExpirationDate: dateProvider().addingTimeInterval(TimeInterval(10)),
+                        acknowledgeAction: acknowledgeAction,
+                    ),
+                ),
         )
 
         // We want to have wiped our master key; we failed reglock, which means the key itself is wrong.
@@ -1507,7 +1534,7 @@ public class RegistrationCoordinatorTest {
         await goThroughOpeningHappyPath(
             coordinator: coordinator,
             mode: mode,
-            expectedNextStep: .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+            expectedNextStep: .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode)),
         )
 
         let (initialMasterKey, finalMasterKey) = buildKeyDataMocks(testCase)
@@ -1545,8 +1572,8 @@ public class RegistrationCoordinatorTest {
                     return request.url == expectedRegRecoveryPwRequest.url
                 },
                 statusCode: 200,
-                bodyJson: accountIdentityResponse
-            )
+                bodyJson: accountIdentityResponse,
+            ),
         )
 
         func expectedAuthedAccount() -> AuthedAccount {
@@ -1555,7 +1582,7 @@ public class RegistrationCoordinatorTest {
                 pni: accountIdentityResponse.pni,
                 e164: Stubs.e164,
                 deviceId: .primary,
-                authPassword: authPassword
+                authPassword: authPassword,
             )
         }
 
@@ -1572,7 +1599,7 @@ public class RegistrationCoordinatorTest {
             #expect(masterKey.rawData == finalMasterKey.rawData)
             #expect(authMethod == .svrAuth(
                 Stubs.svr2AuthCredential,
-                backup: .chatServerAuth(expectedAuthedAccount())
+                backup: .chatServerAuth(expectedAuthedAccount()),
             ))
             return .value(masterKey)
         }
@@ -1609,7 +1636,7 @@ public class RegistrationCoordinatorTest {
             #expect(chatServiceAuth == .explicit(
                 aci: accountIdentityResponse.aci,
                 deviceId: .primary,
-                password: authPassword
+                password: authPassword,
             ))
             return .success(usernameLinkHandle: mockUsernameLink.handle)
         }]
@@ -1617,7 +1644,7 @@ public class RegistrationCoordinatorTest {
         // Once we do the storage service restore, we will sync account attributes and then we are finished!
         let expectedAttributesRequest = RegistrationRequestFactory.updatePrimaryDeviceAccountAttributesRequest(
             Stubs.accountAttributes(finalMasterKey),
-            auth: .implicit() // doesn't matter for url matching
+            auth: .implicit(), // doesn't matter for url matching
         )
         networkManagerMock.asyncRequestHandlers.append({ request, _ in
             if request.url == expectedAttributesRequest.url {
@@ -1631,7 +1658,7 @@ public class RegistrationCoordinatorTest {
         // to recover the SVR master key.
         #expect(
             await coordinator.submitE164(Stubs.e164).awaitable() ==
-                .pinEntry(Stubs.pinEntryStateForSVRAuthCredentialPath(mode: mode))
+                .pinEntry(Stubs.pinEntryStateForSVRAuthCredentialPath(mode: mode)),
         )
 
         // We should have wiped the invalid and unknown credentials.
@@ -1659,7 +1686,7 @@ public class RegistrationCoordinatorTest {
             //            "restoreStorageService",
             .confirmReservedUsername,
             .rotateManifest,
-            .updateAccountAttribute
+            .updateAccountAttribute,
         ]
 
         if testCase.newKey == .accountEntropyPool {
@@ -1689,7 +1716,7 @@ public class RegistrationCoordinatorTest {
         await goThroughOpeningHappyPath(
             coordinator: coordinator,
             mode: mode,
-            expectedNextStep: .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+            expectedNextStep: .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode)),
         )
 
         // Once the first request fails, it should try an start a session.
@@ -1713,7 +1740,7 @@ public class RegistrationCoordinatorTest {
         // Now we should expect to be at verification code entry since we already set the phone number.
         #expect(
             await coordinator.submitE164(Stubs.e164).awaitable() ==
-                .verificationCodeEntry(stubs.verificationCodeEntryState(mode: mode))
+                .verificationCodeEntry(stubs.verificationCodeEntryState(mode: mode)),
         )
 
         // We should have wipted the invalid and unknown credentials.
@@ -1736,29 +1763,29 @@ public class RegistrationCoordinatorTest {
         setupDefaultAccountAttributes()
 
         // Put some auth credentials in storage.
-        let credentialCandidates: [SVR2AuthCredential] = [ Stubs.svr2AuthCredential ]
+        let credentialCandidates: [SVR2AuthCredential] = [Stubs.svr2AuthCredential]
         svrAuthCredentialStore.svr2Dict = Dictionary(grouping: credentialCandidates, by: \.credential.username).mapValues { $0.first! }
 
         // Get past the opening.
         await goThroughOpeningHappyPath(
             coordinator: coordinator,
             mode: mode,
-            expectedNextStep: .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+            expectedNextStep: .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode)),
         )
 
         // Don't give back any matches, which means we will want to create a session as a fallback.
         var expectedSVRCheckRequest = RegistrationRequestFactory.svr2AuthCredentialCheckRequest(
             e164: originalE164,
-            credentials: credentialCandidates
+            credentials: credentialCandidates,
         )
         mockURLSession.addResponse(
             TSRequestOWSURLSessionMock.Response(
                 urlSuffix: expectedSVRCheckRequest.url.absoluteString,
                 statusCode: 200,
                 bodyJson: RegistrationServiceResponses.SVR2AuthCheckResponse(matches: [
-                    "\(Stubs.svr2AuthCredential.credential.username):\(Stubs.svr2AuthCredential.credential.password)": .notMatch
-                ])
-            )
+                    "\(Stubs.svr2AuthCredential.credential.username):\(Stubs.svr2AuthCredential.credential.password)": .notMatch,
+                ]),
+            ),
         )
 
         // Once the first request fails, it should try an start a session.
@@ -1780,23 +1807,23 @@ public class RegistrationCoordinatorTest {
         // Give a match, so it registers via SVR auth credential.
         expectedSVRCheckRequest = RegistrationRequestFactory.svr2AuthCredentialCheckRequest(
             e164: changedE164,
-            credentials: credentialCandidates
+            credentials: credentialCandidates,
         )
         mockURLSession.addResponse(
             TSRequestOWSURLSessionMock.Response(
                 urlSuffix: expectedSVRCheckRequest.url.absoluteString,
                 statusCode: 200,
                 bodyJson: RegistrationServiceResponses.SVR2AuthCheckResponse(matches: [
-                    "\(Stubs.svr2AuthCredential.credential.username):\(Stubs.svr2AuthCredential.credential.password)": .match
-                ])
-            )
+                    "\(Stubs.svr2AuthCredential.credential.username):\(Stubs.svr2AuthCredential.credential.password)": .match,
+                ]),
+            ),
         )
 
         // Give it a phone number, which should cause it to check the auth credentials.
         // Now we should expect to be at verification code entry since we already set the phone number.
         #expect(
             await coordinator.submitE164(originalE164).awaitable() ==
-                .verificationCodeEntry(stubs.verificationCodeEntryState(mode: mode))
+                .verificationCodeEntry(stubs.verificationCodeEntryState(mode: mode)),
         )
 
         // We should have wiped the invalid and unknown credentials.
@@ -1805,13 +1832,13 @@ public class RegistrationCoordinatorTest {
         // Now change the phone number; this should take us back to phone number entry.
         #expect(
             await coordinator.requestChangeE164().awaitable() ==
-                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode)),
         )
 
         // Now it should ask for PIN entry; we are on the SVR auth credential path.
         #expect(
             await coordinator.submitE164(changedE164).awaitable() ==
-                .pinEntry(Stubs.pinEntryStateForSVRAuthCredentialPath(mode: mode))
+                .pinEntry(Stubs.pinEntryStateForSVRAuthCredentialPath(mode: mode)),
         )
     }
 
@@ -1846,8 +1873,8 @@ public class RegistrationCoordinatorTest {
                     return request.url == expectedRequest.url
                 },
                 statusCode: 200,
-                bodyJson: accountIdentityResponse
-            )
+                bodyJson: accountIdentityResponse,
+            ),
         )
 
         func expectedAuthedAccount() -> AuthedAccount {
@@ -1856,7 +1883,7 @@ public class RegistrationCoordinatorTest {
                 pni: accountIdentityResponse.pni,
                 e164: Stubs.e164,
                 deviceId: .primary,
-                authPassword: authPassword
+                authPassword: authPassword,
             )
         }
 
@@ -1902,7 +1929,7 @@ public class RegistrationCoordinatorTest {
             #expect(chatServiceAuth == .explicit(
                 aci: accountIdentityResponse.aci,
                 deviceId: .primary,
-                password: authPassword
+                password: authPassword,
             ))
             throw OWSGenericError("Something went wrong :(")
         }]
@@ -1911,7 +1938,7 @@ public class RegistrationCoordinatorTest {
         // we will sync account attributes and then we are finished!
         let expectedAttributesRequest = RegistrationRequestFactory.updatePrimaryDeviceAccountAttributesRequest(
             Stubs.accountAttributes(newMasterKey),
-            auth: .implicit() // doesn't matter for url matching
+            auth: .implicit(), // doesn't matter for url matching
         )
         networkManagerMock.asyncRequestHandlers.append({ request, _ in
             if request.url == expectedAttributesRequest.url {
@@ -1927,14 +1954,14 @@ public class RegistrationCoordinatorTest {
         // No exit allowed since we've already started trying to create the account.
         #expect(
             await coordinator.submitVerificationCode(Stubs.pinCode).awaitable() ==
-                .pinEntry(Stubs.pinEntryStateForPostRegCreate(mode: mode, exitConfigOverride: .noExitAllowed))
+                .pinEntry(Stubs.pinEntryStateForPostRegCreate(mode: mode, exitConfigOverride: .noExitAllowed)),
         )
 
         // Confirm the pin first.
         // No exit allowed since we've already started trying to create the account.
         #expect(
             await coordinator.setPINCodeForConfirmation(.stub()).awaitable() ==
-                .pinEntry(Stubs.pinEntryStateForPostRegConfirm(mode: mode, exitConfigOverride: .noExitAllowed))
+                .pinEntry(Stubs.pinEntryStateForPostRegConfirm(mode: mode, exitConfigOverride: .noExitAllowed)),
         )
 
         // When we submit the pin, it should backup with SVR.
@@ -1972,9 +1999,9 @@ public class RegistrationCoordinatorTest {
                     stubs.phoneNumberEntryState(
                         mode: mode,
                         previouslyEnteredE164: badE164,
-                        withValidationErrorFor: .invalidArgument
-                    )
-                )
+                        withValidationErrorFor: .invalidArgument,
+                    ),
+                ),
         )
     }
 
@@ -1999,9 +2026,9 @@ public class RegistrationCoordinatorTest {
                     stubs.phoneNumberEntryState(
                         mode: mode,
                         previouslyEnteredE164: Stubs.e164,
-                        withValidationErrorFor: .retryAfter(retryTimeInterval)
-                    )
-                )
+                        withValidationErrorFor: .retryAfter(15),
+                    ),
+                ),
         )
     }
 
@@ -2014,7 +2041,7 @@ public class RegistrationCoordinatorTest {
 
         // Give back a session, but with SMS code rate limiting already.
         sessionManager.addBeginSessionResponseMock(.success(stubs.session(
-            nextSMS: 10
+            nextSMS: 10,
         )))
 
         // Give it a phone number, which should cause it to start a session.
@@ -2025,8 +2052,8 @@ public class RegistrationCoordinatorTest {
                     mode: mode,
                     nextSMS: 10,
                     nextVerificationAttempt: nil,
-                    validationError: .smsResendTimeout
-                ))
+                    validationError: .smsResendTimeout,
+                )),
         )
     }
 
@@ -2047,7 +2074,7 @@ public class RegistrationCoordinatorTest {
         // and no next verification attempt on the session,
         // so it counts as transport failure with no code sent.
         sessionManager.addRequestCodeResponseMock(.transportError(stubs.session(
-            nextSMS: nil /* now sms unavailable but calling is */
+            nextSMS: nil, /* now sms unavailable but calling is */
         )))
 
         // If we resend via voice, that should put us in a happy path. Resolve with a success.
@@ -2062,8 +2089,8 @@ public class RegistrationCoordinatorTest {
                     mode: mode,
                     nextSMS: nil,
                     nextVerificationAttempt: nil,
-                    validationError: .failedInitialTransport(failedTransport: .sms)
-                ))
+                    validationError: .failedInitialTransport(failedTransport: .sms),
+                )),
         )
 
         // We should get back the code entry step.
@@ -2098,12 +2125,13 @@ public class RegistrationCoordinatorTest {
         // Give it a phone number, which should cause it to start a session.
         // We should get back the code entry step,
         // with a validation error for the sms transport.
-        #expect(await coordinator.submitE164(Stubs.e164).awaitable() ==
-            .verificationCodeEntry(stubs.verificationCodeEntryState(
-                mode: mode,
-                nextVerificationAttempt: nil,
-                validationError: .failedInitialTransport(failedTransport: .sms)
-            ))
+        #expect(
+            await coordinator.submitE164(Stubs.e164).awaitable() ==
+                .verificationCodeEntry(stubs.verificationCodeEntryState(
+                    mode: mode,
+                    nextVerificationAttempt: nil,
+                    validationError: .failedInitialTransport(failedTransport: .sms),
+                )),
         )
 
         // The server says no code is available to submit. We know
@@ -2113,7 +2141,7 @@ public class RegistrationCoordinatorTest {
 
         #expect(
             await coordinator.submitVerificationCode(Stubs.verificationCode).awaitable() ==
-                .showErrorSheet(.submittingVerificationCodeBeforeAnyCodeSent)
+                .showErrorSheet(.submittingVerificationCodeBeforeAnyCodeSent),
         )
 
         #expect(
@@ -2121,8 +2149,8 @@ public class RegistrationCoordinatorTest {
                 .verificationCodeEntry(stubs.verificationCodeEntryState(
                     mode: mode,
                     nextVerificationAttempt: nil,
-                    validationError: .failedInitialTransport(failedTransport: .sms)
-                ))
+                    validationError: .failedInitialTransport(failedTransport: .sms),
+                )),
         )
     }
 
@@ -2141,16 +2169,16 @@ public class RegistrationCoordinatorTest {
 
         // Give back a session that's ready to go.
         sessionManager.addBeginSessionResponseMock(.success(stubs.session(
-            receivedDate: self.date
+            receivedDate: self.date,
         )))
 
         // Once we get that session, we should try and send a code.
 
         // Reject with a timeout.
-        sessionManager.addRequestCodeResponseMock(.retryAfterTimeout(stubs.session(
-            receivedDate: self.date,
-            nextSMS: 10
-        )))
+        sessionManager.addRequestCodeResponseMock(.retryAfterTimeout(
+            stubs.session(receivedDate: self.date, nextSMS: 10),
+            retryAfterHeader: nil,
+        ))
 
         // Give it a phone number, which should cause it to start a session.
         // It should put us on the phone number entry screen again
@@ -2162,9 +2190,9 @@ public class RegistrationCoordinatorTest {
                     stubs.phoneNumberEntryState(
                         mode: mode,
                         previouslyEnteredE164: Stubs.e164,
-                        withValidationErrorFor: .retryAfter(10)
-                    )
-                )
+                        withValidationErrorFor: .retryAfter(15),
+                    ),
+                ),
         )
     }
 
@@ -2186,7 +2214,7 @@ public class RegistrationCoordinatorTest {
 
         // Give back a session that's ready to go.
         sessionManager.addBeginSessionResponseMock(.success(stubs.session(
-            e164: originalE164
+            e164: originalE164,
         )))
 
         // Once we get that session, we should try and send a code.
@@ -2208,14 +2236,14 @@ public class RegistrationCoordinatorTest {
         // Give back a session that's ready to go.
         // TODO: allow mocking multiple responses
         sessionManager.addBeginSessionResponseMock(.success(stubs.session(
-            e164: changedE164
+            e164: changedE164,
         )))
 
         // Once we get that session, we should try and send a code.
         // Give back a session with a sent code.
         sessionManager.addRequestCodeResponseMock(.success(stubs.session(
             e164: changedE164,
-            nextVerificationAttempt: 0
+            nextVerificationAttempt: 0,
         )))
 
         // Give it a phone number, which should cause it to start a session.
@@ -2223,14 +2251,14 @@ public class RegistrationCoordinatorTest {
         #expect(
             await coordinator.submitE164(originalE164).awaitable() ==
                 .verificationCodeEntry(
-                    stubs.verificationCodeEntryState(mode: mode, e164: originalE164)
-                )
+                    stubs.verificationCodeEntryState(mode: mode, e164: originalE164),
+                ),
         )
 
         // Ask to change the number; this should put us back on phone number entry.
         #expect(
             await coordinator.requestChangeE164().awaitable() ==
-                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+                .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode)),
         )
 
         // Give it the new phone number, which should cause it to start a session.
@@ -2239,8 +2267,8 @@ public class RegistrationCoordinatorTest {
         #expect(
             await coordinator.submitE164(changedE164).awaitable() ==
                 .verificationCodeEntry(
-                    stubs.verificationCodeEntryState(mode: mode, e164: changedE164)
-                )
+                    stubs.verificationCodeEntryState(mode: mode, e164: changedE164),
+                ),
         )
     }
 
@@ -2282,7 +2310,7 @@ public class RegistrationCoordinatorTest {
         // We should get back the code entry step. Submit a captcha challenge.
         #expect(
             await coordinator.submitCaptcha(Stubs.captchaToken).awaitable() ==
-                .verificationCodeEntry(stubs.verificationCodeEntryState(mode: mode))
+                .verificationCodeEntry(stubs.verificationCodeEntryState(mode: mode)),
         )
 
         // Now try and resend a code, which should hit us with the captcha challenge immediately.
@@ -2306,7 +2334,7 @@ public class RegistrationCoordinatorTest {
         // given the new sms code date above.
         #expect(
             await coordinator.submitCaptcha(Stubs.captchaToken).awaitable() ==
-                .verificationCodeEntry(stubs.verificationCodeEntryState(mode: mode))
+                .verificationCodeEntry(stubs.verificationCodeEntryState(mode: mode)),
         )
     }
 
@@ -2346,11 +2374,11 @@ public class RegistrationCoordinatorTest {
         // We should still be waiting.
         #expect(
             await coordinator.nextStep() ==
-                .verificationCodeEntry(stubs.verificationCodeEntryState(mode: mode))
+                .verificationCodeEntry(stubs.verificationCodeEntryState(mode: mode)),
         )
         #expect(
             sessionManager.latestChallengeFulfillment ==
-                .pushChallenge("a pre-auth challenge token")
+                .pushChallenge("a pre-auth challenge token"),
         )
     }
 
@@ -2366,7 +2394,7 @@ public class RegistrationCoordinatorTest {
         await goThroughOpeningHappyPath(
             coordinator: coordinator,
             mode: mode,
-            expectedNextStep: .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+            expectedNextStep: .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode)),
         )
 
         pushRegistrationManagerMock.addRequestPushTokenMock({ .success(Stubs.apnsRegistrationId) })
@@ -2411,7 +2439,7 @@ public class RegistrationCoordinatorTest {
         await goThroughOpeningHappyPath(
             coordinator: coordinator,
             mode: mode,
-            expectedNextStep: .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+            expectedNextStep: .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode)),
         )
 
         pushRegistrationManagerMock.addRequestPushTokenMock({ .success(Stubs.apnsRegistrationId) })
@@ -2427,7 +2455,7 @@ public class RegistrationCoordinatorTest {
         // Give back a session with a push challenge.
         sessionManager.addBeginSessionResponseMock(.success(stubs.session(
             allowedToRequestCode: false,
-            requestedInformation: [.pushChallenge]
+            requestedInformation: [.pushChallenge],
         )))
 
         timeoutProviderMock.pushTokenMinWaitTime = 0.5
@@ -2459,7 +2487,7 @@ public class RegistrationCoordinatorTest {
         await goThroughOpeningHappyPath(
             coordinator: coordinator,
             mode: mode,
-            expectedNextStep: .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+            expectedNextStep: .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode)),
         )
 
         // Require a push challenge, which we won't be able to answer.
@@ -2473,8 +2501,8 @@ public class RegistrationCoordinatorTest {
             await coordinator.submitE164(Stubs.e164).awaitable() ==
                 .phoneNumberEntry(stubs.phoneNumberEntryState(
                     mode: mode,
-                    previouslyEnteredE164: Stubs.e164
-                ))
+                    previouslyEnteredE164: Stubs.e164,
+                )),
         )
         #expect(sessionManager.latestChallengeFulfillment == nil)
     }
@@ -2610,7 +2638,7 @@ public class RegistrationCoordinatorTest {
         await goThroughOpeningHappyPath(
             coordinator: coordinator,
             mode: mode,
-            expectedNextStep: .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+            expectedNextStep: .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode)),
         )
 
         // Give back a session with multiple challenges.
@@ -2662,7 +2690,7 @@ public class RegistrationCoordinatorTest {
 
         // Give back a rejected argument response, its the wrong code.
         sessionManager.addSubmitCodeResponseMock(.rejectedArgument(stubs.session(
-            nextVerificationAttempt: 0
+            nextVerificationAttempt: 0,
         )))
 
         // Now try and send the wrong code.
@@ -2671,8 +2699,8 @@ public class RegistrationCoordinatorTest {
             await coordinator.submitVerificationCode(badCode).awaitable() ==
                 .verificationCodeEntry(stubs.verificationCodeEntryState(
                     mode: mode,
-                    validationError: .invalidVerificationCode(invalidCode: badCode)
-                ))
+                    validationError: .invalidVerificationCode(invalidCode: badCode),
+                )),
         )
     }
 
@@ -2684,40 +2712,38 @@ public class RegistrationCoordinatorTest {
         await createSessionAndRequestFirstCode(coordinator: coordinator, mode: mode)
 
         // Give back a retry response.
-        sessionManager.addSubmitCodeResponseMock(.retryAfterTimeout(stubs.session(
-            nextVerificationAttempt: 10,
-        )))
+        sessionManager.addSubmitCodeResponseMock(.retryAfterTimeout(
+            stubs.session(nextVerificationAttempt: 10),
+            retryAfterHeader: 10,
+        ))
 
         // Resend an sms code, time that out too.
-        sessionManager.addRequestCodeResponseMock(.retryAfterTimeout(stubs.session(
-            nextSMS: 7,
-            nextCall: 0,
-            nextVerificationAttempt: 9,
-        )))
+        sessionManager.addRequestCodeResponseMock(.retryAfterTimeout(
+            stubs.session(nextSMS: 7, nextCall: 0, nextVerificationAttempt: 9),
+            retryAfterHeader: 7,
+        ))
 
         // Resend an voice code, time that out too
         // Make the timeout SO short that it retries
         sessionManager.didRequestCode = false
-        sessionManager.addRequestCodeResponseMock(.retryAfterTimeout(stubs.session(
-            nextSMS: 6,
-            nextCall: 0.1,
-            nextVerificationAttempt: 8,
-        )))
+        sessionManager.addRequestCodeResponseMock(.retryAfterTimeout(
+            stubs.session(nextSMS: 6, nextCall: 0.1, nextVerificationAttempt: 8),
+            retryAfterHeader: 0.1,
+        ))
 
         // Be ready for the retry. Ensure we called it the first time.
-        sessionManager.addRequestCodeResponseMock(.retryAfterTimeout(stubs.session(
-            nextSMS: 5,
-            nextCall: 4,
-            nextVerificationAttempt: 8,
-        )))
+        sessionManager.addRequestCodeResponseMock(.retryAfterTimeout(
+            stubs.session(nextSMS: 5, nextCall: 4, nextVerificationAttempt: 8),
+            retryAfterHeader: 4,
+        ))
 
         #expect(
             await coordinator.submitVerificationCode(Stubs.verificationCode).awaitable() ==
                 .verificationCodeEntry(stubs.verificationCodeEntryState(
                     mode: mode,
                     nextVerificationAttempt: 10,
-                    validationError: .submitCodeTimeout
-                ))
+                    validationError: .submitCodeTimeout,
+                )),
         )
 
         #expect(
@@ -2726,8 +2752,8 @@ public class RegistrationCoordinatorTest {
                     mode: mode,
                     nextSMS: 7,
                     nextVerificationAttempt: 9,
-                    validationError: .smsResendTimeout
-                ))
+                    validationError: .smsResendTimeout,
+                )),
         )
 
         #expect(
@@ -2737,8 +2763,8 @@ public class RegistrationCoordinatorTest {
                     nextSMS: 5,
                     nextCall: 4,
                     nextVerificationAttempt: 8,
-                    validationError: .voiceResendTimeout
-                ))
+                    validationError: .voiceResendTimeout,
+                )),
         )
 
         #expect(sessionManager.didRequestCode)
@@ -2762,15 +2788,15 @@ public class RegistrationCoordinatorTest {
         // code entry screen, with an error so the user retries sending a code.
         #expect(
             await coordinator.submitVerificationCode(Stubs.verificationCode).awaitable() ==
-                .showErrorSheet(.verificationCodeSubmissionUnavailable)
+                .showErrorSheet(.verificationCodeSubmissionUnavailable),
         )
 
         #expect(
             await coordinator.nextStep() ==
                 .verificationCodeEntry(stubs.verificationCodeEntryState(
                     mode: mode,
-                    nextVerificationAttempt: nil
-                ))
+                    nextVerificationAttempt: nil,
+                )),
         )
     }
 
@@ -2783,19 +2809,19 @@ public class RegistrationCoordinatorTest {
 
         // Give back a retry response when submitting a code,
         // but with no ability to resubmit.
-        sessionManager.addSubmitCodeResponseMock(.retryAfterTimeout(stubs.session()))
+        sessionManager.addSubmitCodeResponseMock(.retryAfterTimeout(stubs.session(), retryAfterHeader: nil))
 
         #expect(
             await coordinator.submitVerificationCode(Stubs.verificationCode).awaitable() ==
-                .showErrorSheet(.verificationCodeSubmissionUnavailable)
+                .showErrorSheet(.verificationCodeSubmissionUnavailable),
         )
 
         #expect(
             await coordinator.nextStep() ==
                 .verificationCodeEntry(stubs.verificationCodeEntryState(
                     mode: mode,
-                    nextVerificationAttempt: nil
-                ))
+                    nextVerificationAttempt: nil,
+                )),
         )
     }
 
@@ -2824,20 +2850,20 @@ public class RegistrationCoordinatorTest {
         // Now we should expect to be at verification code entry since we sent the code.
         #expect(
             await coordinator.submitE164(Stubs.e164).awaitable() ==
-                .verificationCodeEntry(stubs.verificationCodeEntryState(mode: mode))
+                .verificationCodeEntry(stubs.verificationCodeEntryState(mode: mode)),
         )
 
         #expect(
             await coordinator.submitVerificationCode(Stubs.pinCode).awaitable() ==
-                .showErrorSheet(.sessionInvalidated)
+                .showErrorSheet(.sessionInvalidated),
         )
 
         #expect(
             await coordinator.nextStep() ==
                 .phoneNumberEntry(stubs.phoneNumberEntryState(
                     mode: mode,
-                    previouslyEnteredE164: Stubs.e164
-                ))
+                    previouslyEnteredE164: Stubs.e164,
+                )),
         )
     }
 
@@ -2852,7 +2878,7 @@ public class RegistrationCoordinatorTest {
         // Give back a verified session.
         sessionManager.addSubmitCodeResponseMock(.success(stubs.session(
             receivedDate: date,
-            verified: true
+            verified: true,
         )))
 
         let accountIdentityResponse = Stubs.accountIdentityResponse()
@@ -2879,7 +2905,7 @@ public class RegistrationCoordinatorTest {
                     return request.url == expectedRequest.url
                 },
                 statusCode: 200,
-                bodyJson: accountIdentityResponse
+                bodyJson: accountIdentityResponse,
             ),
         )
 
@@ -2889,7 +2915,7 @@ public class RegistrationCoordinatorTest {
                 pni: accountIdentityResponse.pni,
                 e164: Stubs.e164,
                 deviceId: .primary,
-                authPassword: authPassword
+                authPassword: authPassword,
             )
         }
 
@@ -2920,7 +2946,7 @@ public class RegistrationCoordinatorTest {
         // we will sync account attributes and then we are finished!
         let expectedAttributesRequest = RegistrationRequestFactory.updatePrimaryDeviceAccountAttributesRequest(
             Stubs.accountAttributes(newMasterKey),
-            auth: .implicit() // doesn't matter for url matching
+            auth: .implicit(), // doesn't matter for url matching
         )
         networkManagerMock.asyncRequestHandlers.append({ request, _ in
             if request.url == expectedAttributesRequest.url {
@@ -2951,8 +2977,8 @@ public class RegistrationCoordinatorTest {
         #expect(
             await coordinator.submitVerificationCode(Stubs.pinCode).awaitable() ==
                 .pinEntry(
-                    Stubs.pinEntryStateForPostRegCreate(mode: mode, exitConfigOverride: .noExitAllowed)
-                )
+                    Stubs.pinEntryStateForPostRegCreate(mode: mode, exitConfigOverride: .noExitAllowed),
+                ),
         )
 
         // At this point we should not have set the AEP.
@@ -2987,7 +3013,7 @@ public class RegistrationCoordinatorTest {
         // Give back a verified session.
         sessionManager.addSubmitCodeResponseMock(.success(stubs.session(
             receivedDate: date,
-            verified: true
+            verified: true,
         )))
 
         // Previously used SVR so we first ask to restore.
@@ -3009,8 +3035,8 @@ public class RegistrationCoordinatorTest {
                     return request.url == expectedRequest.url
                 },
                 statusCode: 200,
-                bodyJson: accountIdentityResponse
-            )
+                bodyJson: accountIdentityResponse,
+            ),
         )
 
         func expectedAuthedAccount() -> AuthedAccount {
@@ -3019,7 +3045,7 @@ public class RegistrationCoordinatorTest {
                 pni: accountIdentityResponse.pni,
                 e164: Stubs.e164,
                 deviceId: .primary,
-                authPassword: authPassword
+                authPassword: authPassword,
             )
         }
 
@@ -3060,7 +3086,7 @@ public class RegistrationCoordinatorTest {
         // we will sync account attributes and then we are finished!
         let expectedAttributesRequest = RegistrationRequestFactory.updatePrimaryDeviceAccountAttributesRequest(
             Stubs.accountAttributes(newMasterKey),
-            auth: .implicit() // doesn't matter for url matching
+            auth: .implicit(), // doesn't matter for url matching
         )
         networkManagerMock.asyncRequestHandlers.append({ request, _ in
             if request.url == expectedAttributesRequest.url {
@@ -3073,8 +3099,8 @@ public class RegistrationCoordinatorTest {
         #expect(
             await coordinator.submitVerificationCode(Stubs.pinCode).awaitable() ==
                 .pinEntry(
-                    Stubs.pinEntryStateForPostRegRestore(mode: mode)
-                )
+                    Stubs.pinEntryStateForPostRegRestore(mode: mode),
+                ),
         )
 
         // Skip the PIN code and create a new one instead.
@@ -3082,8 +3108,8 @@ public class RegistrationCoordinatorTest {
         #expect(
             await coordinator.skipAndCreateNewPINCode().awaitable() ==
                 .pinEntry(
-                    Stubs.pinEntryStateForPostRegCreate(mode: mode, exitConfigOverride: .noExitAllowed)
-                )
+                    Stubs.pinEntryStateForPostRegCreate(mode: mode, exitConfigOverride: .noExitAllowed),
+                ),
         )
 
         // At this point we should not have set the AEP.
@@ -3116,7 +3142,7 @@ public class RegistrationCoordinatorTest {
         let reglockStateNoneData = "7b226e6f6e65223a7b7d7d"
         #expect(
             try decoder.decode(ReglockState.self, from: Data.data(fromHex: reglockStateNoneData)!) ==
-            ReglockState.none
+                ReglockState.none,
         )
 
         // Serialized ReglockState.reglocked(
@@ -3126,7 +3152,7 @@ public class RegistrationCoordinatorTest {
         let reglockStateReglockedData = "7b227265676c6f636b6564223a7b2265787069726174696f6e44617465223a2d3937383239373230302c2263726564656e7469616c223a7b2263726564656e7469616c223a7b22757365726e616d65223a2261626364222c2270617373776f7264223a2278797a227d7d7d7d"
         #expect(
             try decoder.decode(ReglockState.self, from: Data.data(fromHex: reglockStateReglockedData)!) ==
-            ReglockState.reglocked(credential: .testOnly(svr2: nil), expirationDate: reglockExpirationDate)
+                ReglockState.reglocked(credential: .testOnly(svr2: nil), expirationDate: reglockExpirationDate),
         )
 
         // Serialized ReglockState.reglocked(
@@ -3139,21 +3165,21 @@ public class RegistrationCoordinatorTest {
         let reglockStateReglockedSVR2Data = "7b227265676c6f636b6564223a7b2265787069726174696f6e44617465223a2d3937383239373230302c2263726564656e7469616c223a7b226b6273223a7b2263726564656e7469616c223a7b22757365726e616d65223a2261626364222c2270617373776f7264223a2278797a227d7d2c2273767232223a7b2263726564656e7469616c223a7b22757365726e616d65223a22787878222c2270617373776f7264223a22797979227d7d7d7d7d"
         #expect(
             try decoder.decode(ReglockState.self, from: Data.data(fromHex: reglockStateReglockedSVR2Data)!) ==
-            ReglockState.reglocked(credential: .init(svr2: Stubs.svr2AuthCredential), expirationDate: reglockExpirationDate)
+                ReglockState.reglocked(credential: .init(svr2: Stubs.svr2AuthCredential), expirationDate: reglockExpirationDate),
         )
 
         // Serialized ReglockState.waitingTimeout(expirationDate: reglockExpirationDate)
         let reglockStateWaitingTimeoutData = "7b2277616974696e6754696d656f7574223a7b2265787069726174696f6e44617465223a2d3937383239373230307d7d"
         #expect(
             try decoder.decode(ReglockState.self, from: Data.data(fromHex: reglockStateWaitingTimeoutData)!) ==
-            ReglockState.waitingTimeout(expirationDate: reglockExpirationDate)
+                ReglockState.waitingTimeout(expirationDate: reglockExpirationDate),
         )
     }
 
     // MARK: Happy Path Setups
 
     private func createAccountWithSession(
-        _ masterKey: MasterKey
+        _ masterKey: MasterKey,
     ) -> TSRequest {
         return RegistrationRequestFactory.createAccountRequest(
             verificationMethod: .sessionId(Stubs.sessionId),
@@ -3162,12 +3188,12 @@ public class RegistrationCoordinatorTest {
             accountAttributes: Stubs.accountAttributes(masterKey),
             skipDeviceTransfer: true,
             apnRegistrationId: Stubs.apnsRegistrationId,
-            prekeyBundles: Stubs.prekeyBundles()
+            prekeyBundles: Stubs.prekeyBundles(),
         )
     }
 
     private func createAccountWithRecoveryPw(
-        _ masterKey: MasterKey
+        _ masterKey: MasterKey,
     ) -> TSRequest {
         return RegistrationRequestFactory.createAccountRequest(
             verificationMethod: .recoveryPassword(masterKey.regRecoveryPw),
@@ -3176,7 +3202,7 @@ public class RegistrationCoordinatorTest {
             accountAttributes: Stubs.accountAttributes(masterKey),
             skipDeviceTransfer: true,
             apnRegistrationId: Stubs.apnsRegistrationId,
-            prekeyBundles: Stubs.prekeyBundles()
+            prekeyBundles: Stubs.prekeyBundles(),
         )
     }
 
@@ -3184,7 +3210,7 @@ public class RegistrationCoordinatorTest {
     private func goThroughOpeningHappyPath(
         coordinator: any RegistrationCoordinator,
         mode: RegistrationMode,
-        expectedNextStep: RegistrationStep
+        expectedNextStep: RegistrationStep,
     ) async {
         contactsStore.doesNeedContactsAuthorization = true
         pushRegistrationManagerMock.doesNeedNotificationAuthorization = true
@@ -3223,7 +3249,7 @@ public class RegistrationCoordinatorTest {
         await goThroughOpeningHappyPath(
             coordinator: coordinator,
             mode: mode,
-            expectedNextStep: .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode))
+            expectedNextStep: .phoneNumberEntry(stubs.phoneNumberEntryState(mode: mode)),
         )
     }
 
@@ -3249,7 +3275,7 @@ public class RegistrationCoordinatorTest {
         // We should get back the code entry step.
         #expect(
             await coordinator.submitE164(Stubs.e164).awaitable() ==
-                .verificationCodeEntry(stubs.verificationCodeEntryState(mode: mode))
+                .verificationCodeEntry(stubs.verificationCodeEntryState(mode: mode)),
         )
     }
 
@@ -3282,21 +3308,21 @@ public class RegistrationCoordinatorTest {
                 badges: [],
                 lastFetchDate: Date(timeIntervalSince1970: 1735689600),
                 lastMessagingDate: nil,
-                isPhoneNumberShared: false
+                isPhoneNumberShared: false,
             )
         }
     }
 
     private static func attributesFromCreateAccountRequest(
-        _ request: TSRequest
+        _ request: TSRequest,
     ) -> AccountAttributes {
         let accountAttributesData = try! JSONSerialization.data(
             withJSONObject: request.parameters["accountAttributes"]!,
-            options: .fragmentsAllowed
+            options: .fragmentsAllowed,
         )
         return try! JSONDecoder().decode(
             AccountAttributes.self,
-            from: accountAttributesData
+            from: accountAttributesData,
         )
     }
 
@@ -3337,7 +3363,7 @@ public class RegistrationCoordinatorTest {
             Stubs.svr2AuthCredential,
             SVR2AuthCredential(credential: RemoteAttestation.Auth(username: "aaaa", password: "abc")),
             SVR2AuthCredential(credential: RemoteAttestation.Auth(username: "zzzz", password: "xyz")),
-            SVR2AuthCredential(credential: RemoteAttestation.Auth(username: "0000", password: "123"))
+            SVR2AuthCredential(credential: RemoteAttestation.Auth(username: "0000", password: "123")),
         ]
         svrAuthCredentialStore.svr2Dict = Dictionary(grouping: svr2CredentialCandidates, by: \.credential.username).mapValues { $0.first! }
 
@@ -3345,7 +3371,7 @@ public class RegistrationCoordinatorTest {
         // Match the main auth credential.
         let expectedSVR2CheckRequest = RegistrationRequestFactory.svr2AuthCredentialCheckRequest(
             e164: Stubs.e164,
-            credentials: svr2CredentialCandidates
+            credentials: svr2CredentialCandidates,
         )
         mockURLSession.addResponse(TSRequestOWSURLSessionMock.Response(
             urlSuffix: expectedSVR2CheckRequest.url.absoluteString,
@@ -3354,8 +3380,8 @@ public class RegistrationCoordinatorTest {
                 "\(Stubs.svr2AuthCredential.credential.username):\(Stubs.svr2AuthCredential.credential.password)": isMatch ? .match : .notMatch,
                 "aaaa:abc": .notMatch,
                 "zzzz:xyz": .invalid,
-                "0000:123": .unknown
-            ])
+                "0000:123": .unknown,
+            ]),
         ))
     }
 
@@ -3393,26 +3419,26 @@ public class RegistrationCoordinatorTest {
                 registrationRecoveryPassword: masterKey?.regRecoveryPw,
                 encryptedDeviceName: nil,
                 discoverableByPhoneNumber: .nobody,
-                hasSVRBackups: true
+                capabilities: AccountAttributes.Capabilities(hasSVRBackups: true),
             )
         }
 
         static func accountIdentityResponse(
-            hasPreviouslyUsedSVR: Bool = false
+            hasPreviouslyUsedSVR: Bool = false,
         ) -> RegistrationServiceResponses.AccountIdentityResponse {
             return RegistrationServiceResponses.AccountIdentityResponse(
                 aci: Stubs.aci,
                 pni: Pni.randomForTesting(),
                 e164: Stubs.e164,
                 username: nil,
-                hasPreviouslyUsedSVR: hasPreviouslyUsedSVR
+                hasPreviouslyUsedSVR: hasPreviouslyUsedSVR,
             )
         }
 
         static func prekeyBundles() -> RegistrationPreKeyUploadBundles {
             return RegistrationPreKeyUploadBundles(
                 aci: preKeyBundle(identity: .aci),
-                pni: preKeyBundle(identity: .pni)
+                pni: preKeyBundle(identity: .pni),
             )
         }
 
@@ -3435,7 +3461,7 @@ public class RegistrationCoordinatorTest {
             allowedToRequestCode: Bool = true,
             requestedInformation: [RegistrationSession.Challenge] = [],
             hasUnknownChallengeRequiringAppUpdate: Bool = false,
-            verified: Bool = false
+            verified: Bool = false,
         ) -> RegistrationSession {
             let receivedDate = receivedDate ?? date
             return RegistrationSession(
@@ -3448,7 +3474,7 @@ public class RegistrationCoordinatorTest {
                 allowedToRequestCode: allowedToRequestCode,
                 requestedInformation: requestedInformation,
                 hasUnknownChallengeRequiringAppUpdate: hasUnknownChallengeRequiringAppUpdate,
-                verified: verified
+                verified: verified,
             )
         }
 
@@ -3457,35 +3483,35 @@ public class RegistrationCoordinatorTest {
         static func pinEntryStateForRegRecoveryPath(
             mode: RegistrationMode,
             error: RegistrationPinValidationError? = nil,
-            remainingAttempts: UInt? = nil
+            remainingAttempts: UInt? = nil,
         ) -> RegistrationPinState {
             return RegistrationPinState(
                 operation: .enteringExistingPin(
                     skippability: .canSkip,
-                    remainingAttempts: remainingAttempts
+                    remainingAttempts: remainingAttempts,
                 ),
                 error: error,
                 contactSupportMode: .v2WithUnknownReglockState,
-                exitConfiguration: mode.pinExitConfig
+                exitConfiguration: mode.pinExitConfig,
             )
         }
 
         static func pinEntryStateForSVRAuthCredentialPath(
             mode: RegistrationMode,
-            error: RegistrationPinValidationError? = nil
+            error: RegistrationPinValidationError? = nil,
         ) -> RegistrationPinState {
             return RegistrationPinState(
                 operation: .enteringExistingPin(skippability: .canSkip, remainingAttempts: nil),
                 error: error,
                 contactSupportMode: .v2WithUnknownReglockState,
-                exitConfiguration: mode.pinExitConfig
+                exitConfiguration: mode.pinExitConfig,
             )
         }
 
         func phoneNumberEntryState(
             mode: RegistrationMode,
             previouslyEnteredE164: E164? = nil,
-            withValidationErrorFor response: Registration.BeginSessionResponse? = nil
+            withValidationErrorFor response: Registration.BeginSessionResponse? = nil,
         ) -> RegistrationPhoneNumberViewState {
             let response = response ?? .success(session())
             let validationError: RegistrationPhoneNumberViewState.ValidationError?
@@ -3496,8 +3522,8 @@ public class RegistrationCoordinatorTest {
                 validationError = .invalidE164(.init(invalidE164: previouslyEnteredE164 ?? Stubs.e164))
             case .retryAfter(let timeInterval):
                 validationError = .rateLimited(.init(
-                    expiration: date.addingTimeInterval(timeInterval),
-                    e164: previouslyEnteredE164 ?? Stubs.e164
+                    expiration: date.addingTimeInterval(timeInterval!),
+                    e164: previouslyEnteredE164 ?? Stubs.e164,
                 ))
             case .networkFailure, .genericError:
                 Issue.record("Should not be generating phone number state for error responses.")
@@ -3509,13 +3535,13 @@ public class RegistrationCoordinatorTest {
                 return .registration(.initialRegistration(.init(
                     previouslyEnteredE164: previouslyEnteredE164,
                     validationError: validationError,
-                    canExitRegistration: true
+                    canExitRegistration: true,
                 )))
             case .reRegistering(let params):
                 return .registration(.reregistration(.init(
                     e164: params.e164,
                     validationError: validationError,
-                    canExitRegistration: true
+                    canExitRegistration: true,
                 )))
             case .changingNumber(let changeNumberParams):
                 switch validationError {
@@ -3524,21 +3550,21 @@ public class RegistrationCoordinatorTest {
                         return .changingNumber(.confirmation(.init(
                             oldE164: changeNumberParams.oldE164,
                             newE164: newE164,
-                            rateLimitedError: nil
+                            rateLimitedError: nil,
                         )))
                     } else {
                         return .changingNumber(.initialEntry(.init(
                             oldE164: changeNumberParams.oldE164,
                             newE164: nil,
                             hasConfirmed: false,
-                            invalidE164Error: nil
+                            invalidE164Error: nil,
                         )))
                     }
                 case .rateLimited(let error):
                     return .changingNumber(.confirmation(.init(
                         oldE164: changeNumberParams.oldE164,
                         newE164: previouslyEnteredE164!,
-                        rateLimitedError: error
+                        rateLimitedError: error,
                     )))
                 case .invalidInput:
                     owsFail("Can't happen.")
@@ -3547,7 +3573,7 @@ public class RegistrationCoordinatorTest {
                         oldE164: changeNumberParams.oldE164,
                         newE164: previouslyEnteredE164,
                         hasConfirmed: previouslyEnteredE164 != nil,
-                        invalidE164Error: error
+                        invalidE164Error: error,
                     )))
                 }
             }
@@ -3561,7 +3587,7 @@ public class RegistrationCoordinatorTest {
             showHelpText: Bool = false,
             nextVerificationAttempt: TimeInterval? = 0,
             validationError: RegistrationVerificationValidationError? = nil,
-            exitConfigOverride: RegistrationVerificationState.ExitConfiguration? = nil
+            exitConfigOverride: RegistrationVerificationState.ExitConfiguration? = nil,
         ) -> RegistrationVerificationState {
 
             let canChangeE164: Bool
@@ -3580,60 +3606,60 @@ public class RegistrationCoordinatorTest {
                 canChangeE164: canChangeE164,
                 showHelpText: showHelpText,
                 validationError: validationError,
-                exitConfiguration: exitConfigOverride ?? mode.verificationExitConfig
+                exitConfiguration: exitConfigOverride ?? mode.verificationExitConfig,
             )
         }
 
         static func pinEntryStateForSessionPathReglock(
             mode: RegistrationMode,
-            error: RegistrationPinValidationError? = nil
+            error: RegistrationPinValidationError? = nil,
         ) -> RegistrationPinState {
             return RegistrationPinState(
                 operation: .enteringExistingPin(skippability: .unskippable, remainingAttempts: nil),
                 error: error,
                 contactSupportMode: .v2WithReglock,
-                exitConfiguration: mode.pinExitConfig
+                exitConfiguration: mode.pinExitConfig,
             )
         }
 
         static func pinEntryStateForPostRegRestore(
             mode: RegistrationMode,
             exitConfigOverride: RegistrationPinState.ExitConfiguration? = nil,
-            error: RegistrationPinValidationError? = nil
+            error: RegistrationPinValidationError? = nil,
         ) -> RegistrationPinState {
             return RegistrationPinState(
                 operation: .enteringExistingPin(
                     skippability: .canSkipAndCreateNew,
-                    remainingAttempts: nil
+                    remainingAttempts: nil,
                 ),
                 error: error,
                 contactSupportMode: .v2NoReglock,
-                exitConfiguration: exitConfigOverride ?? mode.pinExitConfig
+                exitConfiguration: exitConfigOverride ?? mode.pinExitConfig,
             )
         }
 
         static func pinEntryStateForPostRegCreate(
             mode: RegistrationMode,
-            exitConfigOverride: RegistrationPinState.ExitConfiguration? = nil
+            exitConfigOverride: RegistrationPinState.ExitConfiguration? = nil,
         ) -> RegistrationPinState {
             return RegistrationPinState(
                 operation: .creatingNewPin,
                 error: nil,
                 contactSupportMode: .v2NoReglock,
-                exitConfiguration: exitConfigOverride ?? mode.pinExitConfig
+                exitConfiguration: exitConfigOverride ?? mode.pinExitConfig,
             )
         }
 
         static func pinEntryStateForPostRegConfirm(
             mode: RegistrationMode,
             error: RegistrationPinValidationError? = nil,
-            exitConfigOverride: RegistrationPinState.ExitConfiguration? = nil
+            exitConfigOverride: RegistrationPinState.ExitConfiguration? = nil,
         ) -> RegistrationPinState {
             return RegistrationPinState(
                 operation: .confirmingNewPin(.stub()),
                 error: error,
                 contactSupportMode: .v2NoReglock,
-                exitConfiguration: exitConfigOverride ?? mode.pinExitConfig
+                exitConfiguration: exitConfigOverride ?? mode.pinExitConfig,
             )
         }
     }
@@ -3707,7 +3733,7 @@ private extension Usernames.UsernameLink {
     static var mocked: Usernames.UsernameLink {
         return Usernames.UsernameLink(
             handle: UUID(),
-            entropy: Data(repeating: 8, count: 32)
+            entropy: Data(repeating: 8, count: 32),
         )!
     }
 }

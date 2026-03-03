@@ -26,7 +26,7 @@ public class BackupArchiveAvatarFetcher {
         profileManager: ProfileManager,
         reachabilityManager: SSKReachabilityManager,
         threadStore: ThreadStore,
-        tsAccountManager: TSAccountManager
+        tsAccountManager: TSAccountManager,
     ) {
         self.appReadiness = appReadiness
         self.db = db
@@ -47,8 +47,8 @@ public class BackupArchiveAvatarFetcher {
                 reachabilityManager: reachabilityManager,
                 store: store,
                 threadStore: threadStore,
-                tsAccountManager: tsAccountManager
-            )
+                tsAccountManager: tsAccountManager,
+            ),
         )
         appReadiness.runNowOrWhenMainAppDidBecomeReadyAsync { [weak self] in
             Task { [weak self] in
@@ -58,12 +58,12 @@ public class BackupArchiveAvatarFetcher {
         }
     }
 
-    internal func enqueueFetchOfGroupAvatar(
+    func enqueueFetchOfGroupAvatar(
         _ thread: TSGroupThread,
         currentTimestamp: UInt64,
         lastVisibleInteractionRowIdInGroupThread: Int64?,
         localIdentifiers: LocalIdentifiers,
-        tx: DBWriteTransaction
+        tx: DBWriteTransaction,
     ) throws {
         guard let avatarUrl = (thread.groupModel as? TSGroupModelV2)?.avatarUrlPath else {
             return
@@ -73,23 +73,23 @@ public class BackupArchiveAvatarFetcher {
             avatarUrl: avatarUrl,
             currentTimestamp: currentTimestamp,
             lastVisibleInteractionRowIdInGroupThread: lastVisibleInteractionRowIdInGroupThread,
-            localIdentifiers: localIdentifiers
+            localIdentifiers: localIdentifiers,
         )
         try record?.insert(tx.database)
     }
 
-    internal func enqueueFetchOfUserProfile(
+    func enqueueFetchOfUserProfile(
         serviceId: ServiceId,
         currentTimestamp: UInt64,
         lastVisibleInteractionRowIdInContactThread: Int64?,
         localIdentifiers: LocalIdentifiers,
-        tx: DBWriteTransaction
+        tx: DBWriteTransaction,
     ) throws {
         var record = Record.forUserProfile(
             serviceId: serviceId,
             currentTimestamp: currentTimestamp,
             lastVisibleInteractionRowIdInContactThread: lastVisibleInteractionRowIdInContactThread,
-            localIdentifiers: localIdentifiers
+            localIdentifiers: localIdentifiers,
         )
         try record.insert(tx.database)
     }
@@ -110,13 +110,13 @@ public class BackupArchiveAvatarFetcher {
             self,
             selector: #selector(didUpdateRegistrationState),
             name: .registrationStateDidChange,
-            object: nil
+            object: nil,
         )
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(reachabililityDidChange),
             name: SSKReachability.owsReachabilityDidChange,
-            object: nil
+            object: nil,
         )
     }
 
@@ -156,7 +156,7 @@ public class BackupArchiveAvatarFetcher {
             reachabilityManager: SSKReachabilityManager,
             store: TaskStore,
             threadStore: ThreadStore,
-            tsAccountManager: TSAccountManager
+            tsAccountManager: TSAccountManager,
         ) {
             self.dateProvider = dateProvider
             self.db = db
@@ -171,12 +171,9 @@ public class BackupArchiveAvatarFetcher {
 
         func runTask(
             record: Record,
-            loader: TaskQueueLoader<TaskRunner>
+            loader: TaskQueueLoader<TaskRunner>,
         ) async -> TaskRecordResult {
-            guard
-                tsAccountManager.registrationStateWithMaybeSneakyTransaction.isRegistered,
-                let localIdentifiers = tsAccountManager.localIdentifiersWithMaybeSneakyTransaction
-            else {
+            guard let registeredState = try? tsAccountManager.registeredStateWithMaybeSneakyTransaction() else {
                 try? await loader.stop()
                 return .cancelled
             }
@@ -198,18 +195,18 @@ public class BackupArchiveAvatarFetcher {
                 }
 
                 do {
-                    if localIdentifiers.contains(serviceId: serviceId) {
+                    if registeredState.localIdentifiers.contains(serviceId: serviceId) {
                         _ = try await profileManager.fetchLocalUsersProfile(
-                            authedAccount: .implicit()
+                            authedAccount: .implicit(),
                         )
                         try await profileManager.downloadAndDecryptLocalUserAvatarIfNeeded(
-                            authedAccount: .implicit()
+                            authedAccount: .implicit(),
                         )
                     } else {
                         _ = try await profileFetcher.fetchProfileImpl(
                             for: serviceId,
                             context: .init(isOpportunistic: true),
-                            authedAccount: .implicit()
+                            authedAccount: .implicit(),
                         )
                     }
                     return .success
@@ -243,7 +240,7 @@ public class BackupArchiveAvatarFetcher {
                 do {
                     let avatarDataState = try await groupsV2.fetchGroupAvatarRestoredFromBackup(
                         groupModel: groupModel,
-                        avatarUrlPath: avatarUrlPath
+                        avatarUrlPath: avatarUrlPath,
                     )
 
                     let avatarHash: String?
@@ -285,7 +282,7 @@ public class BackupArchiveAvatarFetcher {
                         threadStore.update(
                             groupThread: refetchedGroupThread,
                             with: refetchedGroupModel,
-                            tx: tx
+                            tx: tx,
                         )
                     }
                     return .success
@@ -365,7 +362,7 @@ public class BackupArchiveAvatarFetcher {
             serviceId: ServiceId?,
             currentTimestamp: UInt64,
             lastVisibleInteractionRowIdInThread: Int64?,
-            localIdentifiers: LocalIdentifiers
+            localIdentifiers: LocalIdentifiers,
         ) {
             self._id = nil
             self.groupThreadRowId = groupThreadRowId
@@ -383,7 +380,7 @@ public class BackupArchiveAvatarFetcher {
                 nextRetryTimestamp = 0
             } else if
                 let lastVisibleInteractionRowIdInThread = lastVisibleInteractionRowIdInThread
-                    .map({ UInt64(exactly: $0 ) }) ?? nil
+                    .map({ UInt64(exactly: $0) }) ?? nil
             {
                 if lastVisibleInteractionRowIdInThread < currentTimestamp {
                     nextRetryTimestamp = currentTimestamp - lastVisibleInteractionRowIdInThread
@@ -402,7 +399,7 @@ public class BackupArchiveAvatarFetcher {
             avatarUrl: String,
             currentTimestamp: UInt64,
             lastVisibleInteractionRowIdInGroupThread: Int64?,
-            localIdentifiers: LocalIdentifiers
+            localIdentifiers: LocalIdentifiers,
         ) -> Self? {
             guard let rowId = groupThread.sqliteRowId else { return nil }
             return .init(
@@ -411,7 +408,7 @@ public class BackupArchiveAvatarFetcher {
                 serviceId: nil,
                 currentTimestamp: currentTimestamp,
                 lastVisibleInteractionRowIdInThread: lastVisibleInteractionRowIdInGroupThread,
-                localIdentifiers: localIdentifiers
+                localIdentifiers: localIdentifiers,
             )
         }
 
@@ -419,7 +416,7 @@ public class BackupArchiveAvatarFetcher {
             serviceId: ServiceId,
             currentTimestamp: UInt64,
             lastVisibleInteractionRowIdInContactThread: Int64?,
-            localIdentifiers: LocalIdentifiers
+            localIdentifiers: LocalIdentifiers,
         ) -> Self {
             return .init(
                 groupThreadRowId: nil,
@@ -427,7 +424,7 @@ public class BackupArchiveAvatarFetcher {
                 serviceId: serviceId,
                 currentTimestamp: currentTimestamp,
                 lastVisibleInteractionRowIdInThread: lastVisibleInteractionRowIdInContactThread,
-                localIdentifiers: localIdentifiers
+                localIdentifiers: localIdentifiers,
             )
         }
 

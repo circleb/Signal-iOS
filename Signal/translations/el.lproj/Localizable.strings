@@ -217,6 +217,15 @@
 /* Error indicating that the app could not launch because the database could not be loaded. */
 "APP_LAUNCH_FAILURE_COULD_NOT_LOAD_DATABASE" = "Δεν φορτώθηκε η βάση δεδομένων";
 
+/* Message for an action sheet explaining that Signal can't launch because the database is corrupted. */
+"APP_LAUNCH_FAILURE_DATABASE_CORRUPTED_MESSAGE" = "Δεν είναι δυνατή η εκκίνηση του Signal επειδή η βάση δεδομένων είναι κατεστραμμένη. Δεν υπήρξε καμία επίδραση στην ασφάλεια του λογαριασμού ή των μηνυμάτων σου.";
+
+/* Title for an action sheet explaining that Signal can't launch because the database is corrupted. */
+"APP_LAUNCH_FAILURE_DATABASE_CORRUPTED_TITLE" = "Η βάση δεδομένων έχει καταστραφεί";
+
+/* Action in an action sheet offering to attempt recovery of a corrupted database. */
+"APP_LAUNCH_FAILURE_DATABASE_RECOVERY_ACTION_TITLE" = "Επιδιόρθωση";
+
 /* Error indicating that the app could not launch without reverting unknown database migrations. */
 "APP_LAUNCH_FAILURE_INVALID_DATABASE_VERSION_MESSAGE" = "Παρακαλώ αναβάθμισε το Signal στην τελευταία έκδοση";
 
@@ -679,6 +688,9 @@
 /* Message for an action sheet explaining that performing a backup failed with a network error. */
 "BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NETWORK_ERROR" = "Κάτι πήγε στραβά με τη δημιουργία του αντιγράφου ασφαλείας σου. Έλεγξε τη σύνδεσή σου στο διαδίκτυο και δοκιμάστε ξανά.";
 
+/* Message for an action sheet explaining that you must be registered to make a Backup. */
+"BACKUP_SETTINGS_BACKUP_EXPORT_ERROR_SHEET_NOT_REGISTERED" = "Πρέπει να έχεις εγγραφεί για να δημιουργήσεις αντίγραφο ασφαλείας.";
+
 /* Description for a progress bar tracking the optimizing of Backup media. */
 "BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION_OPTIMIZING_MEDIA" = "Βελτιστοποίηση πολυμέσων...";
 
@@ -689,7 +701,7 @@
 "BACKUP_SETTINGS_BACKUP_EXPORT_PROGRESS_DESCRIPTION_PROCESSING_MEDIA" = "Επεξεργασία πολυμέσων...";
 
 /* Message describing to the user that the last backup failed. */
-"BACKUP_SETTINGS_BACKUP_FAILED_MESSAGE" = "Δεν ήταν δυνατή η ολοκλήρωση του τελευταίου αντιγράφου ασφαλείας. Βεβαιώσου ότι η συσκευή σου είναι συνδεδεμένη σε Wi-Fi και πάτα \"Δημιουργία αντιγράφων ασφαλείας τώρα\" για να προσπαθήσεις ξανά";
+"BACKUP_SETTINGS_BACKUP_FAILED_MESSAGE" = "Δεν ήταν δυνατή η ολοκλήρωση του τελευταίου αντιγράφου ασφαλείας. Πάτα \"Δημιουργία αντιγράφου ασφαλείας τώρα\" και δοκίμασε ξανά.";
 
 /* Title for a button allowing users to upgrade from a free to paid backup plan. */
 "BACKUP_SETTINGS_BACKUP_PLAN_FREE_ACTION_BUTTON_TITLE" = "Αναβάθμιση";
@@ -1359,6 +1371,78 @@
 
 /* notification body */
 "CALL_MISSED_BECAUSE_OF_IDENTITY_CHANGE_NOTIFICATION_BODY" = "☎️ Αναπάντητη κλήση επειδή ο αριθμός ασφαλείας αυτού/ης που σε κάλεσε άλλαξε.";
+
+/* Footer text explaining custom issue descriptions in the call quality survey */
+"CALL_QUALITY_SURVEY_CUSTOM_ISSUE_FOOTER" = "Πρόσθεσε τυχόν λεπτομέρειες σχετικές με το πρόβλημα. Οτιδήποτε κοινοποιείς εδώ θα παραμείνει ιδιωτικό και θα χρησιμοποιηθεί μόνο για τη βελτίωση των κλήσεων στο Signal.";
+
+/* Placeholder text for the custom issue entry in the call quality survey */
+"CALL_QUALITY_SURVEY_CUSTOM_ISSUE_PLACEHOLDER" = "Περίγραψε το πρόβλημά σου";
+
+/* Footer text explaining what debug logs contain in the call quality survey */
+"CALL_QUALITY_SURVEY_DEBUG_LOG_FOOTER" = "Τα αρχεία καταγραφής αποσφαλμάτωσης περιέχουν πληροφορίες εφαρμογής χαμηλού επιπέδου και δεν αποκαλύπτουν κανένα από τα περιεχόμενα των μηνυμάτων σου.";
+
+/* Header text explaining the purpose of sharing debug logs in the call quality survey */
+"CALL_QUALITY_SURVEY_DEBUG_LOG_HEADER" = "Η αποστολή των διαγνωστικών σου πληροφοριών μας βοηθά να βελτιώσουμε την ποιότητα των κλήσεων.";
+
+/* Title for the debug log sharing screen in the call quality survey */
+"CALL_QUALITY_SURVEY_DEBUG_LOG_TITLE" = "Βοήθησέ μας να βελτιωθούμε";
+
+/* Label for the toggle to share debug log in the call quality survey */
+"CALL_QUALITY_SURVEY_DEBUG_LOG_TOGGLE" = "Κοινή χρήση αρχείου καταγραφής αποσφαλμάτωσης";
+
+/* Button label for indicating the call did not have issues in the call quality survey */
+"CALL_QUALITY_SURVEY_GREAT_BUTTON" = "Τέλεια";
+
+/* Button label for indicating the call had issues in the call quality survey */
+"CALL_QUALITY_SURVEY_HAD_ISSUES_BUTTON" = "Είχε προβλήματα";
+
+/* Label for audio issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_AUDIO" = "Πρόβλημα με τον ήχο";
+
+/* Label for audio dropout issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_AUDIO_DROP" = "Ο ήχος διακόπηκε";
+
+/* Label for local echo issue option in call quality survey, indicating the user heard an echo */
+"CALL_QUALITY_SURVEY_ISSUE_AUDIO_LOCAL_ECHO" = "Άκουσα ηχώ";
+
+/* Label for remote echo issue option in call quality survey, indicating other participants heard an echo */
+"CALL_QUALITY_SURVEY_ISSUE_AUDIO_REMOTE_ECHO" = "Άλλοι άκουσαν ηχώ";
+
+/* Label for audio stuttering issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_AUDIO_STUTTERING" = "Ο ήχος είχε διακοπές";
+
+/* Label for call dropped issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_CALL_DROPPED" = "Η κλήση διακόπηκε";
+
+/* Label for custom issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_OTHER" = "Κάτι άλλο";
+
+/* Label for video issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_VIDEO" = "Πρόβλημα με βίντεο";
+
+/* Label for poor video quality issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_VIDEO_LOW_QUALITY" = "Κακή ποιότητα βίντεο";
+
+/* Label for low resolution video issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_VIDEO_LOW_RESOLUTION" = "Χαμηλή ανάλυση";
+
+/* Label for camera not working issue option in call quality survey */
+"CALL_QUALITY_SURVEY_ISSUE_VIDEO_NO_CAMERA" = "Η κάμερα δεν λειτούργησε";
+
+/* Header text on the call quality survey issues screen */
+"CALL_QUALITY_SURVEY_ISSUES_HEADER" = "Επίλεξε όλα όσα ισχύουν";
+
+/* Title for the sheet in the call quality survey where issues with the call can be selected */
+"CALL_QUALITY_SURVEY_ISSUES_SHEET_TITLE" = "Τι προβλήματα αντιμετώπισες;";
+
+/* Header text explaining the purpose of the call quality survey */
+"CALL_QUALITY_SURVEY_RATING_HEADER" = "Αυτό μας βοηθά να βελτιώσουμε τις κλήσεις στο Signal. Δεν θα αποθηκευτούν προσωπικά αναγνωρίσιμες πληροφορίες.";
+
+/* Title for the initial rating screen in the call quality survey */
+"CALL_QUALITY_SURVEY_RATING_TITLE" = "Πώς ήταν η κλήση σου;";
+
+/* Button text to submit the call quality survey */
+"CALL_QUALITY_SURVEY_SUBMIT_BUTTON" = "Υποβολή";
 
 /* Label on button for raising hand in call. */
 "CALL_RAISE_HAND_BUTTON_LABEL" = "Σήκωσε το χέρι σου";
@@ -2134,6 +2218,9 @@
 /* Footer for the 'attributes access' section in conversation settings view. */
 "CONVERSATION_SETTINGS_ATTRIBUTES_ACCESS_SECTION_FOOTER" = "Διάλεξε ποιοί θα μπορούν να επεξεργάζονται το όνομα της ομάδας, τη φωτογραφία, τη περιγραφή και το χρόνο εξαφάνισης μηνυμάτων.";
 
+/* Footer for the 'attributes access' section in conversation settings view with pinned messages added. */
+"CONVERSATION_SETTINGS_ATTRIBUTES_ACCESS_SECTION_FOOTER_V2" = "Διάλεξε ποιοι θα μπορούν να επεξεργάζονται το όνομα της ομάδας, τη φωτογραφία, τη περιγραφή, τον χρόνο εξαφάνισης μηνυμάτων και τα καρφιτσωμένα μηνύματα.";
+
 /* Footer string for a contact's badges in conversation settings */
 "CONVERSATION_SETTINGS_BADGES_FOOTER" = "Πάρε εμβλήματα για το προφίλ σου στηρίζοντας το Signal. Πάτα σε ένα έμβλημα για να μάθεις περισσότερα.";
 
@@ -2389,23 +2476,11 @@
 /* Tooltip highlighting the custom chat color controls. */
 "CUSTOM_CHAT_COLOR_SETTINGS_TOOLTIP" = "Σύρε για να αλλάξεις τη φορά της διαβάθμισης";
 
-/* Button to run the database integrity check */
-"DATABASE_INTEGRITY_CHECK_ACTION_RUN" = "Εκτέλεση";
-
-/* Message for alert before running a database integrity check */
-"DATABASE_INTEGRITY_CHECK_MESSAGE" = "Αυτό θα μας βοηθήσει να λύσουμε το πρόβλημά σου και μπορεί να χρειαστούν αρκετά λεπτά για να ολοκληρωθεί. Μπορείς να κλείσεις το Singal για όσο εκτελείται ο έλεγχος, αλλά επέστρεψε για να υποβάλλεις τα αρχεία καταγραφής σου.";
-
-/* Button to skip database integrity check step */
-"DATABASE_INTEGRITY_CHECK_SKIP" = "Παράλειψη";
-
-/* Title for alert before running a database integrity check */
-"DATABASE_INTEGRITY_CHECK_TITLE" = "Εκτέλεση διάγνωσης βάσης δεδομένων;";
-
 /* In some cases, the user's message history can become corrupted, and a recovery interface is shown. The user has not been hacked and may be confused by this interface, so keep that in mind. This is the description on the first screen of this interface, which gives them some information and asks them to continue. */
 "DATABASE_RECOVERY_AWAITING_USER_CONFIRMATION_DESCRIPTION" = "Κάποιο τμήμα από το ιστορικό μηνυμάτων σου μπορεί να έχει καταστραφεί. Δεν υπήρξε καμία επίδραση στην ασφάλεια του λογαριασμού ή των μηνυμάτων σου. Πάτα \"Συνέχεια\" για να ανακτήσεις τα δεδομένα σου.";
 
-/* In some cases, the user's message history can become corrupted, and a recovery interface is shown. The user has not been hacked and may be confused by this interface, so try to avoid using terms like \"database\" or \"corrupted\"—terms like \"message history\" are better. This is the title on the first screen of this interface, which gives them some information and asks them to continue. */
-"DATABASE_RECOVERY_AWAITING_USER_CONFIRMATION_TITLE" = "Πρόβλημα με την ανάκτηση δεδομένων";
+/* In some cases, the user's message history can become corrupted, and a recovery interface is shown. This is the title on the first screen of this interface, which gives them some information and asks them to continue. */
+"DATABASE_RECOVERY_AWAITING_USER_CONFIRMATION_TITLE" = "Επιδιόρθωση";
 
 /* On the database recovery screen, if the user's device storage is nearly full, Signal will not be able to recover the database. A warning screen, which can be bypassed if the user wishes, will be shown. This is the text on the button to bypass the warning. */
 "DATABASE_RECOVERY_MORE_STORAGE_SPACE_NEEDED_CONTINUE_ANYWAY" = "Συνέχεια παρ' όλα αυτά";
@@ -2617,23 +2692,14 @@
 /* The explanation for the device transfer 'choice' view when linking a device */
 "DEVICE_TRANSFER_CHOICE_LINKED_EXPLANATION" = "Επίλεξε πώς θέλεις να μεταφέρεις το ιστορικό μηνυμάτων και τα δεδομένα του λογαριασμού σου";
 
-/* The body for the device transfer 'choice' view 'register' option */
-"DEVICE_TRANSFER_CHOICE_REGISTER_BODY" = "Συνέχεια χωρίς την μεταφορά του λογαριασμού και των μηνυμάτων σου";
-
 /* The body for the device transfer 'choice' view 'register' option when linking a device when message syncing is available */
 "DEVICE_TRANSFER_CHOICE_REGISTER_LINKED_BODY_LINK_AND_SYNC" = "Θα έχεις την επιλογή να μεταφέρεις μηνύματα και πρόσφατα μέσα από το τηλέφωνό σου";
 
 /* The title for the device transfer 'choice' view 'register' option when linking a device */
 "DEVICE_TRANSFER_CHOICE_REGISTER_LINKED_TITLE" = "Προσθήκη ως Νέα Συσκευή";
 
-/* The title for the device transfer 'choice' view 'register' option */
-"DEVICE_TRANSFER_CHOICE_REGISTER_TITLE" = "Εγγραφή χωρίς μεταφορά";
-
 /* The title for the device transfer 'choice' view */
 "DEVICE_TRANSFER_CHOICE_TITLE" = "Μεταφορά λογαριασμού & μηνυμάτων";
-
-/* The body for the device transfer 'choice' view 'transfer' option */
-"DEVICE_TRANSFER_CHOICE_TRANSFER_BODY" = "Μεταφορά λογαριασμού και ιστορικού μηνυμάτων από την παλιά σου συσκευή iOS";
 
 /* The body for the device transfer 'choice' view 'transfer' option when linking a device */
 "DEVICE_TRANSFER_CHOICE_TRANSFER_LINKED_BODY" = "Μεταφορά λογαριασμού και ιστορικού μηνυμάτων από την παλιά σου συσκευή iOS";
@@ -2641,26 +2707,11 @@
 /* The title for the device transfer 'choice' view 'transfer' option when linking a device */
 "DEVICE_TRANSFER_CHOICE_TRANSFER_LINKED_TITLE" = "Μεταφορά από άλλο iPad";
 
-/* The title for the device transfer 'choice' view 'transfer' option */
-"DEVICE_TRANSFER_CHOICE_TRANSFER_TITLE" = "Μεταφορά από συσκευή iOS";
-
-/* Button shown to contract a QR code and exit the fullscreen view. */
-"DEVICE_TRANSFER_CONTRACT_QR_CODE_BUTTON" = "Μικρότερη προβολή";
-
 /* An error indicating that the other device closed signal mid-transfer and it could not complete */
 "DEVICE_TRANSFER_ERROR_BACKGROUNDED" = "Δεν ήταν δυνατή η ολοκλήρωση της μεταφοράς. Βεβαιώσου πως το Signal είναι ανοιχτό και στις δύο συσκευές και δοκίμασε ξανά.";
 
-/* An error indicating that we were unable to verify the identity of the new device to complete the transfer */
-"DEVICE_TRANSFER_ERROR_CERTIFICATE_MISMATCH" = "Αδυναμία επαλήθευσης της νέας συσκευής σου, παρακαλώ δοκίμασε ξανά.";
-
 /* An error indicating that something went wrong with the transfer and it could not complete */
 "DEVICE_TRANSFER_ERROR_GENERIC" = "Δεν ήταν δυνατή η ολοκλήρωση της μεταφοράς. Βεβαιώσου πως οι συσκευές είναι κοντά η μία στην άλλη και προσπάθησε ξανά.";
-
-/* An error indicating the user must scan this code with a linked device to transfer. */
-"DEVICE_TRANSFER_ERROR_MODE_MISMATCH_LINKED" = "Για να ρυθμίσεις το iPad ως συνδεδεμένη συσκευή, πρέπει να σαρώσεις με το παλιό σου iPad";
-
-/* An error indicating the user must scan this code with a primary device to transfer. */
-"DEVICE_TRANSFER_ERROR_MODE_MISMATCH_PRIMARY" = "Για να μεταφέρεις το λογαριασμό σου, πρέπει να σαρώσεις με το iPhone σου";
 
 /* An error indicating that the user does not have enough free space on their device to complete the transfer */
 "DEVICE_TRANSFER_ERROR_NOT_ENOUGH_SPACE" = "Δεν υπάρχει αρκετός ελεύθερος χώρος για την ολοκλήρωση της μεταφοράς";
@@ -2668,41 +2719,11 @@
 /* An error indicating the user must update their device before trying to transfer. */
 "DEVICE_TRANSFER_ERROR_UNSUPPORTED_VERSION" = "Ενημέρωσε το Signal στην τελευταία έκδοση και δοκίμασε ξανά";
 
-/* Button shown to expand a QR code and view it fullscreen. */
-"DEVICE_TRANSFER_EXPAND_QR_CODE_BUTTON" = "Μεγαλύτερη προβολή";
-
-/* The explanation on the action sheet prompting the user if they want to transfer their device. */
-"DEVICE_TRANSFER_PROMPT_EXPLANATION" = "Μεταφορά του Signal λογαριασμού σου σε νέα συσκευή iOS. Βεβαιώσου πως η νέα σου συσκευή είναι κοντά και είναι ενεργοποιημένη.";
-
-/* The title on the acttion sheet prompting the user if they want to transfer their device. */
-"DEVICE_TRANSFER_PROMPT_TITLE" = "Μεταφορά Λογαριασμού";
-
-/* The explanation for the device transfer qr code view */
-"DEVICE_TRANSFER_QRCODE_EXPLANATION" = "Φέρε την παλιά σου συσκευή κοντά, βεβαιώσου ότι το Wi-Fi και το Bluetooth είναι ενεργοποιημένα σε αυτήν και σάρωσε αυτόν τον κωδικό QR.";
-
-/* The second explanation for the device transfer qr code view */
-"DEVICE_TRANSFER_QRCODE_EXPLANATION2" = "Τοποθέτησε αυτόν τον κωδικό QR εντός του πλαισίου της άλλης συσκευής iOS.";
-
-/* A prompt to provide further explanation if the user is not seeing the transfer on both devices. */
-"DEVICE_TRANSFER_QRCODE_NOT_SEEING" = "Δεν βλέπεις το μήνυμα στη παλιά σου συσκευή;";
-
-/* The title for the device transfer qr code view */
-"DEVICE_TRANSFER_QRCODE_TITLE" = "Σκανάρισμα κωδικού QR";
-
 /* The explanation on the view that shows receiving progress */
 "DEVICE_TRANSFER_RECEIVING_EXPLANATION" = "Κράτησε τις δύο συσκευές κοντά. Μην σβήσεις καμία συσκευή και κράτησε το Signal ανοικτό. Οι μεταφορές είναι κρυπτογραφημένες απ' άκρη σ' άκρη.";
 
 /* The title on the view that shows receiving progress */
 "DEVICE_TRANSFER_RECEIVING_TITLE" = "Λήψη δεδομένων";
-
-/* Text indicating that we are connecting to the scanned device */
-"DEVICE_TRANSFER_SCANNING_CONNECTING" = "Συνδέεται…";
-
-/* The explanation for the action sheet asking the user to scan the QR code to transfer */
-"DEVICE_TRANSFER_SCANNING_EXPLANATION" = "Τοποθέτησε τον κώδικα QR εντός του κύκλου";
-
-/* The title for the action sheet asking the user to scan the QR code to transfer */
-"DEVICE_TRANSFER_SCANNING_TITLE" = "Κράτησε την νέα σου συσκευή μπροστά στην κάμερα";
 
 /* Status message on new device when cancelling transfer. */
 "DEVICE_TRANSFER_STATUS_NEW_DEVICE_CANCELLING" = "Ακύρωση σύνδεσης με παλιό iPhone…";
@@ -2714,7 +2735,7 @@
 "DEVICE_TRANSFER_STATUS_NEW_DEVICE_CONNECTING_MESSAGE" = "Φέρε την παλιά σου συσκευή κοντά και βεβαιώσου ότι είναι ενεργοποιημένο το Wi-Fi και το Bluetooth.";
 
 /* Status message on new device when transfer is starting. */
-"DEVICE_TRANSFER_STATUS_NEW_DEVICE_STARTING" = "Αναμονή για σύνδεση με παλιό iPhone…";
+"DEVICE_TRANSFER_STATUS_NEW_DEVICE_STARTING" = "Αναμονή για σύνδεση με παλιά συσκευή...";
 
 /* Description in the progress view displayed after failure of device transfer. */
 "DEVICE_TRANSFER_STATUS_NEW_DEVICE_TRANSFER_FAILED_BODY" = "Η μεταφορά σε νέα συσκευή απέτυχε. Φέρε την παλιά σου συσκευή κοντά σου και δοκίμασε ξανά.";
@@ -2738,13 +2759,10 @@
 "DEVICE_TRANSFER_STATUS_OLD_DEVICE_CONNECTING_MESSAGE" = "Φέρε τη νέα σου συσκευή κοντά σου και βεβαιώσου ότι είναι ενεργοποιημένο το Wi-Fi και το Bluetooth.";
 
 /* Status message on old device when transfer is starting. */
-"DEVICE_TRANSFER_STATUS_OLD_DEVICE_STARTING" = "Αναμονή για σύνδεση με νέο iPhone…";
+"DEVICE_TRANSFER_STATUS_OLD_DEVICE_STARTING" = "Αναμονή για σύνδεση με νέα συσκευή...";
 
-/* The explanation on the action sheet that shows transfer progress */
-"DEVICE_TRANSFER_TRANSFERRING_EXPLANATION" = "Κράτησε τις δύο συσκευές κοντά τη μία στην άλλη. Μην απενεργοποιήσεις καμιά συσκευή και κράτησε το Signal ανοικτό.";
-
-/* The title on the action sheet that shows transfer progress */
-"DEVICE_TRANSFER_TRANSFERRING_TITLE" = "Μεταφορά δεδομένων";
+/* Action asking user to try again after transfer failure. */
+"DEVICE_TRANSFER_TRY_AGAIN_ACTION" = "Ξαναδοκίμασε";
 
 /* table cell label in conversation settings */
 "DISAPPEARING_MESSAGES" = "Μηνύματα που εξαφανίζονται";
@@ -3192,6 +3210,9 @@
 
 /* Label for the currency picker button in donation views */
 "DONATIONS_CURRENCY_PICKER_LABEL" = "Νόμισμα";
+
+/* Label for a button that says 'Don't show again'. */
+"DONT_SHOW_AGAIN_BUTTON_TITLE" = "Να μην εμφανιστεί ξανά";
 
 /* Message for Double Tap to Edit sheet show on first interaction */
 "DOUBLE_TAP_TO_EDIT_ALERT_MESSAGE" = "Πάτα γρήγορα δύο φορές στα μηνύματά σου για να τα επεξεργαστείς. Μπορείς να επεξεργαστείς τα μηνύματά σου έως και 24 ώρες μετά την αποστολή τους.";
@@ -3856,6 +3877,12 @@
 /* Message indicating that 'announcement-only' mode was enabled by a remote user. Embeds {{ user who enabled 'announcement-only' mode }}. */
 "GROUP_IS_ANNOUNCEMENT_ONLY_ENABLED_BY_REMOTE_USER_FORMAT" = "Ο/Η %1$@ άλλαξε τις ρυθμίσεις της ομάδας για να επιτρέπεται μόνο σε διαχειριστές να στέλνουν μηνύματα.";
 
+/* Message text for the 'group invite link' action sheet. */
+"GROUP_LINK_ACTION_SHEET_JOIN_MESSAGE" = "Θέλεις να μπεις σε αυτή την ομάδα και να μοιραστείς το όνομα και τη φωτογραφία σου με τα μέλη της;";
+
+/* Message text for the 'group invite link' action sheet, if the user will be requesting to join. */
+"GROUP_LINK_ACTION_SHEET_JOIN_MESSAGE_W_REQUEST" = "Όταν υποβάλεις αίτημα συμμετοχής, το όνομα και η φωτογραφία σου θα κοινοποιηθούν στα μέλη αυτής της ομάδας. Ένας διαχειριστής πρέπει να αποδεχτεί το αίτημά σου.";
+
 /* Subtitle indicating that the local user has been blocked from joining the group */
 "GROUP_LINK_ACTION_SHEET_VIEW_BLOCKED_FROM_JOINING_SUBTITLE" = "Δεν μπορείς να μπεις στην ομάδα μέσω του συνδέσμου της ομάδας, επειδή κάποιος διαχειριστής σε αφαίρεσε. Επικοινώνησε με έναν διαχειριστή για να προστεθείς ξανά στην ομάδα.";
 
@@ -3874,14 +3901,8 @@
 /* Label indicating that the group info is being loaded in the 'group invite link' action sheet. */
 "GROUP_LINK_ACTION_SHEET_VIEW_LOADING_TITLE" = "Φορτώνει…";
 
-/* Message text for the 'group invite link' action sheet. */
-"GROUP_LINK_ACTION_SHEET_VIEW_MESSAGE" = "Θέλεις να μπεις σε αυτή την ομάδα και να μοιραστείς το όνομα και τη φωτογραφία σου με τα μέλη της;";
-
 /* Label for the 'request to join' button in the 'group invite link' action sheet. */
 "GROUP_LINK_ACTION_SHEET_VIEW_REQUEST_TO_JOIN_BUTTON" = "Αίτημα εισόδου";
-
-/* Message text for the 'group invite link' action sheet, if the user will be requesting to join. */
-"GROUP_LINK_ACTION_SHEET_VIEW_REQUEST_TO_JOIN_MESSAGE" = "Κάποιος διαχειριστής/τρια αυτής της ομάδας θα πρέπει να εγκρίνει το αίτημά σου για να μπορέσεις να μπεις στην ομάδα. Όταν ζητήσεις να μπεις, το όνομα και η φωτογραφία σου θα μοιραστούν με τα μέλη της.";
 
 /* Error message the attempt to request to join the group failed due to network connectivity. */
 "GROUP_LINK_COULD_NOT_REQUEST_TO_JOIN_GROUP_DUE_TO_NETWORK_ERROR_MESSAGE" = "Επιβεβαίωσε πως είσαι συνδεδεμένος/η στο διαδίκτυο και ξαναδοκίμασε.";
@@ -4839,24 +4860,6 @@
 
 /* Shown to users while the app is loading, asking them not to close the app. */
 "LOADING_VIEW_CONTROLLER_DONT_CLOSE_APP" = "Μην κλείνετε το Signal.";
-
-/* Body for local network permission action sheet */
-"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_BODY" = "Για να μεταφέρεις τον λογαριασμό Signal σου, θα πρέπει να ενεργοποιήσεις την πρόσβαση στο τοπικό δίκτυο και στις δύο συσκευές.";
-
-/* A button asking the user if they need further help getting their transfer working. */
-"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_NEED_HELP" = "Χρειάζεσαι βοήθεια;";
-
-/* First step for local network permission action sheet */
-"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_STEP_ONE" = "Σε κάθε συσκευή, άνοιξε τις Ρυθμίσεις";
-
-/* Third step for local network permission action sheet */
-"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_STEP_THREE" = "Ενεργοποίησε το \"Τοπικό δίκτυο\"";
-
-/* Second step for local network permission action sheet */
-"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_STEP_TWO" = "Πήγαινε στο Signal";
-
-/* Title for local network permission action sheet */
-"LOCAL_NETWORK_PERMISSION_ACTION_SHEET_TITLE" = "Ενεργοποίησε τη Πρόσβαση στο τοπικό δίκτυο";
 
 /* A string indicating that the user can search for a location */
 "LOCATION_PICKER_SEARCH_PLACEHOLDER" = "Εύρεση βάση ονόματος ή διεύθυνσης";
@@ -6404,9 +6407,6 @@
 "PHOTO_CAPTURE_GENERIC_ERROR" = "Αδυναμία λήψης εικόνας.";
 
 /* alert title */
-"PHOTO_CAPTURE_UNABLE_TO_CAPTURE_IMAGE" = "Αδυναμία λήψης εικόνας.";
-
-/* alert title */
 "PHOTO_CAPTURE_UNABLE_TO_INITIALIZE_CAMERA" = "Αποτυχία ρύθμισης της κάμερας.";
 
 /* Button label for opening the chat on a sheet presented from photo capture view indicating that a username QR code was found. */
@@ -6417,9 +6417,6 @@
 
 /* Title for sheet presented from photo capture view indicating that a username QR code was found. Embeds {{username}}. */
 "PHOTO_CAPTURE_USERNAME_QR_CODE_FOUND_TITLE_FORMAT" = "Ο χρήστης %1$@ βρέθηκε";
-
-/* alert title, generic error preventing user from capturing a video that is too long */
-"PHOTO_CAPTURE_VIDEO_SIZE_ERROR" = "Πολύ μεγάλο βίντεο.";
 
 /* Pressing this button pins a thread */
 "PIN_ACTION" = "Καρφίτσωμα";
@@ -6565,8 +6562,80 @@
 /* An explanation that you have already pinned the maximum number of conversations. */
 "PINNED_CONVERSATION_LIMIT" = "Μπορείς να καρφιτσώσες μόνο μέχρι 4 συνομιλίες.";
 
+/* Accessibility label prefix for banner showing a pinned message */
+"PINNED_MESSAGE_BANNER_AX_LABEL" = "Καρφιτσωμένο μήνυμα:";
+
+/* Shown when another user pins a message. Embeds {{ another user }}. */
+"PINNED_MESSAGE_CHAT_EVENT_OTHER" = "Ο χρήστης %1$@ καρφίτσωσε ένα μήνυμα";
+
+/* Shown when the local user pins a message. */
+"PINNED_MESSAGE_CHAT_EVENT_SELF" = "Καρφίτσωσες ένα μήνυμα";
+
+/* Accessibility label for pin message button */
+"PINNED_MESSAGE_MENU_ACCESSIBILITY_LABEL" = "Μενού καρφιτσωμένου μηνύματος";
+
+/* Label for button to pin a message */
+"PINNED_MESSAGE_PIN_ACTION_TITLE" = "Καρφίτσωμα";
+
+/* Message for an action sheet confirming the user wants to replace oldest pinned message. */
+"PINNED_MESSAGE_REPLACE_OLDEST_BODY" = "Το καρφίτσωμα του μηνύματος θα αντικαταστήσει το παλαιότερο.";
+
+/* Option in pinned message action sheet to replace oldest pin. */
+"PINNED_MESSAGE_REPLACE_OLDEST_BUTTON" = "Αντικατάσταση";
+
+/* Title for an action sheet confirming the user wants to replace oldest pinned message. */
+"PINNED_MESSAGE_REPLACE_OLDEST_TITLE" = "Αντικατάσταση του παλαιότερου καρφιτσωμένου μηνύματος;";
+
+/* Body for error sheet shown if the pinned message failed to send */
+"PINNED_MESSAGE_SEND_ERROR_SHEET_BODY" = "Έλεγξε τη σύνδεσή σου και δοκίμασε πάλι.";
+
+/* Title for error sheet shown if the pinned message failed to send */
+"PINNED_MESSAGE_SEND_ERROR_SHEET_TITLE" = "Δεν ήταν δυνατό το καρφίτσωμα μηνύματος";
+
+/* Text to show on a toast when someone unpins a message */
+"PINNED_MESSAGE_TOAST" = "Το μήνυμα ξεκαρφιτσώθηκε";
+
+/* Label for button to unpin a message */
+"PINNED_MESSAGE_UNPIN_ACTION_TITLE" = "Ξεκαρφίτσωμα";
+
+/* Option in pinned message action sheet to pin for 24 hours. */
+"PINNED_MESSAGES_24_HOURS" = "24 ώρες";
+
+/* Option in pinned message action sheet to pin for 30 days. */
+"PINNED_MESSAGES_30_DAYS" = "30 ημέρες";
+
+/* Option in pinned message action sheet to pin for 7 days. */
+"PINNED_MESSAGES_7_DAYS" = "7 ημέρες";
+
+/* Title for Pinned Messages detail view */
+"PINNED_MESSAGES_DETAILS_TITLE" = "Καρφιτσωμένα μηνύματα";
+
+/* Title for an action sheet to indicate how long to keep the pin active */
+"PINNED_MESSAGES_EXPIRY_SHEET_TITLE" = "Να μείνει καρφιτσωμένο για...";
+
+/* Option in pinned message action sheet to pin with no expiry. */
+"PINNED_MESSAGES_FOREVER" = "Για πάντα";
+
+/* Action menu item to go to a message in the conversation view */
+"PINNED_MESSAGES_GO_TO_MESSAGE" = "Μετάβαση στο Μήνυμα";
+
+/* Action menu item to see all pinned messages */
+"PINNED_MESSAGES_SEE_ALL_MESSAGES" = "Προβολή όλων των μηνυμάτων";
+
+/* Action menu item to unpin a message */
+"PINNED_MESSAGES_UNPIN" = "Ξεκαρφίτσωμα";
+
+/* Title for a button to unpin all pinned messages. */
+"PINNED_MESSAGES_UNPIN_ALL" = "Ξεκαρφίτσωμα όλων";
+
 /* The title for pinned conversation section on the conversation list */
 "PINNED_SECTION_TITLE" = "Καρφιτσωμένο";
+
+/* Body for a sheet warning users they are pinning a disappearing message. */
+"PINNING_DISAPPEARING_MESSAGE_WARNING_BODY" = "Τα μηνύματα που εξαφανίζονται θα ξεκαρφιτσώνονται όταν λήξει ο χρόνος τους και το μήνυμα αφαιρεθεί από τη συνομιλία.";
+
+/* Title for a sheet warning users they are pinning a disappearing message. */
+"PINNING_DISAPPEARING_MESSAGE_WARNING_TITLE" = "Καρφίτσωμα μηνυμάτων που εξαφανίζονται";
 
 /* Action text for PIN megaphone when user doesn't have a PIN */
 "PINS_MEGAPHONE_ACTION" = "Δημιουργία PIN";
@@ -6584,10 +6653,10 @@
 "PLAY_BUTTON_ACCESSABILITY_LABEL" = "Αναπαραγωγή πολυμέσων";
 
 /* Accessibility label for poll message. Embeds {{ poll question }}. */
-"POLL_ACCESSIBILITY_LABEL" = "Poll: %1$@.";
+"POLL_ACCESSIBILITY_LABEL" = "Δημοσκόπηση: %1$@.";
 
 /* Accessibility label for a vote option that is not selected by the user. */
-"POLL_ACCESSIBILITY_LABEL_OPTION_PENDING" = "pending";
+"POLL_ACCESSIBILITY_LABEL_OPTION_PENDING" = "Εκκρεμεί";
 
 /* Title for a toggle allowing multiple votes for a poll. */
 "POLL_ALLOW_MULTIPLE_LABEL" = "Να επιτρέπονται οι πολλαπλές ψήφοι";
@@ -6865,6 +6934,15 @@
 /* Title of alert shown when push tokens sync job succeeds. */
 "PUSH_REGISTER_SUCCESS" = "Επιτυχής επανεγγραφή για λήψη ειδοποιήσεων.";
 
+/* Body for sheet with info about scanning a Quick Restore QR code */
+"QUICK_RESTORE_URL_OPENED_ACTION_SHEET_EXTERNAL_URL_ACTION_BODY" = "Χρησιμοποίησε αυτή τη συσκευή για να σκανάρεις τον κωδικό QR στη συσκευή που θέλεις να κάνεις μεταφορά";
+
+/* Title for sheet with info about scanning a Quick Restore QR code */
+"QUICK_RESTORE_URL_OPENED_ACTION_SHEET_EXTERNAL_URL_ACTION_TITLE" = "Σκανάρισμα κωδικού QR";
+
+/* Message for an action sheet telling users how to use quick restore, when trying to open an external quick restore URL. */
+"QUICK_RESTORE_URL_OPENED_ACTION_SHEET_EXTERNAL_URL_MESSAGE" = "Για να μεταφέρεις αυτόν τον λογαριασμό σε μια νέα συσκευή, πάτα «Συνέχεια» και σάρωσε ξανά τον κωδικό QR με την κάμερα Signal. Βεβαιώσου ότι σαρώνεις μόνο κωδικούς QR που προέρχονται απευθείας από το Signal.";
+
 /* Accessibility label stating the author of the message to which you are replying. Embeds: {{ the author of the message to which you are replying }}. */
 "QUOTED_REPLY_ACCESSIBILITY_LABEL_FORMAT" = "Απάντηση προς %1$@.";
 
@@ -7099,12 +7177,6 @@
 /* Label for the country code field */
 "REGISTRATION_DEFAULT_COUNTRY_NAME" = "Κωδικός χώρας";
 
-/* If a user is installing Signal on a new phone, they may be asked whether they want to transfer their account from their old device. This is a description on the screen that asks them this question. */
-"REGISTRATION_DEVICE_TRANSFER_CHOICE_EXPLANATION" = "Συνεχίζοντας θα απενεργοποιηθεί το Signal σε άλλες συσκευές εγγεγραμμένες με τον ίδιο αριθμό τηλεφώνου.";
-
-/* If a user is installing Signal on a new phone, they may be asked whether they want to transfer their account from their old device. This is the title on the screen that asks them this question. */
-"REGISTRATION_DEVICE_TRANSFER_CHOICE_TITLE" = "Μεταφορά λογαριασμού & μηνυμάτων";
-
 /* Description for the screen that allows users to enter their recovery key. */
 "REGISTRATION_ENTER_BACKUP_KEY_DESCRIPTION" = "Το κλειδί ανάκτησής σου είναι ένας κωδικός 64 χαρακτήρων που απαιτείται για την ανάκτηση του λογαριασμού και των δεδομένων σου.";
 
@@ -7223,7 +7295,7 @@
 "REGISTRATION_SCAN_QR_CODE_FAILED_TITLE" = "Η επαναφορά απέτυχε";
 
 /* Title for screen containing QR code that users scan with their old phone when they want to transfer/restore their message history to a new device. */
-"REGISTRATION_SCAN_QR_CODE_TITLE" = "Σάρωσε αυτόν τον κωδικό με το παλιό σου τηλέφωνο";
+"REGISTRATION_SCAN_QR_CODE_TITLE" = "Σάρωσε αυτόν τον κωδικό με την παλιά σου συσκευή";
 
 /* Tutorial text describing the first step to scanning the restore/transfer QR code with your old phone: opening Signal */
 "REGISTRATION_SCAN_QR_CODE_TUTORIAL_OPEN_SIGNAL" = "Άνοιξε το Signal στην παλιά σου συσκευή";
@@ -7505,7 +7577,7 @@
 "SCREEN_LOCK_UNLOCK_SIGNAL" = "Ξεκλείδωμα του Signal";
 
 /* Placeholder text indicating the user can search for contacts by name, username, or phone number. */
-"SEARCH_BY_NAME_OR_USERNAME_OR_NUMBER_PLACEHOLDER_TEXT" = "Όνομα, όνομα χρήστη ή αριθμό τηλεφώνου";
+"SEARCH_BY_NAME_OR_USERNAME_OR_NUMBER_PLACEHOLDER_TEXT" = "Όνομα, όνομα χρήστη ή αριθμός";
 
 /* Placeholder text indicating the user can search for contacts by name or phone number. */
 "SEARCH_BYNAMEORNUMBER_PLACEHOLDER_TEXT" = "Αναζήτηση με όνομα ή αριθμό";
@@ -8743,6 +8815,12 @@
 /* The name for the sticker category 'Featured' */
 "STICKER_CATEGORY_FEATURED_NAME" = "Προτεινόμενα";
 
+/* Subtitle of the helper text displayed when Recent stickers are empty. */
+"STICKER_CATEGORY_RECENTS_EMPTY_SUBTITLE" = "Στείλε ένα αυτοκόλλητο και θα εμφανιστεί εδώ";
+
+/* Title of the helper text displayed when Recent stickers are empty. */
+"STICKER_CATEGORY_RECENTS_EMPTY_TITLE" = "Δεν υπάρχουν πρόσφατα αυτοκόλλητα";
+
 /* The name for the sticker category 'Recents' */
 "STICKER_CATEGORY_RECENTS_NAME" = "Πρόσφατα";
 
@@ -8898,21 +8976,6 @@
 
 /* Context menu action to share the selected story */
 "STORIES_SHARE_STORY_ACTION" = "Μοιράσου";
-
-/* Section title shown when sending to non-story conversations but failing to send the file to stories. */
-"STORIES_SHARESHEET_PARTIAL_SEND_REMAINING_SECTION_TITLE" = "Στάλθηκε σε";
-
-/* Section title shown when failing to send an incompatible file to stories, but still sending to non-story conversations. */
-"STORIES_SHARESHEET_PARTIAL_SEND_STORIES_SECTION_TITLE" = "Δεν στάλθηκε στις";
-
-/* Title shown when failing to send an incompatible file to stories, but still sending to non-story conversations. */
-"STORIES_SHARESHEET_PARTIAL_SEND_TITLE" = "Μερική αποστολή";
-
-/* Subtitle shown when failing to send an incompatible file to stories via the sharesheet. */
-"STORIES_SHARESHEET_UNABLE_TO_SEND_SEND_SUBTITLE" = "Ο τύπος αρχείου που επιλέχθηκε δεν υποστηρίζεται.";
-
-/* Title shown when failing to send an incompatible file to stories via the sharesheet. */
-"STORIES_SHARESHEET_UNABLE_TO_SEND_SEND_TITLE" = "Δεν είναι δυνατή η αποστολή";
 
 /* Title for the stories view. */
 "STORIES_TITLE" = "Ιστορίες";
@@ -9205,35 +9268,23 @@
 /* Option in selected text edit menu to make text bold */
 "TEXT_MENU_BOLD" = "Bold";
 
-/* Option in selected text edit menu to clear all text formatting in the selected text range */
-"TEXT_MENU_CLEAR_FORMATTING" = "Διαγραφή μορφοποίησης";
-
 /* Option in selected text edit menu to view text formatting options */
 "TEXT_MENU_FORMAT" = "Μορφοποίηση";
 
 /* Option in selected text edit menu to make text italic */
 "TEXT_MENU_ITALIC" = "Italic";
 
-/* Option in selected text edit menu to look up word definitions */
-"TEXT_MENU_LOOK_UP" = "Αναζήτηση";
-
 /* Option in selected text edit menu to make text monospace */
 "TEXT_MENU_MONOSPACE" = "Monospace";
 
-/* Option in selected text edit menu to replace text with suggestions */
-"TEXT_MENU_REPLACE" = "Αντικατάσταση";
-
-/* Option in selected text edit menu to share selected text */
-"TEXT_MENU_SHARE" = "Μοιράσου";
+/* Option in selected text edit menu to remove all text formatting in the selected text range */
+"TEXT_MENU_REMOVE_FORMATTING" = "Κατάργηση μορφοποίησης";
 
 /* Option in selected text edit menu to make text spoiler */
 "TEXT_MENU_SPOILER" = "Θόλωμα";
 
 /* Option in selected text edit menu to make text strikethrough */
 "TEXT_MENU_STRIKETHROUGH" = "Strikethrough";
-
-/* Option in selected text edit menu to translate the word */
-"TEXT_MENU_TRANSLATE" = "Μετάφραση";
 
 /* text indicating the message was remotely deleted */
 "THIS_MESSAGE_WAS_DELETED" = "Αυτό το μήνυμα διαγράφτηκε.";

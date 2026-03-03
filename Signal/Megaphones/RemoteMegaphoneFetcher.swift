@@ -4,16 +4,16 @@
 //
 
 import Foundation
-public import SignalServiceKit
+import SignalServiceKit
 
 /// Handles fetching and parsing remote megaphones.
-public class RemoteMegaphoneFetcher {
+class RemoteMegaphoneFetcher {
     private let databaseStorage: SDSDatabaseStorage
     private let signalService: any OWSSignalServiceProtocol
 
-    public init(
+    init(
         databaseStorage: SDSDatabaseStorage,
-        signalService: any OWSSignalServiceProtocol
+        signalService: any OWSSignalServiceProtocol,
     ) {
         self.databaseStorage = databaseStorage
         self.signalService = signalService
@@ -22,12 +22,7 @@ public class RemoteMegaphoneFetcher {
     /// Fetch all remote megaphones currently on the service and persist them
     /// locally. Removes any locally-persisted remote megaphones that are no
     /// longer available remotely.
-    public func syncRemoteMegaphonesIfNecessary() async throws {
-        let shouldSync = databaseStorage.read { self.shouldSync(transaction: $0) }
-        guard shouldSync else {
-            return
-        }
-
+    func syncRemoteMegaphones() async throws {
         Logger.info("Beginning remote megaphone fetch.")
 
         let megaphones: [RemoteMegaphoneModel]
@@ -43,54 +38,9 @@ public class RemoteMegaphoneFetcher {
         await self.databaseStorage.awaitableWrite { transaction in
             self.updatePersistedMegaphones(
                 withFetchedMegaphones: megaphones,
-                transaction: transaction
+                transaction: transaction,
             )
-
-            self.recordCompletedSync(transaction: transaction)
         }
-    }
-}
-
-// MARK: - Sync conditions
-
-private extension String {
-    static let fetcherStoreCollection = "RemoteMegaphoneFetcher"
-    static let appVersionAtLastFetchKey = "appVersionAtLastFetch"
-    static let lastFetchDateKey = "lastFetchDate"
-}
-
-private extension RemoteMegaphoneFetcher {
-    private static let fetcherStore = KeyValueStore(collection: .fetcherStoreCollection)
-
-    private static let delayBetweenSyncs: TimeInterval = 3 * .day
-
-    func shouldSync(transaction: DBReadTransaction) -> Bool {
-        guard
-            let appVersionAtLastFetch = Self.fetcherStore.getString(.appVersionAtLastFetchKey, transaction: transaction),
-            let lastFetchDate = Self.fetcherStore.getDate(.lastFetchDateKey, transaction: transaction)
-        else {
-            // If we have never recorded last-fetch data, we should sync.
-            return true
-        }
-
-        let hasChangedAppVersion = appVersionAtLastFetch != AppVersionImpl.shared.currentAppVersion
-        let hasWaitedEnoughSinceLastSync = Date().timeIntervalSince(lastFetchDate) > Self.delayBetweenSyncs
-
-        return hasChangedAppVersion || hasWaitedEnoughSinceLastSync
-    }
-
-    func recordCompletedSync(transaction: DBWriteTransaction) {
-        Self.fetcherStore.setString(
-            AppVersionImpl.shared.currentAppVersion,
-            key: .appVersionAtLastFetchKey,
-            transaction: transaction
-        )
-
-        Self.fetcherStore.setDate(
-            Date(),
-            key: .lastFetchDateKey,
-            transaction: transaction
-        )
     }
 }
 
@@ -103,7 +53,7 @@ private extension RemoteMegaphoneFetcher {
     /// megaphones that no longer exist on the service.
     func updatePersistedMegaphones(
         withFetchedMegaphones serviceMegaphones: [RemoteMegaphoneModel],
-        transaction: DBWriteTransaction
+        transaction: DBWriteTransaction,
     ) {
         // Get the current remote megaphones.
         var localRemoteMegaphones: [String: ExperienceUpgrade] = [:]
@@ -177,7 +127,7 @@ private extension RemoteMegaphoneFetcher {
                 Logger.info("Fetching remote megaphone manifests")
                 let response = try await getUrlSession().performRequest(
                     .manifestUrlPath,
-                    method: .get
+                    method: .get,
                 )
 
                 guard let parser = response.responseBodyParamParser else {
@@ -185,7 +135,7 @@ private extension RemoteMegaphoneFetcher {
                 }
 
                 return try RemoteMegaphoneModel.Manifest.parseFrom(parser: parser)
-            }
+            },
         )
     }
 
@@ -193,7 +143,7 @@ private extension RemoteMegaphoneFetcher {
     /// attempt to fetch a translation matching the user's current locale,
     /// falling back to English otherwise.
     private func fetchTranslation(
-        forMegaphoneManifest manifest: RemoteMegaphoneModel.Manifest
+        forMegaphoneManifest manifest: RemoteMegaphoneModel.Manifest,
     ) async throws -> RemoteMegaphoneModel.Translation {
         let localeStrings: [String] = .possibleTranslationLocaleStrings
 
@@ -225,10 +175,12 @@ private extension RemoteMegaphoneFetcher {
             maxAttempts: 3,
             isRetryable: { $0.isNetworkFailureOrTimeout || $0.is5xxServiceResponse },
             block: {
-                guard let translationUrlPath: String = .translationUrlPath(
-                    forManifest: manifest,
-                    withLocaleString: localeString
-                ) else {
+                guard
+                    let translationUrlPath: String = .translationUrlPath(
+                        forManifest: manifest,
+                        withLocaleString: localeString,
+                    )
+                else {
                     throw OWSAssertionError("Failed to create translation URL path for manifest \(manifest.id)")
                 }
                 Logger.info("Fetching remote megaphone translation")
@@ -237,7 +189,7 @@ private extension RemoteMegaphoneFetcher {
                     throw OWSAssertionError("Missing or invalid body JSON for translation!")
                 }
                 return try RemoteMegaphoneModel.Translation.parseFrom(parser: parser)
-            }
+            },
         )
     }
 
@@ -268,13 +220,13 @@ private extension RemoteMegaphoneFetcher {
                         Logger.info("Fetching remote megaphone image")
                         let response = try await getUrlSession().performDownload(
                             imageRemoteUrlPath,
-                            method: .get
+                            method: .get,
                         )
 
                         do {
                             try FileManager.default.moveItem(
                                 at: response.downloadUrl,
-                                to: imageFileUrl
+                                to: imageFileUrl,
                             )
                         } catch let error {
                             throw OWSAssertionError("Failed to move downloaded image! \(error)")
@@ -288,7 +240,7 @@ private extension RemoteMegaphoneFetcher {
                     owsFailDebug("Unexpectedly got error status code \(error.responseStatusCode) while fetching remote megaphone image for ID \(translation.id)!")
                     throw error
                 }
-            }
+            },
         )
     }
 }
@@ -336,7 +288,7 @@ private extension String {
     /// and locale string.
     static func translationUrlPath(
         forManifest manifest: RemoteMegaphoneModel.Manifest,
-        withLocaleString localeString: String
+        withLocaleString localeString: String,
     ) -> String? {
         "static/release-notes/\(manifest.id)/\(localeString).json"
             .percentEncodedAsUrlPath
@@ -384,27 +336,27 @@ private extension RemoteMegaphoneModel.Manifest {
             let secondaryCtaDataJson: [String: Any]? = try megaphoneParser.optional(key: Self.secondaryCtaDataKey)
 
             var conditionalCheck: ConditionalCheck?
-            if let conditionalId = conditionalId {
+            if let conditionalId {
                 conditionalCheck = ConditionalCheck(fromConditionalId: conditionalId)
             }
 
             var primaryAction: Action?
-            if let primaryCtaId = primaryCtaId {
+            if let primaryCtaId {
                 primaryAction = Action(fromActionId: primaryCtaId)
             }
 
             var primaryActionData: ActionData?
-            if let primaryCtaDataJson = primaryCtaDataJson {
+            if let primaryCtaDataJson {
                 primaryActionData = try ActionData.parse(fromJson: primaryCtaDataJson)
             }
 
             var secondaryAction: Action?
-            if let secondaryCtaId = secondaryCtaId {
+            if let secondaryCtaId {
                 secondaryAction = Action(fromActionId: secondaryCtaId)
             }
 
             var secondaryActionData: ActionData?
-            if let secondaryCtaDataJson = secondaryCtaDataJson {
+            if let secondaryCtaDataJson {
                 secondaryActionData = try ActionData.parse(fromJson: secondaryCtaDataJson)
             }
 
@@ -420,7 +372,7 @@ private extension RemoteMegaphoneModel.Manifest {
                 primaryAction: primaryAction,
                 primaryActionData: primaryActionData,
                 secondaryAction: secondaryAction,
-                secondaryActionData: secondaryActionData
+                secondaryActionData: secondaryActionData,
             )
         }
     }
@@ -454,7 +406,7 @@ private extension RemoteMegaphoneModel.Translation {
             body: body,
             imageRemoteUrlPath: imageUrl,
             primaryActionText: primaryCtaText,
-            secondaryActionText: secondaryCtaText
+            secondaryActionText: secondaryCtaText,
         )
     }
 }

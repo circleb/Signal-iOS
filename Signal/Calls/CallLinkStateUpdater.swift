@@ -34,7 +34,7 @@ actor CallLinkStateUpdater {
         callRecordDeleteManager: any CallRecordDeleteManager,
         callRecordStore: any CallRecordStore,
         db: any DB,
-        tsAccountManager: any TSAccountManager
+        tsAccountManager: any TSAccountManager,
     ) {
         self.authCredentialManager = authCredentialManager
         self.callLinkFetcher = callLinkFetcher
@@ -55,7 +55,7 @@ actor CallLinkStateUpdater {
     /// user never joins.
     func updateExclusively(
         rootKey: CallLinkRootKey,
-        updateAndFetch: (CallLinkAuthCredential) async throws -> SignalServiceKit.CallLinkState
+        updateAndFetch: (CallLinkAuthCredential) async throws -> SignalServiceKit.CallLinkState,
     ) async throws -> SignalServiceKit.CallLinkState {
         return try await _updateExclusively(rootKey: rootKey, updateAndFetch: updateAndFetch)!.get()
     }
@@ -68,7 +68,7 @@ actor CallLinkStateUpdater {
 
     private func _updateExclusively(
         rootKey: CallLinkRootKey,
-        updateAndFetch: (CallLinkAuthCredential) async throws -> SignalServiceKit.CallLinkState?
+        updateAndFetch: (CallLinkAuthCredential) async throws -> SignalServiceKit.CallLinkState?,
     ) async throws -> Result<SignalServiceKit.CallLinkState, CallLinkNotFoundError>? {
         let roomId = rootKey.deriveRoomId()
 
@@ -89,13 +89,11 @@ actor CallLinkStateUpdater {
             }
         }
 
-        guard let localIdentifiers = tsAccountManager.localIdentifiersWithMaybeSneakyTransaction else {
-            throw OWSGenericError("Not registered.")
-        }
+        let registeredState = try tsAccountManager.registeredStateWithMaybeSneakyTransaction()
         let oldRecord = try db.read { tx -> CallLinkRecord? in
             return try callLinkStore.fetch(roomId: roomId, tx: tx)
         }
-        let authCredential = try await authCredentialManager.fetchCallLinkAuthCredential(localIdentifiers: localIdentifiers)
+        let authCredential = try await authCredentialManager.fetchCallLinkAuthCredential(localIdentifiers: registeredState.localIdentifiers)
         let updateResult = await Result { try await updateAndFetch(authCredential) }
 
         let updateAction: UpdateAction
@@ -128,7 +126,7 @@ actor CallLinkStateUpdater {
                         try self.callRecordDeleteManager.deleteCallRecords(
                             self.callRecordStore.fetchExisting(conversationId: .callLink(callLinkRowId: newRecord.id), limit: nil, tx: tx),
                             sendSyncMessageOnDelete: true,
-                            tx: tx
+                            tx: tx,
                         )
                     }
                 }
@@ -167,7 +165,7 @@ actor CallLinkStateUpdater {
             updateAndFetch: { authCredential in
                 try await callLinkManager.deleteCallLink(rootKey: rootKey, adminPasskey: adminPasskey, authCredential: authCredential)
                 return nil
-            }
+            },
         )
     }
 }

@@ -22,16 +22,16 @@ final class BackupArchiveThreadMergeChatUpdateArchiver {
     func archiveThreadMergeChatUpdate(
         infoMessage: TSInfoMessage,
         threadInfo: BackupArchive.ChatArchivingContext.CachedThreadInfo,
-        context: BackupArchive.ChatArchivingContext
+        context: BackupArchive.ChatArchivingContext,
     ) -> ArchiveChatUpdateMessageResult {
         func messageFailure(
             _ errorType: ArchiveFrameError.ErrorType,
-            line: UInt = #line
+            line: UInt = #line,
         ) -> ArchiveChatUpdateMessageResult {
             return .messageFailure([.archiveFrameError(
                 errorType,
                 infoMessage.uniqueInteractionId,
-                line: line
+                line: line,
             )])
         }
 
@@ -70,7 +70,8 @@ final class BackupArchiveThreadMergeChatUpdateArchiver {
             chatItemType: .updateMessage(chatUpdateMessage),
             isSmsPreviouslyRestoredFromBackup: false,
             threadInfo: threadInfo,
-            context: context.recipientContext
+            pinMessageDetails: nil,
+            context: context.recipientContext,
         )
     }
 
@@ -80,16 +81,16 @@ final class BackupArchiveThreadMergeChatUpdateArchiver {
         _ threadMergeUpdateProto: BackupProto_ThreadMergeChatUpdate,
         chatItem: BackupProto_ChatItem,
         chatThread: BackupArchive.ChatThread,
-        context: BackupArchive.ChatItemRestoringContext
+        context: BackupArchive.ChatItemRestoringContext,
     ) -> RestoreChatUpdateMessageResult {
         func invalidProtoData(
             _ error: RestoreFrameError.ErrorType.InvalidProtoDataError,
-            line: UInt = #line
+            line: UInt = #line,
         ) -> RestoreChatUpdateMessageResult {
             return .messageFailure([.restoreFrameError(
                 .invalidProtoData(error),
                 chatItem.id,
-                line: line
+                line: line,
             )])
         }
 
@@ -104,7 +105,7 @@ final class BackupArchiveThreadMergeChatUpdateArchiver {
         let threadMergeInfoMessage: TSInfoMessage = .makeForThreadMerge(
             mergedThread: mergedThread,
             timestamp: chatItem.dateSent,
-            previousE164: previousE164.stringValue
+            previousE164: previousE164.stringValue,
         )
 
         do {
@@ -112,7 +113,7 @@ final class BackupArchiveThreadMergeChatUpdateArchiver {
                 threadMergeInfoMessage,
                 in: chatThread,
                 chatId: chatItem.typedChatId,
-                context: context
+                context: context,
             )
         } catch let error {
             return .messageFailure([.restoreFrameError(.databaseInsertionFailed(error), chatItem.id)])

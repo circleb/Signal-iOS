@@ -4,8 +4,8 @@
 //
 
 import LibSignalClient
-@testable import HCP
 import XCTest
+@testable import Signal
 
 class ReactionBurstManagerTests: XCTestCase {
     func testBasicTriggerBurst() {
@@ -78,7 +78,7 @@ class ReactionBurstManagerTests: XCTestCase {
             Reaction(emoji: "🙈", name: "", aci: Aci(fromUUID: UUID()), timestamp: 1.5),
             Reaction(emoji: "🙈", name: "", aci: Aci(fromUUID: UUID()), timestamp: 1.6),
             Reaction(emoji: "🙈", name: "", aci: Aci(fromUUID: UUID()), timestamp: 1.7),
-            Reaction(emoji: "🙈", name: "", aci: Aci(fromUUID: UUID()), timestamp: 1.8)
+            Reaction(emoji: "🙈", name: "", aci: Aci(fromUUID: UUID()), timestamp: 1.8),
         ]
         reactions.forEach {
             manager.add(reaction: $0)
@@ -104,7 +104,7 @@ class ReactionBurstManagerTests: XCTestCase {
             Reaction(emoji: "💜", name: "", aci: Aci(fromUUID: UUID()), timestamp: 1.8),
             Reaction(emoji: "☎️", name: "", aci: Aci(fromUUID: UUID()), timestamp: 1.6),
             Reaction(emoji: "☎️", name: "", aci: Aci(fromUUID: UUID()), timestamp: 1.7),
-            Reaction(emoji: "☎️", name: "", aci: Aci(fromUUID: UUID()), timestamp: 1.8)
+            Reaction(emoji: "☎️", name: "", aci: Aci(fromUUID: UUID()), timestamp: 1.8),
         ]
         reactions.forEach {
             manager.add(reaction: $0)
@@ -112,7 +112,7 @@ class ReactionBurstManagerTests: XCTestCase {
         XCTAssert(bursts == [
             ["🙈", "🙈", "🙈"],
             ["🐞", "🐞", "🐞"],
-            ["💜", "💜", "💜"]
+            ["💜", "💜", "💜"],
         ])
     }
 
