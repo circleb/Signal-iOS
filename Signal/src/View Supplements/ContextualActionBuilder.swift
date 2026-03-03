@@ -34,6 +34,8 @@ enum ContextualActionBuilder {
         title: String,
         handler: @escaping Handler
     ) -> UIContextualAction {
+        let baseImage = UIImage(named: image) ?? UIImage(systemName: image)
+
         // We want to always show a title with the icon. iOS 26 does this by
         // default, but previous iOS versions only does when the cell's
         // height > 91, so we generate an image with the text below it.
@@ -45,7 +47,7 @@ enum ContextualActionBuilder {
                 handler(completion)
             }
             action.backgroundColor = color
-            action.image = UIImage(named: image)
+            action.image = baseImage
             return action
         } else {
             let action = UIContextualAction(
@@ -56,7 +58,7 @@ enum ContextualActionBuilder {
             }
             action.accessibilityLabel = title
             action.backgroundColor = color
-            action.image = UIImage(named: image)?.withTitle(
+            action.image = baseImage?.withTitle(
                 title,
                 font: .dynamicTypeFootnote.medium(),
                 color: .ows_white,

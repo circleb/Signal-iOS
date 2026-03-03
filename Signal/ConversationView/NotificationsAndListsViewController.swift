@@ -62,8 +62,17 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
         manageButton.configuration = UIButton.Configuration.plain()
         manageButton.addTarget(self, action: #selector(toggleSubscriptionsVisibility), for: .touchUpInside)
         navigationItem.leftBarButtonItem = UIBarButtonItem(customView: manageButton)
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .close,
+            target: self,
+            action: #selector(closeButtonTapped)
+        )
         updateNavigationForCurrentMode()
         loadData()
+    }
+
+    @objc private func closeButtonTapped() {
+        dismiss(animated: true)
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -156,7 +165,11 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
         }()
 
         config.image = UIImage(systemName: symbolName)
-        manageButton.configuration = config
+
+        UIView.performWithoutAnimation {
+            manageButton.configuration = config
+            manageButton.layoutIfNeeded()
+        }
 
         navigationItem.title = OWSLocalizedString(titleKey, comment: titleComment)
     }
@@ -182,6 +195,17 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
             section.add(OWSTableItem.label(withText: error))
             return section
         }
+        let descriptionText = OWSLocalizedString(
+            "NOTIFICATIONS_LISTS_SUBSCRIPTIONS_DESCRIPTION",
+            comment: "Descriptive text shown above the list of notification subscriptions."
+        )
+        section.headerAttributedTitle = NSAttributedString(
+            string: descriptionText,
+            attributes: [
+                .font: UIFont.systemFont(ofSize: 16, weight: .medium),
+                .foregroundColor: UIColor.secondaryLabel
+            ]
+        )
         for sub in subscriptions {
             let isSelected = selectedSubscriptionIds.contains(sub.id)
             let isDefault = sub.isDefault ?? false
@@ -193,6 +217,7 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
                 cell.selectionStyle = isDefault ? .none : .default
                 if isDefault {
                     cell.contentView.alpha = 0.5
+                    cell.tintColor = .secondaryLabel
                 }
                 return cell
             }, actionBlock: { [weak self] in
@@ -242,6 +267,27 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
                     let cell = UITableViewCell(style: .default, reuseIdentifier: nil)
                     OWSTableItem.configureCell(cell)
 
+                    let dateLabel = UILabel()
+                    dateLabel.font = .systemFont(ofSize: 12, weight: .medium)
+                    dateLabel.textColor = .secondaryLabel
+                    let dateFormatter = DateFormatter()
+                    dateFormatter.dateFormat = "MMM d"
+                    dateLabel.text = dateFormatter.string(from: notifCopy.date)
+
+                    let datePill = UIView()
+                    datePill.backgroundColor = .secondarySystemBackground
+                    datePill.layer.cornerRadius = 12
+                    datePill.addSubview(dateLabel)
+                    dateLabel.translatesAutoresizingMaskIntoConstraints = false
+                    NSLayoutConstraint.activate([
+                        dateLabel.topAnchor.constraint(equalTo: datePill.topAnchor, constant: 4),
+                        dateLabel.bottomAnchor.constraint(equalTo: datePill.bottomAnchor, constant: -4),
+                        dateLabel.leadingAnchor.constraint(equalTo: datePill.leadingAnchor, constant: 8),
+                        dateLabel.trailingAnchor.constraint(equalTo: datePill.trailingAnchor, constant: -8)
+                    ])
+                    cell.contentView.addSubview(datePill)
+                    datePill.translatesAutoresizingMaskIntoConstraints = false
+
                     let titleLabel = UILabel()
                     titleLabel.font = .boldSystemFont(ofSize: 20)
                     titleLabel.textColor = .label
@@ -260,21 +306,34 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
                     stack.axis = .vertical
                     stack.spacing = 4
 
-                    cell.accessoryView = notifCopy.isRead ? nil : {
+                    cell.contentView.addSubview(stack)
+
+                    let dotLeadingAnchor: NSLayoutXAxisAnchor
+                    if notifCopy.isRead {
+                        dotLeadingAnchor = cell.contentView.leadingAnchor
+                    } else {
                         let dot = UIView()
                         dot.backgroundColor = .systemBlue
-                        dot.layer.cornerRadius = 4
-                        dot.frame = CGRect(x: 0, y: 0, width: 8, height: 8)
-                        return dot
-                    }()
+                        dot.layer.cornerRadius = 5
+                        dot.translatesAutoresizingMaskIntoConstraints = false
+                        cell.contentView.addSubview(dot)
+                        NSLayoutConstraint.activate([
+                            dot.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: 20),
+                            dot.centerYAnchor.constraint(equalTo: cell.contentView.centerYAnchor),
+                            dot.widthAnchor.constraint(equalToConstant: 10),
+                            dot.heightAnchor.constraint(equalToConstant: 10)
+                        ])
+                        dotLeadingAnchor = dot.trailingAnchor
+                    }
 
-                    cell.contentView.addSubview(stack)
                     stack.translatesAutoresizingMaskIntoConstraints = false
                     NSLayoutConstraint.activate([
+                        datePill.topAnchor.constraint(equalTo: cell.contentView.topAnchor, constant: 12),
+                        datePill.trailingAnchor.constraint(equalTo: cell.contentView.trailingAnchor, constant: -20),
                         stack.topAnchor.constraint(equalTo: cell.contentView.topAnchor, constant: 20),
                         stack.bottomAnchor.constraint(equalTo: cell.contentView.bottomAnchor, constant: -20),
-                        stack.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: 20),
-                        stack.trailingAnchor.constraint(equalTo: cell.contentView.trailingAnchor, constant: -20)
+                        stack.leadingAnchor.constraint(equalTo: dotLeadingAnchor, constant: notifCopy.isRead ? 20 : 12),
+                        stack.trailingAnchor.constraint(lessThanOrEqualTo: datePill.leadingAnchor, constant: -8)
                     ])
                     return cell
                 },
@@ -328,7 +387,7 @@ extension NotificationsAndListsViewController {
         let action = ContextualActionBuilder.makeContextualAction(
             style: .normal,
             color: UIColor.Signal.ultramarine,
-            image: "chat-check-fill",
+            image: "checkmark.circle.fill",
             title: CommonStrings.readAction
         ) { [weak self] completion in
             self?.markNotificationAsRead(identifier: notif.identifier)
@@ -562,7 +621,7 @@ extension NotificationsAndListsViewController {
         notifications = [
             StoredNonSignalNotification(
                 identifier: "notif-1",
-                title: "New bulletin available",
+                title: "Heritage Life Conference",
                 body: "There’s a new clinical bulletin about medication safety. Tap to read more.",
                 date: Date(),
                 isRead: false,
@@ -572,7 +631,7 @@ extension NotificationsAndListsViewController {
                 identifier: "notif-2",
                 title: "New bulletin available",
                 body: "There’s a new clinical bulletin about medication safety. Tap to read more.",
-                date: Date(),
+                date: Date().addingTimeInterval(-263600),
                 isRead: false,
                 actionURL: "https://cms.homesteadheritage.org/items/Bulletin/93"
             ),
@@ -580,7 +639,7 @@ extension NotificationsAndListsViewController {
                 identifier: "notif-3",
                 title: "System maintenance window",
                 body: "Directus will undergo scheduled maintenance tonight from 2–3 AM.",
-                date: Date().addingTimeInterval(-3600),
+                date: Date().addingTimeInterval(-963600),
                 isRead: true,
                 actionURL: "https://cms.homesteadheritage.org/items/Bulletin/93"
             )

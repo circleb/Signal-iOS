@@ -35,6 +35,9 @@ final class BulletinViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
 
+        // Content scrolls under the nav bar when user scrolls; start with content below the bar.
+        textView.contentInsetAdjustmentBehavior = .never
+
         loadingIndicator.hidesWhenStopped = true
         view.addSubview(loadingIndicator)
         view.addSubview(textView)
@@ -42,17 +45,45 @@ final class BulletinViewController: UIViewController {
 
         loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
         textView.translatesAutoresizingMaskIntoConstraints = false
+        // Pin to view edges so the text view extends under the navigation bar; automatic
+        // content insets keep initial content below the bar and allow scroll-under.
         NSLayoutConstraint.activate([
             loadingIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             loadingIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            textView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            textView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
-            textView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
-            textView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+            textView.topAnchor.constraint(equalTo: view.topAnchor),
+            textView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            textView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            textView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
 
         loadingIndicator.startAnimating()
         fetchBulletin()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // Use translucent bar so content scrolling underneath gets the standard blur.
+        navigationController?.navigationBar.standardAppearance.configureWithTransparentBackground()
+        navigationController?.navigationBar.scrollEdgeAppearance = navigationController?.navigationBar.standardAppearance
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // Re-apply insets and initial offset when view is visible (contentOffset.y = -top so first line is below nav bar).
+        let insets = view.safeAreaInsets
+        textView.contentInset = UIEdgeInsets(top: insets.top, left: insets.left, bottom: insets.bottom, right: insets.right)
+        textView.contentOffset = CGPoint(x: 0, y: -insets.top)
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        let insets = view.safeAreaInsets
+        textView.contentInset = UIEdgeInsets(top: insets.top, left: insets.left, bottom: insets.bottom, right: insets.right)
+        // contentOffset.y = -safeAreaTop positions content (0,0) at scroll view y=safeAreaTop (below nav bar).
+        let desiredOffsetY = -insets.top
+        if textView.contentOffset.y != desiredOffsetY {
+            textView.contentOffset = CGPoint(x: 0, y: desiredOffsetY)
+        }
     }
 
     private func fetchBulletin() {
@@ -155,6 +186,17 @@ final class BulletinViewController: UIViewController {
             textView.text = html
         }
         textView.isHidden = false
+        // Re-apply insets and initial offset after content size changes (contentOffset.y = -top so first line is below nav bar).
+        let insets = view.safeAreaInsets
+        textView.contentInset = UIEdgeInsets(top: insets.top, left: insets.left, bottom: insets.bottom, right: insets.right)
+        textView.contentOffset = CGPoint(x: 0, y: -insets.top)
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            // Re-apply after one run loop in case UITextView reset contentOffset (contentOffset.y = -top so first line is below nav bar).
+            let insets = self.view.safeAreaInsets
+            self.textView.contentInset = UIEdgeInsets(top: insets.top, left: insets.left, bottom: insets.bottom, right: insets.right)
+            self.textView.contentOffset = CGPoint(x: 0, y: -insets.top)
+        }
     }
 
     private func cssColor(_ color: UIColor) -> String {

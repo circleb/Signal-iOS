@@ -52,6 +52,15 @@ public class NotificationActionHandler {
                 store.append(stored, transaction: tx)
             }
             NotificationCenter.default.post(name: .nonSignalNotificationsDidChange, object: nil)
+
+            // When the user taps a non-Signal notification, automatically open the
+            // notifications & lists sheet full-screen so they can see the full context.
+            if let frontmostViewController = CurrentAppContext().frontmostViewController() {
+                let sheet = NotificationsAndListsViewController()
+                let nav = OWSNavigationController(rootViewController: sheet)
+                nav.modalPresentationStyle = .fullScreen
+                frontmostViewController.present(nav, animated: true)
+            }
             return
         }
 

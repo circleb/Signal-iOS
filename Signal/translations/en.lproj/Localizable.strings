@@ -5606,6 +5606,9 @@
 /* Loading indicator for subscriptions */
 "NOTIFICATIONS_LISTS_LOADING" = "Loading…";
 
+/* Descriptive text shown above the list of notification subscriptions */
+"NOTIFICATIONS_LISTS_SUBSCRIPTIONS_DESCRIPTION" = "Choose which lists you'd like to receive notification for. Turn off a list to stop those notifications.";
+
 /* Shown when the notification list service (Directus) is not configured for this build */
 "NOTIFICATIONS_LISTS_DIRECTUS_NOT_CONFIGURED" = "Notification list subscriptions are not available for this build.";
 

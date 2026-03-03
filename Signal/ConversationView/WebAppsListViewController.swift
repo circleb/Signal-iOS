@@ -170,10 +170,7 @@ class WebAppsListViewController: UIViewController {
     @objc private func openNotificationsAndListsSheet() {
         let sheet = NotificationsAndListsViewController()
         let nav = OWSNavigationController(rootViewController: sheet)
-        if let sheetPC = nav.sheetPresentationController {
-            sheetPC.detents = [UISheetPresentationController.Detent.medium(), UISheetPresentationController.Detent.large()]
-            sheetPC.prefersGrabberVisible = true
-        }
+        nav.modalPresentationStyle = .fullScreen
         nav.presentationController?.delegate = self
         present(nav, animated: true)
     }
