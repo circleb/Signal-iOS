@@ -4,6 +4,7 @@
 //
 
 import UIKit
+import UserNotifications
 import SignalUI
 import SignalServiceKit
 
@@ -19,6 +20,8 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
     private let userInfoStore: SSOUserInfoStore
     private let nonSignalStore: NonSignalNotificationStore
     private let isPreview: Bool
+
+    private var hasCheckedNotificationPermissions = false
 
     private var subscriptions: [DirectusSubscription] = []
     private var selectedSubscriptionIds: Set<String> = []
@@ -89,6 +92,19 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
         super.viewWillAppear(animated)
         reloadNotifications()
         ensureWebAppsCacheForBulletinButton()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+
+        if isPreview || hasCheckedNotificationPermissions {
+            return
+        }
+        hasCheckedNotificationPermissions = true
+
+        Task { @MainActor in
+            await checkAndRequestNotificationPermissionsIfNeeded()
+        }
     }
 
     /// If bulletin web app isn't in cache (e.g. user opened notifications before Web Apps tab), fetch from API so the "View full bulletin" button can appear.
@@ -409,6 +425,69 @@ final class NotificationsAndListsViewController: OWSTableViewController2 {
             })
         }
         return section
+    }
+
+    @MainActor
+    private func checkAndRequestNotificationPermissionsIfNeeded() async {
+        let pushManager = AppEnvironment.shared.pushRegistrationManagerRef
+
+        let needsAuth = await pushManager.needsNotificationAuthorization()
+        if needsAuth {
+            await pushManager.registerUserNotificationSettings()
+            return
+        }
+
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        switch settings.authorizationStatus {
+        case .authorized, .provisional:
+            return
+        case .denied:
+            await presentNotificationsDisabledAlertIfNeeded()
+        case .notDetermined:
+            // If we're here, something went wrong with needsNotificationAuthorization; avoid looping.
+            return
+        case .ephemeral:
+            return
+        @unknown default:
+            return
+        }
+    }
+
+    @MainActor
+    private func presentNotificationsDisabledAlertIfNeeded() async {
+        let title = OWSLocalizedString(
+            "NOTIFICATIONS_LISTS_SYSTEM_NOTIFICATIONS_DISABLED_TITLE",
+            comment: "Title for an alert shown from the notifications sheet when system notifications are disabled for Signal."
+        )
+        let message = OWSLocalizedString(
+            "NOTIFICATIONS_LISTS_SYSTEM_NOTIFICATIONS_DISABLED_MESSAGE",
+            comment: "Message for an alert shown from the notifications sheet explaining that iOS notifications are disabled for Signal."
+        )
+        let openSettingsTitle = OWSLocalizedString(
+            "NOTIFICATIONS_LISTS_OPEN_SETTINGS_BUTTON",
+            comment: "Button label to open the iOS Settings app from the notifications sheet."
+        )
+
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(
+            UIAlertAction(
+                title: CommonStrings.okButton,
+                style: .cancel
+            )
+        )
+        alert.addAction(
+            UIAlertAction(
+                title: openSettingsTitle,
+                style: .default,
+                handler: { _ in
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url)
+                    }
+                }
+            )
+        )
+
+        present(alert, animated: true)
     }
 
     @objc

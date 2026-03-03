@@ -5613,6 +5613,15 @@
 /* Shown when the notification list service (Directus) is not configured for this build */
 "NOTIFICATIONS_LISTS_DIRECTUS_NOT_CONFIGURED" = "Notification list subscriptions are not available for this build.";
 
+/* Title shown when system notifications are disabled for Signal but the notifications sheet is opened */
+"NOTIFICATIONS_LISTS_SYSTEM_NOTIFICATIONS_DISABLED_TITLE" = "Notifications are off for HCP";
+
+/* Message explaining that system notifications must be enabled to receive non-Signal notifications on this device */
+"NOTIFICATIONS_LISTS_SYSTEM_NOTIFICATIONS_DISABLED_MESSAGE" = "To receive these notifications on this device, enable HCP notifications in iOS Settings.";
+
+/* Button label to open the iOS Settings app from the notifications sheet */
+"NOTIFICATIONS_LISTS_OPEN_SETTINGS_BUTTON" = "Open Settings";
+
 /* Snooze action text for contact permission reminder megaphone */
 "NOTIFICATION_PERMISSION_NOT_NOW_ACTION" = "Not Now";
 
