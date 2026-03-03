@@ -149,10 +149,12 @@ final class BulletinViewController: UIViewController {
 
     private func displayHTML(_ html: String) {
         let wrapped = """
-        <!DOCTYPE html><html><head><meta charset="UTF-8"><style>\
+        <!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>\
         body { font: -apple-system-body; color: \(cssColor(UIColor.label)); }\
         p { margin: 0 0 0.75em; } p:last-child { margin-bottom: 0; }\
-        strong { font-weight: 600; } ul { margin: 0.5em 0; padding-left: 1.2em; }
+        strong, b { font-weight: 600; } em, i { font-style: italic; }\
+        ul { margin: 0.5em 0; padding-left: 1.2em; } ol { margin: 0.5em 0; padding-left: 1.5em; }\
+        h1, h2, h3 { font-weight: 600; margin: 0.5em 0 0.25em; } a { color: \(cssColor(.systemBlue)); }
         </style></head><body>\(html)</body></html>
         """
         guard let data = wrapped.data(using: .utf8) else {
@@ -169,18 +171,19 @@ final class BulletinViewController: UIViewController {
             options: options,
             documentAttributes: nil
         ) {
-            // Ensure readable font and dynamic type
-            let fullRange = NSRange(location: 0, length: attributed.length)
-            attributed.addAttribute(
-                .font,
-                value: UIFont.preferredFont(forTextStyle: .body),
-                range: fullRange
-            )
-            attributed.addAttribute(
-                .foregroundColor,
-                value: UIColor.label,
-                range: fullRange
-            )
+            // Preserve HTML formatting (bold, italic, etc.); only apply default font/color where missing.
+            let bodyFont = UIFont.preferredFont(forTextStyle: .body)
+            let bodyColor = UIColor.label
+            textView.font = bodyFont
+            textView.textColor = bodyColor
+            attributed.enumerateAttributes(in: NSRange(location: 0, length: attributed.length)) { attrs, range, _ in
+                if attrs[.font] == nil {
+                    attributed.addAttribute(.font, value: bodyFont, range: range)
+                }
+                if attrs[.foregroundColor] == nil {
+                    attributed.addAttribute(.foregroundColor, value: bodyColor, range: range)
+                }
+            }
             textView.attributedText = attributed
         } else {
             textView.text = html
