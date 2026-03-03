@@ -11,6 +11,8 @@ public protocol WebAppsServiceProtocol {
     func fetchWebAppsCategorized(userRoles: [String]) -> Promise<[WebAppCategory]>
     func fetchGlobalAllowList() -> Promise<[GlobalAllowEntry]>
     func getCachedWebApps() -> [WebApp]?
+    func getCachedWebApp(byId id: String) -> WebApp?
+    func getCachedWebApp(byEntry entry: String) -> WebApp?
     func getCachedCategorizedWebApps() -> [WebAppCategory]?
     func getCachedGlobalAllowList() -> [GlobalAllowEntry]?
     func cacheWebApps(_ apps: [WebApp]) async
@@ -143,6 +145,18 @@ public class WebAppsService: WebAppsServiceProtocol {
     public func getCachedWebApps() -> [WebApp]? {
         return databaseStorage.read { tx in
             return cache.getWebApps(tx: tx)
+        }
+    }
+
+    public func getCachedWebApp(byId id: String) -> WebApp? {
+        return databaseStorage.read { tx in
+            return cache.getWebApp(byId: id, tx: tx)
+        }
+    }
+
+    public func getCachedWebApp(byEntry entry: String) -> WebApp? {
+        return databaseStorage.read { tx in
+            return cache.getWebApp(by: entry, tx: tx)
         }
     }
 

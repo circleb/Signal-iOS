@@ -90,6 +90,13 @@ public struct AppNotificationUserInfo {
         self.voteAuthorServiceIdBinary = userInfo[UserInfoKey.voteAuthorServiceIdBinary] as? Data
     }
 
+    /// Returns true if the payload is a Signal notification (has Signal-specific userInfo keys).
+    public static func isSignalNotification(userInfo: [AnyHashable: Any]) -> Bool {
+        userInfo[UserInfoKey.threadId] != nil
+            || userInfo[UserInfoKey.messageId] != nil
+            || userInfo[UserInfoKey.defaultAction] != nil
+    }
+
     private enum UserInfoKey {
         public static let callBackAciString = "Signal.AppNotificationsUserInfoKey.callBackUuid"
         public static let callBackPhoneNumber = "Signal.AppNotificationsUserInfoKey.callBackPhoneNumber"

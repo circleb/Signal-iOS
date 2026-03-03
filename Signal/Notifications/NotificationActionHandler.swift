@@ -18,6 +18,52 @@ public class NotificationActionHandler {
     ) async throws {
         owsAssertDebug(appReadiness.isAppReady)
 
+        let rawUserInfo = response.notification.request.content.userInfo
+        if !AppNotificationUserInfo.isSignalNotification(userInfo: rawUserInfo) {
+            // Non-Signal (e.g. HCP) notification: store for the notifications list as unread.
+            let content = response.notification.request.content
+
+            // Prefer a Bulletin endpoint URL if a bulletin id is present (support both \"bulletin-id\" and \"bulletinId\"); otherwise fall back to generic url/link.
+            let bulletinIdString: String? =
+                (rawUserInfo["bulletin-id"] as? String)
+                ?? (rawUserInfo["bulletin-id"] as? NSNumber)?.stringValue
+                ?? (rawUserInfo["bulletinId"] as? String)
+                ?? (rawUserInfo["bulletinId"] as? NSNumber)?.stringValue
+            let bulletinURLString: String?
+            if let bulletinIdString {
+                bulletinURLString = "https://cms.homesteadheritage.org/items/Bulletin/\(bulletinIdString)"
+            } else {
+                bulletinURLString = nil
+            }
+            let actionURL = bulletinURLString
+                ?? (rawUserInfo["url"] as? String)
+                ?? (rawUserInfo["link"] as? String)
+
+            let stored = StoredNonSignalNotification(
+                identifier: response.notification.request.identifier,
+                title: content.title,
+                body: content.body,
+                date: Date(),
+                isRead: false,
+                actionURL: actionURL
+            )
+            let store = NonSignalNotificationStore(keyValueStore: KeyValueStore(collection: "NonSignalNotifications"))
+            await SSKEnvironment.shared.databaseStorageRef.awaitableWrite { tx in
+                store.append(stored, transaction: tx)
+            }
+            NotificationCenter.default.post(name: .nonSignalNotificationsDidChange, object: nil)
+
+            // When the user taps a non-Signal notification, automatically open the
+            // notifications & lists sheet full-screen so they can see the full context.
+            if let frontmostViewController = CurrentAppContext().frontmostViewController() {
+                let sheet = NotificationsAndListsViewController()
+                let nav = OWSNavigationController(rootViewController: sheet)
+                nav.modalPresentationStyle = .fullScreen
+                frontmostViewController.present(nav, animated: true)
+            }
+            return
+        }
+
         let userInfo = AppNotificationUserInfo(response.notification.request.content.userInfo)
 
         switch response.actionIdentifier {

@@ -96,6 +96,15 @@ class NotificationService: UNNotificationServiceExtension {
 
     @MainActor
     private func _didReceive(_ request: UNNotificationRequest, logger: NSELogger) async -> UNNotificationContent {
+        // Pass through non-Signal (e.g. HCP/Directus list) notifications unchanged so they are
+        // displayed and delivered to the main app with title, body, and userInfo intact.
+        // Deliver immediately so a subsequent push cannot cancel this task before we call the handler.
+        if !AppNotificationUserInfo.isSignalNotification(userInfo: request.content.userInfo) {
+            logger.info("Passing through non-Signal notification unchanged.")
+            completeSilently(content: request.content, logger: logger)
+            return request.content
+        }
+
         globalEnvironment.setUp(logger: logger)
         let finalContinuation: AppSetup.FinalContinuation
         do {
