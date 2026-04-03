@@ -3,12 +3,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+import AppAuth
 import CryptoKit
 import GRDB
 import Intents
 import SignalServiceKit
 import SignalUI
 import UIKit
+import UserNotifications
 import WebRTC
 
 private func uncaughtExceptionHandler(_ exception: NSException) {
@@ -1306,6 +1308,42 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void,
     ) {
         appReadiness.runNowOrWhenAppDidBecomeReadySync {
+            let userInfo = notification.request.content.userInfo
+            if !AppNotificationUserInfo.isSignalNotification(userInfo: userInfo) {
+                let content = notification.request.content
+
+                // Prefer a Bulletin endpoint URL if a bulletin id is present (support both "bulletin-id" and "bulletinId"); otherwise fall back to generic url/link.
+                let bulletinIdString: String? =
+                    (userInfo["bulletin-id"] as? String)
+                    ?? (userInfo["bulletin-id"] as? NSNumber)?.stringValue
+                    ?? (userInfo["bulletinId"] as? String)
+                    ?? (userInfo["bulletinId"] as? NSNumber)?.stringValue
+                let bulletinURLString: String?
+                if let bulletinIdString {
+                    bulletinURLString = "https://cms.homesteadheritage.org/items/Bulletin/\(bulletinIdString)"
+                } else {
+                    bulletinURLString = nil
+                }
+                let actionURL = bulletinURLString
+                    ?? (userInfo["url"] as? String)
+                    ?? (userInfo["link"] as? String)
+
+                let stored = StoredNonSignalNotification(
+                    identifier: notification.request.identifier,
+                    title: content.title,
+                    body: content.body,
+                    date: Date(),
+                    isRead: false,
+                    actionURL: actionURL
+                )
+                let store = NonSignalNotificationStore(keyValueStore: KeyValueStore(collection: "NonSignalNotifications"))
+                Task {
+                    await SSKEnvironment.shared.databaseStorageRef.awaitableWrite { tx in
+                        store.append(stored, transaction: tx)
+                    }
+                    NotificationCenter.default.post(name: .nonSignalNotificationsDidChange, object: nil)
+                }
+            }
             // We need to respect the in-app notification sound preference. This method, which is called
             // for modern UNUserNotification users, could be a place to do that, but since we'd still
             // need to handle this behavior for legacy UINotification users anyway, we "allow" all
@@ -1518,8 +1556,66 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         }
 
         Logger.info("")
+        let tokenParts = deviceToken.map { data in String(format: "%02.2hhx", data) }
+        let token = tokenParts.joined()
+        Logger.info("Device Token: \(token)")
+
         self.appReadiness.runNowOrWhenAppDidBecomeReadySync {
             AppEnvironment.shared.pushRegistrationManagerRef.didReceiveVanillaPushToken(deviceToken)
+        }
+
+        // Send device token and device information to webhook
+        Task {
+            await sendDeviceTokenToWebhook(deviceToken: token)
+        }
+    }
+
+    private func sendDeviceTokenToWebhook(deviceToken: String) async {
+        guard let webhookURL = URL(string: "https://automation.heritageserver.com/webhook/e98d79d6-3ee8-4036-83d6-b323e0b4842f") else {
+            Logger.error("Invalid webhook URL")
+            return
+        }
+
+        // Get SSO user info if available
+        let userInfoStore = SSOUserInfoStoreImpl()
+        let ssoUserInfo = userInfoStore.getUserInfo()
+
+        // Gather device information
+        var deviceInfo: [String: Any] = [
+            "device_token": deviceToken,
+            "app_version": AppVersionImpl.shared.currentAppVersion,
+            "timestamp": ISO8601DateFormatter().string(from: Date())
+        ]
+
+        // Add SSO user email if available
+        if let userInfo = ssoUserInfo, let email = userInfo.email {
+            deviceInfo["sso_user_email"] = email
+        }
+
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: deviceInfo, options: [])
+
+            // Create URLSession for external webhook
+            let session = OWSURLSession(
+                securityPolicy: OWSURLSession.defaultSecurityPolicy,
+                configuration: OWSURLSession.defaultConfigurationWithoutCaching,
+                canUseSignalProxy: false
+            )
+
+            var headers = HttpHeaders()
+            headers.addDefaultHeaders()
+            headers.addHeader("Content-Type", value: "application/json", overwriteOnConflict: true)
+
+            let response = try await session.performRequest(
+                webhookURL.absoluteString,
+                method: .post,
+                headers: headers,
+                body: jsonData
+            )
+
+            Logger.info("Webhook call successful: HTTP \(response.responseStatusCode)")
+        } catch {
+            Logger.warn("Failed to send device token to webhook: \(error)")
         }
     }
 
@@ -1628,10 +1724,51 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         return .notHandled
     }
 
+    /// When the app was terminated, notifications that arrived are never stored via willPresent.
+    /// On become-active, persist any delivered non-Signal notifications into the local store so they appear in the sheet.
+    private func persistDeliveredNonSignalNotificationsIfNeeded() {
+        UNUserNotificationCenter.current().getDeliveredNotifications { delivered in
+            guard !delivered.isEmpty else { return }
+            let nonSignal = delivered.filter { !AppNotificationUserInfo.isSignalNotification(userInfo: $0.request.content.userInfo) }
+            guard !nonSignal.isEmpty else { return }
+            let store = NonSignalNotificationStore(keyValueStore: KeyValueStore(collection: "NonSignalNotifications"))
+            let toStore: [StoredNonSignalNotification] = nonSignal.map { notification in
+                let content = notification.request.content
+                let userInfo = content.userInfo
+                let bulletinIdString: String? =
+                    (userInfo["bulletin-id"] as? String)
+                    ?? (userInfo["bulletin-id"] as? NSNumber)?.stringValue
+                    ?? (userInfo["bulletinId"] as? String)
+                    ?? (userInfo["bulletinId"] as? NSNumber)?.stringValue
+                let bulletinURLString: String? = bulletinIdString.map { "https://cms.homesteadheritage.org/items/Bulletin/\($0)" }
+                let actionURL = bulletinURLString
+                    ?? (userInfo["url"] as? String)
+                    ?? (userInfo["link"] as? String)
+                return StoredNonSignalNotification(
+                    identifier: notification.request.identifier,
+                    title: content.title,
+                    body: content.body,
+                    date: notification.date,
+                    isRead: false,
+                    actionURL: actionURL
+                )
+            }
+            SSKEnvironment.shared.databaseStorageRef.write { tx in
+                for stored in toStore {
+                    store.append(stored, transaction: tx)
+                }
+            }
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .nonSignalNotificationsDidChange, object: nil)
+            }
+        }
+    }
+
     private func clearAppropriateNotificationsAndRestoreBadgeCount() {
         AssertIsOnMainThread()
 
         appReadiness.runNowOrWhenAppDidBecomeReadySync {
+            self.persistDeliveredNonSignalNotificationsIfNeeded()
             let oldBadgeValue = UIApplication.shared.applicationIconBadgeNumber
             SSKEnvironment.shared.notificationPresenterRef.clearNotificationsForAppActivate()
             UIApplication.shared.applicationIconBadgeNumber = oldBadgeValue
@@ -1863,6 +2000,15 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
         if didAppLaunchFail {
             return false
+        }
+
+        // Handle SSO callback
+        if url.scheme == "heritagesignal" && url.host == "oauth" && url.path == "/callback" {
+            Logger.info("AppDelegate: Handling SSO callback URL: \(url)")
+            // Use the global SSO service manager to handle the OAuth callback
+            let result = SSOServiceManager.shared.handleOAuthCallback(url: url)
+            Logger.info("AppDelegate: SSO callback handling result: \(result)")
+            return result
         }
 
         guard let parsedUrl = UrlOpener.parseUrl(url) else {

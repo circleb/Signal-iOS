@@ -1874,7 +1874,8 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
             if persistedState.shouldSkipRegistrationSplash {
                 return nil
             }
-            return .registrationSplash
+            // Use SSO splash for Heritage Signal app
+            return .ssoRegistrationSplash
         case .changingNumber:
             return .changeNumberSplash
         case .reRegistering:

@@ -1,0 +1,236 @@
+//
+// Copyright 2026
+//
+
+import UIKit
+import SignalServiceKit
+
+/// Displays Bulletin HTML from the Directus JSON endpoint using a text view (no WebKit),
+/// avoiding WebContent process and related simulator/system errors.
+final class BulletinViewController: UIViewController {
+
+    private let bulletinURL: URL
+    private let textView: UITextView = {
+        let v = UITextView()
+        v.isEditable = false
+        v.isSelectable = true
+        v.dataDetectorTypes = [.link]
+        v.textContainerInset = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+        v.backgroundColor = .clear
+        return v
+    }()
+    private let loadingIndicator = UIActivityIndicatorView(style: .large)
+
+    init(bulletinURL: URL, title: String) {
+        self.bulletinURL = bulletinURL
+        super.init(nibName: nil, bundle: nil)
+        self.title = title
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .systemBackground
+
+        // Content scrolls under the nav bar when user scrolls; start with content below the bar.
+        textView.contentInsetAdjustmentBehavior = .never
+
+        loadingIndicator.hidesWhenStopped = true
+        view.addSubview(loadingIndicator)
+        view.addSubview(textView)
+        textView.isHidden = true
+
+        loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
+        textView.translatesAutoresizingMaskIntoConstraints = false
+        // Pin to view edges so the text view extends under the navigation bar; automatic
+        // content insets keep initial content below the bar and allow scroll-under.
+        NSLayoutConstraint.activate([
+            loadingIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            loadingIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            textView.topAnchor.constraint(equalTo: view.topAnchor),
+            textView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            textView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            textView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+
+        loadingIndicator.startAnimating()
+        fetchBulletin()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // Use translucent bar so content scrolling underneath gets the standard blur.
+        navigationController?.navigationBar.standardAppearance.configureWithTransparentBackground()
+        navigationController?.navigationBar.scrollEdgeAppearance = navigationController?.navigationBar.standardAppearance
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // Re-apply insets and initial offset when view is visible (contentOffset.y = -top so first line is below nav bar).
+        let insets = view.safeAreaInsets
+        textView.contentInset = UIEdgeInsets(top: insets.top, left: insets.left, bottom: insets.bottom, right: insets.right)
+        textView.contentOffset = CGPoint(x: 0, y: -insets.top)
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        let insets = view.safeAreaInsets
+        textView.contentInset = UIEdgeInsets(top: insets.top, left: insets.left, bottom: insets.bottom, right: insets.right)
+        // contentOffset.y = -safeAreaTop positions content (0,0) at scroll view y=safeAreaTop (below nav bar).
+        let desiredOffsetY = -insets.top
+        if textView.contentOffset.y != desiredOffsetY {
+            textView.contentOffset = CGPoint(x: 0, y: desiredOffsetY)
+        }
+    }
+
+    private func fetchBulletin() {
+        var request = URLRequest(url: bulletinURL)
+        let apiKey = DirectusConfig.apiKey
+        if !apiKey.isEmpty {
+            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        }
+
+        let task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+            DispatchQueue.main.async {
+                guard let self else { return }
+
+                if let error {
+                    self.loadingIndicator.stopAnimating()
+                    self.presentError(message: error.localizedDescription)
+                    return
+                }
+
+                guard let http = response as? HTTPURLResponse else {
+                    self.loadingIndicator.stopAnimating()
+                    self.presentError(message: "Unable to load bulletin (no HTTP response).")
+                    return
+                }
+
+                // Handle non-2xx responses (e.g. 403 from Directus with an errors array).
+                if !(200..<300).contains(http.statusCode) {
+                    if
+                        let data,
+                        let directusError = try? JSONDecoder().decode(DirectusErrorResponse.self, from: data),
+                        let firstError = directusError.errors.first
+                    {
+                        self.loadingIndicator.stopAnimating()
+                        self.presentError(message: firstError.message)
+                        return
+                    } else {
+                        self.loadingIndicator.stopAnimating()
+                        self.presentError(message: "Unable to load bulletin (HTTP \(http.statusCode)).")
+                        return
+                    }
+                }
+
+                guard
+                    let data,
+                    let bulletin = try? JSONDecoder().decode(BulletinResponse.self, from: data)
+                else {
+                    self.loadingIndicator.stopAnimating()
+                    self.presentError(message: "Unable to load bulletin.")
+                    return
+                }
+
+                if !bulletin.data.subject.isEmpty {
+                    self.title = bulletin.data.subject
+                }
+
+                self.loadingIndicator.stopAnimating()
+                self.displayHTML(bulletin.data.body)
+            }
+        }
+
+        task.resume()
+    }
+
+    private func displayHTML(_ html: String) {
+        let wrapped = """
+        <!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>\
+        body { font: -apple-system-body; color: \(cssColor(UIColor.label)); }\
+        p { margin: 0 0 0.75em; } p:last-child { margin-bottom: 0; }\
+        strong, b { font-weight: 600; } em, i { font-style: italic; }\
+        ul { margin: 0.5em 0; padding-left: 1.2em; } ol { margin: 0.5em 0; padding-left: 1.5em; }\
+        h1, h2, h3 { font-weight: 600; margin: 0.5em 0 0.25em; } a { color: \(cssColor(.systemBlue)); }
+        </style></head><body>\(html)</body></html>
+        """
+        guard let data = wrapped.data(using: .utf8) else {
+            textView.text = html
+            textView.isHidden = false
+            return
+        }
+        let options: [NSAttributedString.DocumentReadingOptionKey: Any] = [
+            .documentType: NSAttributedString.DocumentType.html,
+            .characterEncoding: String.Encoding.utf8.rawValue
+        ]
+        if let attributed = try? NSMutableAttributedString(
+            data: data,
+            options: options,
+            documentAttributes: nil
+        ) {
+            // Preserve HTML formatting (bold, italic, etc.); only apply default font/color where missing.
+            let bodyFont = UIFont.preferredFont(forTextStyle: .body)
+            let bodyColor = UIColor.label
+            textView.font = bodyFont
+            textView.textColor = bodyColor
+            attributed.enumerateAttributes(in: NSRange(location: 0, length: attributed.length)) { attrs, range, _ in
+                if attrs[.font] == nil {
+                    attributed.addAttribute(.font, value: bodyFont, range: range)
+                }
+                if attrs[.foregroundColor] == nil {
+                    attributed.addAttribute(.foregroundColor, value: bodyColor, range: range)
+                }
+            }
+            textView.attributedText = attributed
+        } else {
+            textView.text = html
+        }
+        textView.isHidden = false
+        // Re-apply insets and initial offset after content size changes (contentOffset.y = -top so first line is below nav bar).
+        let insets = view.safeAreaInsets
+        textView.contentInset = UIEdgeInsets(top: insets.top, left: insets.left, bottom: insets.bottom, right: insets.right)
+        textView.contentOffset = CGPoint(x: 0, y: -insets.top)
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            // Re-apply after one run loop in case UITextView reset contentOffset (contentOffset.y = -top so first line is below nav bar).
+            let insets = self.view.safeAreaInsets
+            self.textView.contentInset = UIEdgeInsets(top: insets.top, left: insets.left, bottom: insets.bottom, right: insets.right)
+            self.textView.contentOffset = CGPoint(x: 0, y: -insets.top)
+        }
+    }
+
+    private func cssColor(_ color: UIColor) -> String {
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        color.getRed(&r, green: &g, blue: &b, alpha: &a)
+        return "rgba(\(Int(r * 255)),\(Int(g * 255)),\(Int(b * 255)),\(a))"
+    }
+
+    private func presentError(message: String) {
+        let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+}
+
+// MARK: - Decoding
+
+private struct BulletinResponse: Decodable {
+    struct BulletinData: Decodable {
+        let subject: String
+        let body: String
+    }
+
+    let data: BulletinData
+}
+
+// Directus error envelope for non-2xx responses.
+private struct DirectusErrorResponse: Decodable {
+    struct DirectusError: Decodable {
+        let message: String
+    }
+
+    let errors: [DirectusError]
+}

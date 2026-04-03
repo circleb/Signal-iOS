@@ -141,6 +141,13 @@ public struct AppNotificationUserInfo {
         }
         return result
     }
+
+    /// Returns true if the payload is a Signal notification (has Signal-specific userInfo keys).
+    public static func isSignalNotification(userInfo: [AnyHashable: Any]) -> Bool {
+        userInfo[UserInfoKey.threadId] != nil
+            || userInfo[UserInfoKey.messageId] != nil
+            || userInfo[UserInfoKey.defaultAction] != nil
+    }
 }
 
 // MARK: -

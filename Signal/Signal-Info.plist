@@ -45,9 +45,21 @@
 				<string>sgnl</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>heritagesignal</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>heritagesignal</string>
+			</array>
+		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>0</string>
+	<string>2</string>
+	<key>DirectusAPIKey</key>
+	<string>pL3m35S0fEBxLaHC-1G9lkhE6f1oLzJd</string>
+	<key>DirectusBaseURL</key>
+	<string>https://cms.homesteadheritage.org</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LOGS_EMAIL</key>
@@ -118,10 +130,6 @@
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>Launch Screen</string>
-	<key>UIRequiredDeviceCapabilities</key>
-	<array>
-		<string>armv7</string>
-	</array>
 	<key>UIStatusBarStyle</key>
 	<string>UIStatusBarStyleDefault</string>
 	<key>UISupportedInterfaceOrientations</key>

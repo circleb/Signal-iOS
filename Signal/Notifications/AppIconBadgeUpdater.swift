@@ -9,6 +9,7 @@ import UIKit
 
 class AppIconBadgeUpdater {
     private let badgeManager: BadgeManager
+    private var nonSignalNotificationsObserver: NSObjectProtocol?
 
     init(badgeManager: BadgeManager) {
         self.badgeManager = badgeManager
@@ -16,6 +17,19 @@ class AppIconBadgeUpdater {
 
     func startObserving() {
         badgeManager.addObserver(self)
+        nonSignalNotificationsObserver = NotificationCenter.default.addObserver(
+            forName: .nonSignalNotificationsDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.badgeManager.invalidateBadgeValue()
+        }
+    }
+
+    deinit {
+        if let nonSignalNotificationsObserver {
+            NotificationCenter.default.removeObserver(nonSignalNotificationsObserver)
+        }
     }
 }
 

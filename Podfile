@@ -52,11 +52,13 @@ def ui_pods
   pod 'MobileCoin/CoreHTTP', git: 'https://github.com/mobilecoinofficial/MobileCoin-Swift', tag: 'v6.0.3'
 end
 
-target 'Signal' do
-  project 'Signal.xcodeproj', 'Debug' => :debug, 'Release' => :release
+target 'HCP' do
+  project 'HCP.xcodeproj', 'Debug' => :debug, 'Release' => :release
 
   # Pods only available inside the main Signal app
   ui_pods
+
+  pod 'AppAuth'
 
   target 'SignalTests' do
     inherit! :search_paths
@@ -198,11 +200,13 @@ def strip_valid_archs(installer)
   end
 end
 
-#update_framework_scripts updates Pod-Signal-frameworks.sh to fix a bug in the .XCFramework->.framework
+#update_framework_scripts updates Pod-HCP-frameworks.sh to fix a bug in the .XCFramework->.framework
 #conversation process, by ensuring symlinks are properly respected in the XCFramework.
 #See https://github.com/CocoaPods/CocoaPods/issues/7587
 def update_frameworks_script(installer)
-    fw_script = File.read('Pods/Target Support Files/Pods-Signal/Pods-Signal-frameworks.sh')
+    fw_script_path = 'Pods/Target Support Files/Pods-HCP/Pods-HCP-frameworks.sh'
+    return unless File.exist?(fw_script_path)
+    fw_script = File.read(fw_script_path)
     fw_script_mod = fw_script.gsub('      lipo -remove "$arch" -output "$binary" "$binary"
 ', '      realBinary="${binary}"
       if [ -L "${realBinary}" ]; then
@@ -211,7 +215,7 @@ def update_frameworks_script(installer)
         realBinary="${dirname}/$(readlink "${realBinary}")"
       fi
       lipo -remove "${arch}" -output "${realBinary}" "${realBinary}" || exit 1')
-    File.open('Pods/Target Support Files/Pods-Signal/Pods-Signal-frameworks.sh', "w") { |file| file << fw_script_mod }
+    File.open(fw_script_path, "w") { |file| file << fw_script_mod }
 end
 
 # Disable warnings on any Pod not currently being modified

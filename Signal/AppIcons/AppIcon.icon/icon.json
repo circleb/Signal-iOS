@@ -41,8 +41,15 @@
             }
           ],
           "hidden" : false,
-          "image-name" : "logo.svg",
-          "name" : "logo"
+          "image-name" : "hcp-logo.svg",
+          "name" : "hcp-logo",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
         }
       ],
       "lighting" : "individual",
