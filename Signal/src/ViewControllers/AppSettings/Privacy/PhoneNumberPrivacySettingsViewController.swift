@@ -234,7 +234,7 @@ class PhoneNumberPrivacySettingsViewController: OWSTableViewController2 {
         ].forEach { textView in
             container.addSubview(textView)
             textView.autoPinEdges(toSuperviewEdgesExcludingEdge: .bottom)
-            textView.autoPinEdge(toSuperviewEdge: .bottom, relation: .greaterThanOrEqual)
+            textView.autoPinEdge(toSuperviewEdge: .bottom, withInset: 0, relation: .greaterThanOrEqual)
         }
         return container
     }

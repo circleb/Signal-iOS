@@ -5,8 +5,8 @@
 
 import Foundation
 import Lottie
-import SignalServiceKit
-
+public import SignalServiceKit
+public import UIKit
 open class HeroSheetViewController: StackSheetViewController {
     public enum Hero {
         /// Scaled image to display at the top of the sheet

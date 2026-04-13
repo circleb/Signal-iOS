@@ -4,8 +4,8 @@
 //
 
 import Foundation
+public import UIKit
 public import SignalServiceKit
-
 public class ThreadViewModel: NSObject {
     public let hasUnreadMessages: Bool
     public let isGroupThread: Bool

@@ -4,8 +4,8 @@
 //
 
 import Foundation
+public import UIKit
 public import SignalServiceKit
-
 public class SafetyNumberConfirmationSheet: UIViewController {
     let stackView = UIStackView()
     let contentView = UIView()

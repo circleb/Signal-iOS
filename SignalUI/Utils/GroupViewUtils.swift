@@ -6,8 +6,7 @@
 import Foundation
 import SafariServices
 import SignalServiceKit
-import UIKit
-
+public import UIKit
 public class GroupViewUtils {
 
     public static func formatGroupMembersLabel(memberCount: Int) -> String {

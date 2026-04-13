@@ -3,6 +3,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+public import Foundation
+
 public struct OWSByteCountFormatStyle: FormatStyle {
     private let fudgeBase2ToBase10: Bool
     private let zeroPadFractionDigits: Bool

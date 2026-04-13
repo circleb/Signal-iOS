@@ -5,7 +5,6 @@
 
 import Foundation
 import SignalServiceKit
-
 public class PaymentActionSheets {
     public static func showBiometryAuthFailedActionSheet(_ handler: ActionSheetAction.Handler? = nil) {
         let title = OWSLocalizedString(

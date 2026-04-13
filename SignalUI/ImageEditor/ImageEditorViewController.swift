@@ -5,7 +5,6 @@
 
 import SignalServiceKit
 import UIKit
-
 // Base class for all tool view controllers.
 
 class ImageEditorViewController: OWSViewController {

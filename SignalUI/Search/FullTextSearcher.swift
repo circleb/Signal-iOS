@@ -6,8 +6,8 @@
 import BonMot
 import Foundation
 import LibSignalClient
+public import UIKit
 public import SignalServiceKit
-
 public typealias MessageSortKey = UInt64
 
 public struct ConversationSortKey: Comparable {

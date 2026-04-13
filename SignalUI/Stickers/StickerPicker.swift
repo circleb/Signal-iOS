@@ -4,7 +4,6 @@
 //
 
 public import SignalServiceKit
-
 public protocol StoryStickerPickerDelegate: AnyObject {
     func didSelect(storySticker: EditorSticker.StorySticker)
 }

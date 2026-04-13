@@ -4,7 +4,6 @@
 //
 
 import SignalServiceKit
-
 // This GR:
 //
 // * Tries to fail quickly to avoid conflicts with other GRs, especially pans/swipes.

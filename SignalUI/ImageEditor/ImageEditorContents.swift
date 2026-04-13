@@ -4,7 +4,6 @@
 //
 
 import SignalServiceKit
-
 // ImageEditorContents represents a snapshot of canvas
 // state.
 //

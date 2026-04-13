@@ -3,14 +3,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import AVFoundation
+public import AVFoundation
 import CoreServices
 import Foundation
+public import UIKit
 public import LibSignalClient
 import MediaPlayer
 import Photos
 public import SignalServiceKit
-
 public struct ApprovedAttachments {
     public let isViewOnce: Bool
     public let imageQuality: ImageQuality

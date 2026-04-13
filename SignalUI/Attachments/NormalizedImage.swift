@@ -4,9 +4,9 @@
 //
 
 import Foundation
-import SignalServiceKit
+public import SignalServiceKit
 import UniformTypeIdentifiers
-
+public import UIKit
 /// Represents ``PreviewableAttachment``s that are images. This is roughly
 /// equivalent to a "previewable image attachment".
 ///

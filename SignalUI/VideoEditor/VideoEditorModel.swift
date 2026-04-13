@@ -5,7 +5,6 @@
 
 import AVFoundation
 import SignalServiceKit
-
 protocol VideoEditorModelObserver: AnyObject {
     func videoEditorModelDidChange(_ model: VideoEditorModel)
 }

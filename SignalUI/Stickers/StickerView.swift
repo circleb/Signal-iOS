@@ -4,6 +4,7 @@
 //
 
 import Lottie
+public import UIKit
 public import SignalServiceKit
 import SDWebImage
 

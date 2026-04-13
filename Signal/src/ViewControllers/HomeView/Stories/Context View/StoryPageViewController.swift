@@ -519,9 +519,19 @@ extension StoryPageViewController: UIViewControllerTransitioningDelegate {
     }
 
     private func storyTransitionContext(presentingViewController: UIViewController, isPresenting: Bool) throws -> StoryTransitionContext? {
-        // If we're not presenting from the stories tab, use a default animation
-        guard let splitViewController = presentingViewController as? ConversationSplitViewController else { return nil }
-        guard splitViewController.homeVC.selectedHomeTab == .stories else { return nil }
+        // Walk up to the split view (presenting may be a nested controller under the tab bar or a modally presented stories stack).
+        let splitViewController: ConversationSplitViewController? = {
+            var vc: UIViewController? = presentingViewController
+            while let c = vc {
+                if let split = c as? ConversationSplitViewController {
+                    return split
+                }
+                vc = c.parent
+            }
+            return nil
+        }()
+        guard let splitViewController else { return nil }
+        guard splitViewController.homeVC.isStoriesFlowPresentedModally else { return nil }
 
         let thumbnailView: UIView
         let storyMessage: StoryMessage

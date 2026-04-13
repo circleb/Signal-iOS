@@ -4,8 +4,7 @@
 //
 
 import SignalServiceKit
-import UIKit
-
+public import UIKit
 public protocol ScreenLockViewDelegate: AnyObject {
     func unlockButtonWasTapped()
 }

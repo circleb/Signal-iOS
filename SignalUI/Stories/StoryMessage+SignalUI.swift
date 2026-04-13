@@ -4,7 +4,6 @@
 //
 
 import SignalServiceKit
-
 extension StoryMessage {
 
     func quotedBody(transaction: DBReadTransaction) -> MessageBody? {

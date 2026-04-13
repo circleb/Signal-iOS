@@ -12,13 +12,21 @@ class SSOAccountMenuActions {
     private let userInfoStore: SSOUserInfoStore
     private let ssoService: SSOServiceProtocol
     private weak var presentingViewController: UIViewController?
+    private let managePinnedAppsHandler: (() -> Void)?
+    private let isManagePinnedAppsEnabled: () -> Bool
     
-    init(userInfoStore: SSOUserInfoStore = SSOUserInfoStoreImpl(),
-         ssoService: SSOServiceProtocol,
-         presentingViewController: UIViewController?) {
+    init(
+        userInfoStore: SSOUserInfoStore = SSOUserInfoStoreImpl(),
+        ssoService: SSOServiceProtocol,
+        presentingViewController: UIViewController?,
+        managePinnedAppsHandler: (() -> Void)? = nil,
+        isManagePinnedAppsEnabled: @escaping () -> Bool = { true },
+    ) {
         self.userInfoStore = userInfoStore
         self.ssoService = ssoService
         self.presentingViewController = presentingViewController
+        self.managePinnedAppsHandler = managePinnedAppsHandler
+        self.isManagePinnedAppsEnabled = isManagePinnedAppsEnabled
     }
     
     func createMenuActions() -> [UIAction] {
@@ -27,6 +35,10 @@ class SSOAccountMenuActions {
         // User Info Section
         if let userInfo = userInfoStore.getUserInfo() {
             actions.append(createUserInfoAction(userInfo: userInfo))
+        }
+        
+        if managePinnedAppsHandler != nil {
+            actions.append(createManagePinnedAppsAction())
         }
         
         // Account Management
@@ -58,6 +70,22 @@ class SSOAccountMenuActions {
             image: nil,
             attributes: .disabled,
             handler: { _ in }
+        )
+    }
+    
+    private func createManagePinnedAppsAction() -> UIAction {
+        let enabled = isManagePinnedAppsEnabled()
+        return UIAction(
+            title: OWSLocalizedString(
+                "WEB_APP_MANAGE_PINS_TITLE",
+                comment: "Title for the sheet that lists web apps pinned to the tab bar.",
+            ),
+            image: UIImage(systemName: "pin"),
+            attributes: enabled ? [] : .disabled,
+            handler: { [weak self] _ in
+                guard enabled else { return }
+                self?.managePinnedAppsHandler?()
+            }
         )
     }
     

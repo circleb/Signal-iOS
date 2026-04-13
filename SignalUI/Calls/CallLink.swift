@@ -5,8 +5,6 @@
 
 import Foundation
 public import SignalRingRTC
-import SignalServiceKit
-
 public struct CallLink: Equatable {
 
     // MARK: -

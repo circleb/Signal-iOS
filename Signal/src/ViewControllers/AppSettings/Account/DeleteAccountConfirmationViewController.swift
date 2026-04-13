@@ -204,6 +204,7 @@ class DeleteAccountConfirmationViewController: OWSTableViewController2 {
 
     private func showDeletionConfirmUI_checkPayments() {
         if
+            TSConstants.isMobileCoinPaymentsUIAccessible,
             SSKEnvironment.shared.paymentsHelperRef.arePaymentsEnabled,
             let paymentBalance = SUIEnvironment.shared.paymentsSwiftRef.currentPaymentBalance,
             !paymentBalance.amount.isZero

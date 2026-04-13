@@ -4,9 +4,9 @@
 //
 
 import Contacts
+public import UIKit
 public import SignalServiceKit
-import UIKit
-
+public import UIKit
 public protocol ContactPickerDelegate: AnyObject {
     func contactPickerDidCancel(_: ContactPickerViewController)
     func contactPicker(_: ContactPickerViewController, didSelect contact: SystemContact)

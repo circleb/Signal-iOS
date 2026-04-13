@@ -4,8 +4,7 @@
 //
 
 import Foundation
-import UIKit
-
+public import UIKit
 public class OWSTableSection {
 
     public private(set) var items: [OWSTableItem]

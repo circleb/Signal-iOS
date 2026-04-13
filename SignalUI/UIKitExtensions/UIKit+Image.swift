@@ -3,8 +3,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-public import SignalServiceKit
 
+import SignalServiceKit
+public import UIKit
 public extension UIImageView {
 
     func setImage(imageName: String) {
@@ -145,7 +146,7 @@ public extension UIImage {
 
     func withBadge(
         color: UIColor,
-        badgeSize: CGSize = .square(8.5),
+        badgeSize: CGSize = CGSize(width: 8.5, height: 8.5),
     ) -> UIImage {
         let newSize = CGSize(
             width: size.width + (badgeSize.width / 2.0),

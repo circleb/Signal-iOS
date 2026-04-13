@@ -3,12 +3,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+import Foundation
 import Contacts
 import ContactsUI
 import LibSignalClient
 import SafariServices
+public import UIKit
 public import SignalServiceKit
-
 @objc
 public protocol ContactsViewHelperObserver: AnyObject {
     func contactsViewHelperDidUpdateContacts()

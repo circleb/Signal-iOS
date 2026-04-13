@@ -4,7 +4,7 @@
 //
 
 import SignalServiceKit
-
+public import UIKit
 /// Abstract base class for errors that can be presented in a sheet.
 open class SheetDisplayableError: Error {
 

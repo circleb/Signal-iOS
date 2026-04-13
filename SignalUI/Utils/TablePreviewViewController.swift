@@ -3,8 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import UIKit
-
+public import UIKit
 #if DEBUG
 
 /// A minimal `UITableViewController` for displaying `UITableViewCell`s in Xcode

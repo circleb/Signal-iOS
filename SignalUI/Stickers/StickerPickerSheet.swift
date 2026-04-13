@@ -3,8 +3,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-public import SignalServiceKit
 
+public import UIKit
+public import SignalServiceKit
 public protocol StickerPickerSheetDelegate: AnyObject {
     func makeManageStickersViewController(for: StickerPickerSheet) -> UIViewController
 }

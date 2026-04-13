@@ -9,6 +9,8 @@ import SignalServiceKit
 
 extension Notification.Name {
     static let nonSignalNotificationsDidChange = Notification.Name("nonSignalNotificationsDidChange")
+    /// Posted after Portal web app list data is refreshed (so the tab bar can resolve pinned apps).
+    static let webAppsPortalDidRefresh = Notification.Name("webAppsPortalDidRefresh")
 }
 
 
@@ -16,6 +18,7 @@ class WebAppsListViewController: UIViewController {
     private let webAppsService: WebAppsServiceProtocol
     private let userInfoStore: SSOUserInfoStore
     private let ssoService: SSOServiceProtocol
+    private let tabPinsStore: WebAppTabPinsStore
     private let searchController = UISearchController(searchResultsController: nil)
     
     // UI Components
@@ -42,12 +45,16 @@ class WebAppsListViewController: UIViewController {
 
 
 
-    init(webAppsService: WebAppsServiceProtocol, 
-         userInfoStore: SSOUserInfoStore = SSOUserInfoStoreImpl(),
-         ssoService: SSOServiceProtocol) {
+    init(
+        webAppsService: WebAppsServiceProtocol,
+        userInfoStore: SSOUserInfoStore = SSOUserInfoStoreImpl(),
+        ssoService: SSOServiceProtocol,
+        tabPinsStore: WebAppTabPinsStore = .shared,
+    ) {
         self.webAppsService = webAppsService
         self.userInfoStore = userInfoStore
         self.ssoService = ssoService
+        self.tabPinsStore = tabPinsStore
         self.tableView = UITableView(frame: .zero, style: .insetGrouped)
         super.init(nibName: nil, bundle: nil)
     }
@@ -133,7 +140,14 @@ class WebAppsListViewController: UIViewController {
         ssoMenuActions = SSOAccountMenuActions(
             userInfoStore: userInfoStore,
             ssoService: ssoService,
-            presentingViewController: self
+            presentingViewController: self,
+            managePinnedAppsHandler: { [weak self] in
+                self?.showPinnedAppsManagement()
+            },
+            isManagePinnedAppsEnabled: { [weak self] in
+                guard let self else { return false }
+                return !self.tabPinsStore.orderedPinIds().isEmpty
+            },
         )
         
         // Create context menu button with avatar as subview (matching HomeTabViewController pattern)
@@ -160,11 +174,57 @@ class WebAppsListViewController: UIViewController {
             action: #selector(openNotificationsAndListsSheet)
         )
         bellBarButtonItem.accessibilityLabel = OWSLocalizedString("NOTIFICATIONS_AND_LISTS_TITLE", comment: "Accessibility label for notifications and lists button.")
+
         navigationItem.rightBarButtonItem = bellBarButtonItem
 
         // Update menu actions
         updateMenuActions()
         refreshNotificationBadgeState()
+    }
+
+    private func showPinnedAppsManagement() {
+        let ids = tabPinsStore.orderedPinIds()
+        guard !ids.isEmpty else { return }
+
+        let alert = UIAlertController(
+            title: OWSLocalizedString(
+                "WEB_APP_MANAGE_PINS_TITLE",
+                comment: "Title for the sheet that lists web apps pinned to the tab bar.",
+            ),
+            message: nil,
+            preferredStyle: .actionSheet,
+        )
+        for id in ids {
+            guard let app = webAppsService.getCachedWebApp(byId: id) ?? webAppsService.getCachedWebApp(byEntry: id) else { continue }
+            let title = String(
+                format: OWSLocalizedString(
+                    "WEB_APP_UNPIN_ACTION_FORMAT",
+                    comment: "Format for an action that removes a named web app from the tab bar. Embeds {app_name}."),
+                app.name,
+            )
+            alert.addAction(UIAlertAction(title: title, style: .destructive) { [weak self] _ in
+                // #region agent log
+                CursorAgentDebugNDJSON.log(
+                    hypothesisId: "H5",
+                    location: "WebAppsListViewController.showPinnedAppsManagement:unpinTap",
+                    message: "user chose unpin from action sheet",
+                    data: [
+                        "isMain": "\(Thread.isMainThread)",
+                        "presentedVC": "\(String(describing: self?.presentedViewController))",
+                    ],
+                )
+                // #endregion
+                self?.tabPinsStore.removePin(webAppId: id)
+                self?.updateUI()
+            })
+        }
+        alert.addAction(UIAlertAction(title: CommonStrings.cancelButton, style: .cancel))
+
+        if let popover = alert.popoverPresentationController {
+            popover.sourceView = contextMenuButton
+            popover.sourceRect = contextMenuButton.bounds
+        }
+        present(alert, animated: true)
     }
 
     @objc private func openNotificationsAndListsSheet() {
@@ -196,6 +256,28 @@ class WebAppsListViewController: UIViewController {
             name: .nonSignalNotificationsDidChange,
             object: nil
         )
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(tabPinsDidChange),
+            name: .webAppTabPinsDidChange,
+            object: nil
+        )
+    }
+
+    @objc private func tabPinsDidChange() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            if self.isSearching, let text = self.searchController.searchBar.text, !text.isEmpty {
+                self.applySearchFilter(searchText: text)
+            } else {
+                self.filteredCategories = self.categoriesExcludingPins(self.allCategories)
+                self.tableView.reloadData()
+            }
+            let totalApps = self.filteredCategories.flatMap { $0.apps }
+            self.emptyStateView.isHidden = !totalApps.isEmpty
+            self.updateMenuActions()
+        }
     }
     
 
@@ -302,6 +384,7 @@ class WebAppsListViewController: UIViewController {
             }
             .done { [weak self] globalAllowList in
                 self?.updateUI()
+                NotificationCenter.default.postOnMainThread(name: .webAppsPortalDidRefresh, object: nil)
                 Logger.info("📋 Loaded \(self?.allCategories.count ?? 0) categories with \(self?.allWebApps.count ?? 0) total web apps and \(globalAllowList.count) global allow entries")
             }
             .catch { [weak self] error in
@@ -313,23 +396,66 @@ class WebAppsListViewController: UIViewController {
             }
     }
 
+    private func categoriesExcludingPins(_ categories: [WebAppCategory]) -> [WebAppCategory] {
+        let pinned = Set(tabPinsStore.orderedPinIds())
+        guard !pinned.isEmpty else {
+            return categories.filter { !$0.apps.isEmpty }
+        }
+        return categories.map { category in
+            WebAppCategory(
+                name: category.name,
+                apps: category.apps.filter { app in
+                    !pinned.contains(app.pinKey)
+                },
+            )
+        }.filter { !$0.apps.isEmpty }
+    }
+
+    private func applySearchFilter(searchText: String) {
+        isSearching = true
+        let userRoles = userInfoStore.getUserRoles()
+        let searchResults = webAppsService.searchWebApps(query: searchText, userRoles: userRoles)
+        let grouped = Dictionary(grouping: searchResults) { $0.category }
+        let built = grouped.map { category, apps in
+            WebAppCategory(
+                name: category,
+                apps: apps.sorted { $0.name < $1.name },
+            )
+        }.sorted { $0.name < $1.name }
+        filteredCategories = categoriesExcludingPins(built)
+    }
+
     private func updateUI() {
-        // Ensure we're on the main thread for UI updates
         DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            
-            if self.isSearching {
-                // Show filtered results
-                self.tableView.reloadData()
+            guard let self else { return }
+
+            if self.isSearching, let text = self.searchController.searchBar.text, !text.isEmpty {
+                self.applySearchFilter(searchText: text)
             } else {
-                // Use the categorized webapps that were already filtered by user roles
-                self.filteredCategories = self.allCategories
-                self.tableView.reloadData()
+                self.filteredCategories = self.categoriesExcludingPins(self.allCategories)
             }
+            self.tableView.reloadData()
 
             let totalApps = self.filteredCategories.flatMap { $0.apps }
             self.emptyStateView.isHidden = !totalApps.isEmpty
+            self.updateMenuActions()
         }
+    }
+
+    private func presentMaxPinsAlert() {
+        let alert = UIAlertController(
+            title: OWSLocalizedString(
+                "WEB_APP_MAX_PINS_ALERT_TITLE",
+                comment: "Title when the user cannot add another pinned web app tab.",
+            ),
+            message: OWSLocalizedString(
+                "WEB_APP_MAX_PINS_ALERT_MESSAGE",
+                comment: "Explanation that the maximum number of web apps are already pinned to the tab bar.",
+            ),
+            preferredStyle: .alert,
+        )
+        alert.addAction(UIAlertAction(title: CommonStrings.okayButton, style: .default))
+        present(alert, animated: true)
     }
 
     private func showError(_ error: Error) {
@@ -425,15 +551,41 @@ extension WebAppsListViewController: UITableViewDataSource, UITableViewDelegate 
         }
 
         let webApp = filteredCategories[indexPath.section].apps[indexPath.row]
-        
-        // Use the split view controller to present web apps properly
-        if let splitViewController = splitViewController as? ConversationSplitViewController {
-            splitViewController.presentWebApp(webApp, animated: true)
-        } else {
-            // Fallback for non-split view contexts
-            let webVC = WebAppWebViewController(webApp: webApp, webAppsService: webAppsService, userInfoStore: userInfoStore)
-            navigationController?.pushViewController(webVC, animated: true)
+        let webVC = WebAppWebViewController(webApp: webApp, webAppsService: webAppsService, userInfoStore: userInfoStore)
+        navigationController?.pushViewController(webVC, animated: true)
+    }
+
+    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        guard indexPath.section < filteredCategories.count,
+              indexPath.row < filteredCategories[indexPath.section].apps.count else {
+            return nil
         }
+        let webApp = filteredCategories[indexPath.section].apps[indexPath.row]
+        let pinKey = webApp.pinKey
+
+        let pinTitle = OWSLocalizedString(
+            "WEB_APP_PIN_TO_TAB_BAR",
+            comment: "Pin a portal web app to the home tab bar (swipe action).",
+        )
+        let pinAction = UIContextualAction(style: .normal, title: pinTitle) { [weak self] _, _, completion in
+            guard let self else {
+                completion(false)
+                return
+            }
+            if self.tabPinsStore.addPin(webAppId: pinKey) {
+                self.updateUI()
+                completion(true)
+            } else {
+                self.presentMaxPinsAlert()
+                completion(true)
+            }
+        }
+        pinAction.image = UIImage(systemName: "pin.fill")
+        pinAction.backgroundColor = .ows_accentBlue
+
+        let config = UISwipeActionsConfiguration(actions: [pinAction])
+        config.performsFirstActionWithFullSwipe = false
+        return config
     }
 }
 
@@ -441,26 +593,14 @@ extension WebAppsListViewController: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
         guard let searchText = searchController.searchBar.text, !searchText.isEmpty else {
             isSearching = false
-            // Use the categorized webapps that were already filtered by user roles
-            filteredCategories = allCategories
+            filteredCategories = categoriesExcludingPins(allCategories)
             DispatchQueue.main.async { [weak self] in
                 self?.tableView.reloadData()
             }
             return
         }
 
-        isSearching = true
-        let userRoles = userInfoStore.getUserRoles()
-        let searchResults = webAppsService.searchWebApps(query: searchText, userRoles: userRoles)
-        
-        // Group search results by category
-        let grouped = Dictionary(grouping: searchResults) { $0.category }
-        filteredCategories = grouped.map { category, apps in
-            WebAppCategory(
-                name: category,
-                apps: apps.sorted { $0.name < $1.name }
-            )
-        }.sorted { $0.name < $1.name }
+        applySearchFilter(searchText: searchText)
 
         DispatchQueue.main.async { [weak self] in
             self?.tableView.reloadData()

@@ -6,8 +6,7 @@
 import Foundation
 public import LibSignalClient
 public import SignalServiceKit
-import UIKit
-
+public import UIKit
 // MARK: -
 
 /// Represents the "message sender" to "group name color" mapping

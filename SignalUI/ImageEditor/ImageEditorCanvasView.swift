@@ -4,7 +4,6 @@
 //
 
 import SignalServiceKit
-
 // MARK: - ImageEditorItemBackground
 
 struct ImageEditorItemBackground {

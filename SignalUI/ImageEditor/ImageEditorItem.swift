@@ -4,7 +4,6 @@
 //
 
 import UIKit
-
 enum ImageEditorError: Int, Error {
     case assertionError
     case invalidInput

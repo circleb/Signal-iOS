@@ -3,8 +3,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+
 import Foundation
 import SignalServiceKit
+public import UIKit
+import CoreGraphics
+import QuartzCore
 
 // ManualStackView (like ManualLayoutView) uses a CATransformLayer
 // by default.  CATransformLayer does not render.

@@ -4,8 +4,8 @@
 //
 
 import Foundation
+public import UIKit
 public import SignalServiceKit
-
 public class ContactCellAccessoryView: NSObject {
     let accessoryView: UIView
     let size: CGSize

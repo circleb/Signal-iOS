@@ -3,6 +3,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+public import Foundation
+
 extension URL {
     public enum Support {
         public static let backups: URL = .supportArticle("9708267671322")

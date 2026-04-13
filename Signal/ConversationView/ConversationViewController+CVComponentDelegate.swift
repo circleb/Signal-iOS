@@ -1197,11 +1197,13 @@ extension ConversationViewController: CVComponentDelegate {
 
     public func didTapActivatePayments() {
         AssertIsOnMainThread()
+        guard TSConstants.isMobileCoinPaymentsUIAccessible else { return }
         SignalApp.shared.showAppSettings(mode: .payments)
     }
 
     public func didTapSendPayment() {
         AssertIsOnMainThread()
+        guard TSConstants.isMobileCoinPaymentsUIAccessible else { return }
         // Same action as tapping on the attachment toolbar.
         paymentButtonPressed()
     }

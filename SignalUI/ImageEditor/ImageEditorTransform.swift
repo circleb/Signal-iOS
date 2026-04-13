@@ -4,7 +4,6 @@
 //
 
 import UIKit
-
 // The image editor uses multiple coordinate systems.
 //
 // * Image unit coordinates.  Brush stroke and text content should be pegged to

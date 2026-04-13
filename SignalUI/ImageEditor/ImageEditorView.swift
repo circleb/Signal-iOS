@@ -4,7 +4,6 @@
 //
 
 import SignalServiceKit
-
 protocol ImageEditorViewDelegate: AnyObject {
 
     func imageEditorView(_ imageEditorView: ImageEditorView, didRequestAddTextItem textItem: ImageEditorTextItem)

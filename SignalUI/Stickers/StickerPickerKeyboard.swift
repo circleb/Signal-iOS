@@ -3,8 +3,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-public import SignalServiceKit
 
+public import UIKit
+public import SignalServiceKit
 // MARK: - StickerKeyboard
 
 public protocol StickerKeyboardDelegate: AnyObject {

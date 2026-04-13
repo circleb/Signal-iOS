@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+import Foundation
 public struct OWSPercentFormatStyle: FormatStyle {
     private let fractionDigits: Int
 
@@ -10,7 +11,7 @@ public struct OWSPercentFormatStyle: FormatStyle {
         self.fractionDigits = fractionDigits
     }
 
-    public func format(_ percent: Float) -> String {
+    public func format(_ percent: Double) -> String {
         return percent.formatted(.percent.precision(.fractionLength(fractionDigits)))
     }
 }

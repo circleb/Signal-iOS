@@ -5,7 +5,6 @@
 
 import AVFoundation
 import SignalServiceKit
-
 protocol VideoPlaybackState {
     var isPlaying: Bool { get }
     var currentTimeSeconds: TimeInterval { get }

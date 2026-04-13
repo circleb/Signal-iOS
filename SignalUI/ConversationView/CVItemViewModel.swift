@@ -4,7 +4,6 @@
 //
 
 public import SignalServiceKit
-
 public protocol CVItemViewModel: AnyObject {
     var interaction: TSInteraction { get }
     var contactShare: ContactShareViewModel? { get }

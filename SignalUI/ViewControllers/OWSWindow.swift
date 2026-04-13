@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import UIKit
-
+import Foundation
+public import UIKit
 public class OWSWindow: UIWindow {
     override public init(frame: CGRect) {
         super.init(frame: frame)

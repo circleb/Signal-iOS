@@ -4,8 +4,7 @@
 //
 
 import Foundation
-import UIKit
-
+public import UIKit
 // Any view that exposes a read-only image that can be used for transitions
 public protocol PrimaryImageView: UIView {
     var primaryImage: UIImage? { get }

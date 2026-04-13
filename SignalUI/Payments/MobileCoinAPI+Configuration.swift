@@ -7,7 +7,7 @@ import Foundation
 import LibMobileCoin
 import MobileCoin
 import SignalServiceKit
-
+import UIKit
 extension MobileCoinAPI {
 
     // MARK: - Environment

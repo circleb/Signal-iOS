@@ -4,6 +4,7 @@
 //
 
 import SignalServiceKit
+import SignalUI
 import UIKit
 
 class ChatListBackupProgressView: UIView {

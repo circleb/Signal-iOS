@@ -3,8 +3,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-public import SignalServiceKit
 
+public import UIKit
+public import SignalServiceKit
 public struct NewMember {
     public let recipient: PickedRecipient
     public let address: SignalServiceAddress

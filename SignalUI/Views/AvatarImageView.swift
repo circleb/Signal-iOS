@@ -3,8 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import UIKit
-
+public import UIKit
 open class AvatarImageView: UIImageView, CVView {
 
     public var shouldDeactivateConstraints = false

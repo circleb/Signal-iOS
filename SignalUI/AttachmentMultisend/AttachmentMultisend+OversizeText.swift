@@ -5,7 +5,6 @@
 
 import Foundation
 public import SignalServiceKit
-
 extension AttachmentMultisend {
 
     public struct Destination {

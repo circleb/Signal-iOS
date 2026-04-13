@@ -8,12 +8,34 @@ public import UIKit
 import SignalServiceKit
 import SignalUI
 
+enum HomeTabKind: Equatable {
+    case portal
+    case chatList
+    case pinnedWebApp(webAppId: String)
+
+    var tabIdentifier: String {
+        switch self {
+        case .portal:
+            return "portal"
+        case .chatList:
+            return "chats"
+        case .pinnedWebApp(let id):
+            return "pinned-\(id)"
+        }
+    }
+}
+
 class HomeTabBarController: UITabBarController {
 
     private let appReadiness: AppReadinessSetter
+    private let portalUserInfoStore: SSOUserInfoStore
+    private let ssoService: SSOServiceProtocol
 
     init(appReadiness: AppReadinessSetter) {
         self.appReadiness = appReadiness
+        let userStore = SSOUserInfoStoreImpl()
+        self.portalUserInfoStore = userStore
+        self.ssoService = SSOService(userInfoStore: userStore)
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -22,177 +44,132 @@ class HomeTabBarController: UITabBarController {
         fatalError("init(coder:) has not been implemented")
     }
 
-    enum Tabs: Int {
-        case webApps = 0
-        case stories = 1
-        case chatList = 2
-        case calls = 3
-
-        var title: String {
-            switch self {
-            case .chatList:
-                return OWSLocalizedString(
-                    "CHAT_LIST_TITLE_INBOX",
-                    comment: "Title for the chat list's default mode.",
-                )
-            case .calls:
-                return OWSLocalizedString(
-                    "CALLS_LIST_TITLE",
-                    comment: "Title for the calls list view.",
-                )
-            case .stories:
-                return OWSLocalizedString(
-                    "STORIES_TITLE",
-                    comment: "Title for the stories view.",
-                )
-            case .webApps:
-                return "Portal"
-            }
-        }
-
-        var image: UIImage? {
-            switch self {
-            case .chatList:
-                return UIImage(imageLiteralResourceName: "tab-chats")
-            case .calls:
-                return UIImage(named: "tab-calls")
-            case .stories:
-                return UIImage(named: "tab-stories")
-            case .webApps:
-                return UIImage(systemName: "square.stack")
-            }
-        }
-
-        var selectedImage: UIImage? {
-            switch self {
-            case .chatList:
-                return UIImage(named: "tab-chats")
-            case .calls:
-                return UIImage(named: "tab-calls")
-            case .stories:
-                return UIImage(named: "tab-stories-fill")
-            case .webApps:
-                return UIImage(systemName: "square.stack.fill")
-            }
-        }
-
-        var tabBarItem: UITabBarItem {
-            return UITabBarItem(
-                title: title,
-                image: image,
-                selectedImage: selectedImage,
-            )
-        }
-
-        var tabIdentifier: String {
-            switch self {
-            case .chatList:
-                return "chats"
-            case .calls:
-                return "calls"
-            case .stories:
-                return "stories"
-            case .webApps:
-                return "webapps"
-            }
-        }
-    }
-
     lazy var chatListViewController = ChatListViewController(chatListMode: .inbox, appReadiness: appReadiness)
     lazy var chatListNavController = OWSNavigationController(rootViewController: chatListViewController)
-    lazy var chatListTabBarItem = Tabs.chatList.tabBarItem
+    private lazy var chatListTabBarItem: UITabBarItem = {
+        UITabBarItem(
+            title: OWSLocalizedString(
+                "CHAT_LIST_TITLE_INBOX",
+                comment: "Title for the chat list's default mode.",
+            ),
+            image: UIImage(imageLiteralResourceName: "tab-chats"),
+            selectedImage: UIImage(named: "tab-chats"),
+        )
+    }()
 
-    // No need to share spoiler render state across the whole app.
     lazy var storiesViewController = StoriesViewController(
         appReadiness: appReadiness,
         spoilerState: SpoilerRenderState(),
     )
     lazy var storiesNavController = OWSNavigationController(rootViewController: storiesViewController)
-    lazy var storiesTabBarItem = Tabs.stories.tabBarItem
 
     lazy var callsListViewController = CallsListViewController(appReadiness: appReadiness)
     lazy var callsListNavController = OWSNavigationController(rootViewController: callsListViewController)
-    lazy var callsListTabBarItem = Tabs.calls.tabBarItem
 
-    // More Apps
     lazy var webAppsService: WebAppsServiceProtocol = {
         let cache = WebAppsStoreImpl(keyValueStore: KeyValueStore(collection: "WebApps"))
         return WebAppsService(networkManager: SSKEnvironment.shared.networkManagerRef, cache: cache, databaseStorage: SSKEnvironment.shared.databaseStorageRef)
     }()
 
-    private lazy var ssoService: SSOServiceProtocol = {
-        return SSOService(userInfoStore: SSOUserInfoStoreImpl())
-    }()
+    let webAppTabPinsStore: WebAppTabPinsStore = .shared
 
     lazy var webAppsListViewController = WebAppsListViewController(
         webAppsService: webAppsService,
-        userInfoStore: SSOUserInfoStoreImpl(),
-        ssoService: ssoService
+        userInfoStore: portalUserInfoStore,
+        ssoService: ssoService,
+        tabPinsStore: webAppTabPinsStore,
     )
     lazy var webAppsNavController = OWSNavigationController(rootViewController: webAppsListViewController)
-    lazy var webAppsTabBarItem = Tabs.webApps.tabBarItem
+    private lazy var webAppsTabBarItem: UITabBarItem = {
+        UITabBarItem(
+            title: "Portal",
+            image: UIImage(systemName: "square.stack"),
+            selectedImage: UIImage(systemName: "square.stack.fill"),
+        )
+    }()
 
-    // There are two things going on here that require this code. The first is a stored property can't
-    // conditionally include itself with an @available property, so some type erasing hoops need to be
-    // jumped through to persis UITabs in a property.  As for why the need to persit UITabs -
-    // UITabs are constructed with a 'viewControllerBuilder' completion that is required to return a
-    // fresh UIViewController instance each time a tab is replaced.  This behavior is in conflict with
-    // how this view controller manages the same set of child viewcontroller throughout it's lifetime.
-    // To avoid having to rebuild the ViewControllers whenever there's a change (e.g. - hiding stories),
-    // build UITabs once and persist them in a type erasing array.
+    /// Pinned web app tabs reuse these navigation controllers so state is preserved while pinned.
+    private var pinnedNavigationControllers = [String: OWSNavigationController]()
+
+    private var tabKinds: [HomeTabKind] = []
+
+    // UITab (iOS 18 iPad) persistence — see `uiTab(for:)`.
     private var _uiTabs = [String: Any]()
+
     @available(iOS 18, *)
-    func uiTab(for tab: Tabs) -> UITab {
-        var uiTab = _uiTabs[tab.tabIdentifier]
-        if uiTab == nil {
-            let vc = childControllers(for: tab).navigationController
-            uiTab = UITab(title: tab.title, image: tab.image, identifier: tab.tabIdentifier) { _ in
-                return vc
-            }
-            _uiTabs[tab.tabIdentifier] = uiTab
+    func uiTab(for kind: HomeTabKind) -> UITab {
+        let identifier = kind.tabIdentifier
+        if let existing = _uiTabs[identifier] as? UITab {
+            return existing
         }
-        return uiTab as! UITab
+        let nav = navigationController(for: kind)
+        let title = tabTitle(for: kind)
+        let image = tabImage(for: kind)
+        let uiTab = UITab(title: title, image: image, identifier: identifier) { _ in
+            nav
+        }
+        _uiTabs[identifier] = uiTab
+        return uiTab
     }
 
-    var selectedHomeTab: Tabs {
-        get { Tabs(rawValue: selectedIndex) ?? .chatList }
-        set { selectedIndex = newValue.rawValue }
+    var selectedPrimaryTab: HomeTabKind {
+        get {
+            guard tabKinds.indices.contains(selectedIndex) else { return .portal }
+            return tabKinds[selectedIndex]
+        }
+        set {
+            if let idx = tabKinds.firstIndex(of: newValue) {
+                selectedIndex = idx
+            }
+        }
+    }
+
+    var primaryNavigationControllerForSelectedTab: OWSNavigationController {
+        navigationController(for: selectedPrimaryTab)
+    }
+
+    /// `true` when the stories flow is presented modally (there is no stories tab).
+    var isStoriesFlowPresentedModally: Bool {
+        presentedViewController === storiesNavController
     }
 
     var owsTabBar: OWSTabBar? {
         return tabBar as? OWSTabBar
     }
 
-    private lazy var storyBadgeCountManager = StoryBadgeCountManager()
-
     override func viewDidLoad() {
         super.viewDidLoad()
 
         delegate = self
 
-        NotificationCenter.default.addObserver(self, selector: #selector(storiesEnabledStateDidChange), name: .storiesEnabledStateDidChange, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(applyTheme), name: .themeDidChange, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(didEnterForeground), name: .OWSApplicationWillEnterForeground, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(webAppTabPinsDidChange), name: .webAppTabPinsDidChange, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(webAppsPortalDidRefresh), name: .webAppsPortalDidRefresh, object: nil)
+
         applyTheme()
 
-        // We read directly from the database here, as the cache may not have been warmed by the time
-        // this view is loaded (since it's the very first thing to load). Otherwise, there can be a
-        // small window where the tab bar is in the wrong state at app launch.
-        let areStoriesEnabled = SSKEnvironment.shared.databaseStorageRef.read { StoryManager.areStoriesEnabled(transaction: $0) }
-
-        updateTabBars(areStoriesEnabled: areStoriesEnabled)
+        webAppTabPinsStore.ensureDefaultPinsIfNeeded()
+        rebuildTabs()
 
         AppEnvironment.shared.badgeManager.addObserver(self)
-        storyBadgeCountManager.beginObserving(observer: self)
 
         setTabBarHidden(false, animated: false)
     }
 
     @objc
     private func didEnterForeground() {
-        if selectedHomeTab == .stories {
-            storyBadgeCountManager.markAllStoriesRead()
-        }
+        rebuildTabs()
+    }
+
+    @objc
+    private func webAppTabPinsDidChange() {
+        rebuildTabs()
+    }
+
+    @objc
+    private func webAppsPortalDidRefresh() {
+        rebuildTabs()
     }
 
     @objc
@@ -200,66 +177,214 @@ class HomeTabBarController: UITabBarController {
         tabBar.tintColor = Theme.primaryTextColor
     }
 
-    private func updateTabBars(areStoriesEnabled: Bool) {
-        let newTabs = tabsToShow(areStoriesEnabled: areStoriesEnabled)
-        if #available(iOS 18, *), UIDevice.current.isIPad {
-            self.tabs = newTabs.map(uiTab(for:))
-        } else {
-            initializeCustomTabBar(tabs: newTabs)
-        }
-        applyTheme()
+    private func cachedWebApp(forPinKey pinKey: String) -> WebApp? {
+        webAppsService.getCachedWebApp(byId: pinKey) ?? webAppsService.getCachedWebApp(byEntry: pinKey)
     }
 
-    private func initializeCustomTabBar(tabs: [Tabs]) {
-        // Use our custom tab bar.
-        setValue(OWSTabBar(), forKey: "tabBar")
-        updateCustomTabBar(newTabs: tabs)
-    }
+    func rebuildTabs() {
+        AssertIsOnMainThread()
+        // #region agent log
+        CursorAgentDebugNDJSON.log(
+            hypothesisId: "H1",
+            location: "HomeTabBarController.rebuildTabs:entry",
+            message: "rebuildTabs started",
+            data: [
+                "selectedIndex": "\(selectedIndex)",
+                "tabKindsCount": "\(tabKinds.count)",
+                "vcCount": "\(viewControllers?.count ?? -1)",
+            ],
+        )
+        // #endregion
 
-    private func updateCustomTabBar(newTabs: [Tabs]) {
-        viewControllers = newTabs
-            .map(childControllers(for:))
-            .map { navController, tabBarItem in
-                navController.tabBarItem = tabBarItem
-                return navController
+        func resolvePins(_ ids: [String]) -> [(String, WebApp)] {
+            ids.compactMap { pinKey in
+                guard let app = self.cachedWebApp(forPinKey: pinKey) else { return nil }
+                return (pinKey, app)
             }
+        }
+
+        var pinIds = webAppTabPinsStore.orderedPinIds()
+        var resolved = resolvePins(pinIds)
+        var resolvedIds = resolved.map(\.0)
+        // Avoid clearing stored pin IDs while the web app cache is still empty (first launch before fetch).
+        let cacheIsPrimed = !(webAppsService.getCachedWebApps() ?? []).isEmpty
+        if resolvedIds != pinIds, cacheIsPrimed {
+            webAppTabPinsStore.replaceOrderedPinIdsSilently(resolvedIds)
+            // Pruning to [] (e.g. legacy UUID pins vs API without `id`) re-seeds defaults in-session when the user never customized pins.
+            webAppTabPinsStore.ensureDefaultPinsIfNeeded()
+            pinIds = webAppTabPinsStore.orderedPinIds()
+            resolved = resolvePins(pinIds)
+            resolvedIds = resolved.map(\.0)
+        }
+
+        for id in pinnedNavigationControllers.keys where !resolvedIds.contains(id) {
+            pinnedNavigationControllers.removeValue(forKey: id)
+        }
+
+        for (id, app) in resolved {
+            if pinnedNavigationControllers[id] == nil {
+                let webVC = WebAppWebViewController(
+                    webApp: app,
+                    webAppsService: webAppsService,
+                    userInfoStore: portalUserInfoStore,
+                    prefersSwitchToPortalOnClose: true
+                )
+                let nav = OWSNavigationController(rootViewController: webVC)
+                pinnedNavigationControllers[id] = nav
+            }
+            if let nav = pinnedNavigationControllers[id] {
+                updatePinnedTabBarItem(nav: nav, webApp: app)
+            }
+        }
+
+        let kinds: [HomeTabKind] = [.portal] + resolved.map { .pinnedWebApp(webAppId: $0.0) } + [.chatList]
+
+        let previousKind: HomeTabKind = if tabKinds.indices.contains(selectedIndex) {
+            tabKinds[selectedIndex]
+        } else {
+            .portal
+        }
+
+        tabKinds = kinds
+
+        // UITabBarController can crash if `selectedIndex` is still the old value while
+        // `viewControllers` / `tabs` is replaced with a shorter array (e.g. user on Chats
+        // at the last index, then a pinned tab in the middle is removed).
+        if !kinds.isEmpty, selectedIndex >= kinds.count {
+            selectedIndex = kinds.count - 1
+        }
+        // #region agent log
+        CursorAgentDebugNDJSON.log(
+            hypothesisId: "H1",
+            location: "HomeTabBarController.rebuildTabs:afterClamp",
+            message: "about to assign tabs or viewControllers",
+            data: [
+                "selectedIndex": "\(selectedIndex)",
+                "kindsCount": "\(kinds.count)",
+                "previousKind": "\(previousKind)",
+            ],
+        )
+        // #endregion
+
+        if #available(iOS 18, *), UIDevice.current.isIPad {
+            let validKeys = Set(kinds.map { $0.tabIdentifier })
+            for key in _uiTabs.keys where !validKeys.contains(key) {
+                _uiTabs.removeValue(forKey: key)
+            }
+            // #region agent log
+            CursorAgentDebugNDJSON.log(
+                hypothesisId: "H3",
+                location: "HomeTabBarController.rebuildTabs:beforeTabsAssign",
+                message: "iOS18 iPad assigning self.tabs",
+                data: [
+                    "selectedIndex": "\(selectedIndex)",
+                    "kindsCount": "\(kinds.count)",
+                ],
+            )
+            // #endregion
+            self.tabs = kinds.map { uiTab(for: $0) }
+        } else {
+            initializeCustomTabBar(tabKinds: kinds)
+        }
+
+        applyTheme()
+
+        if let newIndex = kinds.firstIndex(of: previousKind) {
+            selectedIndex = newIndex
+        } else if let portalIdx = kinds.firstIndex(of: .portal) {
+            selectedIndex = portalIdx
+        } else if let chatIdx = kinds.firstIndex(of: .chatList) {
+            selectedIndex = chatIdx
+        } else {
+            selectedIndex = 0
+        }
+        // #region agent log
+        CursorAgentDebugNDJSON.log(
+            hypothesisId: "H1",
+            location: "HomeTabBarController.rebuildTabs:exit",
+            message: "rebuildTabs finished",
+            data: [
+                "selectedIndex": "\(selectedIndex)",
+                "kindsCount": "\(kinds.count)",
+                "vcCount": "\(viewControllers?.count ?? -1)",
+            ],
+        )
+        // #endregion
     }
 
-    private func childControllers(for tab: HomeTabBarController.Tabs) -> (
-        navigationController: OWSNavigationController,
-        tabBarItem: UITabBarItem,
-    ) {
-        switch tab {
+    private func initializeCustomTabBar(tabKinds: [HomeTabKind]) {
+        // #region agent log
+        CursorAgentDebugNDJSON.log(
+            hypothesisId: "H2",
+            location: "HomeTabBarController.initializeCustomTabBar:entry",
+            message: "replacing tabBar and viewControllers",
+            data: [
+                "selectedIndex": "\(selectedIndex)",
+                "newTabKindsCount": "\(tabKinds.count)",
+            ],
+        )
+        // #endregion
+        setValue(OWSTabBar(), forKey: "tabBar")
+        viewControllers = tabKinds.map { kind in
+            let nav = navigationController(for: kind)
+            switch kind {
+            case .portal:
+                nav.tabBarItem = webAppsTabBarItem
+            case .chatList:
+                nav.tabBarItem = chatListTabBarItem
+            case .pinnedWebApp:
+                break
+            }
+            return nav
+        }
+    }
+
+    private func navigationController(for kind: HomeTabKind) -> OWSNavigationController {
+        switch kind {
+        case .portal:
+            return webAppsNavController
         case .chatList:
-            return (chatListNavController, chatListTabBarItem)
-        case .calls:
-            return (callsListNavController, callsListTabBarItem)
-        case .stories:
-            return (storiesNavController, storiesTabBarItem)
-        case .webApps:
-            return (webAppsNavController, webAppsTabBarItem)
+            return chatListNavController
+        case .pinnedWebApp(let id):
+            guard let nav = pinnedNavigationControllers[id] else {
+                owsFailDebug("Missing pinned navigation for \(id)")
+                return webAppsNavController
+            }
+            return nav
         }
     }
 
-    private func tabsToShow(areStoriesEnabled: Bool) -> [Tabs] {
-        var tabs = [Tabs.webApps]
-        if areStoriesEnabled {
-            tabs.append(Tabs.stories)
+    private func tabTitle(for kind: HomeTabKind) -> String {
+        switch kind {
+        case .portal:
+            return "Portal"
+        case .chatList:
+            return OWSLocalizedString(
+                "CHAT_LIST_TITLE_INBOX",
+                comment: "Title for the chat list's default mode.",
+            )
+        case .pinnedWebApp(let id):
+            return cachedWebApp(forPinKey: id)?.name ?? " "
         }
-        tabs.append(Tabs.chatList)
-        tabs.append(Tabs.calls)
-        return tabs
     }
 
-    @objc
-    private func storiesEnabledStateDidChange() {
-        updateTabBars(areStoriesEnabled: StoryManager.areStoriesEnabled)
-        if selectedHomeTab == .stories {
-            storiesNavController.popToRootViewController(animated: false)
+    private func tabImage(for kind: HomeTabKind) -> UIImage? {
+        switch kind {
+        case .portal:
+            return UIImage(systemName: "square.stack")
+        case .chatList:
+            return UIImage(imageLiteralResourceName: "tab-chats")
+        case .pinnedWebApp(let id):
+            guard let app = cachedWebApp(forPinKey: id) else {
+                return UIImage(systemName: "app.fill")
+            }
+            return UIImage(systemName: app.icon) ?? UIImage(systemName: "app.fill")
         }
+    }
 
-        selectedHomeTab = .chatList
-        setTabBarHidden(false, animated: false)
+    private func updatePinnedTabBarItem(nav: OWSNavigationController, webApp: WebApp) {
+        let image = UIImage(systemName: webApp.icon) ?? UIImage(systemName: "app.fill")
+        nav.tabBarItem = UITabBarItem(title: webApp.name, image: image, selectedImage: image)
     }
 
     // MARK: - Hiding the tab bar
@@ -332,78 +457,32 @@ extension HomeTabBarController: BadgeObserver {
             return badgeValue > 0 ? badgeValue.formatted() : nil
         }
 
+        let value = stringify(badgeCount.unreadChatCount)
+        chatListTabBarItem.badgeValue = value
         if #available(iOS 18, *), UIDevice.current.isIPad {
-            uiTab(for: .chatList).badgeValue = stringify(badgeCount.unreadChatCount)
-            uiTab(for: .calls).badgeValue = stringify(badgeCount.unreadCallsCount)
-        } else {
-            chatListTabBarItem.badgeValue = stringify(badgeCount.unreadChatCount)
-            callsListTabBarItem.badgeValue = stringify(badgeCount.unreadCallsCount)
+            uiTab(for: .chatList).badgeValue = value
         }
-    }
-}
-
-extension HomeTabBarController: StoryBadgeCountObserver {
-
-    var isStoriesTabActive: Bool {
-        return selectedHomeTab == .stories && CurrentAppContext().isAppForegroundAndActive()
-    }
-
-    func didUpdateStoryBadge(_ badge: String?) {
-        if #available(iOS 18, *), UIDevice.current.isIPad {
-            uiTab(for: .stories).badgeValue = badge
-        } else {
-            storiesTabBarItem.badgeValue = badge
-        }
-        var views: [UIView] = [tabBar]
-        var badgeViews = [UIView]()
-        while let view = views.popLast() {
-            if NSStringFromClass(view.classForCoder) == "_UIBadgeView" {
-                badgeViews.append(view)
-            }
-            views = view.subviews + views
-        }
-        let sortedBadgeViews = badgeViews.sorted { lhs, rhs in
-            let lhsX = view.convert(CGPoint.zero, from: lhs).x
-            let rhsX = view.convert(CGPoint.zero, from: rhs).x
-            if CurrentAppContext().isRTL {
-                return lhsX > rhsX
-            } else {
-                return lhsX < rhsX
-            }
-        }
-        let badgeView = sortedBadgeViews[safe: Tabs.stories.rawValue]
-        badgeView?.layer.transform = CATransform3DIdentity
-        let xOffset: CGFloat = CurrentAppContext().isRTL ? 0 : -5
-        badgeView?.layer.transform = CATransform3DMakeTranslation(xOffset, 1, 1)
     }
 }
 
 extension HomeTabBarController: UITabBarControllerDelegate {
     func tabBarController(_ tabBarController: UITabBarController, shouldSelect viewController: UIViewController) -> Bool {
-        // If we re-select the active tab, scroll to the top.
         if selectedViewController == viewController {
-            let tableView: UITableView
-            switch selectedHomeTab {
+            switch selectedPrimaryTab {
             case .chatList:
-                tableView = chatListViewController.tableView
-            case .stories:
-                tableView = storiesViewController.tableView
-            case .calls:
-                tableView = callsListViewController.tableView
-            case .webApps:
-                tableView = webAppsListViewController.tableView
+                let tableView = chatListViewController.tableView
+                tableView.setContentOffset(CGPoint(x: 0, y: -tableView.safeAreaInsets.top), animated: true)
+            case .portal:
+                let tableView = webAppsListViewController.tableView
+                tableView.setContentOffset(CGPoint(x: 0, y: -tableView.safeAreaInsets.top), animated: true)
+            case .pinnedWebApp:
+                if let webVC = (viewController as? OWSNavigationController)?.viewControllers.first as? WebAppWebViewController {
+                    webVC.scrollWebContentToTop(animated: true)
+                }
             }
-
-            tableView.setContentOffset(CGPoint(x: 0, y: -tableView.safeAreaInsets.top), animated: true)
         }
 
         return true
-    }
-
-    func tabBarController(_ tabBarController: UITabBarController, didSelect viewController: UIViewController) {
-        if isStoriesTabActive {
-            storyBadgeCountManager.markAllStoriesRead()
-        }
     }
 }
 

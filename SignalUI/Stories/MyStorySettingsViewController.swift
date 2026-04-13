@@ -7,7 +7,6 @@ import BonMot
 import Foundation
 import SignalServiceKit
 import UIKit
-
 public class MyStorySettingsViewController: OWSTableViewController2, MyStorySettingsDataSourceDelegate {
 
     private lazy var dataSource = MyStorySettingsDataSource(delegate: self)

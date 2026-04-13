@@ -5,7 +5,7 @@
 
 import Foundation
 import SignalServiceKit
-
+public import UIKit
 public final class NonContactTableViewCell: UITableViewCell, ReusableTableViewCell {
 
     public static let reuseIdentifier = "NonContactTableViewCell"

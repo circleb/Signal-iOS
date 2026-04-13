@@ -3,9 +3,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+
 public import BonMot
 import SignalServiceKit
-
+public import UIKit
 public protocol OWSTableViewControllerDelegate: AnyObject {
     func tableViewWillBeginDragging(_ tableView: UITableView)
 }

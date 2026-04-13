@@ -3,10 +3,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+public import CoreGraphics
 import Foundation
 import MetalKit
+public import UIKit
 public import SignalServiceKit
-
 /// Produces the actual particle effects used to tile spoilered regions.
 public class SpoilerRenderer {
 

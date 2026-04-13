@@ -33,6 +33,11 @@ public struct WebApp: Codable {
         self.parent = parent
         self.kcRole = kcRole
     }
+
+    /// Stable key for pinning when the API omits `id` (falls back to `entry`).
+    public var pinKey: String {
+        id ?? entry
+    }
 }
 
 public struct WebAppCategory: Codable {

@@ -15,6 +15,7 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
     private var chatListNavController: OWSNavigationController { homeVC.chatListNavController }
     private var callsListNavController: OWSNavigationController { homeVC.callsListNavController }
     private var storiesNavController: OWSNavigationController { homeVC.storiesNavController }
+    private var webAppsNavController: OWSNavigationController { homeVC.webAppsNavController }
 
     private lazy var detailNavController = OWSNavigationController()
     private var lastActiveInterfaceOrientation = UIInterfaceOrientation.unknown
@@ -47,14 +48,7 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
     }
 
     var topViewController: UIViewController? {
-        let selectedNavController: OWSNavigationController = switch homeVC.selectedHomeTab {
-        case .chatList:
-            chatListNavController
-        case .calls:
-            callsListNavController
-        case .stories:
-            storiesNavController
-        }
+        let selectedNavController = homeVC.primaryNavigationControllerForSelectedTab
 
         if isCollapsed {
             return selectedNavController.topViewController
@@ -176,7 +170,7 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
             return
         }
 
-        if homeVC.selectedHomeTab != .chatList {
+        if homeVC.selectedPrimaryTab != .chatList {
             guard homeVC.presentedViewController == nil else {
                 homeVC.dismiss(animated: true) {
                     self.presentThread(
@@ -189,8 +183,7 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
                 return
             }
 
-            // Ensure the tab bar is on the chat list.
-            homeVC.selectedHomeTab = .chatList
+            homeVC.selectedPrimaryTab = .chatList
         }
 
         if
@@ -268,19 +261,23 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
             return
         }
 
-        if homeVC.selectedHomeTab != .stories {
-            guard homeVC.presentedViewController == nil else {
-                homeVC.dismiss(animated: true) {
-                    self.showMyStoriesController(animated: animated)
-                }
-                return
-            }
-
-            // Ensure the tab bar is on the stories tab.
-            homeVC.selectedHomeTab = .stories
+        if homeVC.presentedViewController === homeVC.storiesNavController {
+            homeVC.storiesViewController.showMyStories(animated: animated)
+            return
         }
 
-        homeVC.storiesViewController.showMyStories(animated: animated)
+        guard homeVC.presentedViewController == nil else {
+            homeVC.dismiss(animated: true) {
+                self.showMyStoriesController(animated: animated)
+            }
+            return
+        }
+
+        homeVC.storiesNavController.modalPresentationStyle = .fullScreen
+        homeVC.present(homeVC.storiesNavController, animated: animated) {
+            self.homeVC.storiesNavController.popToRootViewController(animated: false)
+            self.homeVC.storiesViewController.showMyStories(animated: animated)
+        }
     }
 
     override var shouldAutorotate: Bool {
@@ -523,7 +520,7 @@ class ConversationSplitViewController: UISplitViewController, ConversationSplit 
         if selectedThread != nil {
             keyCommands += selectedConversationKeyCommands
         }
-        if homeVC.selectedHomeTab == .chatList {
+        if homeVC.selectedPrimaryTab == .chatList {
             keyCommands += chatListKeyCommands
         }
         return keyCommands

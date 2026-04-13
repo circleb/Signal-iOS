@@ -3,8 +3,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-public import SignalServiceKit
 
+import UIKit
+public import SignalServiceKit
 private protocol ContactNameFieldViewDelegate: AnyObject {
     func nameFieldDidChange()
 }

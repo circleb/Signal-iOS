@@ -3,9 +3,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+import Foundation
 public import AVFoundation
 public import SignalServiceKit
-
 public protocol VideoPlayerDelegate: AnyObject {
     func videoPlayerDidPlayToCompletion(_ videoPlayer: VideoPlayer)
 }

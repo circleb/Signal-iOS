@@ -3,9 +3,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+
+import CoreGraphics
 import Foundation
 import SignalServiceKit
-import UIKit
+public import UIKit
 
 public class OWSTableItem {
 

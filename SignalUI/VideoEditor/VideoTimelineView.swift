@@ -4,7 +4,7 @@
 //
 
 import SignalServiceKit
-
+import UIKit
 protocol VideoTimelineViewDataSource: VideoEditorDataSource, VideoPlaybackState {
 
     var videoThumbnails: [UIImage]? { get }

@@ -3,10 +3,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-public import BonMot
+import Foundation
+
+import BonMot
 import SafariServices
 import SignalServiceKit
-
+public import UIKit
 public protocol SheetDismissalDelegate: AnyObject {
     func didDismissPresentedSheet()
 }

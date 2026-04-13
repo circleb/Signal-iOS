@@ -3,8 +3,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import SignalServiceKit
-
+import Foundation
+public import SignalServiceKit
+public import UIKit
 public class MediaTextView: UITextView {
 
     public enum DecorationStyle: String, CaseIterable {

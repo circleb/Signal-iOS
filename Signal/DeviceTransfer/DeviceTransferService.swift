@@ -601,7 +601,7 @@ class DeviceTransferService: NSObject, DeviceTransferServiceProtocol {
 #if TESTABLE_BUILD
 
 class DeviceTransferServiceMock: DeviceTransferServiceProtocol {
-    func startAcceptingTransfersFromOldDevices(mode: Signal.DeviceTransferService.TransferMode) throws -> URL {
+    func startAcceptingTransfersFromOldDevices(mode: DeviceTransferService.TransferMode) throws -> URL {
         return URL(string: "https://example.com")!
     }
 

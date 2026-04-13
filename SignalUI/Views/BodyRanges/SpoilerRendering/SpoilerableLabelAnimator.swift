@@ -4,9 +4,9 @@
 //
 
 import Foundation
+public import UIKit
 public import SignalServiceKit
-import UIKit
-
+public import UIKit
 /// Defines values needed to apply spoilers to a UITextView or UILabel.
 ///
 /// This API acknowledges that these will be shown inside table view cells which

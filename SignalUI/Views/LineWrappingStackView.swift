@@ -3,8 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import UIKit
-
+public import UIKit
 /// Like a horizontal UIStackView, except if the elements do not fit
 /// horizontally it "line wraps" elements to a new line, arranging within a line
 /// in left-to-right fashion (regardless of RTL setting).

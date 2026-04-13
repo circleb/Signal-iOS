@@ -4,7 +4,6 @@
 //
 
 import SignalServiceKit
-
 // MARK: - Draw Tool
 
 extension ImageEditorViewController {

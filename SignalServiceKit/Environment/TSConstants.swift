@@ -42,6 +42,17 @@ public class TSConstants {
     public static let donateUrl = URL(string: "https://signal.org/donate/")!
     public static let appStoreUrl = URL(string: "https://itunes.apple.com/us/app/heritage-community-platform/id6480311253?mt=8")!
 
+    // MARK: Heritage Community Platform (fork)
+
+    /// When `false`, the app does not surface donation flows, badge purchase UI, or related megaphone actions. Upstream code remains for easier merges.
+    public static let isDonationUIAccessible: Bool = false
+
+    /// When `false`, MobileCoin is not exposed in settings, the composer, chat list payment reminders, or privacy (PassKit wallet passes in chat are unchanged).
+    public static let isMobileCoinPaymentsUIAccessible: Bool = false
+
+    /// When `false`, hides **discretionary** phone-registration entry points: Account settings (primary re-register row, change number), and primary re-register prompts from banners/notifications. **Does not block** cold start, mid-flow resume (`lastMode`), legacy reregistration routing, or `SignalApp.showRegistration` — those must run when the user is unregistered or the app cannot obtain an ACI (your SSO/registration UI lives inside `RegistrationNavigationController`). Link-device / relinking provisioning is unchanged.
+    public static let isSignalPhoneRegistrationUIAccessible: Bool = false
+
     public static var mainServiceURL: String { shared.mainServiceURL }
 
     public static var textSecureCDN0ServerURL: String { shared.textSecureCDN0ServerURL }

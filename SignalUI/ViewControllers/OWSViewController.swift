@@ -3,7 +3,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import SignalServiceKit
+import Foundation
+public import SignalServiceKit
+public import UIKit
+import CoreGraphics
 
 public enum ViewControllerLifecycle: Equatable {
     /// `viewDidLoad` hasn't happened yet.

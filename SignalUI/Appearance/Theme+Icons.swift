@@ -4,7 +4,7 @@
 //
 
 import SignalServiceKit
-
+public import UIKit
 public enum ThemeIcon: UInt {
     case settingsAccount
     case settingsLinkedDevices

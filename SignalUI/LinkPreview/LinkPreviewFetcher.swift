@@ -4,8 +4,8 @@
 //
 
 import Foundation
+public import UIKit
 public import SignalServiceKit
-
 public protocol LinkPreviewFetcher {
     func fetchLinkPreview(for url: URL) async throws -> OWSLinkPreviewDraft
 }

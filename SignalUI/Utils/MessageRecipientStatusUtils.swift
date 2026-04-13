@@ -4,7 +4,6 @@
 //
 
 public import SignalServiceKit
-
 public enum MessageReceiptStatus: Int {
     case uploading
     case sending

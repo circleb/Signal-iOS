@@ -3,9 +3,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-public import SignalServiceKit
-import UIKit
 
+public import UIKit
+public import SignalServiceKit
+public import UIKit
 extension UIFont {
 
     public class func font(for textStyle: TextAttachment.TextStyle, withPointSize pointSize: CGFloat) -> UIFont {

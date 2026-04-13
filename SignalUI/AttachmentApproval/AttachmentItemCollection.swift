@@ -5,7 +5,7 @@
 
 import Foundation
 import SignalServiceKit
-
+import UIKit
 public class AttachmentApprovalItem {
 
     enum AttachmentApprovalItemError: Error {

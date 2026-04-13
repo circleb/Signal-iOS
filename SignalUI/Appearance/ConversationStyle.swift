@@ -3,8 +3,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-public import SignalServiceKit
 
+public import UIKit
+public import SignalServiceKit
 // An immutable snapshot of the core styling
 // state used by CVC for a given load/render cycle.
 public struct ConversationStyle {

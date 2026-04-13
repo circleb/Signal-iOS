@@ -210,7 +210,11 @@ extension ChatListViewController {
 
     public func updateRegistrationReminderView() {
         let tsRegistrationState = DependenciesBridge.shared.tsAccountManager.registrationStateWithMaybeSneakyTransaction
-        deregisteredView.isHidden = !tsRegistrationState.isDeregistered
+        let showDeregisteredBanner = tsRegistrationState.isDeregistered
+        // Primary users who registered elsewhere still hit deregistered state; don't nag them on every launch.
+        let suppressPrimaryPhoneRegNag = !TSConstants.isSignalPhoneRegistrationUIAccessible
+            && (tsRegistrationState.isPrimaryDevice ?? true)
+        deregisteredView.isHidden = !showDeregisteredBanner || suppressPrimaryPhoneRegNag
     }
 
     public func updateOutageDetectionReminderView() {
@@ -222,6 +226,10 @@ extension ChatListViewController {
     }
 
     public func updatePaymentReminderView() {
+        if !TSConstants.isMobileCoinPaymentsUIAccessible {
+            paymentsReminderView.isHidden = true
+            return
+        }
         if unreadPaymentNotificationsCount == 1, let firstUnreadPaymentModel = self.firstUnreadPaymentModel {
             self.paymentsReminderView.isHidden = false
 

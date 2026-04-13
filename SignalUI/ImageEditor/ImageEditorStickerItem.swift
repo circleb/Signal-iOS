@@ -4,7 +4,6 @@
 //
 
 import UIKit
-
 final class ImageEditorStickerItem: ImageEditorItem, ImageEditorTransformable {
     let sticker: EditorSticker
     /// The timestamp for when the sticker item was created. Used for displaying clock stickers.

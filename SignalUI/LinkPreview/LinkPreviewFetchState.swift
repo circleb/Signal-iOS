@@ -5,8 +5,8 @@
 
 import Foundation
 import LibSignalClient
+public import UIKit
 public import SignalServiceKit
-
 public class LinkPreviewFetchState {
 
     private let db: any DB

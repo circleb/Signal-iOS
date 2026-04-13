@@ -252,6 +252,7 @@ extension ConversationViewController: MessageActionsDelegate {
     }
 
     func messageActionsShowPaymentDetails(_ itemViewModel: CVItemViewModelImpl) {
+        guard TSConstants.isMobileCoinPaymentsUIAccessible else { return }
         guard let contactAddress = (thread as? TSContactThread)?.contactAddress else {
             owsFailDebug("Should be contact thread")
             return

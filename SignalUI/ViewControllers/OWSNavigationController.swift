@@ -3,8 +3,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import SignalServiceKit
-
+import Foundation
+public import SignalServiceKit
+public import UIKit
 /// Any view controller which wants to be able cancel back button
 /// presses and back gestures should implement this protocol.
 public protocol OWSNavigationChildController: AnyObject {

@@ -677,7 +677,7 @@
 "BACKUP_SETTINGS_BACKGROUND_APP_REFRESH_DISABLED_SHEET_GO_TO_SETTINGS_BUTTON" = "Go to Settings";
 
 /* Message for a sheet warning the user about the Background App Refresh permission. \"Background App Refresh\" should be localized the same way it is in iOS Settings app permissions. */
-"BACKUP_SETTINGS_BACKGROUND_APP_REFRESH_DISABLED_SHEET_MESSAGE" = "To allow HCP to automatically back up your messages, tap \\"Go to Settings\\" below and enable \\"Background App Refresh\\"";
+"BACKUP_SETTINGS_BACKGROUND_APP_REFRESH_DISABLED_SHEET_MESSAGE" = "To allow HCP to automatically back up your messages, tap \"Go to Settings\" below and enable \"Background App Refresh\"";
 
 /* Title for a sheet warning the user about the Background App Refresh permission. \"Background App Refresh\" should be localized the same way it is in iOS Settings app permissions. */
 "BACKUP_SETTINGS_BACKGROUND_APP_REFRESH_DISABLED_SHEET_TITLE" = "Automatic Backups Disabled";
@@ -5000,10 +5000,10 @@
 "LINKED_DEVICE_NOTIFICATION_TITLE" = "You Linked a New Device";
 
 /* Message for an action sheet telling users how to link a device, when trying to open an external device-linking URL. */
-"LINKED_DEVICE_URL_OPENED_ACTION_SHEET_EXTERNAL_URL_MESSAGE" = "To link a desktop or iPad to this Signal account, go to Linked Devices and tap \\"Link a New Device\\" and scan the QR code again. Make sure you only scan QR codes that come directly from HCP.";
+"LINKED_DEVICE_URL_OPENED_ACTION_SHEET_EXTERNAL_URL_MESSAGE" = "To link a desktop or iPad to this Signal account, go to Linked Devices and tap \"Link a New Device\" and scan the QR code again. Make sure you only scan QR codes that come directly from HCP.";
 
 /* Message for an action sheet telling users how to link a device, when trying to open a device-linking URL from the in-app camera. */
-"LINKED_DEVICE_URL_OPENED_ACTION_SHEET_IN_APP_CAMERA_MESSAGE" = "It looks like you're trying to link a HCP device. Tap continue and then tap \\"Link a New Device\\" and scan the QR code again.";
+"LINKED_DEVICE_URL_OPENED_ACTION_SHEET_IN_APP_CAMERA_MESSAGE" = "It looks like you're trying to link a HCP device. Tap continue and then tap \"Link a New Device\" and scan the QR code again.";
 
 /* Bullet point about downloads on the linked devices education sheet. Embeds {{ %1$@ iPad download link, %2$@ desktop download link }} */
 "LINKED_DEVICES_EDUCATION_POINT_DOWNLOADS" = "On your other device, visit %1$@ to install the iPad app or %2$@ to install the desktop app.";
@@ -5888,48 +5888,48 @@
 "NOTIFICATIONS_ERROR_TITLE" = "Couldn’t Show Notifications";
 
 /* No comment provided by engineer. */
-“NOTIFICATIONS_FOOTER_WARNING” = “Actions include “Mark as Read,” “Reply,” and “Call Back.””;
+"NOTIFICATIONS_FOOTER_WARNING" = "Actions include “Mark as Read,” “Reply,” and “Call Back.”";
 
 /* Title for the Notifications sheet */
-“NOTIFICATIONS_AND_LISTS_TITLE” = “Notifications”;
-“NOTIFICATIONS_LISTS_MANAGE_BUTTON” = “Manage Notifications”;
-“NOTIFICATIONS_LISTS_SHOW_NOTIFICATIONS_BUTTON” = “Show Bulletins”;
-“NOTIFICATIONS_LISTS_OPEN_BULLETIN” = “View All Bulletins”;
+"NOTIFICATIONS_AND_LISTS_TITLE" = "Notifications";
+"NOTIFICATIONS_LISTS_MANAGE_BUTTON" = "Manage Notifications";
+"NOTIFICATIONS_LISTS_SHOW_NOTIFICATIONS_BUTTON" = "Show Bulletins";
+"NOTIFICATIONS_LISTS_OPEN_BULLETIN" = "View All Bulletins";
 
 /* Prompt to sign in to manage subscriptions */
-“NOTIFICATIONS_LISTS_SIGN_IN_PROMPT” = “Sign in to manage your notification list subscriptions.”;
+"NOTIFICATIONS_LISTS_SIGN_IN_PROMPT" = "Sign in to manage your notification list subscriptions.";
 
 /* Save subscriptions button */
-“NOTIFICATIONS_LISTS_SAVE” = “Save Subscriptions”;
+"NOTIFICATIONS_LISTS_SAVE" = "Save Subscriptions";
 
 /* Section header for received notifications */
-“NOTIFICATIONS_LISTS_RECEIVED_HEADER” = “Received Notifications”;
+"NOTIFICATIONS_LISTS_RECEIVED_HEADER" = "Received Notifications";
 
 /* Empty state when there are no non-Signal notifications */
-“NOTIFICATIONS_LISTS_NO_NOTIFICATIONS” = “No notifications yet.”;
-“NOTIFICATIONS_LISTS_TITLE_NOTIFICATIONS” = “Notifications”;
-“NOTIFICATIONS_LISTS_TITLE_SUBSCRIPTIONS” = “Subscriptions”;
+"NOTIFICATIONS_LISTS_NO_NOTIFICATIONS" = "No notifications yet.";
+"NOTIFICATIONS_LISTS_TITLE_NOTIFICATIONS" = "Notifications";
+"NOTIFICATIONS_LISTS_TITLE_SUBSCRIPTIONS" = "Subscriptions";
 
 /* Loading indicator for subscriptions */
-“NOTIFICATIONS_LISTS_LOADING” = “Loading…”;
+"NOTIFICATIONS_LISTS_LOADING" = "Loading…";
 
 /* Descriptive text shown above the list of notification subscriptions */
-“NOTIFICATIONS_LISTS_SUBSCRIPTIONS_DESCRIPTION” = “Choose which lists you'd like to receive notification for. Turn off a list to stop those notifications.”;
+"NOTIFICATIONS_LISTS_SUBSCRIPTIONS_DESCRIPTION" = "Choose which lists you'd like to receive notification for. Turn off a list to stop those notifications.";
 
 /* Shown when the notification list service (Directus) is not configured for this build */
-“NOTIFICATIONS_LISTS_DIRECTUS_NOT_CONFIGURED” = “Notification list subscriptions are not available for this build.”;
+"NOTIFICATIONS_LISTS_DIRECTUS_NOT_CONFIGURED" = "Notification list subscriptions are not available for this build.";
 
 /* Title shown when system notifications are disabled for Signal but the notifications sheet is opened */
-“NOTIFICATIONS_LISTS_SYSTEM_NOTIFICATIONS_DISABLED_TITLE” = “Notifications are off for HCP”;
+"NOTIFICATIONS_LISTS_SYSTEM_NOTIFICATIONS_DISABLED_TITLE" = "Notifications are off for HCP";
 
 /* Message explaining that system notifications must be enabled to receive non-Signal notifications on this device */
-“NOTIFICATIONS_LISTS_SYSTEM_NOTIFICATIONS_DISABLED_MESSAGE” = “To receive these notifications on this device, enable HCP notifications in iOS Settings.”;
+"NOTIFICATIONS_LISTS_SYSTEM_NOTIFICATIONS_DISABLED_MESSAGE" = "To receive these notifications on this device, enable HCP notifications in iOS Settings.";
 
 /* Button label to open the iOS Settings app from the notifications sheet */
-“NOTIFICATIONS_LISTS_OPEN_SETTINGS_BUTTON” = “Open Settings”;
+"NOTIFICATIONS_LISTS_OPEN_SETTINGS_BUTTON" = "Open Settings";
 
 /* No comment provided by engineer. */
-“NOTIFICATIONS_NONE” = “No Name or Content”;
+"NOTIFICATIONS_NONE" = "No Name or Content";
 
 /* Table cell switch label. When disabled, Signal will not play notification sounds while the app is in the foreground. */
 "NOTIFICATIONS_SECTION_INAPP" = "Play While App is Open";
@@ -8053,7 +8053,7 @@
 "SECONDARY_ONBOARDING_INSTALL_PRIMARY_FIRST_TITLE" = "Install HCP on Your Phone";
 
 /* body text while displaying a QR code which, when scanned, will link this device. */
-"SECONDARY_ONBOARDING_SCAN_CODE_BODY" = "Tap on your profile picture to open HCP Settings on your phone. Then \\"Linked Devices\\" and \\"Link New Device\\" to scan this code with your phone:";
+"SECONDARY_ONBOARDING_SCAN_CODE_BODY" = "Tap on your profile picture to open HCP Settings on your phone. Then \"Linked Devices\" and \"Link New Device\" to scan this code with your phone:";
 
 /* Link text for page with troubleshooting info shown on the QR scanning screen */
 "SECONDARY_ONBOARDING_SCAN_CODE_HELP_TEXT" = "Get help linking your iPad here";
@@ -10208,3 +10208,39 @@
 
 /* Info Message when you update disappearing messages duration. Embeds a {{time amount}} before messages disappear. see the *_TIME_AMOUNT strings for context. */
 "YOU_UPDATED_DISAPPEARING_MESSAGES_CONFIGURATION" = "You set disappearing message time to %@.";
+
+/* Button label to continue and configure a new chat account after SSO. */
+"SSO_CONFIGURE_CHAT" = "Configure chat";
+
+/* Button label to open HCP registration in a web view. */
+"SSO_REGISTER_WITH_HCP" = "Register with HCP";
+
+/* Button label to retry the SSO sign-in flow after an error. */
+"SSO_RETRY" = "Retry";
+
+/* Button label to retry SSO login from the authentication screen. */
+"SSO_RETRY_SSO_LOGIN" = "Retry sign in";
+
+/* Button label to sign in using Heritage SSO during onboarding. */
+"SSO_SIGN_IN_WITH_HERITAGE" = "Sign in with Heritage";
+
+/* Button label to transfer an existing Signal account after SSO. */
+"SSO_TRANSFER_CHATS_FROM_SIGNAL" = "Transfer chats from Signal";
+
+/* Context menu item to pin a portal web app to the home tab bar. */
+"WEB_APP_PIN_TO_TAB_BAR" = "Pin to Tab Bar";
+
+/* Title when the user cannot add another pinned web app tab. */
+"WEB_APP_MAX_PINS_ALERT_TITLE" = "Too Many Pins";
+
+/* Explanation that the maximum number of web apps are already pinned to the tab bar. */
+"WEB_APP_MAX_PINS_ALERT_MESSAGE" = "Remove a pinned app from the tab bar before adding another.";
+
+/* Accessibility label for the button that manages web apps pinned to the tab bar. */
+"WEB_APP_MANAGE_PINS_ACCESSIBILITY_LABEL" = "Pinned web apps";
+
+/* Title for the sheet that lists web apps pinned to the tab bar. */
+"WEB_APP_MANAGE_PINS_TITLE" = "Pinned Apps";
+
+/* Format for an action that removes a named web app from the tab bar. Embeds the app name. */
+"WEB_APP_UNPIN_ACTION_FORMAT" = "Remove “%@” from Tab Bar";

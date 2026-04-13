@@ -7,7 +7,7 @@ import Foundation
 public import LibSignalClient
 public import MobileCoin
 public import SignalServiceKit
-
+import UIKit
 public class PaymentsImpl: NSObject, PaymentsSwift {
 
     private let appReadiness: AppReadiness
@@ -153,7 +153,8 @@ public class PaymentsImpl: NSObject, PaymentsSwift {
     public var canEnablePayments: Bool { SSKEnvironment.shared.paymentsHelperRef.canEnablePayments }
 
     public var shouldShowPaymentsUI: Bool {
-        arePaymentsEnabled || canEnablePayments
+        guard TSConstants.isMobileCoinPaymentsUIAccessible else { return false }
+        return arePaymentsEnabled || canEnablePayments
     }
 
     // MARK: - PaymentsState

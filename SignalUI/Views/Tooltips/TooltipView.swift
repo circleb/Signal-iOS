@@ -3,7 +3,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import SignalServiceKit
+public import SignalServiceKit
+public import UIKit
+import CoreGraphics
 
 open class TooltipView: UIView {
     public enum TailDirection {

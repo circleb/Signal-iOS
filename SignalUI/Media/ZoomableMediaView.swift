@@ -4,8 +4,8 @@
 //
 
 import PureLayout
-import SignalServiceKit
-
+public import SignalServiceKit
+public import UIKit
 public class ZoomableMediaView: UIScrollView {
     private let mediaView: UIView
     private let singleTapGestureBlock: () -> Void

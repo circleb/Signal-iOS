@@ -185,9 +185,20 @@ public extension ConversationViewController {
             requestView = appExpiredView
             bottomView = appExpiredView
         case .notRegistered:
+            let reg = DependenciesBridge.shared.tsAccountManager.registrationStateWithMaybeSneakyTransaction
+            let passivePrimaryDeregistered = !TSConstants.isSignalPhoneRegistrationUIAccessible
+                && (reg.isPrimaryDevice ?? true)
             let notRegisteredView = BlockingErrorBottomPanelView(
-                text: notRegisteredErrorText(),
+                text: passivePrimaryDeregistered
+                    ? NSAttributedString(string: OWSLocalizedString(
+                        "DEREGISTRATION_WARNING",
+                        comment: "Label warning the user that they have been de-registered.",
+                    ))
+                    : notRegisteredErrorText(),
                 onTap: { [unowned self] in
+                    if passivePrimaryDeregistered {
+                        return
+                    }
                     RegistrationUtils.showReregistrationUI(fromViewController: self, appReadiness: appReadiness)
                 },
             )

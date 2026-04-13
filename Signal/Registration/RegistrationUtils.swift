@@ -20,6 +20,11 @@ public class RegistrationUtils {
             return
         }
 
+        guard TSConstants.isSignalPhoneRegistrationUIAccessible else {
+            Logger.warn("Ignoring primary re-register request; phone registration UI is disabled.")
+            return
+        }
+
         guard
             let localIdentifiers = DependenciesBridge.shared.tsAccountManager.localIdentifiersWithMaybeSneakyTransaction,
             let e164 = E164(localIdentifiers.phoneNumber)
@@ -39,6 +44,11 @@ public class RegistrationUtils {
         // If this is not the primary device, jump directly to the re-linking flow.
         guard DependenciesBridge.shared.tsAccountManager.registrationStateWithMaybeSneakyTransaction.isPrimaryDevice == true else {
             showRelinkingUI(appReadiness: appReadiness)
+            return
+        }
+
+        guard TSConstants.isSignalPhoneRegistrationUIAccessible else {
+            Logger.warn("Ignoring re-registration prompt; phone registration UI is disabled.")
             return
         }
 

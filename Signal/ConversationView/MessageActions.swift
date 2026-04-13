@@ -399,11 +399,13 @@ class MessageActions: NSObject {
         )
         actions.append(deleteAction)
 
-        let showPaymentDetailsAction = MessageActionBuilder.showPaymentDetails(
-            itemViewModel: itemViewModel,
-            delegate: delegate,
-        )
-        actions.append(showPaymentDetailsAction)
+        if TSConstants.isMobileCoinPaymentsUIAccessible {
+            let showPaymentDetailsAction = MessageActionBuilder.showPaymentDetails(
+                itemViewModel: itemViewModel,
+                delegate: delegate,
+            )
+            actions.append(showPaymentDetailsAction)
+        }
 
         if shouldAllowReply {
             let replyAction = MessageActionBuilder.reply(

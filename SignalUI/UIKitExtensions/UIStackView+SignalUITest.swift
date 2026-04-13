@@ -4,7 +4,7 @@
 //
 
 import SignalUI
-import UIKit
+public import UIKit
 import XCTest
 
 final class UIStackViewSignalUITest: XCTestCase {

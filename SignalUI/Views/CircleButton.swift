@@ -4,7 +4,7 @@
 //
 
 import Foundation
-
+public import UIKit
 public class CircleButton: OWSButton {
 
     // MARK: - Init

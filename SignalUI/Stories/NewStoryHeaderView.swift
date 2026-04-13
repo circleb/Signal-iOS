@@ -4,7 +4,7 @@
 //
 
 import SignalServiceKit
-
+public import UIKit
 public protocol NewStoryHeaderDelegate: AnyObject, OWSTableViewController2 {
     func newStoryHeaderView(_ newStoryHeaderView: NewStoryHeaderView, didCreateNewStoryItems items: [StoryConversationItem])
 }

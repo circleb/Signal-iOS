@@ -4,7 +4,6 @@
 //
 
 public import SignalServiceKit
-
 /// This is absolutely horrible.
 ///
 /// Why does it exist? PaymentsFormat, lives in Signal, not SignalServiceKit.

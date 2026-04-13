@@ -520,6 +520,7 @@ extension ConversationViewController: LongTextViewDelegate {
 
 extension ConversationViewController: SendPaymentViewDelegate {
     public func didSendPayment(success: Bool) {
+        guard TSConstants.isMobileCoinPaymentsUIAccessible else { return }
 
         func paymentSettingsNavigationController() -> OWSNavigationController {
             let paymentSettingsView = PaymentsSettingsViewController(mode: .standalone, appReadiness: appReadiness)

@@ -4,7 +4,6 @@
 //
 
 import SignalServiceKit
-
 class NewGroupStoryViewController: ConversationPickerViewController {
     var selectItemsInParent: (([StoryConversationItem]) -> Void)?
 

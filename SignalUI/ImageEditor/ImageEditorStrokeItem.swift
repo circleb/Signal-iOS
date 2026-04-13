@@ -4,7 +4,6 @@
 //
 
 import SignalServiceKit
-
 class ImageEditorStrokeItem: ImageEditorItem {
 
     enum StrokeType: Equatable {

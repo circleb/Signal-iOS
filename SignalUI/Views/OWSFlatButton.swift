@@ -3,9 +3,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import SignalServiceKit
-import UIKit
-
+import Foundation
+public import SignalServiceKit
+public import UIKit
 open class OWSFlatButton: UIView {
 
     public let button: UIButton

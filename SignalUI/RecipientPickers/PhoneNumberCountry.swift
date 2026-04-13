@@ -5,7 +5,6 @@
 
 import Foundation
 import SignalServiceKit
-
 public struct PhoneNumberCountry: Equatable, Identifiable {
     // e.g. France
     public let countryName: String

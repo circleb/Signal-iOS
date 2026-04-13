@@ -7,7 +7,6 @@ import Foundation
 import LibSignalClient
 public import SignalRingRTC
 public import SignalServiceKit
-
 public struct CallLinkNotFoundError: Error {}
 
 public class CallLinkFetcherImpl {

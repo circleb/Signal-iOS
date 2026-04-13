@@ -3,9 +3,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+import Foundation
+
 public import PureLayout
 import SignalServiceKit
-
+public import UIKit
 public class ToastController: NSObject, ToastViewDelegate {
 
     static var currentToastController: ToastController?

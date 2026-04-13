@@ -1,4 +1,10 @@
 PODS:
+  - AppAuth (2.0.0):
+    - AppAuth/Core (= 2.0.0)
+    - AppAuth/ExternalUserAgent (= 2.0.0)
+  - AppAuth/Core (2.0.0)
+  - AppAuth/ExternalUserAgent (2.0.0):
+    - AppAuth/Core
   - blurhash (0.0.1)
   - BonMot (6.0.0)
   - CocoaLumberjack (3.7.4):
@@ -47,6 +53,7 @@ PODS:
   - SwiftProtobuf (1.36.1)
 
 DEPENDENCIES:
+  - AppAuth
   - blurhash (from `./ThirdParty/blurhash.podspec`)
   - BonMot
   - CocoaLumberjack
@@ -68,6 +75,7 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - AppAuth
     - BonMot
     - CocoaLumberjack
     - GRDB.swift
@@ -128,6 +136,7 @@ CHECKOUT OPTIONS:
     :tag: v4.6.1-f_barrierfsync
 
 SPEC CHECKSUMS:
+  AppAuth: 1c1a8afa7e12f2ec3a294d9882dfa5ab7d3cb063
   blurhash: f588a9d659f4c742a325bbbbd438d1ef3c34af19
   BonMot: fb2b6a2209cb3149aca37b7131d49c051c04ae86
   CocoaLumberjack: 543c79c114dadc3b1aba95641d8738b06b05b646
@@ -147,6 +156,6 @@ SPEC CHECKSUMS:
   SQLCipher: ff2f045b20d675a73a70f7329395ddd4a2580063
   SwiftProtobuf: 9e106a71456f4d3f6a3b0c8fd87ef0be085efc38
 
-PODFILE CHECKSUM: 9090833d0cec2bc3f1306d4f784f5ec77214983b
+PODFILE CHECKSUM: 193512fd0c709140a784443778d9d4cdbebf417a
 
-COCOAPODS: 1.15.2
+COCOAPODS: 1.16.2

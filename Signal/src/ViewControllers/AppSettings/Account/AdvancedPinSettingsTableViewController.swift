@@ -82,6 +82,7 @@ class AdvancedPinSettingsTableViewController: OWSTableViewController2 {
     ) {
         if isPinEnabled {
             if
+                TSConstants.isMobileCoinPaymentsUIAccessible,
                 SSKEnvironment.shared.paymentsHelperRef.arePaymentsEnabled,
                 !PaymentsSettingsViewController.hasReviewedPassphraseWithSneakyTransaction()
             {

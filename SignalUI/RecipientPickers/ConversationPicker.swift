@@ -6,9 +6,9 @@
 import AVKit
 import Foundation
 import LibSignalClient
+public import UIKit
 public import SignalServiceKit
-import UIKit
-
+public import UIKit
 public protocol ConversationPickerDelegate: AnyObject {
     func conversationPickerSelectionDidChange(_ conversationPickerViewController: ConversationPickerViewController)
 

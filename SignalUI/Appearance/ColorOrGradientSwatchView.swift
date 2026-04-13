@@ -5,7 +5,7 @@
 
 import Foundation
 public import SignalServiceKit
-
+import UIKit
 // Compare with CVColorOrGradientView:
 //
 // * CVColorOrGradientView is intended to be used in CVC cells.

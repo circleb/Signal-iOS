@@ -16,7 +16,7 @@ protocol GroupThreadCallDelegate: AnyObject {
     func groupThreadCallRequestGroupMembers(_ call: GroupThreadCall)
 }
 
-final class GroupThreadCall: Signal.GroupCall {
+final class GroupThreadCall: GroupCall {
     private weak var delegate: (any GroupThreadCallDelegate)?
 
     let groupId: GroupIdentifier

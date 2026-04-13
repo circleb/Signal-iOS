@@ -255,6 +255,7 @@ class UrlOpener {
             rootViewController.presentActionSheet(quickRestoreWarningActionSheet)
 
         case .completeIDEALDonation(let donationType):
+            guard TSConstants.isDonationUIAccessible else { return }
             _ = try tsAccountManager.registeredStateWithMaybeSneakyTransaction()
             Task { [appReadiness, databaseStorage] in
                 let handled = await DonationViewsUtil.attemptToContinueActiveIDEALDonation(
@@ -273,7 +274,7 @@ class UrlOpener {
                         appReadiness: appReadiness,
                     )
                     Logger.info("[Donations] Completed iDEAL donation")
-                } catch Signal.DonationJobError.timeout {
+                } catch DonationJobError.timeout {
                     // This is an expected error case for pending donations
                 } catch {
                     // Unexpected. Log a warning

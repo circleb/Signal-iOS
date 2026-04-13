@@ -4,8 +4,8 @@
 //
 
 import Foundation
+public import UIKit
 public import SignalServiceKit
-
 // Supplies sticker pack data
 public protocol StickerPackDataSourceDelegate: AnyObject {
     func stickerPackDataDidChange()

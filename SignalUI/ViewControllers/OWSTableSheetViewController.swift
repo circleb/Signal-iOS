@@ -4,8 +4,7 @@
 //
 
 import Foundation
-import UIKit
-
+public import UIKit
 open class OWSTableSheetViewController: InteractiveSheetViewController {
     open var tableViewController = OWSTableViewController2()
     override open var interactiveScrollViews: [UIScrollView] { [tableViewController.tableView] }

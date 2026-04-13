@@ -6,7 +6,6 @@
 import Contacts
 import LibSignalClient
 import SignalServiceKit
-
 /// If we try and hide a recipient but fail because they correspond to
 /// a system contact, we show this controller which provides a hook
 /// to delete the system contact (which, if successful, then triggers a hide).

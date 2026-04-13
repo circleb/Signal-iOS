@@ -3,9 +3,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-public import AVKit
+import Foundation
+import AVKit
+public import AVFoundation
 public import SignalServiceKit
-
+public import UIKit
 /// Model object for a looping video asset
 /// Any LoopingVideoViews playing this instance will all be kept in sync
 public class LoopingVideo: NSObject {

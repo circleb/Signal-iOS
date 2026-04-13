@@ -4,8 +4,8 @@
 //
 
 import Foundation
+public import UIKit
 public import SignalServiceKit
-
 public typealias SurfaceArea = CGFloat
 
 /// A single rectangle in which to render spoilers.

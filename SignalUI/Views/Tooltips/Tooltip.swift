@@ -3,8 +3,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import SignalServiceKit
-import UIKit
+import Foundation
+public import SignalServiceKit
+public import UIKit
+import CoreGraphics
 
 public struct Tooltip {
 

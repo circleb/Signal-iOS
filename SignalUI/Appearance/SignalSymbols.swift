@@ -3,9 +3,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+import Foundation
 import NaturalLanguage
-import SignalServiceKit
+public import SignalServiceKit
 public import SwiftUI
+public import UIKit
 
 public enum SignalSymbol: Character {
 

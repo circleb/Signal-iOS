@@ -5,7 +5,6 @@
 
 import SignalServiceKit
 import UIKit
-
 private extension CGFloat {
 
     var degreesToRadians: CGFloat {

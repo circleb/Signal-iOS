@@ -4,7 +4,6 @@
 //
 
 import UIKit
-
 // The most permissive GR possible.
 //
 // * Accepts any number of touches in any locations.

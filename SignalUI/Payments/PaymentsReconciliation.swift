@@ -6,7 +6,6 @@
 import Foundation
 public import MobileCoin
 public import SignalServiceKit
-
 public class PaymentsReconciliation {
 
     private let appReadiness: AppReadiness

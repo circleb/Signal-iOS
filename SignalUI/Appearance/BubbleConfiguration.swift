@@ -3,9 +3,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import SignalServiceKit
-import UIKit
-
+public import SignalServiceKit
+public import UIKit
 ///
 /// An object that describes shape of a bubble in chat.
 ///

@@ -7,7 +7,6 @@ import Foundation
 import LibSignalClient
 import SignalServiceKit
 import UIKit
-
 // Coincides with Android's max text message length
 let kMaxMessageBodyCharacterCount = 2000
 

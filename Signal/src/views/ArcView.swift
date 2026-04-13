@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+import SignalUI
 import UIKit
 
 /// A torus, whose ring is filled up to `percentComplete` with blue. Useful as a

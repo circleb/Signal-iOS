@@ -5,7 +5,6 @@
 
 import Foundation
 public import SignalServiceKit
-
 public struct RegistrationPhoneNumber {
     public let country: PhoneNumberCountry
     public let nationalNumber: String

@@ -3,8 +3,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-public import SignalServiceKit
+import Foundation
 
+public import UIKit
+public import SignalServiceKit
 extension HydratedMessageBody.DisplayConfiguration.SearchRanges {
 
     public static func matchedRanges(_ ranges: [NSRange]) -> Self {

@@ -20,16 +20,24 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController, W
     private let loadingIndicator = UIActivityIndicatorView(style: .large)
     private var isLoadingBlockedMessage = false
     private var blockedURL: String?
-    
+    /// When true (pinned tab bar tabs), the nav bar X selects the Portal tab instead of popping (there is no stack to pop).
+    private let prefersSwitchToPortalOnClose: Bool
+
     // Pinning functionality
     private var pinnedURLsService: PinnedURLsServiceProtocol {
         return webAppsService.getPinnedURLsService()
     }
-    
-    init(webApp: WebApp, webAppsService: WebAppsServiceProtocol, userInfoStore: SSOUserInfoStore = SSOUserInfoStoreImpl()) {
+
+    init(
+        webApp: WebApp,
+        webAppsService: WebAppsServiceProtocol,
+        userInfoStore: SSOUserInfoStore = SSOUserInfoStoreImpl(),
+        prefersSwitchToPortalOnClose: Bool = false
+    ) {
         self.webApp = webApp
         self.webAppsService = webAppsService
         self.userInfoStore = userInfoStore
+        self.prefersSwitchToPortalOnClose = prefersSwitchToPortalOnClose
         super.init(nibName: nil, bundle: nil)
         
         // Set title and hide bottom bar when pushed (like ConversationViewController)
@@ -309,6 +317,14 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController, W
     }
     
     @objc private func closeButtonTapped() {
+        if let nav = navigationController, nav.viewControllers.count > 1 {
+            nav.popViewController(animated: true)
+            return
+        }
+        if prefersSwitchToPortalOnClose, let homeTabBar = tabBarController as? HomeTabBarController {
+            homeTabBar.selectedPrimaryTab = .portal
+            return
+        }
         navigationController?.popViewController(animated: true)
     }
     
@@ -343,6 +359,12 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController, W
         present(alert, animated: true)
     }
     
+    /// Scrolls the main web content to the top (e.g. when re-selecting a pinned tab).
+    func scrollWebContentToTop(animated: Bool) {
+        let top = -webView.scrollView.adjustedContentInset.top
+        webView.scrollView.setContentOffset(CGPoint(x: 0, y: top), animated: animated)
+    }
+
     deinit {
         webView.removeObserver(self, forKeyPath: "estimatedProgress")
     }

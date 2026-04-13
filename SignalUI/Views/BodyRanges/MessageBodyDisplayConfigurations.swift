@@ -3,9 +3,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+
+public import UIKit
 import Foundation
 public import SignalServiceKit
-
 public extension HydratedMessageBody.DisplayConfiguration {
 
     static func forMeasurement(font: UIFont) -> Self {

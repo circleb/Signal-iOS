@@ -3,8 +3,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import SignalServiceKit
-
+import Foundation
+public import SignalServiceKit
+public import UIKit
+import Foundation
+public import UIKit
 public extension UISearchBar {
 
     var textField: UITextField? {

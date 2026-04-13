@@ -4,7 +4,6 @@
 //
 
 import SignalServiceKit
-
 class ImageEditorTopBar: MediaTopBar {
 
     let undoButton = RoundMediaButton(

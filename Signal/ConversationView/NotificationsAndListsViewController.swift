@@ -532,7 +532,7 @@ extension NotificationsAndListsViewController {
         let action = ContextualActionBuilder.makeContextualAction(
             style: .normal,
             color: UIColor.Signal.ultramarine,
-            image: "checkmark.circle.fill",
+            image: UIImage(systemName: "checkmark.circle.fill"),
             title: CommonStrings.readAction
         ) { [weak self] completion in
             self?.markNotificationAsRead(identifier: notif.identifier)
@@ -550,7 +550,7 @@ extension NotificationsAndListsViewController {
         let action = ContextualActionBuilder.makeContextualAction(
             style: .destructive,
             color: UIColor.Signal.red,
-            image: "trash-fill",
+            image: UIImage(systemName: "trash.fill"),
             title: CommonStrings.deleteButton
         ) { [weak self] completion in
             self?.deleteNotification(identifier: notif.identifier)

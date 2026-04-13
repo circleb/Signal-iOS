@@ -4,7 +4,6 @@
 //
 
 import SignalServiceKit
-
 enum CropRegion {
     // The sides of the crop region.
     case left

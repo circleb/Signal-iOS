@@ -6,7 +6,7 @@
 import Foundation
 import MetalKit
 import SignalServiceKit
-
+import UIKit
 /// Information required to render with metal, that can be loaded once
 /// on startup. If loading fails, we can fall back to non-animated spoiler
 /// rendering.

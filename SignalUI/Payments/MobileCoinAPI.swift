@@ -6,7 +6,7 @@
 import Foundation
 import MobileCoin
 public import SignalServiceKit
-
+import UIKit
 public class MobileCoinAPI {
 
     // MARK: - Passphrases & Entropy

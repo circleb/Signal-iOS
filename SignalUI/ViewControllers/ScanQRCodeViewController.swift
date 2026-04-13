@@ -6,6 +6,7 @@
 public import AVFoundation
 import Foundation
 import SignalServiceKit
+public import UIKit
 import Vision
 
 public protocol QRCodeSampleBufferScannerDelegate: AnyObject {

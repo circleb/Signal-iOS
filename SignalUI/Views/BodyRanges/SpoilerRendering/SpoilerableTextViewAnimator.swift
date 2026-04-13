@@ -5,8 +5,7 @@
 
 import Foundation
 import SignalServiceKit
-import UIKit
-
+public import UIKit
 /// Animates spoilers on a UITextView or UITextView subclass.
 /// Users must hold a reference to the animator alongside the UITextView,
 /// and configure it with a SpoilerableTextConfig to begin animation.

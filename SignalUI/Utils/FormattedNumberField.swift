@@ -4,9 +4,8 @@
 //
 
 import Foundation
-import SignalServiceKit
-import UIKit
-
+public import SignalServiceKit
+public import UIKit
 /// Attach this to a ``UITextField`` to auto-format it and restrict input to
 /// ASCII digits.
 ///

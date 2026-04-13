@@ -1396,15 +1396,18 @@ extension ChatListViewController {
             break
 
         case .payments:
+            guard TSConstants.isMobileCoinPaymentsUIAccessible else { break }
             let paymentsSettings = PaymentsSettingsViewController(mode: .inAppSettings, appReadiness: appReadiness)
             viewControllers += [paymentsSettings]
 
         case .payment(let paymentsHistoryItem):
+            guard TSConstants.isMobileCoinPaymentsUIAccessible else { break }
             let paymentsSettings = PaymentsSettingsViewController(mode: .inAppSettings, appReadiness: appReadiness)
             let paymentsDetail = PaymentsDetailViewController(paymentItem: paymentsHistoryItem)
             viewControllers += [paymentsSettings, paymentsDetail]
 
         case .paymentsTransferIn:
+            guard TSConstants.isMobileCoinPaymentsUIAccessible else { break }
             let paymentsSettings = PaymentsSettingsViewController(mode: .inAppSettings, appReadiness: appReadiness)
             let paymentsTransferIn = PaymentsTransferInViewController()
             viewControllers += [paymentsSettings, paymentsTransferIn]
@@ -1447,6 +1450,7 @@ extension ChatListViewController {
             internalCompletion = { profile.presentUsernameLinkCorruptedResolution() }
 
         case let .donate(donateMode):
+            guard TSConstants.isDonationUIAccessible else { break }
             guard
                 DonationUtilities.canDonate(
                     inMode: donateMode.asDonationMode,

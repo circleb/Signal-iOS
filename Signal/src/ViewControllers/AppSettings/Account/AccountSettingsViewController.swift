@@ -126,16 +126,20 @@ class AccountSettingsViewController: OWSTableViewController2 {
 
         let tsRegistrationState = DependenciesBridge.shared.tsAccountManager.registrationStateWithMaybeSneakyTransaction
         if tsRegistrationState.isDeregistered {
-            accountSection.add(.actionItem(
-                withText: tsRegistrationState.isPrimaryDevice ?? true
-                    ? OWSLocalizedString("SETTINGS_REREGISTER_BUTTON", comment: "Label for re-registration button.")
-                    : OWSLocalizedString("SETTINGS_RELINK_BUTTON", comment: "Label for re-link button."),
-                textColor: .ows_accentBlue,
-                accessibilityIdentifier: UIView.accessibilityIdentifier(in: self, name: "reregister"),
-                actionBlock: { [weak self] in
-                    self?.reregisterUser()
-                },
-            ))
+            let isPrimaryOrUnknown = tsRegistrationState.isPrimaryDevice ?? true
+            let canShowReregisterOrRelink = !isPrimaryOrUnknown || TSConstants.isSignalPhoneRegistrationUIAccessible
+            if canShowReregisterOrRelink {
+                accountSection.add(.actionItem(
+                    withText: isPrimaryOrUnknown
+                        ? OWSLocalizedString("SETTINGS_REREGISTER_BUTTON", comment: "Label for re-registration button.")
+                        : OWSLocalizedString("SETTINGS_RELINK_BUTTON", comment: "Label for re-link button."),
+                    textColor: .ows_accentBlue,
+                    accessibilityIdentifier: UIView.accessibilityIdentifier(in: self, name: "reregister"),
+                    actionBlock: { [weak self] in
+                        self?.reregisterUser()
+                    },
+                ))
+            }
             accountSection.add(.actionItem(
                 withText: OWSLocalizedString(
                     "SETTINGS_DELETE_DATA_BUTTON",
@@ -148,27 +152,29 @@ class AccountSettingsViewController: OWSTableViewController2 {
                 },
             ))
         } else if tsRegistrationState.isRegisteredPrimaryDevice {
-            switch self.changeNumberState() {
-            case .disallowed:
-                break
-            case .allowed:
-                accountSection.add(.actionItem(
-                    withText: OWSLocalizedString("SETTINGS_CHANGE_PHONE_NUMBER_BUTTON", comment: "Label for button in settings views to change phone number"),
-                    accessibilityIdentifier: UIView.accessibilityIdentifier(in: self, name: "change_phone_number"),
-                    actionBlock: { [weak self] in
-                        guard let self else {
-                            return
-                        }
-                        // Fetch the state again in case it changed from under us
-                        // between when the button was rendered and when it was tapped.
-                        switch self.changeNumberState() {
-                        case .disallowed:
-                            return
-                        case .allowed(let changeNumberParams):
-                            self.changePhoneNumber(changeNumberParams)
-                        }
-                    },
-                ))
+            if TSConstants.isSignalPhoneRegistrationUIAccessible {
+                switch self.changeNumberState() {
+                case .disallowed:
+                    break
+                case .allowed:
+                    accountSection.add(.actionItem(
+                        withText: OWSLocalizedString("SETTINGS_CHANGE_PHONE_NUMBER_BUTTON", comment: "Label for button in settings views to change phone number"),
+                        accessibilityIdentifier: UIView.accessibilityIdentifier(in: self, name: "change_phone_number"),
+                        actionBlock: { [weak self] in
+                            guard let self else {
+                                return
+                            }
+                            // Fetch the state again in case it changed from under us
+                            // between when the button was rendered and when it was tapped.
+                            switch self.changeNumberState() {
+                            case .disallowed:
+                                return
+                            case .allowed(let changeNumberParams):
+                                self.changePhoneNumber(changeNumberParams)
+                            }
+                        },
+                    ))
+                }
             }
             accountSection.add(.actionItem(
                 withText: OWSLocalizedString(
@@ -303,6 +309,7 @@ class AccountSettingsViewController: OWSTableViewController2 {
     }
 
     private func changePhoneNumber(_ params: RegistrationMode.ChangeNumberParams) {
+        guard TSConstants.isSignalPhoneRegistrationUIAccessible else { return }
         let logger = PrefixedLogger(prefix: "[ChangeNum]")
         logger.info("Attempting to start change number from settings")
         let dependencies = RegistrationCoordinatorDependencies.from(NSObject())

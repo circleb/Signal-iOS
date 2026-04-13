@@ -3,9 +3,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+import Foundation
 import SafariServices
-import SignalServiceKit
-
+public import SignalServiceKit
+public import UIKit
 public class LinkingTextView: UITextView {
 
     public var shouldInteractWithURLOverride: ((URL) -> Bool)?

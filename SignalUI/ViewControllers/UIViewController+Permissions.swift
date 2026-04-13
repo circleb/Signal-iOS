@@ -6,7 +6,7 @@
 import AVFoundation
 public import Photos
 import SignalServiceKit
-
+public import UIKit
 extension UIViewController {
 
     public func ows_askForCameraPermissions(callback: @escaping (Bool) -> Void) {

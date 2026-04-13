@@ -3,8 +3,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+import Foundation
 import SignalServiceKit
-
+import UIKit
 protocol FindByUsernameDelegate: AnyObject {
     func findByUsername(address: SignalServiceAddress)
     var shouldShowQRCodeButton: Bool { get }

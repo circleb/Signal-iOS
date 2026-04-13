@@ -5,8 +5,8 @@
 
 import Foundation
 import PureLayout
+public import UIKit
 public import SignalServiceKit
-
 extension Wallpaper {
 
     public static func viewBuilder(for thread: TSThread? = nil, tx: DBReadTransaction) -> WallpaperViewBuilder? {

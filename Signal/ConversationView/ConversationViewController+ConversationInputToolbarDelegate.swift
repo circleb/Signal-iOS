@@ -506,6 +506,8 @@ extension ConversationViewController: ConversationInputToolbarDelegate {
     public func paymentButtonPressed() {
         AssertIsOnMainThread()
 
+        guard TSConstants.isMobileCoinPaymentsUIAccessible else { return }
+
         guard let contactThread = thread as? TSContactThread else {
             owsFailDebug("Not a contact thread.")
             return

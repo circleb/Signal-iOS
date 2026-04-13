@@ -753,7 +753,7 @@ class CallDrawerSheet: InteractiveSheetViewController, UITableViewDelegate, Call
     // MARK: - CallMemberCellDelegate
 
     fileprivate func overflowButtonContextMenuActions(demuxId: DemuxId, aci: Aci, displayName: String, isAudioMuted: Bool) -> [UIAction] {
-        let groupCall: Signal.GroupCall
+        let groupCall: GroupCall
         switch call.mode {
         case .individual:
             owsFailDebug("Individual call with demux ID?")
@@ -775,7 +775,7 @@ class CallDrawerSheet: InteractiveSheetViewController, UITableViewDelegate, Call
     }
 
     fileprivate func raiseHand(raise: Bool) {
-        let groupCall: Signal.GroupCall
+        let groupCall: GroupCall
         switch call.mode {
         case .individual:
             owsFailDebug("Raising hand in 1:1 call?")
@@ -1170,13 +1170,13 @@ private class UnknownMembersCell: UITableViewCell, ReusableTableViewCell {
             avatarView.autoVCenterInSuperview()
             switch position {
             case .front:
-                avatarView.autoPinEdge(toSuperviewEdge: .trailing)
-                avatarView.autoPinEdge(toSuperviewEdge: .leading, relation: .greaterThanOrEqual)
+                avatarView.autoPinEdge(toSuperviewEdge: .trailing, withInset: 0)
+                avatarView.autoPinEdge(toSuperviewEdge: .leading, withInset: 0, relation: .greaterThanOrEqual)
             case .middle:
                 avatarView.autoHCenterInSuperview()
             case .back:
-                avatarView.autoPinEdge(toSuperviewEdge: .leading)
-                avatarView.autoPinEdge(toSuperviewEdge: .trailing, relation: .greaterThanOrEqual)
+                avatarView.autoPinEdge(toSuperviewEdge: .leading, withInset: 0)
+                avatarView.autoPinEdge(toSuperviewEdge: .trailing, withInset: 0, relation: .greaterThanOrEqual)
             }
 
             avatarView.updateWithSneakyTransactionIfNecessary { configuration in

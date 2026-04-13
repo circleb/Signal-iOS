@@ -3,11 +3,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import AVFoundation
+public import AVFoundation
 import Foundation
 import SignalServiceKit
-import UIKit
-
+public import UIKit
 protocol AttachmentPrepViewControllerDelegate: AnyObject {
 
     func attachmentPrepViewControllerDidRequestUpdateControlsVisibility(

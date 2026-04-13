@@ -4,7 +4,6 @@
 //
 
 import SignalServiceKit
-
 class ImageAttachmentPrepViewController: AttachmentPrepViewController {
 
     private let model: ImageEditorModel

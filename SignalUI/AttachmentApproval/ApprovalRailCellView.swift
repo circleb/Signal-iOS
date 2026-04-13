@@ -4,7 +4,6 @@
 //
 
 import SignalServiceKit
-
 protocol ApprovalRailCellViewDelegate: AnyObject {
     func approvalRailCellView(
         _ approvalRailCellView: ApprovalRailCellView,

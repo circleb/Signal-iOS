@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import SignalServiceKit
-
+public import SignalServiceKit
+public import UIKit
 /// Class designed to show link preview in the message composer UI.
 /// Unlike CVLinkPreviewView, this component is designed to show "loading" state and contains
 /// ( X ) cancel button to dismiss the link preview.

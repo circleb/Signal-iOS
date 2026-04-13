@@ -92,6 +92,11 @@ class RemoteMegaphone: MegaphoneView {
                 self.dismiss(animated: false)
             }
 
+            guard TSConstants.isDonationUIAccessible else {
+                done()
+                return
+            }
+
             guard
                 DonationUtilities.canDonateInAnyWay(
                     tsAccountManager: DependenciesBridge.shared.tsAccountManager,
@@ -135,6 +140,11 @@ class RemoteMegaphone: MegaphoneView {
                 // Snooze regardless of outcome.
                 self.markAsSnoozedWithSneakyTransaction()
                 self.dismiss(animated: false)
+            }
+
+            guard TSConstants.isDonationUIAccessible else {
+                done()
+                return
             }
 
             guard

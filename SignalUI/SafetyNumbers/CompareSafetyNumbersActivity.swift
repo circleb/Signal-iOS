@@ -4,8 +4,7 @@
 //
 
 import SignalServiceKit
-import UIKit
-
+public import UIKit
 let CompareSafetyNumbersActivityType = "org.whispersystems.signal.activity.CompareSafetyNumbers"
 
 enum CompareSafetyNumberError: Error {

@@ -4,8 +4,8 @@
 //
 
 import Foundation
+public import UIKit
 public import SignalServiceKit
-
 public enum MessageRecipient: Equatable {
     case contact(_ address: SignalServiceAddress)
     case group(_ groupThreadId: String)

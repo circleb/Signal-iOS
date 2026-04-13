@@ -3,8 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import UIKit
-
+public import UIKit
 /// A `UITableViewDiffableDataSource` that exposes hooks into various
 /// `UITableViewDataSource` APIs that callers may be interested in.
 public class OWSTableViewDiffableDataSource<

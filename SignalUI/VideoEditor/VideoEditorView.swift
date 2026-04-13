@@ -7,7 +7,6 @@ import AVFoundation
 import Photos
 import SignalServiceKit
 import UIKit
-
 protocol VideoEditorViewDelegate: AnyObject {
     func videoEditorViewPlaybackTimeDidChange(_ videoEditorView: VideoEditorView)
 }

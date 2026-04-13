@@ -5,8 +5,8 @@
 
 import Foundation
 import UniformTypeIdentifiers
+public import UIKit
 public import SignalServiceKit
-
 // MARK: - ItemProviderError
 
 private enum ItemProviderError: Error {

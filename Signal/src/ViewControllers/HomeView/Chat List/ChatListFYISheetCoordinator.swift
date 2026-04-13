@@ -470,6 +470,7 @@ extension ChatListViewController: BadgeIssueSheetDelegate {
         case .dismiss:
             break
         case .openDonationView:
+            guard TSConstants.isDonationUIAccessible else { break }
             showAppSettings(mode: .donate(donateMode: .oneTime))
         }
     }

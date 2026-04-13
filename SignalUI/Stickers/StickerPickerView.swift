@@ -4,7 +4,6 @@
 //
 
 import SignalServiceKit
-
 protocol StickerPickerViewDelegate: StickerPickerDelegate {
 
     func presentManageStickersView(for: StickerPickerView)

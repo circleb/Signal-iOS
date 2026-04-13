@@ -3,9 +3,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-public import SwiftUI
+import Foundation
 import SignalServiceKit
-
+public import SwiftUI
 extension Text {
     /// Appends a tappable link with a custom action to the end of a `Text`.
     /// Includes a leading space.

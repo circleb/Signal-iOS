@@ -3,8 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import UIKit
-
+public import UIKit
 public protocol CustomBackgroundColorCell: UITableViewCell {
     func customBackgroundColor(forceDarkMode: Bool) -> UIColor
     func customSelectedBackgroundColor(forceDarkMode: Bool) -> UIColor

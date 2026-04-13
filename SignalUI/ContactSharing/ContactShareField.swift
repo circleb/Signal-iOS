@@ -4,7 +4,6 @@
 //
 
 import SignalServiceKit
-
 protocol ContactShareField: AnyObject {
     var isIncluded: Bool { get set }
     var localizedLabel: String { get }

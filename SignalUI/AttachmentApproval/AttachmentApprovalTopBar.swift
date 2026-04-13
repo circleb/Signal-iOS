@@ -5,7 +5,6 @@
 
 import SignalServiceKit
 import UIKit
-
 class AttachmentApprovalTopBar: MediaTopBar {
 
     // MARK: - Subviews

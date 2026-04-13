@@ -4,8 +4,8 @@
 //
 
 import Foundation
+public import UIKit
 public import SignalServiceKit
-
 extension ThemedColor {
 
     public var forCurrentTheme: UIColor {

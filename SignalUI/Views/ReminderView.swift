@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import UIKit
-
+import Foundation
+public import UIKit
 open class ReminderView: UIView {
     public enum Style {
         case info

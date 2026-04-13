@@ -4,7 +4,6 @@
 //
 
 import SignalServiceKit
-
 // Used to represent undo/redo operations.
 //
 // Because the image editor's "contents" and "items"

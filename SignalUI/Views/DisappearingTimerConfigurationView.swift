@@ -4,8 +4,8 @@
 //
 
 import Foundation
-import SignalServiceKit
-
+public import SignalServiceKit
+public import UIKit
 public protocol DisappearingTimerConfigurationViewDelegate: AnyObject {
     func disappearingTimerConfigurationViewWasTapped(_ disappearingTimerView: DisappearingTimerConfigurationView)
 }

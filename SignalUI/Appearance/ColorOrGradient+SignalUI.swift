@@ -3,10 +3,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import Foundation
-public import SignalServiceKit
-import UIKit
 
+public import UIKit
+import Foundation
+public import UIKit
+public import SignalServiceKit
+public import UIKit
 // MARK: -
 
 /// ColorOrGradientSetting is used for persistence and comparison.

@@ -4,8 +4,8 @@
 //
 
 import Foundation
+public import UIKit
 public import SignalServiceKit
-
 public class NewPrivateStoryRecipientsViewController: BaseMemberViewController {
     var recipientSet: OrderedSet<PickedRecipient> = []
 

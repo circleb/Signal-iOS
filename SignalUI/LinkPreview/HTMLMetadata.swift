@@ -4,7 +4,7 @@
 //
 
 import Foundation
-
+import UIKit
 public struct HTMLMetadata: Equatable {
     /// Parsed from <title>
     var titleTag: String?

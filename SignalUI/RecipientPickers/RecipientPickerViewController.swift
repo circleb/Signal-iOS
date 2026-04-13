@@ -5,6 +5,7 @@
 
 import Foundation
 import MessageUI
+public import UIKit
 public import SignalServiceKit
 import SwiftUI
 

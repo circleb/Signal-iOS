@@ -130,8 +130,16 @@ public class WebAppsService: WebAppsServiceProtocol {
                 headers: headers
             )
             
-            guard let data = response.responseBodyData,
-                  let globalAllowList = try? JSONDecoder().decode([GlobalAllowEntry].self, from: data) else {
+            guard let data = response.responseBodyData else {
+                throw WebAppsError.invalidResponse
+            }
+            let globalAllowList: [GlobalAllowEntry]
+            if let directus = try? JSONDecoder().decode(GlobalAllowListDirectusResponse.self, from: data) {
+                globalAllowList = directus.data
+            } else if let legacy = try? JSONDecoder().decode([GlobalAllowEntry].self, from: data) {
+                // Legacy flat array (e.g. old globalallow.php).
+                globalAllowList = legacy
+            } else {
                 throw WebAppsError.invalidResponse
             }
 
@@ -287,4 +295,10 @@ public class WebAppsService: WebAppsServiceProtocol {
             databaseStorage: databaseStorage
         )
     }
-} 
+}
+
+/// Directus-style list response for `global_url_allow` (`/items/global_url_allow`).
+private struct GlobalAllowListDirectusResponse: Decodable {
+    let data: [GlobalAllowEntry]
+}
+

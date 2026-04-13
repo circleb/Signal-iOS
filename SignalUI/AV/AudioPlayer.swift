@@ -3,10 +3,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import AVFoundation
+import Foundation
+public import AVFoundation
 import MediaPlayer
 public import SignalServiceKit
-
+import UIKit
 public enum AudioBehavior {
     case unknown
     case playback

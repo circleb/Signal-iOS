@@ -4,9 +4,8 @@
 //
 
 import CoreImage
-import SignalServiceKit
-import UIKit
-
+public import SignalServiceKit
+public import UIKit
 public extension UIImage {
 
     // Name corresponds to CIImage filter.

@@ -4,7 +4,7 @@
 //
 
 import SignalServiceKit
-
+import UIKit
 public class StickerViewCache {
 
     private typealias CacheType = LRUCache<StickerInfo, ThreadSafeCacheHandle<StickerReusableView>>

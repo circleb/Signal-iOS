@@ -6,7 +6,6 @@
 import Foundation
 import SignalServiceKit
 import UIKit
-
 class AttachmentApprovalToolbar: UIView {
 
     struct Configuration: Equatable {

@@ -4,8 +4,8 @@
 //
 
 import Combine
-import SignalServiceKit
-
+public import SignalServiceKit
+public import UIKit
 /// An interactive sheet view controller with stack view content. Automatically
 /// resizes the sheet and enables/disables scrolling based on content size.
 ///

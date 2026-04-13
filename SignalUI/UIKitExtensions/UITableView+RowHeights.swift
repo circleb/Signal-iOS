@@ -4,7 +4,7 @@
 //
 
 import SignalServiceKit
-
+public import UIKit
 extension UITableView {
     /// Force the table view to recompute the height of its rows.
     ///

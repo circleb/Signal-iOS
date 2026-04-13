@@ -3,9 +3,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+import Foundation
+
 public import LibSignalClient
 public import SignalServiceKit
-
+public import UIKit
 public protocol TextApprovalViewControllerDelegate: AnyObject {
 
     func textApproval(_ textApproval: TextApprovalViewController, didApproveMessage messageBody: MessageBody, linkPreviewDraft: OWSLinkPreviewDraft?)

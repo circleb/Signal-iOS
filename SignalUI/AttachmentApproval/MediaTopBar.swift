@@ -3,8 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import UIKit
-
+public import UIKit
 open class MediaTopBar: UIView {
 
     // Custom layout guide is necessary to allow to adjust the top margin.

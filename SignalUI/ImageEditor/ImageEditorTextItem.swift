@@ -4,7 +4,6 @@
 //
 
 import UIKit
-
 final class ImageEditorTextItem: ImageEditorItem, ImageEditorTransformable {
 
     let text: String

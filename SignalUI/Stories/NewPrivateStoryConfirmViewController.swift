@@ -6,7 +6,7 @@
 import Foundation
 import SafariServices
 import SignalServiceKit
-
+import UIKit
 public class NewPrivateStoryConfirmViewController: OWSTableViewController2 {
 
     let recipientSet: OrderedSet<PickedRecipient>

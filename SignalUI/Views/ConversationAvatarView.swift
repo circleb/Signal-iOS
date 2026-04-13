@@ -3,11 +3,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+import Foundation
 import GRDB
 import LibSignalClient
-import UIKit
+public import UIKit
+import CoreGraphics
 public import SignalServiceKit
-
 public protocol ConversationAvatarViewDelegate: UIViewController {
     func didTapBadge()
 

@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import SignalServiceKit
-
+public import SignalServiceKit
+public import UIKit
 // MARK: - NSDirectionalEdgeInsets
 
 private extension NSDirectionalEdgeInsets {
@@ -25,6 +25,7 @@ private extension NSDirectionalEdgeInsets {
 // MARK: - UIButton
 
 public extension UIButton {
+
     /// Add spacing between a button's image and its title.
     ///
     /// Modified from [this project][0], licensed under the MIT License.

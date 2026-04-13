@@ -102,6 +102,7 @@ post_install do |installer|
   update_frameworks_script(installer)
   disable_non_development_pod_warnings(installer)
   fix_ringrtc_project_symlink(installer)
+  patch_reachability_in6_header(installer)
   fetch_ringrtc
   copy_acknowledgements
 end
@@ -129,8 +130,8 @@ end
 # We want some warning to be treated as errors.
 #
 # NOTE: We have to manually keep this list in sync with what's in our
-# Signal.xcodeproj config in Xcode go to:
-#   Signal Project > Build Settings > Other Warning Flags
+# HCP.xcodeproj config in Xcode go to:
+#   HCP Project > Build Settings > Other Warning Flags
 def configure_warning_flags(installer)
   installer.pods_project.targets.each do |target|
       target.build_configurations.each do |build_configuration|
@@ -247,6 +248,18 @@ def fix_ringrtc_project_symlink(installer)
   if ringrtc_header_ref.path.start_with?('../') || ringrtc_header_ref.path.start_with?('/') then
     ringrtc_header_ref.path = 'out/release/libringrtc/ringrtc.h'
   end
+end
+
+# Recent Apple SDKs treat <netinet6/in6.h> as a private module header when building Reachability as a framework.
+# IPv6 types come from <netinet/in.h> on Darwin.
+def patch_reachability_in6_header(installer)
+  path = File.join(installer.sandbox.root, 'Reachability/Reachability.m')
+  return unless File.exist?(path)
+
+  contents = File.read(path)
+  return unless contents.include?('#import <netinet6/in6.h>')
+
+  File.write(path, contents.sub("#import <netinet6/in6.h>\n", ''))
 end
 
 def fetch_ringrtc

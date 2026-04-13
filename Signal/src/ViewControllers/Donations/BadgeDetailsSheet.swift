@@ -117,7 +117,7 @@ class BadgeDetailsSheet: OWSTableSheetViewController {
             return cell
         }, actionBlock: nil))
 
-        if !owner.isLocal {
+        if !owner.isLocal, TSConstants.isDonationUIAccessible {
             let buttonSection = OWSTableSection(items: [.init(customCellBlock: { [weak self] in
                 let cell = OWSTableItem.newCell()
                 cell.selectionStyle = .none

@@ -4,8 +4,8 @@
 //
 
 import Foundation
+public import UIKit
 public import SignalServiceKit
-
 open class ContactTableViewCell: UITableViewCell, ReusableTableViewCell {
 
     open class var reuseIdentifier: String { "ContactTableViewCell" }

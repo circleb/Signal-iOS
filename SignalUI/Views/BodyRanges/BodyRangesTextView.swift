@@ -3,9 +3,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+import Foundation
+
+public import UIKit
 public import LibSignalClient
 public import SignalServiceKit
-
 public protocol BodyRangesTextViewDelegate: UITextViewDelegate {
     func textViewDidBeginTypingMention(_ textView: BodyRangesTextView)
     func textViewDidEndTypingMention(_ textView: BodyRangesTextView)

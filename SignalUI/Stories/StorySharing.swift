@@ -3,8 +3,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+import Foundation
 public import SignalServiceKit
-
+import UIKit
 public enum StorySharing {
     public static func enqueueTextStory(
         with messageBody: MessageBody,

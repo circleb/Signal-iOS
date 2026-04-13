@@ -4,7 +4,6 @@
 //
 
 public import SignalServiceKit
-
 extension Sounds {
 
     private static func shouldAudioPlayerLoop(forSound sound: Sound) -> Bool {

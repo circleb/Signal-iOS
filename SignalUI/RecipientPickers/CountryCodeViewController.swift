@@ -3,10 +3,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-public import SwiftUI
+
 import Combine
 import SignalServiceKit
-
+public import SwiftUI
+public import UIKit
 public protocol CountryCodeViewControllerDelegate: AnyObject {
     func countryCodeViewController(_ vc: CountryCodeViewController, didSelectCountry: PhoneNumberCountry)
 }

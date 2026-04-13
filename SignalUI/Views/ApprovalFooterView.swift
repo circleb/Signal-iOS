@@ -4,8 +4,8 @@
 //
 
 import Foundation
-import SignalServiceKit
-
+public import SignalServiceKit
+public import UIKit
 // Outgoing message approval can be a multi-step process.
 public enum ApprovalMode: UInt {
     // This is the final step of approval; continuing will send.

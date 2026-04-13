@@ -190,7 +190,7 @@ class AttachmentFormatPickerView: UIView {
             if !BuildFlags.pollOneOnOneSend {
                 casesToExclude.append(.poll)
             }
-            if !SSKEnvironment.shared.paymentsHelperRef.arePaymentsEnabled {
+            if !TSConstants.isMobileCoinPaymentsUIAccessible || !SSKEnvironment.shared.paymentsHelperRef.arePaymentsEnabled {
                 casesToExclude.append(.payment)
             }
 

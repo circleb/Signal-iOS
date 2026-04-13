@@ -4,9 +4,8 @@
 //
 
 import Foundation
-import UIKit
+public import UIKit
 public import SignalServiceKit
-
 open class TextAttachmentView: UIView {
 
     private var linkPreviewUrlString: String? { linkPreview?.urlString }

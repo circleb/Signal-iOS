@@ -3,9 +3,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+
 public import AVFoundation
 import SignalServiceKit
-
+public import UIKit
 public protocol VideoPlayerViewDelegate: AnyObject {
     func videoPlayerViewStatusDidChange(_ view: VideoPlayerView)
     func videoPlayerViewPlaybackTimeDidChange(_ view: VideoPlayerView)

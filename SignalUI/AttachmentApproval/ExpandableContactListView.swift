@@ -4,7 +4,6 @@
 //
 
 import UIKit
-
 class ExpandableContactListView: UIView {
 
     private class var listFormatter: ListFormatter {

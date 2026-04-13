@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import SignalServiceKit
-
+public import SignalServiceKit
+public import UIKit
 open class SheetViewController: UIViewController {
 
     public var dismissHandler: ((SheetViewController) -> Void)?

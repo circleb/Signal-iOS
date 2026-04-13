@@ -3,8 +3,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-public import SignalServiceKit
+import Foundation
 
+public import UIKit
+public import SignalServiceKit
 public protocol RecipientPickerDelegate: RecipientContextMenuHelperDelegate {
     func recipientPicker(
         _ recipientPickerViewController: RecipientPickerViewController,

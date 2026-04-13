@@ -132,6 +132,10 @@ public class SendPaymentViewController: OWSViewController {
         isOutgoingTransfer: Bool,
         mode: SendPaymentMode,
     ) {
+        guard TSConstants.isMobileCoinPaymentsUIAccessible else {
+            Logger.info("MobileCoin payments UI is disabled for this app configuration.")
+            return
+        }
         guard SSKEnvironment.shared.paymentsHelperRef.arePaymentsEnabled else {
             Logger.info("Payments not enabled.")
             showEnablePaymentsActionSheet()

@@ -657,6 +657,7 @@ extension DonationSettingsViewController: BadgeIssueSheetDelegate {
         case .dismiss:
             break
         case .openDonationView:
+            guard TSConstants.isDonationUIAccessible else { break }
             self.showDonateViewController(preferredDonateMode: .oneTime)
         }
     }

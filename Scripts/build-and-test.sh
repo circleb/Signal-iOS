@@ -33,8 +33,8 @@ echo "Using simulator: $LATEST_IOS_SIM_ID"
 echo
 set -o pipefail \
 && NSUnbufferedIO=YES TEST_RUNNER_SCHEMA_DUMP_PATH="$SCHEMA_DIR/schema.json" xcodebuild \
-  -workspace Signal.xcworkspace \
-  -scheme Signal \
+  -workspace HCP.xcworkspace \
+  -scheme HCP \
   -destination "platform=iOS Simulator,id=$LATEST_IOS_SIM_ID" \
   -disableAutomaticPackageResolution \
   -test-timeouts-enabled YES \

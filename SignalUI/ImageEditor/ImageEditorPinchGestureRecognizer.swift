@@ -4,7 +4,6 @@
 //
 
 import SignalServiceKit
-
 struct ImageEditorPinchState {
     let centroid: CGPoint
     let distance: CGFloat

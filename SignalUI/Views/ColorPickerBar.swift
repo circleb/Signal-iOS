@@ -4,6 +4,8 @@
 //
 
 import SignalServiceKit
+public import UIKit
+import CoreGraphics
 
 public protocol ColorPickerBarViewDelegate: AnyObject {
     func colorPickerBarView(_ pickerView: ColorPickerBarView, didSelectColor color: ColorPickerBarColor)

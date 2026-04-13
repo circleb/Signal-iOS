@@ -5,7 +5,6 @@
 
 import Foundation
 import SignalServiceKit
-
 public class AppContextUtils {
 
     private init() {}

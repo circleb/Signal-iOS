@@ -7,7 +7,8 @@ import Foundation
 
 public struct WebAppsConfig {
     static let apiEndpoint = "https://my.homesteadheritage.org/api/v2/webapps.php"
-    static let globalAllowEndpoint = "https://my.homesteadheritage.org/api/v2/globalallow.php"
+    /// Directus collection `global_url_allow` (JSON: `{ "data": [ { "entry", "name", ... } ] }`).
+    static let globalAllowEndpoint = "https://cms.homesteadheritage.org/items/global_url_allow"
     static let cacheKey = "web_apps_cache"
     static let globalAllowCacheKey = "global_allow_cache"
     static let cacheExpirationInterval: TimeInterval = 3600 // 1 hour

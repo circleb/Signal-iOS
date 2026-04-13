@@ -6,7 +6,7 @@
 import Foundation
 import LibSignalClient
 import SignalServiceKit
-
+import UIKit
 public enum MentionPickerStyle {
     case `default`
     case composingAttachment

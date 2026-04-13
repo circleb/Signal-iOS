@@ -3,8 +3,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import SignalServiceKit
-
+import Foundation
+public import SignalServiceKit
+public import UIKit
 /**
  * Given an attributed string and a highlightRange, draws a colored capsule behind the characters in highlightRange.
  * The color of the capsule is determined by the textColor with opacity decreased.

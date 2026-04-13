@@ -3,9 +3,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-public import SignalServiceKit
-import UIKit
 
+public import SignalServiceKit
+public import UIKit
 // MARK: - SpacerView
 
 public class SpacerView: UIView {
@@ -19,7 +19,7 @@ public class SpacerView: UIView {
         self.init(preferredSize: CGSize(width: preferredWidth, height: preferredHeight))
     }
 
-    public init(preferredSize: CGSize = CGSize(square: UIView.noIntrinsicMetric)) {
+    public init(preferredSize: CGSize = CGSize(width: UIView.noIntrinsicMetric, height: UIView.noIntrinsicMetric)) {
         self.preferredSize = preferredSize
         super.init(frame: .zero)
     }
