@@ -27,6 +27,8 @@ class SSOWebViewController: UIViewController {
             progressView.isHidden = estimatedProgress >= 1.0
         }
     }
+
+    private var lastLoggedAnalyticsURL: String?
     
     init(url: URL, title: String, userInfoStore: SSOUserInfoStore = SSOUserInfoStoreImpl()) {
         self.url = url
@@ -44,6 +46,11 @@ class SSOWebViewController: UIViewController {
         setupUI()
         setupWebView()
         loadURL()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        ViewAppearanceAnalytics.notifyViewControllerDidAppear(self)
     }
     
     private func setupUI() {
@@ -127,6 +134,13 @@ class SSOWebViewController: UIViewController {
 // MARK: - WKNavigationDelegate
 
 extension SSOWebViewController: WKNavigationDelegate {
+
+    func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
+        guard let urlString = webView.url?.absoluteString else { return }
+        guard urlString != lastLoggedAnalyticsURL else { return }
+        lastLoggedAnalyticsURL = urlString
+        HCPFirebaseAnalytics.logSSOWebDocumentURL(url: urlString)
+    }
     
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
         estimatedProgress = 0.0

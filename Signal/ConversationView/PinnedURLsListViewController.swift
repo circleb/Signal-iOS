@@ -34,6 +34,11 @@ class PinnedURLsListViewController: UIViewController {
         loadPinnedURLs()
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        ViewAppearanceAnalytics.notifyViewControllerDidAppear(self)
+    }
+
     private func setupUI() {
         title = "Bookmarks"
         view.backgroundColor = Theme.backgroundColor

@@ -59,6 +59,7 @@ target 'HCP' do
   ui_pods
 
   pod 'AppAuth'
+  pod 'Firebase/Analytics'
 
   target 'SignalTests' do
     inherit! :search_paths
@@ -268,7 +269,7 @@ end
 
 def copy_acknowledgements
   targets = [
-    'Signal',
+    'HCP',
     'SignalNSE',
     'SignalServiceKit',
     'SignalServiceKitTests',

@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-public import UIKit
+import UIKit
 #if DEBUG
 public class SheetPreviewViewController: UIViewController {
     private let animateFirstAppearance: Bool

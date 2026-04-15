@@ -6,7 +6,8 @@
 import Foundation
 
 public struct WebAppsConfig {
-    static let apiEndpoint = "https://my.homesteadheritage.org/api/v2/webapps.php"
+    /// Directus collection `HCP_Web_Apps` (JSON: `{ "data": [ { "Name", "Entry", ... } ] }`).
+    static let apiEndpoint = "https://cms.homesteadheritage.org/items/HCP_Web_Apps"
     /// Directus collection `global_url_allow` (JSON: `{ "data": [ { "entry", "name", ... } ] }`).
     static let globalAllowEndpoint = "https://cms.homesteadheritage.org/items/global_url_allow"
     static let cacheKey = "web_apps_cache"

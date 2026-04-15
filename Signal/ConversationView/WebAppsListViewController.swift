@@ -83,6 +83,11 @@ class WebAppsListViewController: UIViewController {
         refreshNotificationBadgeState()
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        ViewAppearanceAnalytics.notifyViewControllerDidAppear(self)
+    }
+
     private func setupUI() {
         title = "Portal"
         // Use a grouped-style background so white cells sit on gray, like Settings
@@ -203,17 +208,6 @@ class WebAppsListViewController: UIViewController {
                 app.name,
             )
             alert.addAction(UIAlertAction(title: title, style: .destructive) { [weak self] _ in
-                // #region agent log
-                CursorAgentDebugNDJSON.log(
-                    hypothesisId: "H5",
-                    location: "WebAppsListViewController.showPinnedAppsManagement:unpinTap",
-                    message: "user chose unpin from action sheet",
-                    data: [
-                        "isMain": "\(Thread.isMainThread)",
-                        "presentedVC": "\(String(describing: self?.presentedViewController))",
-                    ],
-                )
-                // #endregion
                 self?.tabPinsStore.removePin(webAppId: id)
                 self?.updateUI()
             })

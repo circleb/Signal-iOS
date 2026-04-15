@@ -19,8 +19,8 @@ final class WebAppTabPinsStore {
     /// Default pins for first launch (never written before).
     /// Uses `entry` strings from `webapps.php` when the API does not provide `id`.
     static let defaultOrderedPinIds: [String] = [
-        "my.homesteadheritage.org/events",
-        "listings.homesteadheritage.org",
+        "19fb63a7-6900-4574-b963-4566404ac4cf",
+        "2d9a7b8a-757c-4d8e-8bb3-99ce43956782",
     ]
 
     /// Maximum number of web apps that may be pinned (excluding fixed Portal + Chats tabs).
@@ -65,17 +65,6 @@ final class WebAppTabPinsStore {
             keyValueStore.setBool(true, key: Self.userModifiedKey, transaction: tx)
             keyValueStore.setStringArray(ids, key: Self.orderedIdsKey, transaction: tx)
         }
-        // #region agent log
-        CursorAgentDebugNDJSON.log(
-            hypothesisId: "H4",
-            location: "WebAppTabPinsStore.setOrderedPinIds",
-            message: "pins persisted, posting notification async",
-            data: [
-                "pinCount": "\(ids.count)",
-                "isMain": "\(Thread.isMainThread)",
-            ],
-        )
-        // #endregion
         NotificationCenter.default.postOnMainThread(name: .webAppTabPinsDidChange, object: nil)
     }
 

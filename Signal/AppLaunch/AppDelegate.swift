@@ -5,6 +5,7 @@
 
 import AppAuth
 import CryptoKit
+import FirebaseCore
 import GRDB
 import Intents
 import SignalServiceKit
@@ -152,6 +153,11 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         DebugLogger.configureSwiftLogging()
         if DebugFlags.audibleErrorLogging {
             debugLogger.enableErrorReporting()
+        }
+
+        FirebaseApp.configure()
+        ViewAppearanceAnalytics.onViewControllerDidAppear = { viewController in
+            HCPFirebaseAnalytics.logScreenView(for: viewController)
         }
 
         Logger.warn("Launching…")

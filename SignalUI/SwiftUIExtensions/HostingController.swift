@@ -113,6 +113,8 @@ open class HostingController<Wrapped: View>: UIHostingController<_HostingControl
         if transitionCoordinator == nil {
             rootView.appearanceTransitionState = .finished
         }
+
+        ViewAppearanceAnalytics.notifyViewControllerDidAppear(self)
     }
 
     override open func viewWillDisappear(_ animated: Bool) {

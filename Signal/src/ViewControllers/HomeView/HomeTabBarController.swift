@@ -181,20 +181,21 @@ class HomeTabBarController: UITabBarController {
         webAppsService.getCachedWebApp(byId: pinKey) ?? webAppsService.getCachedWebApp(byEntry: pinKey)
     }
 
+    /// `UITabBarController` can report `NSNotFound` (`Int.max`) or other out-of-range values before
+    /// `viewControllers` exist (state restoration / first layout). Assigning `viewControllers` or
+    /// replacing the tab bar while selection is invalid traps on some OS versions.
+    private func sanitizeSelectedIndex(forTabCount count: Int) {
+        guard count > 0 else { return }
+        let upper = count - 1
+        if selectedIndex == NSNotFound || selectedIndex > upper {
+            super.selectedIndex = upper
+        } else if selectedIndex < 0 {
+            super.selectedIndex = 0
+        }
+    }
+
     func rebuildTabs() {
         AssertIsOnMainThread()
-        // #region agent log
-        CursorAgentDebugNDJSON.log(
-            hypothesisId: "H1",
-            location: "HomeTabBarController.rebuildTabs:entry",
-            message: "rebuildTabs started",
-            data: [
-                "selectedIndex": "\(selectedIndex)",
-                "tabKindsCount": "\(tabKinds.count)",
-                "vcCount": "\(viewControllers?.count ?? -1)",
-            ],
-        )
-        // #endregion
 
         func resolvePins(_ ids: [String]) -> [(String, WebApp)] {
             ids.compactMap { pinKey in
@@ -250,38 +251,14 @@ class HomeTabBarController: UITabBarController {
         // UITabBarController can crash if `selectedIndex` is still the old value while
         // `viewControllers` / `tabs` is replaced with a shorter array (e.g. user on Chats
         // at the last index, then a pinned tab in the middle is removed).
-        if !kinds.isEmpty, selectedIndex >= kinds.count {
-            selectedIndex = kinds.count - 1
-        }
-        // #region agent log
-        CursorAgentDebugNDJSON.log(
-            hypothesisId: "H1",
-            location: "HomeTabBarController.rebuildTabs:afterClamp",
-            message: "about to assign tabs or viewControllers",
-            data: [
-                "selectedIndex": "\(selectedIndex)",
-                "kindsCount": "\(kinds.count)",
-                "previousKind": "\(previousKind)",
-            ],
-        )
-        // #endregion
+        sanitizeSelectedIndex(forTabCount: kinds.count)
 
         if #available(iOS 18, *), UIDevice.current.isIPad {
             let validKeys = Set(kinds.map { $0.tabIdentifier })
             for key in _uiTabs.keys where !validKeys.contains(key) {
                 _uiTabs.removeValue(forKey: key)
             }
-            // #region agent log
-            CursorAgentDebugNDJSON.log(
-                hypothesisId: "H3",
-                location: "HomeTabBarController.rebuildTabs:beforeTabsAssign",
-                message: "iOS18 iPad assigning self.tabs",
-                data: [
-                    "selectedIndex": "\(selectedIndex)",
-                    "kindsCount": "\(kinds.count)",
-                ],
-            )
-            // #endregion
+            sanitizeSelectedIndex(forTabCount: kinds.count)
             self.tabs = kinds.map { uiTab(for: $0) }
         } else {
             initializeCustomTabBar(tabKinds: kinds)
@@ -298,33 +275,12 @@ class HomeTabBarController: UITabBarController {
         } else {
             selectedIndex = 0
         }
-        // #region agent log
-        CursorAgentDebugNDJSON.log(
-            hypothesisId: "H1",
-            location: "HomeTabBarController.rebuildTabs:exit",
-            message: "rebuildTabs finished",
-            data: [
-                "selectedIndex": "\(selectedIndex)",
-                "kindsCount": "\(kinds.count)",
-                "vcCount": "\(viewControllers?.count ?? -1)",
-            ],
-        )
-        // #endregion
     }
 
     private func initializeCustomTabBar(tabKinds: [HomeTabKind]) {
-        // #region agent log
-        CursorAgentDebugNDJSON.log(
-            hypothesisId: "H2",
-            location: "HomeTabBarController.initializeCustomTabBar:entry",
-            message: "replacing tabBar and viewControllers",
-            data: [
-                "selectedIndex": "\(selectedIndex)",
-                "newTabKindsCount": "\(tabKinds.count)",
-            ],
-        )
-        // #endregion
+        sanitizeSelectedIndex(forTabCount: tabKinds.count)
         setValue(OWSTabBar(), forKey: "tabBar")
+        sanitizeSelectedIndex(forTabCount: tabKinds.count)
         viewControllers = tabKinds.map { kind in
             let nav = navigationController(for: kind)
             switch kind {

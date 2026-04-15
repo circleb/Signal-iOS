@@ -158,6 +158,8 @@ open class OWSViewController: UIViewController {
 #if DEBUG
         ensureNavbarAccessibilityIds()
 #endif
+
+        ViewAppearanceAnalytics.notifyViewControllerDidAppear(self)
     }
 
     override open func viewWillDisappear(_ animated: Bool) {

@@ -4,6 +4,7 @@
 
 import UIKit
 import SignalServiceKit
+import SignalUI
 
 /// Displays Bulletin HTML from the Directus JSON endpoint using a text view (no WebKit),
 /// avoiding WebContent process and related simulator/system errors.
@@ -69,6 +70,7 @@ final class BulletinViewController: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        ViewAppearanceAnalytics.notifyViewControllerDidAppear(self)
         // Re-apply insets and initial offset when view is visible (contentOffset.y = -top so first line is below nav bar).
         let insets = view.safeAreaInsets
         textView.contentInset = UIEdgeInsets(top: insets.top, left: insets.left, bottom: insets.bottom, right: insets.right)

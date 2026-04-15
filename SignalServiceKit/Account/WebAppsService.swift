@@ -62,8 +62,16 @@ public class WebAppsService: WebAppsServiceProtocol {
                 headers: headers
             )
             
-            guard let data = response.responseBodyData,
-                  let webApps = try? JSONDecoder().decode([WebApp].self, from: data) else {
+            guard let data = response.responseBodyData else {
+                throw WebAppsError.invalidResponse
+            }
+
+            let webApps: [WebApp]
+            if let directus = try? JSONDecoder().decode(HCPWebAppsDirectusResponse.self, from: data) {
+                webApps = directus.data.map(\.asWebApp)
+            } else if let legacy = try? JSONDecoder().decode([WebApp].self, from: data) {
+                webApps = legacy
+            } else {
                 throw WebAppsError.invalidResponse
             }
 
@@ -300,5 +308,57 @@ public class WebAppsService: WebAppsServiceProtocol {
 /// Directus-style list response for `global_url_allow` (`/items/global_url_allow`).
 private struct GlobalAllowListDirectusResponse: Decodable {
     let data: [GlobalAllowEntry]
+}
+
+/// Directus list response for `HCP_Web_Apps` (`/items/HCP_Web_Apps`).
+private struct HCPWebAppsDirectusResponse: Decodable {
+    let data: [HCPWebAppsDirectusRow]
+}
+
+/// One row from Directus `HCP_Web_Apps` (field names match CMS schema).
+private struct HCPWebAppsDirectusRow: Decodable {
+    let id: String?
+    let entry: String
+    let name: String
+    let description: String
+    let icon: String
+    let category: String
+    let urlsPermitted: [String]?
+    let kcRole: [String]?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case entry = "Entry"
+        case name = "Name"
+        case description = "Description"
+        case icon = "Icon"
+        case category = "Category"
+        case urlsPermitted
+        case kcRole
+    }
+
+    /// Mirrors defaults from `hcp-account-react/public/api/v2/webapps.php` plus Directus `id` for pinning.
+    var asWebApp: WebApp {
+        let trimmedIcon = icon.trimmingCharacters(in: .whitespacesAndNewlines)
+        let symbol = trimmedIcon.isEmpty ? "app.fill" : trimmedIcon
+        let roles: [String]? = {
+            guard let r = kcRole, !r.isEmpty else { return nil }
+            return r
+        }()
+        return WebApp(
+            entry: entry,
+            name: name,
+            description: description,
+            icon: symbol,
+            image: "",
+            category: category,
+            urlsPermitted: urlsPermitted ?? [],
+            location: ["more"],
+            type: "weblink",
+            parent: "",
+            id: id,
+            kcRole: roles,
+        )
+    }
 }
 

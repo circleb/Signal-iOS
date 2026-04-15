@@ -20,6 +20,7 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController, W
     private let loadingIndicator = UIActivityIndicatorView(style: .large)
     private var isLoadingBlockedMessage = false
     private var blockedURL: String?
+    private var lastLoggedAnalyticsURL: String?
     /// When true (pinned tab bar tabs), the nav bar X selects the Portal tab instead of popping (there is no stack to pop).
     private let prefersSwitchToPortalOnClose: Bool
 
@@ -99,6 +100,11 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController, W
         }
         
         loadWebApp()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        ViewAppearanceAnalytics.notifyViewControllerDidAppear(self)
     }
     
     private func setupUI() {
@@ -373,6 +379,13 @@ class WebAppWebViewController: UIViewController, OWSNavigationChildController, W
 // MARK: - WKNavigationDelegate
 
 extension WebAppWebViewController {
+    func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
+        guard let urlString = webView.url?.absoluteString else { return }
+        guard urlString != lastLoggedAnalyticsURL else { return }
+        lastLoggedAnalyticsURL = urlString
+        HCPFirebaseAnalytics.logWebDocumentURL(webAppName: webApp.name, url: urlString)
+    }
+
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         loadingIndicator.stopAnimating()
         isLoadingBlockedMessage = false
@@ -703,6 +716,11 @@ class PinnedURLsHalfSheetViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        ViewAppearanceAnalytics.notifyViewControllerDidAppear(self)
     }
     
     private func setupUI() {
